@@ -1,0 +1,23 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+venv/
+.venv/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Skill workflow ephemera (per WORKFLOW-v3.md section 4.3.3)
+.e2e-artifacts/
+
+# Skill-creator iteration workspaces (kept local, not distributed)
+*-workspace/
