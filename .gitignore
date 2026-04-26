@@ -21,3 +21,6 @@ Thumbs.db
 
 # Skill-creator iteration workspaces (kept local, not distributed)
 *-workspace/
+
+# Packaged skill archives (built on demand; distributed via GitHub releases)
+*.skill
