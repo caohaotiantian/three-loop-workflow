@@ -2,7 +2,7 @@
 name: three-loop-workflow
 description: Use this skill for any non-trivial functional change to a software project — implementing a new feature, fixing a behavior bug, optimizing performance, refactoring, or modifying a load-bearing process/contract file (CLAUDE.md, this skill itself, SKILL.md, OpenAPI specs, schema definitions, public API contracts). It enforces a three-loop discipline (L1 Design Document → L2 Implementation Document → L3 Development Work) with mandatory fresh-subagent reviews, round caps of 3 per domain, and explicit escalation rules. Trigger this skill whenever the user asks to implement, fix, refactor, optimize, build, or modify behavior in code — even when they say "just do X" or "quickly add Y". Skip only for pure typo fixes, doc reordering, dependency upgrades, and questions that do not change code.
 metadata:
-  version: "1.0"
+  version: "1.1"
 ---
 
 # Three-Loop Development Workflow
@@ -128,6 +128,8 @@ Each loop must satisfy its termination condition before advancing. Hitting the r
 
 **Document creation convention**: `docs/design/` and `docs/implementation/` are **not** pre-existing knowledge bases. They are created on demand per task. The first task simply runs `mkdir -p docs/design docs/implementation` at the repository root and writes its files. No pre-planned directory structure or README index is maintained.
 
+**Document closure convention**: at task closeout (F), each task's two documents are consolidated in a single focused pass — ephemeral scaffolding pruned, a closure block added (`Status: closed`, `Closing-commit:`, `Closed-on:`, `Deferred:`), and supersedes / superseded-by links recorded if a genuine succession exists. Consolidation is verified by a fresh review subagent. This keeps `docs/design/` and `docs/implementation/` from growing into a graveyard of stale drafts. Procedure and review template live in `references/end-to-end-review.md`.
+
 **Shared termination condition (all loops)**:
 - **Pass**: the review subagent reports zero severe issues this round, AND one consecutive prior round reported zero general issues. Exit the loop.
 - **Hard cap, per domain**: 3 rounds, counted independently. L1 / L2 / L3 do not share rounds — even if L1 takes all 3 rounds to pass, L2 still starts at round 1. L3 is counted independently per Phase. Hitting cap → escalate, never relax the bar.
@@ -162,7 +164,7 @@ Once you've confirmed this skill applies to the current task, jump to the releva
 | Draft `docs/implementation/<task-slug>.md` (L2) | `references/loop-2-implementation.md` — Phase breakdown, review subagent prompt template |
 | Start a Phase (L3): dev → review → accept → fix | `references/loop-3-development.md` — four-corner subagent template, role table, commit conventions |
 | Run external-process / E2E verification | `references/loop-3-development.md` (E2E section: pre-flight, isolated spawn, archival) |
-| Close out the task with end-to-end review (F) | `references/end-to-end-review.md` |
+| Close out the task: end-to-end review, document consolidation (F) | `references/end-to-end-review.md` |
 | Encounter ambiguity, breaking change, or unverifiable acceptance | `references/escalation-rules.md` |
 | Audit CLAUDE.md / cross-file consistency | `references/claude-md-integration.md` |
 
@@ -182,6 +184,6 @@ Detailed examples and the four-corner role table are in `references/loop-3-devel
 - L1 closed? `docs/design/<task-slug>.md` exists, all 8 required sections present, review subagent reports zero severe + one prior round zero general.
 - L2 closed? `docs/implementation/<task-slug>.md` exists, every Phase has runnable `<ACCEPT-CMD>`, review subagent reports zero severe + one prior round zero general.
 - Phase closed? Accept subagent reports pass on every command, main agent personally re-ran `<TEST-CMD>` and every `<ACCEPT-CMD>`, results recorded as commit trailers. If a contract file was modified, E2E gate executed or skip-reason recorded.
-- Task closed? End-to-end review (F) completed per `references/end-to-end-review.md`.
+- Task closed? End-to-end review (F) completed per `references/end-to-end-review.md` — including step 5 document consolidation (closure block added, ephemera pruned, fresh-subagent review verdict pass), all `e2e/*` worktrees and unreferenced `.e2e-artifacts/` directories cleaned up.
 
 If any of these is "no", you have not closed that stage — return to the relevant reference and continue, or escalate.

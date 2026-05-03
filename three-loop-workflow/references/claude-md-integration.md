@@ -43,6 +43,7 @@ Items written in _italics_ are **roles**, not literal heading names. References 
 | Four-corner subagent template | `references/loop-3-development.md` | impl doc Engineering Constraints Index |
 | Commit prefix `fix(phaseN-roundR)` | `references/loop-3-development.md` "Commit conventions" | `references/loop-2-implementation.md` review template |
 | External-process E2E trigger | `references/loop-3-development.md` "When to trigger" | CLAUDE.md _repo-workflow_ role (one-line forward reference) |
+| Closeout document consolidation (closure block, ephemera pruning, supersedes links) | `references/end-to-end-review.md` "Document consolidation" | skill `SKILL.md` "Document closure convention"; `references/loop-2-implementation.md` Deprecated-section note |
 | Load-bearing document list | skill `SKILL.md` "When this skill applies" + CLAUDE.md _load-bearing-docs_ role | All listed contract files cross-reference each other in their headers |
 | Language and terminology policy | CLAUDE.md _language-policy_ role | review subagent prompts in `references/loop-1-design.md` and `references/loop-2-implementation.md` |
 | Test command `<TEST-CMD>` | CLAUDE.md _common-commands_ role | the "acceptance command" section of every impl doc |
