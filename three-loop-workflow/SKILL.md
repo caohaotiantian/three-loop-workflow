@@ -2,7 +2,7 @@
 name: three-loop-workflow
 description: Use this skill for any non-trivial functional change to a software project — implementing a new feature, fixing a behavior bug, optimizing performance, refactoring, or modifying a load-bearing process/contract file (CLAUDE.md, this skill itself, SKILL.md, OpenAPI specs, schema definitions, public API contracts). It enforces a three-loop discipline (L1 Design Document → L2 Implementation Document → L3 Development Work) with mandatory fresh-subagent reviews, round caps of 3 per domain, and explicit escalation rules. Trigger this skill whenever the user asks to implement, fix, refactor, optimize, build, or modify behavior in code — even when they say "just do X" or "quickly add Y". Skip only for pure typo fixes, doc reordering, dependency upgrades, and questions that do not change code.
 metadata:
-  version: "1.1"
+  version: "1.2"
 ---
 
 # Three-Loop Development Workflow
