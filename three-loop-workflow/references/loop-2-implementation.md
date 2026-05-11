@@ -74,7 +74,7 @@ contract files.
 
 [Steps]
 1. Read {{impl-doc-path}} in full and {{design-doc-path}}.
-2. For each Phase, answer four questions. Any "no" is a severe issue.
+2. For each Phase, answer five questions. Any "no" is a severe issue.
    a. Could a fresh agent start work using only this document plus the
       design document sections it cites?
    b. Are the acceptance commands actually runnable? (pytest selectors
@@ -84,6 +84,12 @@ contract files.
    c. Is the TDD order correct (test tasks before implementation tasks)?
    d. Does regression protection cover the critical paths of prior
       Phases?
+   e. For each test task in the Phase task list: does the description
+      specify the business invariant being protected, not just the
+      function being called? A task description vague enough that the
+      resulting test could be implemented as a shape-only assertion
+      (passing regardless of whether the protected logic is intact)
+      tests shape, not intent — flag as severe.
 3. Check consistency with CLAUDE.md and the three-loop-workflow skill
    (commit prefix `fix(phaseN-roundR):`, language policy, load-bearing
    document list).

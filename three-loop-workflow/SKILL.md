@@ -55,6 +55,8 @@ When a principle conflicts with apparent progress, the principle wins. Violation
 - Match existing style even when you would write it differently.
 - Notice unrelated dead code: mention it, do not delete it.
 - When your changes orphan an import, variable, or function, remove it. Do not remove pre-existing dead code unless asked.
+- When two existing patterns in the codebase conflict, pick the more recent or more tested one and flag the other for cleanup. Producing a hybrid that satisfies neither is forbidden. Cleanup of the rejected pattern is a separate task — do not perform it here.
+- If you cannot articulate why surrounding code is structured a way, stop and ask before modifying it. Assuming orthogonality between the code you are touching and the code you are not is the dangerous default.
 - **Trace test**: every changed line must trace directly to either (a) a Deliverable in the design document, or (b) an escalated decision recorded in the design document. Lines that pass neither must be reverted before the L3 review subagent runs.
 
 ### 0.4 Goal-Driven Execution — define success, loop until verified
