@@ -57,6 +57,8 @@ flowchart LR
 
 Same as L1, with one addition: **the L2 round cap of 3 is counted independently**. If the design document is forced into rollback edits, the implementation document loop **must restart** from round 1. Commits already produced under the prior L3 cycle are listed by the main agent under a "Deprecated" section in `docs/implementation/<task-slug>.md` to prevent implementation drift. The Deprecated section is intentionally kept until task closeout — it gets pruned during F step 5 (document consolidation), since the git history will then preserve its content.
 
+When an L2 rollback is triggered, the main agent must revert all L3 commits from the prior cycle, or explicitly note them as retained with user authorization (reverting published commits requires AskUserQuestion first). Each rollback event appends a dated sub-entry to the Deprecated section — for example: `Deprecated — rollback 1 (YYYY-MM-DD): commits <sha>…` — so multiple rollback rounds remain distinguishable.
+
 ## Review subagent prompt template
 
 ```plaintext
@@ -84,6 +86,9 @@ contract files.
    c. Is the TDD order correct (test tasks before implementation tasks)?
    d. Does regression protection cover the critical paths of prior
       Phases?
+   *(Skill v1.2 addition: this fifth question supersedes the four-question count in
+   WORKFLOW-v3.md § 3.4 for this installation. WORKFLOW-v3.md § 3.4 is updated in
+   parallel — see D4 in docs/design/skill-v1-3-improvements.md.)*
    e. For each test task in the Phase task list: does the description
       specify the business invariant being protected, not just the
       function being called? A task description vague enough that the

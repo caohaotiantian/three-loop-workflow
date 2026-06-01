@@ -13,6 +13,8 @@ These rules apply across all three loops (L1, L2, L3) and the closeout review (F
 | Magic number or default threshold (algorithm parameter, weight, timeout, batch size) | Cite an existing constant from `docs/design/` or the source. If none exists, AskUserQuestion |
 | Schema backward-compatibility ruling (keep, migrate, or drop legacy fields) | AskUserQuestion: include migration impact surface |
 | Action exceeds authorized scope (push to main, delete files outside workspace, send messages externally) | Request authorization first |
+| Deletion of a file listed in CLAUDE.md _load-bearing-docs_ role | AskUserQuestion: state which contract the file fulfills, what replaces it, and the migration impact on every file that references it |
+| Another in-progress design doc covers overlapping domain | AskUserQuestion: identify the overlap, propose merge or serialization, and get a coordination ruling before proceeding |
 
 ## Forbidden
 
@@ -54,6 +56,11 @@ Pure open-ended questions are forbidden because they push the design burden onto
 If the AskUserQuestion tool is unavailable in the current harness, degrade to a plain-text question segment in the main output beginning with `STOP: QUESTION` and **suspend all subagent spawns** until a reply arrives. Do not let subagents continue in parallel — their work depends on the answer.
 
 The `STOP: QUESTION` block must still satisfy the three quality requirements above (options, recommendation, rationale).
+
+If subagents are already in flight when the STOP:QUESTION condition is detected,
+do not use their outputs — discard partial work and re-run after the user's answer
+is received. The "suspend all subagent spawns" instruction is forward-looking only;
+in-flight agents must be abandoned, not waited on.
 
 ## Round-cap exhaustion (deadlock report)
 

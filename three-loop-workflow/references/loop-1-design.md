@@ -20,6 +20,10 @@ If `docs/design/` does not yet exist, the first task simply runs `mkdir -p docs/
 ## Main agent procedure
 
 1. If existing `docs/design/*.md` files are present, read them all first to build a design map and avoid conflicts or duplicate modeling. The very first design task may skip this step.
+   Before drafting, also ask the user whether any parallel tasks covering the same domain
+   are in progress. If yes, coordinate — merge or serialize the design work — before
+   drafting. A fresh agent reviewing your design doc cannot discover uncommitted in-progress
+   designs by a parallel task.
 2. Read CLAUDE.md _language-policy_ and _load-bearing-docs_ roles to confirm project requirements on language, terminology consistency, and contract file scope.
 3. On encountering ANY of the following signals, **stop and escalate** (see `references/escalation-rules.md`). Do not silently assume:
     - Vague deliverables (e.g., "improve performance", "make it more readable")

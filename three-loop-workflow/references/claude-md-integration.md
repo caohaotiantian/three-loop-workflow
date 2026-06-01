@@ -48,6 +48,7 @@ Items written in _italics_ are **roles**, not literal heading names. References 
 | Language and terminology policy | CLAUDE.md _language-policy_ role | review subagent prompts in `references/loop-1-design.md` and `references/loop-2-implementation.md` |
 | Test command `<TEST-CMD>` | CLAUDE.md _common-commands_ role | the "acceptance command" section of every impl doc |
 | Project engineering norms | CLAUDE.md _engineering-norms_ role | impl doc Engineering Constraints Index |
+| L2 review prompt question count | `references/loop-2-implementation.md` review prompt (five questions as of skill v1.2) | `WORKFLOW-v3.md` section 3.4 (must match; currently updated to five in skill v1.3) |
 
 When introducing a new commitment clause, register its source of truth and reference site in this table **before** modifying any file. If the new clause needs a CLAUDE.md anchor not in the five-role minimum, either reuse an existing role or extend the role vocabulary in the same commit (and update the project's anchor map).
 

@@ -22,6 +22,7 @@ Throughout this skill, `<TEST-CMD>` denotes the project test command (typically 
 | Performance optimization | yes |
 | Refactor that touches more than one file | yes |
 | Modification to a **load-bearing** doc (CLAUDE.md, this skill, SKILL.md, OpenAPI specs, schema definitions, public API contracts) | yes |
+| Deletion of a **load-bearing** doc | yes — plus mandatory AskUserQuestion before any file is deleted; see `references/escalation-rules.md` |
 | Pure document reordering, typo fix, dependency upgrade | no — but still requires one independent fresh-agent review |
 | Pure question answering, exploration with no code change | no |
 
@@ -165,6 +166,7 @@ Once you've confirmed this skill applies to the current task, jump to the releva
 | Draft `docs/design/<task-slug>.md` (L1) | `references/loop-1-design.md` — required sections, main agent procedure, review subagent prompt template |
 | Draft `docs/implementation/<task-slug>.md` (L2) | `references/loop-2-implementation.md` — Phase breakdown, review subagent prompt template |
 | Start a Phase (L3): dev → review → accept → fix | `references/loop-3-development.md` — four-corner subagent template, role table, commit conventions |
+| Encounter an implementation-document conflict during L3 dev | `references/loop-2-implementation.md` — restart L2 from round 1; list deprecated L3 commits in a Deprecated section |
 | Run external-process / E2E verification | `references/loop-3-development.md` (E2E section: pre-flight, isolated spawn, archival) |
 | Close out the task: end-to-end review, document consolidation (F) | `references/end-to-end-review.md` |
 | Encounter ambiguity, breaking change, or unverifiable acceptance | `references/escalation-rules.md` |
@@ -189,3 +191,7 @@ Detailed examples and the four-corner role table are in `references/loop-3-devel
 - Task closed? End-to-end review (F) completed per `references/end-to-end-review.md` — including step 5 document consolidation (closure block added, ephemera pruned, fresh-subagent review verdict pass), all `e2e/*` worktrees and unreferenced `.e2e-artifacts/` directories cleaned up.
 
 If any of these is "no", you have not closed that stage — return to the relevant reference and continue, or escalate.
+
+If AskUserQuestion is unavailable in the current harness, see `references/escalation-rules.md`
+Degraded mode for the STOP:QUESTION fallback procedure, including the in-flight-agent
+suspension rule.

@@ -121,7 +121,7 @@ else
 fi
 ```
 
-On `AUTH_FAIL`: enter degraded path — skip the external-process spawn, fall back to `<TEST-CMD>` plus one manual smoke test (walk the entry-point flow described in the contract file by hand), and record `E2E skipped: <reason>` in the end-to-end review summary.
+On `AUTH_FAIL`: enter degraded path — skip the external-process spawn, fall back to `<TEST-CMD>` plus one manual smoke test (walk the entry-point flow described in the contract file by hand), and record `E2E skipped: <reason>` in the end-to-end review summary (reason must be specific — e.g., `AUTH_FAIL: ANTHROPIC_API_KEY not set`; see `references/end-to-end-review.md` step 3 for the specificity requirement)
 
 ### Isolated spawn procedure (example)
 
