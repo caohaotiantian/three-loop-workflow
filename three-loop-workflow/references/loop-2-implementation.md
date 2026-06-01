@@ -59,6 +59,10 @@ Same as L1, with one addition: **the L2 round cap of 3 is counted independently*
 
 When an L2 rollback is triggered, the main agent must revert all L3 commits from the prior cycle, or explicitly note them as retained with user authorization (reverting published commits requires AskUserQuestion first). Each rollback event appends a dated sub-entry to the Deprecated section — for example: `Deprecated — rollback 1 (YYYY-MM-DD): commits <sha>…` — so multiple rollback rounds remain distinguishable.
 
+> For structured output from this review subagent, see `references/schemas.md` (`ReviewVerdict` schema).
+
+> Spawn this subagent with `agentType: 'code-reviewer'` for strongest review discipline.
+
 ## Review subagent prompt template
 
 ```plaintext

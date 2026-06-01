@@ -29,6 +29,46 @@ To make grep-based self-checks reliable, each project pins a short anchor map at
 
 When this skill says "read the CLAUDE.md _common-commands_ role", grep for the literal heading text the anchor map points to. If a project adds extra roles, list them in the same anchor map so future tasks can resolve them too.
 
+## Copy-paste starter template
+
+The following CLAUDE.md snippet satisfies all five required roles for a new project.
+Paste it into your project's `CLAUDE.md` and fill in the bracketed values.
+
+~~~markdown
+<!-- Anchor map (required by three-loop-workflow skill) -->
+- _repo-workflow_       → "## Development Workflow"
+- _load-bearing-docs_   → "## Load-Bearing Documents"
+- _language-policy_     → "## Language Policy"
+- _common-commands_     → "## Common Commands"
+- _engineering-norms_   → "## Engineering Norms"
+
+## Development Workflow
+
+Tasks proceed via the three-loop-workflow skill. Trigger it for any functional
+change, bug fix, or load-bearing document modification. Escalation contact: [name].
+
+## Load-Bearing Documents
+
+The following files are protected by the full L1→L2→L3 cycle:
+- `CLAUDE.md` (this file)
+- `SKILL.md` (if the three-loop-workflow skill is installed project-locally)
+- [add your OpenAPI specs, schema files, public API contracts here]
+
+## Language Policy
+
+Code: [language, e.g. Python 3.11+]. Process documents: English. Terminology must
+be consistent with docs/design/, README, and contract files.
+
+## Common Commands
+
+- `<TEST-CMD>`: [e.g. `pytest tests/ -v`]
+- `<LINT-CMD>`: [e.g. `ruff check .`]
+
+## Engineering Norms
+
+[Key coding standards, architecture overview, anti-patterns specific to this repo.]
+~~~
+
 ## Cross-file consistency checklist
 
 When modifying any **commitment clause** below, the same commit must update both the source of truth and the reference site. Self-check before submitting. Each project extends this table with project-specific clauses in its own CLAUDE.md.

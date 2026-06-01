@@ -23,12 +23,26 @@ Throughout this skill, `<TEST-CMD>` denotes the project test command (typically 
 | Refactor that touches more than one file | yes |
 | Modification to a **load-bearing** doc (CLAUDE.md, this skill, SKILL.md, OpenAPI specs, schema definitions, public API contracts) | yes |
 | Deletion of a **load-bearing** doc | yes — plus mandatory AskUserQuestion before any file is deleted; see `references/escalation-rules.md` |
-| Pure document reordering, typo fix, dependency upgrade | no — but still requires one independent fresh-agent review |
-| Pure question answering, exploration with no code change | no |
 
 When a load-bearing doc is **first introduced** (or first retroactively classified as load-bearing), a one-page retroactive design brief plus an independent agent review with two consecutive clean rounds may substitute for the full three-loop cycle. Any subsequent modification must follow the formal procedure.
 
 **Role isolation rule** (applies to every loop): a single subagent must never both author and review the same artifact. Reviews are performed by a fresh subagent that receives only the artifact, the relevant prompt template, and the linked design / impl docs.
+
+## When this skill does NOT apply
+
+| Change type | Action |
+|---|---|
+| Pure document reordering, typo fix, dependency upgrade | no L1→L2→L3 cycle — but still requires one independent fresh-agent review |
+| Pure question answering / exploration producing no file edits | no requirement |
+
+> **Quick orientation**: this skill runs three sequential loops (L1 Design → L2
+> Implementation → L3 Development). Each loop closes only when a fresh reviewer
+> reports zero severe issues this round AND zero general issues the prior round.
+> Round cap is 3 per loop; hitting it triggers AskUserQuestion — never a relaxed bar.
+> You cannot skip a loop. If unsure which loop you are in, check the routing table.
+
+**Round tracking with Tasks**: to survive context compaction during long tasks, call
+`TaskCreate({ title: "L1 round 1" })` at each loop start and `TaskUpdate({ status, notes: verdictSummary })` after each review verdict. The round cap check becomes readable from `TaskGet(id)` rather than from conversational context. This is optional but strongly recommended for tasks with more than two L1 or L2 rounds.
 
 ## Core principles (non-negotiable, every loop, every subagent)
 
@@ -131,6 +145,8 @@ Each loop must satisfy its termination condition before advancing. Hitting the r
 
 **Document creation convention**: `docs/design/` and `docs/implementation/` are **not** pre-existing knowledge bases. They are created on demand per task. The first task simply runs `mkdir -p docs/design docs/implementation` at the repository root and writes its files. No pre-planned directory structure or README index is maintained.
 
+**Document naming**: all task documents use the slug format `YYYY-MM-DD-<kebab-case-feature>`. The design document (`docs/design/YYYY-MM-DD-<slug>.md`) and implementation document (`docs/implementation/YYYY-MM-DD-<slug>.md`) for the same task must use the **identical slug**. Mismatched slugs across these two docs are a protocol error. This convention applies to tasks created after this task closes; pre-existing documents are not renamed.
+
 **Document closure convention**: at task closeout (F), each task's two documents are consolidated in a single focused pass — ephemeral scaffolding pruned, a closure block added (`Status: closed`, `Closing-commit:`, `Closed-on:`, `Deferred:`), and supersedes / superseded-by links recorded if a genuine succession exists. Consolidation is verified by a fresh review subagent. This keeps `docs/design/` and `docs/implementation/` from growing into a graveyard of stale drafts. Procedure and review template live in `references/end-to-end-review.md`.
 
 **Shared termination condition (all loops)**:
@@ -161,16 +177,18 @@ Full role-vocabulary detail, the cross-file consistency checklist, and grep-base
 
 Once you've confirmed this skill applies to the current task, jump to the relevant phase reference:
 
-| You are about to... | Read this reference |
-|---|---|
-| Draft `docs/design/<task-slug>.md` (L1) | `references/loop-1-design.md` — required sections, main agent procedure, review subagent prompt template |
-| Draft `docs/implementation/<task-slug>.md` (L2) | `references/loop-2-implementation.md` — Phase breakdown, review subagent prompt template |
-| Start a Phase (L3): dev → review → accept → fix | `references/loop-3-development.md` — four-corner subagent template, role table, commit conventions |
-| Encounter an implementation-document conflict during L3 dev | `references/loop-2-implementation.md` — restart L2 from round 1; list deprecated L3 commits in a Deprecated section |
-| Run external-process / E2E verification | `references/loop-3-development.md` (E2E section: pre-flight, isolated spawn, archival) |
-| Close out the task: end-to-end review, document consolidation (F) | `references/end-to-end-review.md` |
-| Encounter ambiguity, breaking change, or unverifiable acceptance | `references/escalation-rules.md` |
-| Audit CLAUDE.md / cross-file consistency | `references/claude-md-integration.md` |
+| You are about to... | Read this reference | Recommended `agentType` |
+|---|---|---|
+| Draft `docs/design/<task-slug>.md` (L1) | `references/loop-1-design.md` — required sections, main agent procedure, review subagent prompt template | draft: *(default)*; review subagent: `code-reviewer` |
+| Draft `docs/implementation/<task-slug>.md` (L2) | `references/loop-2-implementation.md` — Phase breakdown, review subagent prompt template | draft: *(default)*; review subagent: `code-reviewer` |
+| Start a Phase (L3): dev → review → accept → fix | `references/loop-3-development.md` — four-corner subagent template, role table, commit conventions | dev: `feature-dev:feature-dev`; review: `feature-dev:code-reviewer`; accept/fix: *(default)* |
+| Encounter an implementation-document conflict during L3 dev | `references/loop-2-implementation.md` — restart L2 from round 1; list deprecated L3 commits in a Deprecated section | *(default)* |
+| Run external-process / E2E verification | `references/loop-3-development.md` (E2E section: pre-flight, isolated spawn, archival) | *(default)* |
+| Close out the task: end-to-end review, document consolidation (F) | `references/end-to-end-review.md` | *(default)* |
+| Encounter ambiguity, breaking change, or unverifiable acceptance | `references/escalation-rules.md` | *(default)* |
+| Audit CLAUDE.md / cross-file consistency | `references/claude-md-integration.md` | *(default)* |
+
+For L1 and L2 fresh review subagents, use `agentType: 'code-reviewer'` (bare name). For L3 review, use `agentType: 'feature-dev:code-reviewer'` (namespaced). The distinction is intentional: L1/L2 reviews are general design/implementation reviews; L3 reviews are code-change reviews requiring code-specific expertise.
 
 ## Commit conventions (cross-cutting)
 
@@ -195,3 +213,13 @@ If any of these is "no", you have not closed that stage — return to the releva
 If AskUserQuestion is unavailable in the current harness, see `references/escalation-rules.md`
 Degraded mode for the STOP:QUESTION fallback procedure, including the in-flight-agent
 suspension rule.
+
+## Common failure modes and recovery
+
+| Symptom | Likely cause | Recovery |
+|---|---|---|
+| Review keeps finding severe issues; round counter reaches 3 | Round cap exhausted | Escalate via AskUserQuestion with a deadlock report (see `references/escalation-rules.md`) |
+| Agent declares loop closed but prior round had general issues | Incorrect termination check | Two-generation rule violated — re-run the review round; zero-general in the PRIOR round is required |
+| L3 dev reports the implementation doc conflicts with the code | Impl-doc conflict | L2 rollback — see routing table row for "Encounter an implementation-document conflict" |
+| AskUserQuestion tool unavailable | Constrained harness | Use STOP:QUESTION degraded mode (see `references/escalation-rules.md`) |
+| Design and implementation doc slugs don't match | Missed slug convention | Rename to match YYYY-MM-DD-<slug> format (see "Document naming" in Document creation convention) |

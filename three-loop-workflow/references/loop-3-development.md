@@ -57,6 +57,10 @@ Notes on the diagram:
 - **Phase-end main-agent verification** sits between the accept pass and the E2E gate, so its result is captured in the Phase commit trailer regardless of whether E2E is triggered.
 - **The E2E gate is conditional.** Pure internal refactors, test changes, and README updates skip the E2E branch and rely on `<TEST-CMD>` only.
 
+> For structured output from review subagents (step 2), see `references/schemas.md` (`ReviewVerdict` schema).
+
+> Spawn the dev subagent (step 1) with `agentType: 'feature-dev:feature-dev'`. Spawn the review subagent (step 2) with `agentType: 'feature-dev:code-reviewer'`. Note: L1/L2 reviews use the bare `code-reviewer` type; L3 review uses the namespaced `feature-dev:code-reviewer`.
+
 ## Role responsibilities
 
 | Role | Input | Output | Forbidden |

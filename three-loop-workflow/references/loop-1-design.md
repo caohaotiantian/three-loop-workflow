@@ -62,6 +62,10 @@ The main agent edits the doc directly — no separate fix subagent at L1 (scale 
 - **Hard cap**: 3 rounds. Hitting cap with severe issues unresolved → escalate, do not relax the bar. Compose a deadlock report (see `references/escalation-rules.md` "Round-cap exhaustion").
 - If a new user-decision point is identified mid-loop, return to procedure step 3 to ask the user. Do not decide unilaterally.
 
+> For structured output from this review subagent, see `references/schemas.md` (`ReviewVerdict` schema).
+
+> Spawn this subagent with `agentType: 'code-reviewer'` for strongest review discipline.
+
 ## Review subagent prompt template
 
 Substitute the bracketed values, increment the round counter, and spawn a fresh subagent per round. The subagent must never receive the literal `{{round}}` string.
