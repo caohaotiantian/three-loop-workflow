@@ -1,5 +1,12 @@
 # Implementation: skill v1.3 — Protocol Fixes, Usability Additions, and New-Feature Guidance
 
+```
+Status: closed
+Closing-commit: d2346ec
+Closed-on: 2026-06-01
+Deferred: none
+```
+
 ## 1. Task Index
 
 Design document: `docs/design/skill-v1-3-improvements.md`

@@ -1,5 +1,14 @@
 # Design: skill v1.3 — Protocol Fixes, Usability Additions, and New-Feature Guidance
 
+```
+Status: closed
+Closing-commit: d2346ec
+Closed-on: 2026-06-01
+Deferred: F3 (Workflow tool as L3 engine), F5 (worktree isolation) — no issue IDs; deferred by design (see §4 Decision 1)
+```
+
+E2E gate: PASS — smoke test (structural checks on installed SKILL.md, 11/11 green). Full CLI subprocess E2E not triggered; skill is documentation-only with no executable entry points.
+
 ## 1. Background and Purpose
 
 A multi-reviewer workflow audit of the three-loop-workflow skill (v1.2) produced 17
