@@ -1,5 +1,12 @@
 # Implementation: maintenance debt — zip, README, WORKFLOW-v3, CLAUDE.md, l3-phase fix
 
+```
+Status: closed
+Closing-commit: f9b1d15
+Closed-on: 2026-06-01
+Deferred: none
+```
+
 ## 1. Task Index
 
 Design document: `docs/design/2026-06-01-maintenance-debt.md`

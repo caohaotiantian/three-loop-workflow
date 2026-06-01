@@ -1,5 +1,14 @@
 # Design: maintenance debt — zip, README, WORKFLOW-v3, CLAUDE.md, l3-phase fix
 
+```
+Status: closed
+Closing-commit: f9b1d15
+Closed-on: 2026-06-01
+Deferred: none
+```
+
+E2E gate: PASS — 11/11 structural smoke-test checks. Full CLI subprocess E2E not triggered; skill is documentation/script-only.
+
 ## 1. Background and Purpose
 
 Five maintenance items were explicitly deferred or excluded from the v1.3 and v1.3.1 tasks:
