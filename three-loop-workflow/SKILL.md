@@ -181,7 +181,8 @@ Once you've confirmed this skill applies to the current task, jump to the releva
 |---|---|---|
 | Draft `docs/design/<task-slug>.md` (L1) | `references/loop-1-design.md` — required sections, main agent procedure, review subagent prompt template | draft: *(default)*; review subagent: `code-reviewer` |
 | Draft `docs/implementation/<task-slug>.md` (L2) | `references/loop-2-implementation.md` — Phase breakdown, review subagent prompt template | draft: *(default)*; review subagent: `code-reviewer` |
-| Start a Phase (L3): dev → review → accept → fix | `references/loop-3-development.md` — four-corner subagent template, role table, commit conventions | dev: `feature-dev:feature-dev`; review: `feature-dev:code-reviewer`; accept/fix: *(default)* |
+| Start a Phase (L3) — Workflow mode (recommended) | `references/loop-3-workflow.md` — how to invoke `l3-phase.js`, args, return values | dev: `feature-dev:feature-dev`; review: `feature-dev:code-reviewer`; accept/fix: *(default)* |
+| Start a Phase (L3) — manual/fallback mode: dev → review → accept → fix | `references/loop-3-development.md` — four-corner subagent template, role table, commit conventions | dev: `feature-dev:feature-dev`; review: `feature-dev:code-reviewer`; accept/fix: *(default)* |
 | Encounter an implementation-document conflict during L3 dev | `references/loop-2-implementation.md` — restart L2 from round 1; list deprecated L3 commits in a Deprecated section | *(default)* |
 | Run external-process / E2E verification | `references/loop-3-development.md` (E2E section: pre-flight, isolated spawn, archival) | *(default)* |
 | Close out the task: end-to-end review, document consolidation (F) | `references/end-to-end-review.md` | *(default)* |

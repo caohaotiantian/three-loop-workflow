@@ -1,5 +1,11 @@
 # L3: Development Work Loop
 
+> **Recommended execution mode**: use the Workflow script at `references/loop-3-workflow.md`
+> (invokes `l3-phase.js`) rather than manual Agent-tool orchestration. The script enforces
+> round caps, structured verdicts, and worktree isolation as deterministic code. The
+> four-corner template, role table, commit conventions, and E2E gate below remain
+> authoritative regardless of which mode is used.
+
 ## Four-corner subagent template
 
 Each Phase runs at least one cycle of step 1 (dev) → step 2 (review) → step 3 (accept). Review failures route through step 4 (fix) back to step 2; accept failures route through step 4 back to step 3. The Phase has its own round counter R, capped at 3.
