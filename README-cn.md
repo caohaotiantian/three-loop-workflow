@@ -11,6 +11,13 @@ English version → [README.md](./README.md)
 
 规范是事实标准。skill 是面向 Claude 优化过的衍生物 —— 把规范拆成短小的入口(`SKILL.md`)加上按需加载的分阶段引用文件,避免一次塞太多内容到模型上下文里。
 
+## 更新日志
+
+| 版本 | 主要新增内容 |
+|---|---|
+| **v1.3** | 路由表新增 `agentType` 推荐列；`references/schemas.md`（ReviewVerdict 结构化输出 schema）；新增"本技能不适用的情形"说明表；快速导览区块；常见错误模式速查表；文档命名规范；TaskCreate 轮次追踪指引 |
+| **v1.3.1** | `references/l3-phase.js` — 基于 Workflow 工具的 L3 阶段执行器（推荐模式）；`references/loop-3-workflow.md` — 调用指南；`references/schemas.md` 新增 AcceptVerdict 和 DevResult schema；SKILL.md 路由表新增 Workflow 模式行 |
+
 ## 什么是三循环工作流
 
 agent 类编码失败有共同模式:急于动手实现、悄悄选择默认值、跳过评审。这套工作流通过三层强制纪律来防止这些失败 —— 每个功能变更都必须穿过三个自上而下的循环和最终评审:
@@ -57,7 +64,7 @@ cp -r three-loop-workflow ~/.claude/skills/
 或打包成单个可分发的 `.skill` 文件:
 
 ```bash
-python -m scripts.package_skill three-loop-workflow
+cd /home/fedora/workflow && zip -r three-loop-workflow.skill three-loop-workflow/
 # 产出 three-loop-workflow.skill —— Claude Code 双击即可识别
 ```
 

@@ -11,6 +11,13 @@ A disciplined three-loop workflow for non-trivial software changes, packaged as 
 
 The spec is the source of truth. The skill is a derivative artifact tuned for Claude consumption: it splits the spec into a short entry point (`SKILL.md`) plus per-stage references that load only when needed.
 
+## What's new
+
+| Version | Key additions |
+|---|---|
+| **v1.3** | `agentType` recommendation column in routing table; `references/schemas.md` (ReviewVerdict schema); `## When this skill does NOT apply` table; Quick orientation box; Common failure modes table; Document naming convention; TaskCreate round-tracking guidance |
+| **v1.3.1** | `references/l3-phase.js` — Workflow-based L3 Phase runner (recommended mode); `references/loop-3-workflow.md` — invocation guide; `references/schemas.md` gains AcceptVerdict and DevResult schemas; SKILL.md routing table gains Workflow-mode row |
+
 ## What is the three-loop workflow?
 
 Most agentic coding failures share a pattern: rushing into implementation, picking silent defaults, skipping review. This workflow forces the discipline that prevents those failures by gating every functional change through three top-down loops, plus a closeout review.
@@ -57,7 +64,7 @@ cp -r three-loop-workflow ~/.claude/skills/
 Or package it as a single distributable `.skill` file:
 
 ```bash
-python -m scripts.package_skill three-loop-workflow
+cd /home/fedora/workflow && zip -r three-loop-workflow.skill three-loop-workflow/
 # produces three-loop-workflow.skill — a zip Claude Code recognizes
 ```
 
