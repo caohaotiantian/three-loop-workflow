@@ -1,8 +1,8 @@
 export const meta = {
   name: 'l3-phase',
-  description: 'Three-loop-workflow L3 per-Phase runner: dev → review-loop → accept-loop with round cap 3 and worktree isolation',
+  description: 'Three-loop-workflow L3 per-Phase runner: dev → review-loop → accept-loop with round cap 3',
   phases: [
-    { title: 'Dev', detail: 'dev subagent implements phase tasks in isolated worktree' },
+    { title: 'Dev', detail: 'dev subagent implements phase tasks' },
     { title: 'Review', detail: 'review subagent audits diff; two-generation termination' },
     { title: 'Accept', detail: 'accept subagent runs all ACCEPT-CMDs' },
   ],
@@ -59,7 +59,7 @@ const devResult = await agent(
   `and return DevResult with the branch name, a summary, and conflict=true if the design doc ` +
   `conflicts with any task.\n\nDesign doc: ${designDocPath}\nImpl doc: ${implDocPath}\n\nPhase tasks:\n${phaseSpec}`,
   { label: `dev:${phaseLabel}`, phase: 'Dev', agentType: 'feature-dev:feature-dev',
-    isolation: 'worktree', schema: DEV_SCHEMA }
+    schema: DEV_SCHEMA }
 )
 
 if (!devResult) return { status: 'cap-exhausted', phaseLabel, round: 0, reason: 'dev agent returned null' }
@@ -103,7 +103,7 @@ while (round <= MAX_ROUNDS) {
     `You are the fix subagent for ${phaseLabel} review round ${round}. Fix the following review issues on branch "${devBranch}". ` +
     `Surgical Changes only — commit fixes to the same branch.\n\nSevere: ${review.severe.join('; ')}\nGeneral: ${review.general.join('; ')}`,
     { label: `fix:review:${phaseLabel}:r${round}`, phase: 'Fix',
-      agentType: 'feature-dev:feature-dev', isolation: 'worktree' }
+      agentType: 'feature-dev:feature-dev' }
   )
   phase('Review')
 }
@@ -134,7 +134,7 @@ while (acceptRound <= MAX_ROUNDS) {
     `You are the fix subagent for ${phaseLabel} accept round ${acceptRound}. Fix the following accept failures on branch "${devBranch}". ` +
     `Commit fixes to the same branch.\n\nFailures: ${accept.failures.join('; ')}`,
     { label: `acceptFix:${phaseLabel}:r${acceptRound}`, phase: 'Fix',
-      agentType: 'feature-dev:feature-dev', isolation: 'worktree' }
+      agentType: 'feature-dev:feature-dev' }
   )
   phase('Accept')
 }

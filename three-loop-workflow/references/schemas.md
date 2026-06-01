@@ -73,7 +73,7 @@ Use this schema when spawning accept subagents (L3 step 3). Pass as `agent(accep
 
 ## DevResult
 
-Use this schema when spawning dev subagents (L3 step 1) with `isolation: 'worktree'`. Pass as `agent(devPrompt, { isolation: 'worktree', schema: DevResult })`.
+Use this schema when spawning dev subagents (L3 step 1). Pass as `agent(devPrompt, { schema: DevResult })`. The `branch` field is the commit audit trail / rollback reference — dev agents should commit their changes to a named branch and return it here.
 
 ```json
 {

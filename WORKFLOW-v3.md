@@ -438,6 +438,40 @@ Notes on the diagram:
 
 **Role isolation hard constraint**: within a single Phase, a single subagent may take only one role. The main agent spawns a fresh subagent per role per round. Self-review is forbidden.
 
+#### 4.1.1 Workflow-based execution (recommended)
+
+The four-corner loop can be driven by the `references/l3-phase.js` Workflow script
+instead of manual Agent-tool orchestration. The Workflow-based mode enforces round
+caps, structured verdicts, and the two-generation termination condition as
+deterministic code rather than prose instructions. Dev agents write directly to the
+main working tree (no `isolation: 'worktree'`), so accept commands see the correct
+state.
+
+**Invocation** (once per Phase, from the main agent):
+
+```javascript
+const result = await Workflow({
+  scriptPath: '~/.claude/skills/three-loop-workflow/references/l3-phase.js',
+  args: {
+    phaseLabel:    'Phase 1',          // human-readable phase name
+    phaseSpec:     '<task list>',      // full Phase task list from the impl doc
+    designDocPath: 'docs/design/<slug>.md',
+    implDocPath:   'docs/implementation/<slug>.md',
+  }
+})
+```
+
+**Return values**: `{ status: 'closed'|'cap-exhausted'|'design-conflict', phaseLabel, round, branch? }`.
+- `'closed'`: Phase accepted. `result.branch` is the dev branch; merge it: `git merge --ff-only result.branch` then `git branch -d result.branch`.
+- `'cap-exhausted'`: round cap (3) exhausted. Escalate per section 6.
+- `'design-conflict'`: dev agent detected a conflict. Roll back to L1 or L2. Clean up: `git branch -d result.branch`.
+
+**Fallback**: if the Workflow tool is unavailable, use the manual prose-driven
+procedure in section 4.1 and `references/loop-3-development.md` instead.
+
+**Schema reference**: structured verdict and dev result schemas are in
+`references/schemas.md` (`ReviewVerdict`, `AcceptVerdict`, `DevResult`).
+
 ### 4.2 Additional Main Agent Constraints
 
 - At the end of **each Phase**, the main agent personally runs `<TEST-CMD>` and every `<ACCEPT-CMD>` declared for that Phase in the impl doc. The results are recorded as trailers on the Phase commit.
