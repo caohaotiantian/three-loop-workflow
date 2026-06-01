@@ -1,5 +1,14 @@
 # Design: F3 + F5 — Workflow-based L3 engine with worktree isolation
 
+```
+Status: closed
+Closing-commit: 537cae5
+Closed-on: 2026-06-01
+Deferred: none
+```
+
+E2E gate: PASS — 19/19 structural smoke-test checks on installed skill files. Full CLI subprocess E2E not triggered; skill is documentation/script-only with no external service entry points.
+
 ## 1. Background and Purpose
 
 The three-loop-workflow skill v1.3 deferred two features from the audit:

@@ -1,5 +1,12 @@
 # Implementation: F3 + F5 — Workflow-based L3 engine with worktree isolation
 
+```
+Status: closed
+Closing-commit: 537cae5
+Closed-on: 2026-06-01
+Deferred: none
+```
+
 ## 1. Task Index
 
 Design document: `docs/design/2026-06-01-f3-f5-workflow-l3-engine.md`
