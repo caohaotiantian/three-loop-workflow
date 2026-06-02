@@ -61,7 +61,7 @@ When an L2 rollback is triggered, the main agent must revert all L3 commits from
 
 > For structured output from this review subagent, see `references/schemas.md` (`ReviewVerdict` schema).
 
-> Spawn this subagent with `agentType: 'code-reviewer'` for strongest review discipline.
+> Spawn this review as a fresh default subagent (a new general-purpose subagent, separate from the agent that drafted the document); no special agent type is required — role isolation, not a particular agent type, is what matters.
 
 ## Review subagent prompt template
 

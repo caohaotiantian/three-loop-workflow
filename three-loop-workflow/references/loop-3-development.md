@@ -65,7 +65,7 @@ Notes on the diagram:
 
 > For structured output from review subagents (step 2), see `references/schemas.md` (`ReviewVerdict` schema).
 
-> Spawn the dev subagent (step 1) with `agentType: 'feature-dev:feature-dev'`. Spawn the review subagent (step 2) with `agentType: 'feature-dev:code-reviewer'`. Note: L1/L2 reviews use the bare `code-reviewer` type; L3 review uses the namespaced `feature-dev:code-reviewer`.
+> Spawn the dev subagent (step 1) and the review subagent (step 2) as separate fresh default subagents (no special agent type needed). The hard rule is role isolation: the agent that wrote the code must never review it.
 
 ## Role responsibilities
 

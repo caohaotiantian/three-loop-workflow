@@ -2,7 +2,7 @@
 name: three-loop-workflow
 description: Use this skill for any non-trivial functional change to a software project — implementing a new feature, fixing a behavior bug, optimizing performance, refactoring, or modifying a load-bearing process/contract file (CLAUDE.md, this skill itself, SKILL.md, OpenAPI specs, schema definitions, public API contracts). It enforces a three-loop discipline (L1 Design Document → L2 Implementation Document → L3 Development Work) with mandatory fresh-subagent reviews, round caps of 3 per domain, and explicit escalation rules. Trigger this skill whenever the user asks to implement, fix, refactor, optimize, build, or modify behavior in code — even when they say "just do X" or "quickly add Y". Skip only for pure typo fixes, doc reordering, dependency upgrades, and questions that do not change code.
 metadata:
-  version: "1.3.1"
+  version: "1.3.2"
 ---
 
 # Three-Loop Development Workflow
@@ -177,19 +177,17 @@ Full role-vocabulary detail, the cross-file consistency checklist, and grep-base
 
 Once you've confirmed this skill applies to the current task, jump to the relevant phase reference:
 
-| You are about to... | Read this reference | Recommended `agentType` |
-|---|---|---|
-| Draft `docs/design/<task-slug>.md` (L1) | `references/loop-1-design.md` — required sections, main agent procedure, review subagent prompt template | draft: *(default)*; review subagent: `code-reviewer` |
-| Draft `docs/implementation/<task-slug>.md` (L2) | `references/loop-2-implementation.md` — Phase breakdown, review subagent prompt template | draft: *(default)*; review subagent: `code-reviewer` |
-| Start a Phase (L3) — Workflow mode (recommended) | `references/loop-3-workflow.md` — how to invoke `l3-phase.js`, args, return values | dev: `feature-dev:feature-dev`; review: `feature-dev:code-reviewer`; accept/fix: *(default)* |
-| Start a Phase (L3) — manual/fallback mode: dev → review → accept → fix | `references/loop-3-development.md` — four-corner subagent template, role table, commit conventions | dev: `feature-dev:feature-dev`; review: `feature-dev:code-reviewer`; accept/fix: *(default)* |
-| Encounter an implementation-document conflict during L3 dev | `references/loop-2-implementation.md` — restart L2 from round 1; list deprecated L3 commits in a Deprecated section | *(default)* |
-| Run external-process / E2E verification | `references/loop-3-development.md` (E2E section: pre-flight, isolated spawn, archival) | *(default)* |
-| Close out the task: end-to-end review, document consolidation (F) | `references/end-to-end-review.md` | *(default)* |
-| Encounter ambiguity, breaking change, or unverifiable acceptance | `references/escalation-rules.md` | *(default)* |
-| Audit CLAUDE.md / cross-file consistency | `references/claude-md-integration.md` | *(default)* |
-
-For L1 and L2 fresh review subagents, use `agentType: 'code-reviewer'` (bare name). For L3 review, use `agentType: 'feature-dev:code-reviewer'` (namespaced). The distinction is intentional: L1/L2 reviews are general design/implementation reviews; L3 reviews are code-change reviews requiring code-specific expertise.
+| You are about to... | Read this reference |
+|---|---|
+| Draft `docs/design/<task-slug>.md` (L1) | `references/loop-1-design.md` — required sections, main agent procedure, review subagent prompt template |
+| Draft `docs/implementation/<task-slug>.md` (L2) | `references/loop-2-implementation.md` — Phase breakdown, review subagent prompt template |
+| Start a Phase (L3) — Workflow mode (recommended) | `references/loop-3-workflow.md` — how to invoke `l3-phase.js`, args, return values |
+| Start a Phase (L3) — manual/fallback mode: dev → review → accept → fix | `references/loop-3-development.md` — four-corner subagent template, role table, commit conventions |
+| Encounter an implementation-document conflict during L3 dev | `references/loop-2-implementation.md` — restart L2 from round 1; list deprecated L3 commits in a Deprecated section |
+| Run external-process / E2E verification | `references/loop-3-development.md` (E2E section: pre-flight, isolated spawn, archival) |
+| Close out the task: end-to-end review, document consolidation (F) | `references/end-to-end-review.md` |
+| Encounter ambiguity, breaking change, or unverifiable acceptance | `references/escalation-rules.md` |
+| Audit CLAUDE.md / cross-file consistency | `references/claude-md-integration.md` |
 
 ## Commit conventions (cross-cutting)
 

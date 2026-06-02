@@ -58,8 +58,7 @@ const devResult = await agent(
   `Commit your changes to a branch named "${phaseLabel.replace(/\s+/g, '').toLowerCase()}-dev-r1" ` +
   `and return DevResult with the branch name, a summary, and conflict=true if the design doc ` +
   `conflicts with any task.\n\nDesign doc: ${designDocPath}\nImpl doc: ${implDocPath}\n\nPhase tasks:\n${phaseSpec}`,
-  { label: `dev:${phaseLabel}`, phase: 'Dev', agentType: 'feature-dev:feature-dev',
-    schema: DEV_SCHEMA }
+  { label: `dev:${phaseLabel}`, phase: 'Dev', schema: DEV_SCHEMA }
 )
 
 if (!devResult) return { status: 'cap-exhausted', phaseLabel, round: 0, reason: 'dev agent returned null' }
@@ -84,8 +83,7 @@ while (round <= MAX_ROUNDS) {
     `You are the review subagent for ${phaseLabel} round ${round}. Review the diff on branch "${devBranch}" ` +
     `against design doc ${designDocPath} and impl doc ${implDocPath}. ` +
     `Return a ReviewVerdict (see references/schemas.md).`,
-    { label: `review:${phaseLabel}:r${round}`, phase: 'Review',
-      agentType: 'feature-dev:code-reviewer', schema: REVIEW_SCHEMA }
+    { label: `review:${phaseLabel}:r${round}`, phase: 'Review', schema: REVIEW_SCHEMA }
   )
 
   if (!review) return { status: 'cap-exhausted', phaseLabel, round, stage: 'review-null-return' }
@@ -102,8 +100,7 @@ while (round <= MAX_ROUNDS) {
   await agent(
     `You are the fix subagent for ${phaseLabel} review round ${round}. Fix the following review issues on branch "${devBranch}". ` +
     `Surgical Changes only — commit fixes to the same branch.\n\nSevere: ${review.severe.join('; ')}\nGeneral: ${review.general.join('; ')}`,
-    { label: `fix:review:${phaseLabel}:r${round}`, phase: 'Fix',
-      agentType: 'feature-dev:feature-dev' }
+    { label: `fix:review:${phaseLabel}:r${round}`, phase: 'Fix' }
   )
   phase('Review')
 }
@@ -133,8 +130,7 @@ while (acceptRound <= MAX_ROUNDS) {
   await agent(
     `You are the fix subagent for ${phaseLabel} accept round ${acceptRound}. Fix the following accept failures on branch "${devBranch}". ` +
     `Commit fixes to the same branch.\n\nFailures: ${accept.failures.join('; ')}`,
-    { label: `acceptFix:${phaseLabel}:r${acceptRound}`, phase: 'Fix',
-      agentType: 'feature-dev:feature-dev' }
+    { label: `acceptFix:${phaseLabel}:r${acceptRound}`, phase: 'Fix' }
   )
   phase('Accept')
 }
