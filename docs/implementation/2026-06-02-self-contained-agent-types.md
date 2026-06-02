@@ -1,5 +1,20 @@
 # Implementation: Self-contained subagent types (drop plugin agentType dependencies)
 
+```
+Status: closed
+Closing-commit: 87e24c8
+Closed-on: 2026-06-02
+Deferred: none
+```
+
+Closeout acceptance summary (main agent re-ran all gates): 19/19 acceptance checks PASS
+(AC1–AC12 incl. AC7b), `<TEST-CMD>` = N/A (no test suite per CLAUDE.md). Phases 1 and 2
+closed via the L3 four-corner engine; Phase 3 dev work (zip rebuild + installed-copy sync)
+completed and committed, but its review loop hit the round cap on two non-blocking general
+items (a transient workflow-engine file, since removed; and a conformant `code-reviewer`
+mention in the README changelog) — no deliverable defect; all Phase-3 acceptance commands
+(AC10, AC12) pass under main-agent re-run.
+
 ## Task Index
 
 Design document: `docs/design/2026-06-02-self-contained-agent-types.md` (same slug).

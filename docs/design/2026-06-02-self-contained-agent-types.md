@@ -1,5 +1,26 @@
 # Design: Self-contained subagent types (drop plugin agentType dependencies)
 
+```
+Status: closed
+Closing-commit: 87e24c8
+Closed-on: 2026-06-02
+Deferred: none
+Supersedes (partial, see §6): the agentType choices in
+  docs/design/2026-06-01-f3-f5-workflow-l3-engine.md (l3-phase.js) and the
+  SKILL.md "Recommended agentType" routing column from
+  docs/design/skill-v1-3-improvements.md (D15). These are partial decision-level
+  supersessions, not whole-design replacements — l3-phase.js and the v1.3 routing
+  table both remain in force minus the plugin agentTypes. No blanket Superseded-by
+  back-link is added to those closed docs, since that would overstate the relationship.
+```
+
+E2E gate: PASS — the corrected self-contained pattern (omit `agentType` → default
+subagent) was exercised end-to-end by running the L3 four-corner engine itself with that
+exact pattern: 18 default subagents spawned and ran successfully across Phases 1–3 with
+zero agent-resolution failures. Plus 19/19 structural acceptance checks on the edited skill
+files (see §7). No external-service / CLI-subprocess E2E applies — the skill is
+documentation + one JS Workflow script with no service entry point.
+
 ## 1. Background and Purpose
 
 The three-loop-workflow skill points several of its subagent / Workflow nodes at
@@ -37,34 +58,34 @@ skill neither depends on nor conflicts with any other installed plugin or skill.
 
 ## 2. Deliverables
 
-- [ ] D1: `references/l3-phase.js` — remove all four `agentType:` references; dev, review,
+- [x] D1: `references/l3-phase.js` — remove all four `agentType:` references; dev, review,
       and fix nodes run on the **default Workflow subagent** (the `agentType` key is omitted).
       Script remains valid JavaScript and structurally unchanged otherwise (round caps,
       schemas, two-generation termination, return contract all preserved).
-- [ ] D2: `references/loop-1-design.md` — replace the `agentType: 'code-reviewer'` guidance
+- [x] D2: `references/loop-1-design.md` — replace the `agentType: 'code-reviewer'` guidance
       line with guidance to spawn a **fresh default subagent** (no plugin agentType); the
       role-isolation intent is preserved in prose. **The replacement text must not contain
       the literal substring `code-reviewer` or `feature-dev`** (so AC2 holds).
-- [ ] D3: `references/loop-2-implementation.md` — same change as D2, same substring constraint.
-- [ ] D4: `references/loop-3-development.md` — replace the line recommending
+- [x] D3: `references/loop-2-implementation.md` — same change as D2, same substring constraint.
+- [x] D4: `references/loop-3-development.md` — replace the line recommending
       `feature-dev:feature-dev` / `feature-dev:code-reviewer` with guidance to spawn fresh
       default subagents for the dev and review roles. **Same substring constraint: the
       replacement text contains neither `code-reviewer` nor `feature-dev`.**
-- [ ] D5: `SKILL.md` — remove the now-redundant "Recommended `agentType`" column from the
+- [x] D5: `SKILL.md` — remove the now-redundant "Recommended `agentType`" column from the
       Routing table, and remove the explanatory paragraph that distinguishes bare
       `code-reviewer` from namespaced `feature-dev:code-reviewer`. The routing table's
       "You are about to…" and "Read this reference" columns are unchanged.
-- [ ] D6: `SKILL.md` — bump `metadata.version` from `"1.3.1"` to `"1.3.2"`.
-- [ ] D7: `README.md` — add a short dependency note containing the phrase **"self-contained"**
+- [x] D6: `SKILL.md` — bump `metadata.version` from `"1.3.1"` to `"1.3.2"`.
+- [x] D7: `README.md` — add a short dependency note containing the phrase **"self-contained"**
       (no plugin dependencies) and append a `v1.3.2` row to the "What's new" table. Prior
       changelog rows (v1.3, v1.3.1) are **immutable history** and are not edited — only a new
       row is appended.
-- [ ] D8: `README-cn.md` — Chinese translation of the D7 additions, terminology consistent
+- [x] D8: `README-cn.md` — Chinese translation of the D7 additions, terminology consistent
       with the existing translation. Append a `v1.3.2` row; prior rows immutable. The
       dependency note must include a stable, greppable Chinese phrase for AC9 (the term
       「自包含」, paired with the English token `self-contained` in parentheses on first use so
       both EN and CN content checks are mechanically satisfiable).
-- [ ] D9: Rebuild `three-loop-workflow.skill` zip and sync the installed copy at
+- [x] D9: Rebuild `three-loop-workflow.skill` zip and sync the installed copy at
       `~/.claude/skills/three-loop-workflow/` (per CLAUDE.md _common-commands_).
 
 ## 3. Scope Boundary
