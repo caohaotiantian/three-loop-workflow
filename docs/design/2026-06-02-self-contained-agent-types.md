@@ -2,7 +2,7 @@
 
 ```
 Status: closed
-Closing-commit: 87e24c8
+Closing-commit: bae80a1
 Closed-on: 2026-06-02
 Deferred: none
 Supersedes (partial, see §6): the agentType choices in
