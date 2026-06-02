@@ -18,6 +18,7 @@ English version → [README.md](./README.md)
 | **v1.3** | 路由表新增 `agentType` 推荐列；`references/schemas.md`（ReviewVerdict 结构化输出 schema）；新增"本技能不适用的情形"说明表；快速导览区块；常见错误模式速查表；文档命名规范；TaskCreate 轮次追踪指引 |
 | **v1.3.1** | `references/l3-phase.js` — 基于 Workflow 工具的 L3 阶段执行器（推荐模式）；`references/loop-3-workflow.md` — 调用指南；`references/schemas.md` 新增 AcceptVerdict 和 DevResult schema；SKILL.md 路由表新增 Workflow 模式行 |
 | **v1.3.2** | skill 现在是「自包含」(self-contained)的:所有 subagent/Workflow 节点都运行在内置的默认 subagent 上;移除了对 feature-dev 插件 agent 类型的依赖（从 SKILL.md 删除了 `agentType` 推荐列以及裸名 vs 命名空间评审 agent 的说明段落） |
+| **v1.3.3** | skill 不再诱发代码中的「过程叙述型注释」:在 SKILL.md 与 WORKFLOW-v3.md §0.3 新增明确的 Surgical Changes 规则（「注释解释代码,而非工作流」），并在 L3 评审中新增对其的检查项;`references/l3-phase.js` 范例已清除设计文档/决策/示意图引用 |
 
 ## 什么是三循环工作流
 
