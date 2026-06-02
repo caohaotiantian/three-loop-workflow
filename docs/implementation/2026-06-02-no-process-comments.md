@@ -1,5 +1,16 @@
 # Implementation: No process-narration comments in code
 
+```
+Status: closed
+Closing-commit: <closeout-sha>
+Closed-on: 2026-06-02
+Deferred: none
+```
+
+Closeout acceptance summary (main agent re-ran all gates): 17/17 acceptance checks PASS
+(AC1–AC11), `<TEST-CMD>` = N/A (no test suite per CLAUDE.md). All three L3 phases closed via
+the four-corner engine on the first dev round each (diff-scoped review prompt; no cap stalls).
+
 ## Task Index
 
 Design document: `docs/design/2026-06-02-no-process-comments.md` (same slug).

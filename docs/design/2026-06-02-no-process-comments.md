@@ -1,5 +1,19 @@
 # Design: No process-narration comments in code
 
+```
+Status: closed
+Closing-commit: <closeout-sha>
+Closed-on: 2026-06-02
+Deferred: none
+Supersedes: none (strictly extends docs/design/2026-06-02-self-contained-agent-types.md —
+  same skill files, next version 1.3.2 → 1.3.3; no decision there is reversed).
+```
+
+E2E gate: PASS — the new rule and the scrubbed exemplar were exercised end-to-end by running
+the L3 four-corner engine itself (default subagents, self-contained pattern): all three phases
+closed with zero agent-resolution failures. Plus 17/17 structural acceptance checks (see §7).
+No external-service / CLI E2E applies — the skill is documentation + one JS Workflow script.
+
 ## 1. Background and Purpose
 
 When this skill drives a coding task, the code it produces frequently carries
@@ -35,25 +49,25 @@ exemplar** so it stops being modeled.
 
 ## 2. Deliverables
 
-- [ ] D1: `SKILL.md` §0.3 (Surgical Changes) — add one bullet stating code comments must
+- [x] D1: `SKILL.md` §0.3 (Surgical Changes) — add one bullet stating code comments must
       explain the code, not narrate the workflow; round/cycle history, design-doc/decision
       references, and review-iteration notes belong in the design doc and git history, never
       in code comments.
-- [ ] D2: `WORKFLOW-v3.md` §0.3 (Surgical Changes) — add the **same** bullet (consistent
+- [x] D2: `WORKFLOW-v3.md` §0.3 (Surgical Changes) — add the **same** bullet (consistent
       wording) so the spec and the skill stay in lockstep (cross-file consistency requirement).
-- [ ] D3: `references/loop-3-development.md` — add an L3 review-check note instructing the
+- [x] D3: `references/loop-3-development.md` — add an L3 review-check note instructing the
       review subagent to flag process-narration comments in the diff as a Surgical-Changes
       issue.
-- [ ] D4: `references/l3-phase.js` — remove the process-narration / external-reference
+- [x] D4: `references/l3-phase.js` — remove the process-narration / external-reference
       comments that model the anti-pattern (the three identified in §4 Decision 3), keeping
       genuine algorithm-explaining comments. Script remains valid JS, structurally unchanged.
       **Do NOT touch the functional `references/schemas.md` string literal inside the review
       agent prompt (line ~85 `(see references/schemas.md)`) — it is executable code that the
       review subagent reads, not a comment.**
-- [ ] D5: `SKILL.md` — bump `metadata.version` from `"1.3.2"` to `"1.3.3"`.
-- [ ] D6: `README.md` and `README-cn.md` — append a `v1.3.3` row to the "What's new" /
+- [x] D5: `SKILL.md` — bump `metadata.version` from `"1.3.2"` to `"1.3.3"`.
+- [x] D6: `README.md` and `README-cn.md` — append a `v1.3.3` row to the "What's new" /
       更新日志 table describing this change (prior rows immutable). EN + CN consistent.
-- [ ] D7: Rebuild `three-loop-workflow.skill` zip and sync the installed copy at
+- [x] D7: Rebuild `three-loop-workflow.skill` zip and sync the installed copy at
       `~/.claude/skills/three-loop-workflow/`.
 
 ## 3. Scope Boundary
