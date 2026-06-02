@@ -8,7 +8,7 @@ export const meta = {
   ],
 }
 
-// Required args (see docs/design/2026-06-01-f3-f5-workflow-l3-engine.md §4 Decision 2):
+// Required args:
 //   phaseLabel:    string  — e.g. "Phase 1"
 //   phaseSpec:     string  — full Phase task list from the impl doc
 //   designDocPath: string  — path to docs/design/<slug>.md
@@ -71,7 +71,6 @@ let devBranch = devResult.branch
 // ── Review loop ───────────────────────────────────────────────
 // `round` starts at 1 and increments on every fix cycle.
 // Two-generation termination: `round > 1 && priorGeneralCount === 0`
-// This formula matches references/schemas.md ReviewVerdict loop-closure check.
 phase('Review')
 let round = 1
 let priorGeneralCount = Infinity
@@ -106,7 +105,7 @@ while (round <= MAX_ROUNDS) {
 }
 
 // ── Accept loop ───────────────────────────────────────────────
-// Accept failures route back to ACCEPT (not review) per the four-corner diagram.
+// Accept failures route back to ACCEPT, not review.
 // The `acceptRound` counter shares the same cap pool as `round`.
 phase('Accept')
 let acceptRound = round

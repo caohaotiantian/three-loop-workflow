@@ -2,7 +2,7 @@
 name: three-loop-workflow
 description: Use this skill for any non-trivial functional change to a software project — implementing a new feature, fixing a behavior bug, optimizing performance, refactoring, or modifying a load-bearing process/contract file (CLAUDE.md, this skill itself, SKILL.md, OpenAPI specs, schema definitions, public API contracts). It enforces a three-loop discipline (L1 Design Document → L2 Implementation Document → L3 Development Work) with mandatory fresh-subagent reviews, round caps of 3 per domain, and explicit escalation rules. Trigger this skill whenever the user asks to implement, fix, refactor, optimize, build, or modify behavior in code — even when they say "just do X" or "quickly add Y". Skip only for pure typo fixes, doc reordering, dependency upgrades, and questions that do not change code.
 metadata:
-  version: "1.3.2"
+  version: "1.3.3"
 ---
 
 # Three-Loop Development Workflow
@@ -73,6 +73,7 @@ When a principle conflicts with apparent progress, the principle wins. Violation
 - When two existing patterns in the codebase conflict, pick the more recent or more tested one and flag the other for cleanup. Producing a hybrid that satisfies neither is forbidden. Cleanup of the rejected pattern is a separate task — do not perform it here.
 - If you cannot articulate why surrounding code is structured a way, stop and ask before modifying it. Assuming orthogonality between the code you are touching and the code you are not is the dangerous default.
 - **Trace test**: every changed line must trace directly to either (a) a Deliverable in the design document, or (b) an escalated decision recorded in the design document. Lines that pass neither must be reverted before the L3 review subagent runs.
+- **Comments explain the code, not the workflow.** A comment must explain what the code does or why — never narrate the process that produced it. Do not leave round/cycle history, review-iteration notes, or design-document/decision references in source comments (e.g. `// Cycle A`, `// added in review round 2`, `// per Decision 2`, `// see docs/design/…`). That provenance lives in the design document and git history; in code it is stale-prone noise. This is the most common over-reading of the trace test above: trace a line to its Deliverable in your reasoning, not in a comment.
 
 ### 0.4 Goal-Driven Execution — define success, loop until verified
 

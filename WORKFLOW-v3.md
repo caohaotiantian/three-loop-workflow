@@ -43,6 +43,8 @@ The three-loop workflow operationalizes four non-negotiable principles. Every su
 
 **The trace test**: every changed line must trace directly to either (a) a Deliverable in the design document, or (b) a section 6 escalated decision recorded in the design document. Lines that pass neither test must be reverted before the L3 review subagent runs.
 
+**Comments explain the code, not the workflow.** A comment must explain what the code does or why — never narrate the process that produced it. Round/cycle history, review-iteration notes, and design-document/decision references (e.g. `// Cycle A`, `// added in review round 2`, `// per Decision 2`, `// see docs/design/…`) belong in the design document and git history, not in source comments. This is the most common over-reading of the trace test: trace a line to its Deliverable in your reasoning, not in a comment.
+
 **Enforcement points**: section 4.1 step 4 explicitly bans structural refactors inside fix rounds. Section 4.2 commit discipline (`fix(phaseN-roundR): <failing-item-keyword>`) requires every fix commit to name the acceptance item it closes. Drive-by edits leave no valid keyword and thus cannot be committed under the convention.
 
 ### 0.4 Goal-Driven Execution
