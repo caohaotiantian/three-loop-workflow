@@ -13,16 +13,17 @@ The workflow exists because shipping code without explicit design surfacing, mec
 
 Throughout this skill, `<TEST-CMD>` denotes the project test command (typically `pytest tests/ -v` for Python, `npm test` for Node, `go test ./...` for Go) and `<ACCEPT-CMD>` denotes the per-Phase acceptance commands declared in the implementation document. Concrete values come from the project's `CLAUDE.md` _common-commands_ role (see "Project integration" below).
 
-## When this skill applies
+## Which tier applies
 
-| Change type | Apply full L1 → L2 → L3? |
-|---|---|
-| New feature with externally observable behavior | yes |
-| Bug fix that changes behavior | yes |
-| Performance optimization | yes |
-| Refactor that touches more than one file | yes |
-| Modification to a **load-bearing** doc (CLAUDE.md, this skill, SKILL.md, OpenAPI specs, schema definitions, public API contracts) | yes |
-| Deletion of a **load-bearing** doc | yes — plus mandatory AskUserQuestion before any file is deleted; see `references/escalation-rules.md` |
+This skill runs in two tiers. **Full Mode** is the complete L1 → L2 → L3 → F cycle. **Light Mode** keeps the four non-negotiables — a short four-field design brief, a fresh-reviewer diff review, round-cap → escalation, the four principles — but drops the separate L2 impl doc and collapses F, for small low-risk changes. Procedure: `references/light-mode.md`.
+
+| Tier | When | What runs |
+|---|---|---|
+| **Full Mode** | Any load-bearing file (CLAUDE.md, this skill, SKILL.md, OpenAPI specs, schema definitions, public API contracts); any breaking change; any unresolved >1-option design decision; any magic-number / threshold decision; or a change touching more than ~3 files. **When in doubt → Full.** Deleting a load-bearing doc is Full **plus** mandatory AskUserQuestion before any file is deleted (see `references/escalation-rules.md`). | Full L1 → L2 → L3 → F |
+| **Light Mode** | ≤ 3 non-load-bearing files, no breaking change, no new external contract, no unresolved decision. Typical small features, bug fixes, and local refactors land here. | `references/light-mode.md`: four-field brief → fresh-reviewer diff review → accept → one-line closure |
+| **None** | Pure typo / doc reordering / dependency upgrade (one independent fresh-agent review, no cycle); or a question with no file edits (no requirement). A *trivial, non-commitment-clause* edit to a load-bearing doc (a typo that changes no rule) is None — one review, not the full cycle; a *substantive* load-bearing edit is always Full. | one independent review, or nothing |
+
+The Full-Mode gate is a **hard filter**: any "yes" forces Full Mode, and the Light-Mode reviewer independently re-runs this checklist against the diff — finding a load-bearing file, breaking change, unresolved decision, or magic number rejects the Light tier and escalates to Full. Tier choice is fresh-eyes-enforced, not author-asserted.
 
 When a load-bearing doc is **first introduced** (or first retroactively classified as load-bearing), a one-page retroactive design brief plus an independent agent review with two consecutive clean rounds may substitute for the full three-loop cycle. Any subsequent modification must follow the formal procedure.
 
@@ -30,12 +31,7 @@ When a load-bearing doc is **first introduced** (or first retroactively classifi
 
 **Role isolation rule** (applies to every loop): a single subagent must never both author and review the same artifact. Reviews are performed by a fresh subagent that receives only the artifact, the relevant prompt template, and the linked design / impl docs.
 
-## When this skill does NOT apply
-
-| Change type | Action |
-|---|---|
-| Pure document reordering, typo fix, dependency upgrade | no L1→L2→L3 cycle — but still requires one independent fresh-agent review |
-| Pure question answering / exploration producing no file edits | no requirement |
+The **None** tier (above) is where pure document reordering, typo fixes, and dependency upgrades go — no L1→L2→L3 cycle, but still one independent fresh-agent review — along with pure question answering / exploration that produces no file edits (no requirement).
 
 > **Quick orientation**: this skill runs three sequential loops (L1 Design → L2
 > Implementation → L3 Development). Each loop closes only when a fresh reviewer

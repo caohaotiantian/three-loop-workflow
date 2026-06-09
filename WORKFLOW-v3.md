@@ -79,6 +79,8 @@ The three-loop workflow operationalizes four non-negotiable principles. Every su
 
 ### 0.6 Scope of Application
 
+**Two tiers.** Work runs in **Full Mode** (the complete L1 → L2 → L3 → F cycle) or **Light Mode** (a four-field design brief + the same fresh-reviewer diff review + round-cap → escalation + the four principles, dropping the separate L2 doc and collapsing F). Light Mode is allowed only for a change touching ≤3 non-load-bearing files with no breaking change, no new external contract, and no unresolved decision; any of those forces Full Mode, and the Light-Mode reviewer re-runs that gate against the diff (fresh-eyes-enforced). When in doubt → Full. See the skill's `references/light-mode.md`. The clauses below define what mandates Full Mode.
+
 - Any **functional change** to this repository: new feature, bug fix, optimization, externally observable behavior change.
 - Any modification to a **load-bearing process document** counts as a behavioral change and must complete the full L1, L2, L3 cycle plus an independent agent review. The minimum set includes:
 	- This file
