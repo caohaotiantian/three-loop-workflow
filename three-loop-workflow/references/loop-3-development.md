@@ -2,7 +2,8 @@
 
 > **Recommended execution mode**: use the Workflow script at `references/loop-3-workflow.md`
 > (invokes `l3-phase.js`) rather than manual Agent-tool orchestration. The script enforces
-> round caps, structured verdicts, and worktree isolation as deterministic code. The
+> round caps, structured verdicts, and the two-generation termination condition as
+> deterministic code (dev writes to the main working tree — no worktree isolation). The
 > four-corner template, role table, commit conventions, and E2E gate below remain
 > authoritative regardless of which mode is used.
 
@@ -31,8 +32,8 @@ flowchart TD
 
     Ask[Escalate]
     PhaseEnd[Main agent personally runs<br/>TEST-CMD and every ACCEPT-CMD<br/>recorded as commit trailer]
-    E2EGate{Modifies a<br/>contract file?}
-    E2E[Run external-process E2E]
+    E2EGate{Contract or externally<br/>observable change?}
+    E2E[Run E2E / behavior verification]
     Done([Phase k green, advance to k+1])
 
     Start --> Dev --> Conflict
@@ -57,26 +58,31 @@ flowchart TD
 
 Notes on the diagram:
 
-- **Fresh subagent on every role node.** Within a single Phase, a single subagent may take only one role. Self-review is forbidden — this is how the role isolation rule is enforced.
-- **R increments only on a fix.** The cap is checked before re-entry. Hitting R = 3 with the failure unresolved escalates to the user, never to a relaxed bar.
+- **Fresh subagent on every role node** — self-review is forbidden (the role-isolation hard constraint, below).
+- **R increments only on a fix**; the cap is checked before re-entry. Hitting R = 3 unresolved escalates to the user (never a relaxed bar).
+- **R is a single phase-wide budget shared by review and accept** — the accept loop continues the same counter (no fresh 3), so a review-heavy Phase may reach accept at the cap and escalate on the first accept failure (by design). A Phase that required a fix needs a later clean review round before it can close; a Phase whose first review is fully clean with no fix closes in one round (the L3-only clean-first-round relaxation; L1/L2 stay strict — see SKILL.md "Shared termination condition").
 - **Accept failures loop back to step 3, not step 2.** The accept subagent re-runs commands without re-spawning the review subagent — the review already passed, so the failure is a code/test problem rather than a code-quality problem.
 - **Phase-end main-agent verification** sits between the accept pass and the E2E gate, so its result is captured in the Phase commit trailer regardless of whether E2E is triggered.
-- **The E2E gate is conditional.** Pure internal refactors, test changes, and README updates skip the E2E branch and rely on `<TEST-CMD>` only.
+- **The E2E / behavior gate is conditional.** It fires for a contract change OR an externally observable behavior change (UI / CLI / endpoint / user-visible output). Pure internal refactors, test-only changes, and README updates skip it and rely on `<TEST-CMD>` only.
 
 > For structured output from review subagents (step 2), see `references/schemas.md` (`ReviewVerdict` schema).
 
 > Spawn the dev subagent (step 1) and the review subagent (step 2) as separate fresh default subagents (no special agent type needed). The hard rule is role isolation: the agent that wrote the code must never review it.
+
+> **Optional escalation**: for a load-bearing or high-risk Phase, run the review corner as an adversarial **panel** — pass `reviewMode: 'panel'` to `l3-phase.js`, or run `references/review-panel.js` directly. See `references/multi-voter-review.md`.
+
+> **Optional**: if the `three-loop-l3-reviewer` / `three-loop-accept-runner` agents (`references/optional-subagents.md`) are installed, spawn them by name (note: tool restrictions apply on the manual path, not the Workflow `agent(prompt,{schema})` path); the skill runs zero-install without them.
 
 ## Role responsibilities
 
 | Role | Input | Output | Forbidden |
 |---|---|---|---|
 | **step 1: dev** | Phase task list in impl doc + design doc references + exports, immediate callers, and shared utilities of files being modified | Code changes (TDD: tests first), task-list checkboxes ticked | Modify the impl doc; expand scope unilaterally |
-| **step 2: review** | dev's diff + design doc + impl doc + CLAUDE.md | Review report (severe / general / clarification, format per L1 template) | Modify code |
+| **step 2: review** | dev's diff (obtained as the review subagent's first action via `git diff <baseSha>..<devBranch>` — the dev returns `baseSha`, captured before editing) + design doc + impl doc + CLAUDE.md | Review report (severe / general / clarification, format per L1 template) | Modify code |
 | **step 3: accept** | Phase `<ACCEPT-CMD>` list from impl doc | Per-command exit code and key output, marked pass or fail; plus passed/failed/skipped/xfail tally per command (skipped tests are not passing tests) | Modify code or tests; interpret or judge output beyond the mechanical exit-code → pass/fail derivation (that is the review role's job) |
 | **step 4: fix** | Failing items from step 2 or step 3 | Minimal-scope code fix; commit prefix `fix(phaseN-roundR):` | Structural refactors; introducing new requirements outside the design doc |
 
-**Role isolation hard constraint**: within a single Phase, a single subagent takes only one role. The main agent spawns a fresh subagent per role per round.
+**Role isolation hard constraint**: within a single Phase, a single subagent takes only one role. The main agent spawns a fresh subagent per role per round. This binds to **identity**, not just to invocation: a subagent (or agent-team teammate) that authored or self-claimed the dev task for an artifact may never claim its review or accept — whether the second role would arrive by lead assignment, teammate self-claim, or lead plan-approval. Lead plan-approval is not the fresh-reviewer gate.
 
 > **Review check — process-narration comments.** The review subagent must flag any comment in the diff that narrates the workflow — round/cycle history, review-iteration notes, design-doc/decision references — rather than explaining the code, as a Surgical-Changes issue (see SKILL.md §0.3 "Comments explain the code, not the workflow").
 
@@ -88,7 +94,7 @@ Notes on the diagram:
 ## Commit conventions
 
 - **Phase opener**: `feat(phaseN): <one-line summary>` or `fix(phaseN): …` depending on change nature.
-- **Within-round fix**: `fix(phaseN-roundR): <failing-item-keyword>`. The keyword must name a failing item from the review or accept report. Drive-by edits leave no valid keyword and thus cannot be committed under this convention — that is how Surgical Changes is enforced mechanically.
+- **Within-round fix**: `fix(phaseN-roundR): <failing-item-keyword>`. The keyword must name a failing item from the review or accept report — a drive-by edit has no valid keyword to name. The keyword is named by the author and **checked by the review subagent against the diff** (optionally pre-screened by the commit-prefix lint hook `references/validate-commit-msg.sh`, which enforces only the prefix grammar, not surgical-ness). The prefix alone does not prove a change is surgical; the review corner does.
 - **Trailers** record `<TEST-CMD>` exit code and key `<ACCEPT-CMD>` results.
 - **Do not** mention AI involvement, model names, or agent tooling in commit messages or PR descriptions.
 
@@ -111,9 +117,17 @@ Test-Cmd: pytest tests/ -v (exit 0, 142 passed)
 
 ### When to trigger
 
-Only when the task modifies an **external behavior contract**: contract files declared by the CLAUDE.md _load-bearing-docs_ role (such as SKILL.md, public API spec) or entry scripts / endpoints directly referenced by them.
+Trigger when **either** holds:
+- the task modifies an **external behavior contract**: contract files declared by the CLAUDE.md _load-bearing-docs_ role (such as SKILL.md, public API spec) or entry scripts / endpoints directly referenced by them; **or**
+- the task **introduces or changes externally observable behavior** — a UI surface, a CLI command, an endpoint, or a user-visible output. Green unit tests are not a good app; observing the real behavior catches broken flows, wrong output, and regressions tests miss.
 
-**Skip the E2E branch** for: pure internal refactors, test changes, and README updates. These rely on `<TEST-CMD>` only.
+**Skip the E2E / behavior branch** for: pure internal refactors, test-only changes, and README updates. These rely on `<TEST-CMD>` only.
+
+### Behavior verification (gating)
+
+When the trigger fires because the change is externally observable, a **fresh subagent that is NOT the dev author of the Phase** drives the app along the new user path and records the observed behavior against the design's measurable Acceptance Criteria. This is a **gating** check, not decorative: an observed behavior that does not match a design Acceptance Criterion is a blocking finding that routes through the normal step-4 fix / round-cap machinery — never "observed, noted". Emit a structured pass/fail (AcceptVerdict-style, see `references/schemas.md`) so closure stays mechanical rather than "looks right".
+
+Recommended drivers: the `/run` and `/verify` bundled skills (build and run the app to confirm a change works, without falling back to tests or type checks); for a non-standard launch (db/env/graphical/multi-step) `/run-skill-generator` produces a project-specific runner. The zero-install fallback is the existing manual smoke test (walk the entry-point flow by hand). Bake no project launch constants into the skill — the per-project recipe lives outside it.
 
 ### Pre-flight check (zero cost, no paid API calls)
 
