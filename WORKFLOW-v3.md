@@ -1,6 +1,12 @@
 
 # Three-Loop Development Workflow (Generic Template)
 
+> **Derived — do not edit directly.** The source of truth is the three-loop-workflow skill
+> (`SKILL.md` + `references/`), which is what Claude Code loads and executes. This file is a
+> derived, spec-level narrative kept token-consistent with the skill by the
+> `three-loop-consistency` check (CLAUDE.md Common Commands). Change the skill first, then
+> reflect the change here; never the reverse.
+
 > This document defines the meta-process every development, optimization, or verification task in this repository must follow. It is designed to be reusable across repositories. Each task is composed of three top-down loops: **Design Document Loop, Implementation Document Loop, Development Work Loop**. The four-corner subagent template at Phase level (dev, review, accept, fix) is inlined in section 4.1.
 >
 > **Placeholder convention**: `<TEST-CMD>` denotes the project test command (typically `pytest tests/ -v` for Python projects, `npm test` for Node, `go test ./…` for Go). `<ACCEPT-CMD>` denotes the acceptance commands declared per Phase in the implementation document. Concrete values are declared by each project in `CLAUDE.md`.
@@ -427,6 +433,7 @@ Notes on the diagram:
 
 - "Fresh subagent" appears on every role node to enforce the section 4.1 role isolation rule.
 - The round counter R increments only on a fix; the cap is checked before re-entry. Hitting R = 3 with the failure unresolved escalates to AskUserQuestion, never to a relaxed bar.
+- R is a single phase-wide budget shared by review and accept: the accept loop continues the same counter the review loop left off (it does not get a fresh 3). A review-heavy Phase may reach accept with R already at the cap and escalate on the first accept failure — by design. Under two-generation termination, any Phase that required a fix needs a subsequent clean review round before it can close.
 - Accept failures loop back to step 3, not step 2: the accept subagent re-runs commands without re-spawning the review subagent. This matches the document text "Any failure reported by step 3 must go through step 4 (fix) and back to step 3".
 - Phase-end main-agent verification (section 4.2) sits between the accept pass and the section 4.3 E2E gate, so its result is captured in the Phase commit trailer regardless of whether E2E is triggered.
 - The section 4.3 gate is conditional: pure internal refactors, test changes, and README updates skip the E2E branch.

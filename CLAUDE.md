@@ -31,10 +31,15 @@ of `README.md`.
 
 ## Common Commands
 
-- `<TEST-CMD>`: N/A — this repo has no test suite; acceptance is verified by
-  grep-based checks over the modified files.
-- Zip rebuild: `cd /home/fedora/workflow && zip -r three-loop-workflow.skill three-loop-workflow/`
-- Installed-copy sync: `cp -r /home/fedora/workflow/three-loop-workflow/. /home/fedora/.claude/skills/three-loop-workflow/`
+- `<TEST-CMD>`: N/A — this repo has no unit-test suite; acceptance is verified by
+  grep-based checks over the modified files, plus the two gates below.
+- three-loop-consistency check: `bash three-loop-workflow/references/check-consistency.sh` —
+  fails if a named token (the five role names, `fix(phaseN-roundR)`, "five questions", the
+  two-generation termination wording) drifts between `WORKFLOW-v3.md` and the skill files.
+- Workflow-script syntax check: `bash three-loop-workflow/references/check-workflow-syntax.sh <file.js>` —
+  reliably parses a Workflow script (`node --check` mis-parses these `export`+top-level-`return` files).
+- Zip rebuild (from repo root): `zip -r three-loop-workflow.skill three-loop-workflow/`
+- Installed-copy sync (if an installed copy exists): `cp -r three-loop-workflow/. "$HOME/.claude/skills/three-loop-workflow/"`
 
 ## Engineering Norms
 

@@ -90,9 +90,6 @@ contract files.
    c. Is the TDD order correct (test tasks before implementation tasks)?
    d. Does regression protection cover the critical paths of prior
       Phases?
-   *(Skill v1.2 addition: this fifth question supersedes the four-question count in
-   WORKFLOW-v3.md § 3.4 for this installation. WORKFLOW-v3.md § 3.4 is updated in
-   parallel — see D4 in docs/design/skill-v1-3-improvements.md.)*
    e. For each test task in the Phase task list: does the description
       specify the business invariant being protected, not just the
       function being called? A task description vague enough that the

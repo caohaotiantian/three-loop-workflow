@@ -6,10 +6,10 @@ A disciplined three-loop workflow for non-trivial software changes, packaged as 
 
 ## What's in this repo
 
-- **`WORKFLOW-v3.md`** — the canonical specification of the workflow.
-- **`three-loop-workflow/`** — a Claude skill that operationalizes the spec. Drop this folder into Claude Code or Claude.ai and Claude will follow it on any non-trivial code change.
+- **`three-loop-workflow/`** — a Claude skill that operationalizes the workflow. Drop this folder into Claude Code or Claude.ai and Claude will follow it on any non-trivial code change.
+- **`WORKFLOW-v3.md`** — a derived, spec-level narrative of the workflow for human readers.
 
-The spec is the source of truth. The skill is a derivative artifact tuned for Claude consumption: it splits the spec into a short entry point (`SKILL.md`) plus per-stage references that load only when needed.
+The skill files (`SKILL.md` + `references/`) are the source of truth — they are what Claude Code loads and executes. `WORKFLOW-v3.md` is a derived spec-level narrative; when the two differ, the skill wins. They are kept token-consistent by the `three-loop-consistency` check (see CLAUDE.md Common Commands).
 
 ## What's new
 
@@ -105,7 +105,7 @@ See `three-loop-workflow/references/claude-md-integration.md` for the full conve
 
 ```
 .
-├── WORKFLOW-v3.md                    Source specification (canonical)
+├── WORKFLOW-v3.md                    Derived spec-level narrative (skill is the source of truth)
 ├── three-loop-workflow/              The skill itself
 │   ├── SKILL.md                      Entry point: principles + routing + applicability table
 │   └── references/

@@ -60,6 +60,7 @@ Notes on the diagram:
 
 - **Fresh subagent on every role node.** Within a single Phase, a single subagent may take only one role. Self-review is forbidden — this is how the role isolation rule is enforced.
 - **R increments only on a fix.** The cap is checked before re-entry. Hitting R = 3 with the failure unresolved escalates to the user, never to a relaxed bar.
+- **R is a single phase-wide budget shared by review and accept.** The per-Phase cap of 3 is one pool: the accept loop continues the same counter the review loop left off (it does not get a fresh 3). A review-heavy Phase may therefore reach accept with R already at the cap and escalate on the first accept failure — by design, not a bug. Under two-generation termination, any Phase that required a fix needs a subsequent clean review round before it can close (so a fixed Phase takes at least two review rounds).
 - **Accept failures loop back to step 3, not step 2.** The accept subagent re-runs commands without re-spawning the review subagent — the review already passed, so the failure is a code/test problem rather than a code-quality problem.
 - **Phase-end main-agent verification** sits between the accept pass and the E2E gate, so its result is captured in the Phase commit trailer regardless of whether E2E is triggered.
 - **The E2E gate is conditional.** Pure internal refactors, test changes, and README updates skip the E2E branch and rely on `<TEST-CMD>` only.

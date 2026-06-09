@@ -50,6 +50,13 @@ git merge --ff-only <result.branch>
 git branch -d <result.branch>
 ```
 
+> **`status === 'closed'` is not a complete Phase close.** The Workflow script performs
+> dev → review → accept only. It does **not** run the main-agent PhaseEnd verification
+> (personally re-running `<TEST-CMD>` and every `<ACCEPT-CMD>`, recorded as commit trailers —
+> see `references/loop-3-development.md` "Main agent constraints") or the conditional E2E gate
+> (`loop-3-development.md` "External-process / End-to-End verification"). After merging, the
+> main agent must still discharge both before advancing to the next Phase.
+
 ## Args reference
 
 | Field | Type | Description |
