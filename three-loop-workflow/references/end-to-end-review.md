@@ -6,7 +6,7 @@ Before closing the task, the main agent must complete this checklist. Skip none.
 
 1. **Tick every entry under the design document Deliverables.** Unfinished items require an explicit reason and a follow-up issue (link the issue ID in the design doc next to the unticked item). A deliverable cannot be silently dropped.
 2. **Run `<TEST-CMD>` plus every `<ACCEPT-CMD>` declared in the impl doc** and paste the result summary into the closeout report (commit message body or PR description). The summary must include exit codes and a short tally (e.g., "142 passed, 0 failed").
-3. **If E2E (external-process verification) was triggered**, attach key output snippets from the external-process smoke test. If skipped due to auth or environment, record `E2E skipped: <reason>` plus the `<TEST-CMD>` summary as substitute evidence. The reason must be specific (e.g., `AUTH_FAIL: ANTHROPIC_API_KEY not set`), not generic.
+3. **If the E2E / behavior gate was triggered** (a contract change or an externally observable behavior change), attach the evidence — not only exit-code tallies: key output snippets from the external-process smoke test, and/or the behavior-verification observation (what the fresh non-author subagent observed driving the app, checked against the design Acceptance Criteria). If skipped due to auth or environment, record `E2E skipped: <reason>` plus the `<TEST-CMD>` summary as substitute evidence. The reason must be specific (e.g., `AUTH_FAIL: ANTHROPIC_API_KEY not set`), not generic.
 4. **Confirm no leftover temporary worktrees, branches, or artifacts remain**:
     - `git worktree list` — no `e2e/*` worktrees.
     - `git branch --list 'e2e/*'` — empty.
@@ -48,7 +48,9 @@ Run these substeps in order:
     - The impl doc stays as a separate file (impl docs are per-task by construction; do not merge them).
 
     Larger designs stay as standalone files. When in doubt, do not merge.
-5. **Spawn a fresh review subagent** with the prompt template below. One round only. The subagent's sole job is to confirm the consolidation removed only ephemeral content and preserved every load-bearing claim. Severe findings here escalate to the user — do not roll a second round of consolidation, because that pattern silently invites information loss.
+5. **Spawn a fresh review subagent** with the prompt template below (one round only). Severe findings escalate to the user — do not roll a second consolidation round, which silently invites information loss.
+
+> For structured output from this review subagent, see `references/schemas.md` (`ReviewVerdict` schema) — the Consolidation Review Report maps onto its severe / general / verdict fields.
 
 ### Consolidation review subagent prompt template
 

@@ -2,38 +2,34 @@
 name: three-loop-workflow
 description: Use this skill for any non-trivial functional change to a software project — implementing a new feature, fixing a behavior bug, optimizing performance, refactoring, or modifying a load-bearing process/contract file (CLAUDE.md, this skill itself, SKILL.md, OpenAPI specs, schema definitions, public API contracts). It enforces a three-loop discipline (L1 Design Document → L2 Implementation Document → L3 Development Work) with mandatory fresh-subagent reviews, round caps of 3 per domain, and explicit escalation rules. Trigger this skill whenever the user asks to implement, fix, refactor, optimize, build, or modify behavior in code — even when they say "just do X" or "quickly add Y". Skip only for pure typo fixes, doc reordering, dependency upgrades, and questions that do not change code.
 metadata:
-  version: "1.3.3"
+  version: "1.4.0"
 ---
 
 # Three-Loop Development Workflow
 
-This skill operationalizes a disciplined process for non-trivial software changes. Every functional change passes through three top-down loops — **L1 Design Document Loop**, **L2 Implementation Document Loop**, **L3 Development Work Loop** — followed by a final **F: End-to-End Review**.
+Every non-trivial functional change passes through three top-down loops — **L1 Design Document Loop**, **L2 Implementation Document Loop**, **L3 Development Work Loop** — followed by a final **F: End-to-End Review**.
 
 The workflow exists because shipping code without explicit design surfacing, mechanical acceptance, and fresh-eyes review consistently produces drift, scope creep, and hard-to-debug regressions. Following this loop is slower per-task but eliminates a category of failures that compound across tasks.
 
 Throughout this skill, `<TEST-CMD>` denotes the project test command (typically `pytest tests/ -v` for Python, `npm test` for Node, `go test ./...` for Go) and `<ACCEPT-CMD>` denotes the per-Phase acceptance commands declared in the implementation document. Concrete values come from the project's `CLAUDE.md` _common-commands_ role (see "Project integration" below).
 
-## When this skill applies
+## Which tier applies
 
-| Change type | Apply full L1 → L2 → L3? |
-|---|---|
-| New feature with externally observable behavior | yes |
-| Bug fix that changes behavior | yes |
-| Performance optimization | yes |
-| Refactor that touches more than one file | yes |
-| Modification to a **load-bearing** doc (CLAUDE.md, this skill, SKILL.md, OpenAPI specs, schema definitions, public API contracts) | yes |
-| Deletion of a **load-bearing** doc | yes — plus mandatory AskUserQuestion before any file is deleted; see `references/escalation-rules.md` |
+This skill runs in two tiers. **Full Mode** is the complete L1 → L2 → L3 → F cycle. **Light Mode** (small, low-risk changes) keeps the fresh-reviewer review, round caps, and the four principles, but replaces the 8-section design doc with a four-field brief and drops the separate L2 doc + the F consolidation. Procedure: `references/light-mode.md`.
+
+| Tier | When | What runs |
+|---|---|---|
+| **Full Mode** | Any load-bearing file (CLAUDE.md, this skill, SKILL.md, OpenAPI specs, schema definitions, public API contracts); any breaking change; any unresolved >1-option design decision; any magic-number / threshold decision; or a change touching more than ~3 files. **When in doubt → Full.** Deleting a load-bearing doc is Full **plus** mandatory AskUserQuestion before any file is deleted (see `references/escalation-rules.md`). | Full L1 → L2 → L3 → F |
+| **Light Mode** | ≤ 3 non-load-bearing files, no breaking change, no new external contract, no unresolved decision. Typical small features, bug fixes, and local refactors land here. | `references/light-mode.md`: four-field brief → fresh-reviewer diff review → accept → one-line closure |
+| **None** | Pure typo / doc reordering / dependency upgrade (one independent fresh-agent review, no cycle); or a question with no file edits (no requirement). A *trivial, non-commitment-clause* edit to a load-bearing doc (a typo that changes no rule) is None — one review, not the full cycle; a *substantive* load-bearing edit is always Full. | one independent review, or nothing |
+
+The Full-Mode gate is a **hard filter**: any "yes" forces Full Mode. Tier choice is fresh-eyes-enforced, not author-asserted — the Light-Mode reviewer re-runs this gate against the diff (see `references/light-mode.md`).
 
 When a load-bearing doc is **first introduced** (or first retroactively classified as load-bearing), a one-page retroactive design brief plus an independent agent review with two consecutive clean rounds may substitute for the full three-loop cycle. Any subsequent modification must follow the formal procedure.
 
-**Role isolation rule** (applies to every loop): a single subagent must never both author and review the same artifact. Reviews are performed by a fresh subagent that receives only the artifact, the relevant prompt template, and the linked design / impl docs.
+**Cost expectation.** A full L1 → L2 → L3 → F cycle spawns roughly 8–15 fresh subagents (L1/L2 reviews + per-Phase dev/review/accept/fix + one F review) and produces two committed documents before merge. Apply it deliberately; it is heavier than a single pass.
 
-## When this skill does NOT apply
-
-| Change type | Action |
-|---|---|
-| Pure document reordering, typo fix, dependency upgrade | no L1→L2→L3 cycle — but still requires one independent fresh-agent review |
-| Pure question answering / exploration producing no file edits | no requirement |
+**Role isolation rule** (every loop): a single subagent must never both author and review the same artifact — whether the second role would arrive via lead assignment, teammate self-claim, or lead plan-approval. Lead plan-approval is autonomous coordination, not the fresh-reviewer gate. Reviews use a fresh subagent that receives only the artifact, the prompt template, and the linked design/impl docs. (Agent-team specifics: `references/loop-3-teams.md`.)
 
 > **Quick orientation**: this skill runs three sequential loops (L1 Design → L2
 > Implementation → L3 Development). Each loop closes only when a fresh reviewer
@@ -41,8 +37,7 @@ When a load-bearing doc is **first introduced** (or first retroactively classifi
 > Round cap is 3 per loop; hitting it triggers AskUserQuestion — never a relaxed bar.
 > You cannot skip a loop. If unsure which loop you are in, check the routing table.
 
-**Round tracking with Tasks**: to survive context compaction during long tasks, call
-`TaskCreate({ title: "L1 round 1" })` at each loop start and `TaskUpdate({ status, notes: verdictSummary })` after each review verdict. The round cap check becomes readable from `TaskGet(id)` rather than from conversational context. This is optional but strongly recommended for tasks with more than two L1 or L2 rounds.
+**Round tracking with Tasks** (optional; recommended for tasks with >2 L1/L2 rounds): call `TaskCreate` at each loop start and `TaskUpdate` after each verdict, so the round-cap check survives context compaction — readable via `TaskGet` instead of conversational memory.
 
 ## Core principles (non-negotiable, every loop, every subagent)
 
@@ -152,27 +147,18 @@ Each loop must satisfy its termination condition before advancing. Hitting the r
 
 **Shared termination condition (all loops)**:
 - **Pass**: the review subagent reports zero severe issues this round, AND one consecutive prior round reported zero general issues. Exit the loop.
+  - **L3-only clean-first-round relaxation** (Workflow mode, `references/l3-phase.js`): a Phase also closes on a *single* round when its first review is fully clean — zero severe AND zero general — and no fix was applied. The moment any fix lands, the standard two-generation rule re-engages. This removes only the tax on correct-first-time work; a round with any unresolved issue never closes. **L1 and L2 keep the strict two-generation rule** (there the second clean round is fresh-reviewer corroboration, not a post-fix re-check).
 - **Hard cap, per domain**: 3 rounds, counted independently. L1 / L2 / L3 do not share rounds — even if L1 takes all 3 rounds to pass, L2 still starts at round 1. L3 is counted independently per Phase. Hitting cap → escalate, never relax the bar.
 - **Round counter substitution**: increment `{{round}}` before spawning each review subagent. The subagent never receives the literal `{{round}}` string.
 - L1 / L2 fixes are made directly by the main agent — no separate fix subagent (scale is small). L3 uses the four-corner template (dev / review / accept / fix), each role a fresh subagent.
 
 ## Project integration: CLAUDE.md role vocabulary
 
-This skill references the project's CLAUDE.md by **role**, not by literal heading name, so it remains portable across projects whose CLAUDE.md heading conventions differ. Each project pins concrete heading text to each role at the top of its CLAUDE.md (an "anchor map").
+This skill references the project's CLAUDE.md by **role**, not literal heading name, so it stays portable across projects with different heading conventions. Each project pins concrete heading text to each role in an "anchor map" at the top of its CLAUDE.md.
 
-The five required roles:
+The five required roles: **_repo-workflow_** (how tasks proceed here), **_load-bearing-docs_** (the contract files under the full cycle), **_language-policy_** (language/terminology rules), **_common-commands_** (the concrete `<TEST-CMD>` / `<ACCEPT-CMD>` and other shell commands the workflow invokes — resolve those placeholders here), **_engineering-norms_** (coding standards, anti-patterns).
 
-| Role | Responsibility |
-|---|---|
-| _repo-workflow_ | How tasks proceed in this repo: entry points, who triggers L1/L2/L3, escalation contacts, link to this skill |
-| _load-bearing-docs_ | Concrete list of contract files protected by the full L1/L2/L3 cycle |
-| _language-policy_ | Language and terminology rules for code, process docs, and contract files |
-| _common-commands_ | Concrete value of `<TEST-CMD>` and other shell commands the workflow invokes |
-| _engineering-norms_ | Project-level coding standards, architecture overview, anti-patterns |
-
-When you see `<TEST-CMD>` or `<ACCEPT-CMD>` in this skill, resolve them via the project's `CLAUDE.md` _common-commands_ role.
-
-Full role-vocabulary detail, the cross-file consistency checklist, and grep-based self-check commands live in `references/claude-md-integration.md`. Read it when authoring a project's CLAUDE.md anchor map or auditing for drift.
+Full role detail, the cross-file consistency checklist, and grep self-checks live in `references/claude-md-integration.md` — read it when authoring a CLAUDE.md anchor map or auditing for drift.
 
 ## Routing — which reference file to load next
 
@@ -180,6 +166,8 @@ Once you've confirmed this skill applies to the current task, jump to the releva
 
 | You are about to... | Read this reference |
 |---|---|
+| Run a small, low-risk change in Light Mode | `references/light-mode.md` — the four-field brief, the Full-Mode gate, the fresh-eyes tier check |
+| Understand existing code before L1 (the pre-step) | `references/loop-1-design.md` — "L1 pre-step: Understand before designing" (read-only Explore sweep, not a loop) |
 | Draft `docs/design/<task-slug>.md` (L1) | `references/loop-1-design.md` — required sections, main agent procedure, review subagent prompt template |
 | Draft `docs/implementation/<task-slug>.md` (L2) | `references/loop-2-implementation.md` — Phase breakdown, review subagent prompt template |
 | Start a Phase (L3) — Workflow mode (recommended) | `references/loop-3-workflow.md` — how to invoke `l3-phase.js`, args, return values |
@@ -188,24 +176,20 @@ Once you've confirmed this skill applies to the current task, jump to the releva
 | Run external-process / E2E verification | `references/loop-3-development.md` (E2E section: pre-flight, isolated spawn, archival) |
 | Close out the task: end-to-end review, document consolidation (F) | `references/end-to-end-review.md` |
 | Encounter ambiguity, breaking change, or unverifiable acceptance | `references/escalation-rules.md` |
+| Escalate a review to an adversarial panel (load-bearing / high-risk artifact) | `references/multi-voter-review.md` — N fresh voters, mechanical union; `reviewMode: 'panel'` in `l3-phase.js` |
+| Install optional tool-restricted reviewer agents (built-in `.claude/agents`, model routing) | `references/optional-subagents.md` — definitions, the honest enforcement boundary, mandatory fallback |
+| Use agent-team modes (behavior-bug debate, cross-layer L3, parallel F review) | `references/loop-3-teams.md` — three modes, the identity guardrail, "when NOT to use a team" |
 | Audit CLAUDE.md / cross-file consistency | `references/claude-md-integration.md` |
 
 ## Commit conventions (cross-cutting)
 
-Every code-modifying commit produced inside L3 follows these conventions:
-
-- **Phase opener**: `feat(phaseN): <one-line summary>` or `fix(phaseN): …` depending on change nature.
-- **Within-round fix**: `fix(phaseN-roundR): <failing-item-keyword>`. The keyword must name a failing item from the review or accept report — drive-by edits leave no valid keyword and thus cannot be committed under this convention. This is how Surgical Changes is enforced mechanically.
-- **Trailers** record `<TEST-CMD>` exit code and key `<ACCEPT-CMD>` results.
-- **Do not** mention AI involvement, model names, or agent tooling in commit messages or PR descriptions.
-
-Detailed examples and the four-corner role table are in `references/loop-3-development.md`.
+Every code-modifying L3 commit: `feat(phaseN):` / `fix(phaseN):` for a Phase opener; `fix(phaseN-roundR): <failing-item-keyword>` for a within-round fix (the keyword names a failing review/accept item); `<TEST-CMD>` / `<ACCEPT-CMD>` results as trailers; and **no mention of AI involvement, model names, or tooling**. Full conventions, worked examples, the optional commit-prefix lint, and the four-corner role table live in `references/loop-3-development.md` (canonical).
 
 ## Self-check before claiming a loop is closed
 
 - L1 closed? `docs/design/<task-slug>.md` exists, all 8 required sections present, review subagent reports zero severe + one prior round zero general.
 - L2 closed? `docs/implementation/<task-slug>.md` exists, every Phase has runnable `<ACCEPT-CMD>`, review subagent reports zero severe + one prior round zero general.
-- Phase closed? Accept subagent reports pass on every command, main agent personally re-ran `<TEST-CMD>` and every `<ACCEPT-CMD>`, results recorded as commit trailers. If a contract file was modified, E2E gate executed or skip-reason recorded.
+- Phase closed? Accept subagent reports pass on every command, main agent personally re-ran `<TEST-CMD>` and every `<ACCEPT-CMD>`, results recorded as commit trailers. If a contract file was modified **or the change is externally observable** (UI / CLI / endpoint / user-visible output), the E2E / behavior gate executed or a skip-reason recorded.
 - Task closed? End-to-end review (F) completed per `references/end-to-end-review.md` — including step 5 document consolidation (closure block added, ephemera pruned, fresh-subagent review verdict pass), all `e2e/*` worktrees and unreferenced `.e2e-artifacts/` directories cleaned up.
 
 If any of these is "no", you have not closed that stage — return to the relevant reference and continue, or escalate.

@@ -6,10 +6,9 @@ A disciplined three-loop workflow for non-trivial software changes, packaged as 
 
 ## What's in this repo
 
-- **`WORKFLOW-v3.md`** — the canonical specification of the workflow.
-- **`three-loop-workflow/`** — a Claude skill that operationalizes the spec. Drop this folder into Claude Code or Claude.ai and Claude will follow it on any non-trivial code change.
+- **`three-loop-workflow/`** — a Claude skill that operationalizes the workflow. Drop this folder into Claude Code or Claude.ai and Claude will follow it on any non-trivial code change.
 
-The spec is the source of truth. The skill is a derivative artifact tuned for Claude consumption: it splits the spec into a short entry point (`SKILL.md`) plus per-stage references that load only when needed.
+The skill files (`SKILL.md` + `references/`) are the single source of truth — they are what Claude Code loads and executes. A short entry point (`SKILL.md`) routes to per-stage reference files that load only when needed.
 
 ## What's new
 
@@ -18,7 +17,8 @@ The spec is the source of truth. The skill is a derivative artifact tuned for Cl
 | **v1.3** | `agentType` recommendation column in routing table; `references/schemas.md` (ReviewVerdict schema); `## When this skill does NOT apply` table; Quick orientation box; Common failure modes table; Document naming convention; TaskCreate round-tracking guidance |
 | **v1.3.1** | `references/l3-phase.js` — Workflow-based L3 Phase runner (recommended mode); `references/loop-3-workflow.md` — invocation guide; `references/schemas.md` gains AcceptVerdict and DevResult schemas; SKILL.md routing table gains Workflow-mode row |
 | **v1.3.2** | Skill is now self-contained: all subagent/Workflow nodes run on the built-in default subagent; removed the dependency on the feature-dev plugin's agent types (`agentType` recommendation column and the bare-vs-namespaced `code-reviewer` paragraph dropped from SKILL.md) |
-| **v1.3.3** | Skill no longer induces process-narration comments in code: explicit Surgical-Changes rule ("comments explain the code, not the workflow") added to SKILL.md and WORKFLOW-v3.md §0.3, plus an L3 review check that flags them; the `references/l3-phase.js` exemplar scrubbed of design-doc/decision/diagram references |
+| **v1.3.3** | Skill no longer induces process-narration comments in code: explicit Surgical-Changes rule ("comments explain the code, not the workflow") added to SKILL.md, plus an L3 review check that flags them; the `references/l3-phase.js` exemplar scrubbed of design-doc/decision/diagram references |
+| **v1.4** | **Orchestration upgrade.** Correctness: L3 dev diff materialized via `baseSha` + an `agent-error` status distinct from cap-exhaustion (`l3-phase.js`); the skill files made the **sole source of truth** (the redundant derived `WORKFLOW-v3.md` spec removed) with a `three-loop-consistency` self-check; false worktree-isolation claims removed. Discipline tuning: L3-only clean-first-round termination relaxation; gated **Light/Full tier** (`references/light-mode.md`) with a fresh-eyes tier check; scope-based phases; cost expectation. Quality ceiling: L1 "understand before designing" Explore pre-step; gating **behavior verification** (`/run`, `/verify`); declare-or-exclude perf/UX/a11y budgets. Optional modes (opt-in, zero-install fallback): adversarial **review panel** with mechanical union (`references/review-panel.js`, `multi-voter-review.md`); tool-restricted **reviewer agents** with model routing (`references/optional-subagents.md`); commit-prefix lint hook (`references/validate-commit-msg.sh`); **agent-team** modes (`references/loop-3-teams.md`) |
 
 ## What is the three-loop workflow?
 
@@ -52,6 +52,8 @@ Four non-negotiable principles every subagent inherits:
 ## Installing the skill
 
 The skill is **self-contained** — it depends on no external plugin. Every subagent / Workflow node runs on the built-in default subagent, so installing this skill alone is sufficient.
+
+**Optional** reviewer agents (`three-loop-workflow/references/optional-subagents.md`) add tool-restricted, model-routed reviewers — these are **built-in Claude Code `.claude/agents` files, not the external plugin v1.3.2 removed**, and the skill still runs zero-install without them.
 
 ### Claude Code
 
@@ -105,16 +107,26 @@ See `three-loop-workflow/references/claude-md-integration.md` for the full conve
 
 ```
 .
-├── WORKFLOW-v3.md                    Source specification (canonical)
-├── three-loop-workflow/              The skill itself
-│   ├── SKILL.md                      Entry point: principles + routing + applicability table
+├── three-loop-workflow/              The skill (the single source of truth)
+│   ├── SKILL.md                      Entry point: principles + tier table + routing
 │   └── references/
-│       ├── loop-1-design.md          L1 review template + 8 required sections
+│       ├── loop-1-design.md          L1 review template + 8 sections + understand pre-step
 │       ├── loop-2-implementation.md  L2 Phase breakdown + review template
-│       ├── loop-3-development.md     L3 four-corner template + commits + E2E
+│       ├── loop-3-workflow.md        L3 Workflow mode (invoking l3-phase.js)
+│       ├── loop-3-development.md     L3 four-corner template + commits + E2E/behavior
+│       ├── l3-phase.js               L3 Workflow script (dev → review → accept → fix)
+│       ├── review-panel.js           Optional adversarial review panel (mechanical union)
+│       ├── schemas.md                ReviewVerdict / AcceptVerdict / DevResult
+│       ├── light-mode.md             The Light tier
+│       ├── multi-voter-review.md     Optional review-panel escalation
+│       ├── optional-subagents.md     Optional tool-restricted reviewer agents
+│       ├── loop-3-teams.md           Optional agent-team modes
 │       ├── end-to-end-review.md      F closeout checklist
 │       ├── escalation-rules.md       When/how to escalate; deadlock procedure
-│       └── claude-md-integration.md  CLAUDE.md roles + cross-file consistency
+│       ├── claude-md-integration.md  CLAUDE.md roles + cross-file consistency
+│       ├── check-consistency.sh      three-loop-consistency self-check
+│       ├── check-workflow-syntax.sh  Workflow-script syntax gate
+│       └── validate-commit-msg.sh    Optional commit-prefix lint hook
 ├── README.md                         this file
 └── README-cn.md                      Chinese version
 ```
@@ -123,4 +135,4 @@ See `three-loop-workflow/references/claude-md-integration.md` for the full conve
 
 This skill is **load-bearing by its own definition**. Modifying `SKILL.md` or any `references/*.md` triggers the full L1 → L2 → L3 cycle.
 
-One transitional clause: when a load-bearing doc is first introduced (or first retroactively classified as load-bearing — including the first version of `WORKFLOW.md`), a one-page retroactive design brief plus an independent review with two consecutive clean rounds may substitute for the full cycle. Subsequent modifications must follow the formal procedure.
+One transitional clause: when a load-bearing doc is first introduced (or first retroactively classified as load-bearing), a one-page retroactive design brief plus an independent review with two consecutive clean rounds may substitute for the full cycle. Subsequent modifications must follow the formal procedure.
