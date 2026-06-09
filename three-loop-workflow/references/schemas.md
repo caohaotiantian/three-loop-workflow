@@ -73,7 +73,7 @@ Use this schema when spawning accept subagents (L3 step 3). Pass as `agent(accep
 
 ## DevResult
 
-Use this schema when spawning dev subagents (L3 step 1). Pass as `agent(devPrompt, { schema: DevResult })`. The `branch` field is the commit audit trail / rollback reference — dev agents should commit their changes to a named branch and return it here.
+Use this schema when spawning dev subagents (L3 step 1). Pass as `agent(devPrompt, { schema: DevResult })`. The `branch` field is the commit audit trail / rollback reference — dev agents should commit their changes to a named branch and return it here. The `baseSha` field is the **diff base**: the dev agent captures `git rev-parse HEAD` BEFORE editing and returns it, so the review and accept subagents can run `git diff <baseSha>..<branch>` and audit exactly the changes under review (without it, the fresh-eyes audit depends on an unstated, agent-guessed diff command).
 
 ```json
 {
@@ -82,6 +82,10 @@ Use this schema when spawning dev subagents (L3 step 1). Pass as `agent(devPromp
     "branch": {
       "type": "string",
       "description": "git branch name where changes were committed (e.g. 'phase1-dev-r1'); REQUIRED — the script treats a missing branch as a dev failure"
+    },
+    "baseSha": {
+      "type": "string",
+      "description": "the commit SHA captured via `git rev-parse HEAD` BEFORE any edit; REQUIRED — the diff base for the review/accept fresh-eyes audit (`git diff <baseSha>..<branch>`). Must be captured before editing or the diff collapses to empty."
     },
     "summary": {
       "type": "string",
@@ -92,6 +96,6 @@ Use this schema when spawning dev subagents (L3 step 1). Pass as `agent(devPromp
       "description": "true if the dev agent detected a conflict between the design doc and the implementation task; triggers design-conflict return from l3-phase.js"
     }
   },
-  "required": ["branch", "summary", "conflict"]
+  "required": ["branch", "baseSha", "summary", "conflict"]
 }
 ```

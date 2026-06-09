@@ -2,7 +2,8 @@
 
 > **Recommended execution mode**: use the Workflow script at `references/loop-3-workflow.md`
 > (invokes `l3-phase.js`) rather than manual Agent-tool orchestration. The script enforces
-> round caps, structured verdicts, and worktree isolation as deterministic code. The
+> round caps, structured verdicts, and the two-generation termination condition as
+> deterministic code (dev writes to the main working tree — no worktree isolation). The
 > four-corner template, role table, commit conventions, and E2E gate below remain
 > authoritative regardless of which mode is used.
 
@@ -72,7 +73,7 @@ Notes on the diagram:
 | Role | Input | Output | Forbidden |
 |---|---|---|---|
 | **step 1: dev** | Phase task list in impl doc + design doc references + exports, immediate callers, and shared utilities of files being modified | Code changes (TDD: tests first), task-list checkboxes ticked | Modify the impl doc; expand scope unilaterally |
-| **step 2: review** | dev's diff + design doc + impl doc + CLAUDE.md | Review report (severe / general / clarification, format per L1 template) | Modify code |
+| **step 2: review** | dev's diff (obtained as the review subagent's first action via `git diff <baseSha>..<devBranch>` — the dev returns `baseSha`, captured before editing) + design doc + impl doc + CLAUDE.md | Review report (severe / general / clarification, format per L1 template) | Modify code |
 | **step 3: accept** | Phase `<ACCEPT-CMD>` list from impl doc | Per-command exit code and key output, marked pass or fail; plus passed/failed/skipped/xfail tally per command (skipped tests are not passing tests) | Modify code or tests; interpret or judge output beyond the mechanical exit-code → pass/fail derivation (that is the review role's job) |
 | **step 4: fix** | Failing items from step 2 or step 3 | Minimal-scope code fix; commit prefix `fix(phaseN-roundR):` | Structural refactors; introducing new requirements outside the design doc |
 

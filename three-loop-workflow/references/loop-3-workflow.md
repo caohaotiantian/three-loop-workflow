@@ -3,17 +3,16 @@
 This file describes how to invoke `references/l3-phase.js` to run an L3 Phase
 deterministically. The Workflow-based mode is **recommended** over the manual
 prose-driven mode (`references/loop-3-development.md`) because it enforces round caps,
-structured verdicts, and worktree isolation as code rather than instructions.
-
-> **Version note**: worktree isolation (`isolation: 'worktree'`) requires a Claude Code
-> release where this feature is stable. On older clients or restricted environments, use
-> the prose-driven fallback in `references/loop-3-development.md` instead.
+structured verdicts, and the two-generation termination condition as deterministic code
+rather than prose instructions. Dev agents write directly to the main working tree
+(no git worktree isolation), so accept commands see the correct state; the review and
+accept subagents audit the dev changes via `git diff <baseSha>..<devBranch>` (the dev
+agent returns `baseSha` in `DevResult`).
 
 ## When to use this
 
 Use for every L3 Phase in normal operation. Fall back to the prose-driven mode only when:
 - The Workflow tool is unavailable (headless CI, restricted harness).
-- The current Claude Code version has known `isolation: 'worktree'` issues.
 
 ## Invocation
 
@@ -41,6 +40,7 @@ Do NOT use a `name:` registry lookup — this script is not registered as a name
 |---|---|---|
 | `'closed'` | Phase accepted | Record `result.branch` commit in trailer; advance to next Phase |
 | `'cap-exhausted'` | Round cap (3) hit without closure | Escalate to user with a deadlock report (see `references/escalation-rules.md`) |
+| `'agent-error'` | A dev/review/accept subagent failed (threw or returned null) twice in a row — infrastructure failure, **not** a review deadlock | Report the infrastructure failure; do **not** compose a deadlock report (there are no unresolved severe items to adjudicate); offer to relaunch the Workflow for this Phase. `result.stage` names the failing corner. |
 | `'design-conflict'` | Dev agent detected conflict | Rollback to L1 or L2 to fix the source document; `result.branch` contains the partial dev branch (clean up with `git branch -d result.branch`) |
 
 When `status === 'closed'`, `result.branch` contains the git branch with the accepted

@@ -8,6 +8,13 @@ export const meta = {
   ],
 }
 
+// ── ROLE-ISOLATION INVARIANT (load-bearing) ──────────────────────────────────
+// Every agent() call below MUST spawn a fresh subagent. dev / review / accept / fix
+// are isolated roles; no subagent may carry context from a prior role. A future
+// refactor that reuses an agent handle across roles to save tokens would silently
+// break self-review prevention — the skill's central safety property. Do not collapse
+// roles. See the role-isolation rule in SKILL.md.
+
 // Required args:
 //   phaseLabel:    string  — e.g. "Phase 1"
 //   phaseSpec:     string  — full Phase task list from the impl doc
@@ -40,33 +47,53 @@ const DEV_SCHEMA = {
   type: 'object',
   properties: {
     branch:   { type: 'string' },
+    baseSha:  { type: 'string' },
     summary:  { type: 'string' },
     conflict: { type: 'boolean' },
   },
-  required: ['branch', 'summary', 'conflict'],
+  required: ['branch', 'baseSha', 'summary', 'conflict'],
 }
 
 const MAX_ROUNDS = 3
 const { phaseLabel, phaseSpec, designDocPath, implDocPath } = args
 
+// Retry-once wrapper. A transient agent failure (thrown error or null/undefined
+// return) is retried once; a second failure returns null so the caller can emit
+// 'agent-error' (infrastructure failure) rather than 'cap-exhausted' (a genuine
+// review deadlock that would wrongly trigger a deadlock escalation report).
+async function tryAgent(prompt, opts) {
+  for (let attempt = 1; attempt <= 2; attempt++) {
+    try {
+      const r = await agent(prompt, opts)
+      if (r) return r
+    } catch (e) {
+      log(`${opts.label}: attempt ${attempt} failed: ${e && e.message ? e.message : e}`)
+    }
+  }
+  return null
+}
+
 // ── Step 1: Dev ──────────────────────────────────────────────
 phase('Dev')
 log(`${phaseLabel}: running dev subagent`)
 
-const devResult = await agent(
-  `You are the dev subagent for ${phaseLabel}. Implement the tasks below in the current worktree. ` +
-  `Commit your changes to a branch named "${phaseLabel.replace(/\s+/g, '').toLowerCase()}-dev-r1" ` +
-  `and return DevResult with the branch name, a summary, and conflict=true if the design doc ` +
-  `conflicts with any task.\n\nDesign doc: ${designDocPath}\nImpl doc: ${implDocPath}\n\nPhase tasks:\n${phaseSpec}`,
+const devResult = await tryAgent(
+  `You are the dev subagent for ${phaseLabel}. FIRST, capture the diff base: run ` +
+  '`git rev-parse HEAD` BEFORE making any edit and return it as baseSha. Then implement the ' +
+  `tasks below in the main working tree (no worktree isolation). Commit your changes to a branch ` +
+  `named "${phaseLabel.replace(/\s+/g, '').toLowerCase()}-dev-r1" and return DevResult with the ` +
+  `branch name, baseSha, a summary, and conflict=true if the design doc conflicts with any task.` +
+  `\n\nDesign doc: ${designDocPath}\nImpl doc: ${implDocPath}\n\nPhase tasks:\n${phaseSpec}`,
   { label: `dev:${phaseLabel}`, phase: 'Dev', schema: DEV_SCHEMA }
 )
 
-if (!devResult) return { status: 'cap-exhausted', phaseLabel, round: 0, reason: 'dev agent returned null' }
+if (!devResult) return { status: 'agent-error', phaseLabel, round: 0, stage: 'dev', reason: 'dev agent failed after retry' }
 if (devResult.conflict) return { status: 'design-conflict', phaseLabel, round: 0, branch: devResult.branch }
 
 // Explicit null-branch guard (defense-in-depth; schema required:[] is primary gate)
-if (!devResult.branch) return { status: 'cap-exhausted', phaseLabel, round: 0, reason: 'dev agent did not return branch name' }
+if (!devResult.branch) return { status: 'agent-error', phaseLabel, round: 0, stage: 'dev', reason: 'dev agent did not return branch name' }
 let devBranch = devResult.branch
+const baseSha = devResult.baseSha   // diff base for the review/accept fresh-eyes audit
 
 // ── Review loop ───────────────────────────────────────────────
 // `round` starts at 1 and increments on every fix cycle.
@@ -78,14 +105,16 @@ let priorGeneralCount = Infinity
 while (round <= MAX_ROUNDS) {
   log(`${phaseLabel}: review round ${round}/${MAX_ROUNDS} (prior generals: ${priorGeneralCount === Infinity ? 'n/a' : priorGeneralCount})`)
 
-  const review = await agent(
-    `You are the review subagent for ${phaseLabel} round ${round}. Review the diff on branch "${devBranch}" ` +
+  const review = await tryAgent(
+    `You are the review subagent for ${phaseLabel} round ${round}. Your FIRST tool call MUST be ` +
+    `\`git diff ${baseSha}..${devBranch}\` to see exactly the changes under review (and ` +
+    `\`git log ${baseSha}..${devBranch}\` to check commit conventions). Review that diff ` +
     `against design doc ${designDocPath} and impl doc ${implDocPath}. ` +
     `Return a ReviewVerdict (see references/schemas.md).`,
     { label: `review:${phaseLabel}:r${round}`, phase: 'Review', schema: REVIEW_SCHEMA }
   )
 
-  if (!review) return { status: 'cap-exhausted', phaseLabel, round, stage: 'review-null-return' }
+  if (!review) return { status: 'agent-error', phaseLabel, round, stage: 'review' }
 
   const reviewPasses = review.severe_count === 0 && round > 1 && priorGeneralCount === 0
   priorGeneralCount = review.general_count
@@ -96,8 +125,9 @@ while (round <= MAX_ROUNDS) {
   if (round > MAX_ROUNDS) return { status: 'cap-exhausted', phaseLabel, round, stage: 'review' }
   log(`${phaseLabel}: review issues remain (severe=${review.severe_count} general=${review.general_count}), running fix round ${round}`)
   phase('Fix')
-  await agent(
-    `You are the fix subagent for ${phaseLabel} review round ${round}. Fix the following review issues on branch "${devBranch}". ` +
+  await tryAgent(
+    `You are the fix subagent for ${phaseLabel} review round ${round}. Fix the following review issues on branch "${devBranch}" ` +
+    `(inspect the cumulative diff with \`git diff ${baseSha}..${devBranch}\`). ` +
     `Surgical Changes only — commit fixes to the same branch.\n\nSevere: ${review.severe.join('; ')}\nGeneral: ${review.general.join('; ')}`,
     { label: `fix:review:${phaseLabel}:r${round}`, phase: 'Fix' }
   )
@@ -113,22 +143,23 @@ let acceptRound = round
 while (acceptRound <= MAX_ROUNDS) {
   log(`${phaseLabel}: accept round ${acceptRound}/${MAX_ROUNDS}`)
 
-  const accept = await agent(
-    `You are the accept subagent for ${phaseLabel}. The dev branch is "${devBranch}". ` +
+  const accept = await tryAgent(
+    `You are the accept subagent for ${phaseLabel}. The dev branch is "${devBranch}" (diff base ${baseSha}; ` +
+    `inspect the changes with \`git diff ${baseSha}..${devBranch}\`). ` +
     `Run every ACCEPT-CMD listed in impl doc ${implDocPath} and return AcceptVerdict.`,
     { label: `accept:${phaseLabel}:r${acceptRound}`, phase: 'Accept', schema: ACCEPT_SCHEMA }
   )
 
-  if (!accept) return { status: 'cap-exhausted', phaseLabel, round: acceptRound, stage: 'accept-null-return' }
+  if (!accept) return { status: 'agent-error', phaseLabel, round: acceptRound, stage: 'accept' }
   if (accept.all_pass) return { status: 'closed', phaseLabel, round: acceptRound, branch: devBranch }
 
   acceptRound++
   if (acceptRound > MAX_ROUNDS) return { status: 'cap-exhausted', phaseLabel, round: acceptRound, stage: 'accept' }
   log(`${phaseLabel}: accept failures: ${accept.failures.join('; ')}, running acceptFix round ${acceptRound}`)
   phase('Fix')
-  await agent(
-    `You are the fix subagent for ${phaseLabel} accept round ${acceptRound}. Fix the following accept failures on branch "${devBranch}". ` +
-    `Commit fixes to the same branch.\n\nFailures: ${accept.failures.join('; ')}`,
+  await tryAgent(
+    `You are the fix subagent for ${phaseLabel} accept round ${acceptRound}. Fix the following accept failures on branch "${devBranch}" ` +
+    `(diff base ${baseSha}). Commit fixes to the same branch.\n\nFailures: ${accept.failures.join('; ')}`,
     { label: `acceptFix:${phaseLabel}:r${acceptRound}`, phase: 'Fix' }
   )
   phase('Accept')
