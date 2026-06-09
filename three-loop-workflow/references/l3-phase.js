@@ -98,6 +98,9 @@ async function panelReview(basePrompt, round) {
     ))
   )).filter(Boolean)
   if (verdicts.length === 0) return null
+  // A soft-failed voter is dropped (no retry): the union is over fewer voters, which can
+  // narrow but never weaken the gate vs a clean single reviewer. Surface it rather than hide it.
+  if (verdicts.length < n) log(`${phaseLabel}: panel r${round} — ${n - verdicts.length}/${n} voters failed; union over ${verdicts.length} (narrower, never weaker)`)
   const uniq = (arr) => Array.from(new Set(arr))
   const severe = uniq(verdicts.flatMap(v => v.severe || []))
   const general = uniq(verdicts.flatMap(v => v.general || []))

@@ -62,6 +62,10 @@ if (verdicts.length === 0) {
   return { severe: ['panel: all voters failed'], general: [], clarifications: [], verdict: 'severe-nonconformance', severe_count: 1, general_count: 0 }
 }
 
+// A soft-failed voter is dropped (no retry): the union is over fewer voters, which can
+// narrow but never weaken the gate vs a clean single reviewer. Surface it rather than hide it.
+if (verdicts.length < N) log(`${label}: ${N - verdicts.length}/${N} voters failed; union over ${verdicts.length} (narrower, never weaker)`)
+
 // ── MECHANICAL UNION (no agent in the counting path) ─────────────────────────
 // An issue is severe for the round if ANY voter marks it severe; likewise general. The
 // counts fed to the termination check are the sizes of the unioned sets. `uniq` removes

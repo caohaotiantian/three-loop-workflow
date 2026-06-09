@@ -45,6 +45,11 @@ for fix-prompt readability, but may never lower a count or demote a severe to a 
 The panel runs **inside one review round** and emits **one** aggregated `ReviewVerdict`, so
 round counting and cap → escalation are unchanged: the N voters do **not** each consume a round.
 
+> **Voter failures.** A voter that soft-fails is dropped (the union is computed over the
+> survivors) and logged; this can **narrow** the panel but never makes the gate weaker than a
+> clean single reviewer. If **every** voter fails, the panel returns a blocking
+> non-conformance — never a silent pass.
+
 ## How to invoke
 
 - **Inside L3 (Workflow mode):** pass `reviewMode: 'panel'` (and optionally `panelVoters: N`) in
