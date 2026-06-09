@@ -78,13 +78,14 @@ Items written in _italics_ are **roles**, not literal heading names. References 
 | Clause category | Source of truth | Required reference site |
 |---|---|---|
 | Coding philosophy (Think Before Coding, Simplicity First, Surgical Changes, Goal-Driven Execution) | skill `SKILL.md` "Core principles" | review subagent prompts in `references/loop-1-design.md`, `references/loop-2-implementation.md`, `references/loop-3-development.md` (any violation is a severe issue) |
-| Three-loop trigger conditions (when L1/L2/L3 apply) | skill `SKILL.md` "When this skill applies" | CLAUDE.md _repo-workflow_ role |
+| Adversarial review-panel angles (the four principles restated as voter lenses) | skill `SKILL.md` "Core principles" | `references/multi-voter-review.md` and the `ANGLES` list in `references/review-panel.js`; `PANEL_ANGLES` in `references/l3-phase.js` |
+| Three-loop trigger conditions (which tier applies) | skill `SKILL.md` "Which tier applies" | CLAUDE.md _repo-workflow_ role |
 | CLAUDE.md role vocabulary | this file ("The five required roles") | CLAUDE.md anchor map at the top of the file |
 | Four-corner subagent template | `references/loop-3-development.md` | impl doc Engineering Constraints Index |
 | Commit prefix `fix(phaseN-roundR)` | `references/loop-3-development.md` "Commit conventions" | `references/loop-2-implementation.md` review template |
 | External-process E2E trigger | `references/loop-3-development.md` "When to trigger" | CLAUDE.md _repo-workflow_ role (one-line forward reference) |
 | Closeout document consolidation (closure block, ephemera pruning, supersedes links) | `references/end-to-end-review.md` "Document consolidation" | skill `SKILL.md` "Document closure convention"; `references/loop-2-implementation.md` Deprecated-section note |
-| Load-bearing document list | skill `SKILL.md` "When this skill applies" + CLAUDE.md _load-bearing-docs_ role | All listed contract files cross-reference each other in their headers |
+| Load-bearing document list | skill `SKILL.md` "Which tier applies" + CLAUDE.md _load-bearing-docs_ role | All listed contract files cross-reference each other in their headers |
 | Language and terminology policy | CLAUDE.md _language-policy_ role | review subagent prompts in `references/loop-1-design.md` and `references/loop-2-implementation.md` |
 | Test command `<TEST-CMD>` | CLAUDE.md _common-commands_ role | the "acceptance command" section of every impl doc |
 | Project engineering norms | CLAUDE.md _engineering-norms_ role | impl doc Engineering Constraints Index |

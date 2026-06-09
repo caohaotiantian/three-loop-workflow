@@ -63,6 +63,8 @@ When an L2 rollback is triggered, the main agent must revert all L3 commits from
 
 > Spawn this review as a fresh default subagent (a new general-purpose subagent, separate from the agent that drafted the document); no special agent type is required — role isolation, not a particular agent type, is what matters.
 
+> **Optional escalation**: for a load-bearing or high-risk implementation plan, escalate to an adversarial **panel** review (N fresh voters, mechanical union) — see `references/multi-voter-review.md`.
+
 ## Review subagent prompt template
 
 ```plaintext

@@ -29,7 +29,7 @@ When a load-bearing doc is **first introduced** (or first retroactively classifi
 
 **Cost expectation.** A full L1 → L2 → L3 → F cycle spawns roughly 8–15 fresh subagents (L1 and L2 reviews + per-Phase dev/review/accept/fix + one F review) and produces two committed documents before merge. Choose to apply the full cycle deliberately — it buys drift-resistance and fresh-eyes review, and it is heavier than a single pass.
 
-**Role isolation rule** (applies to every loop): a single subagent must never both author and review the same artifact. Reviews are performed by a fresh subagent that receives only the artifact, the relevant prompt template, and the linked design / impl docs.
+**Role isolation rule** (applies to every loop): a single subagent must never both author and review the same artifact — regardless of whether the second role arrives via lead assignment, teammate self-claim, or lead plan-approval. (In an agent-team setup, a teammate that authored or self-claimed the dev task for an artifact is barred from claiming its review/accept off the shared task list; lead plan-approval is autonomous coordination, not the fresh-reviewer gate, and never substitutes for it.) Reviews are performed by a fresh subagent that receives only the artifact, the relevant prompt template, and the linked design / impl docs.
 
 The **None** tier (above) is where pure document reordering, typo fixes, and dependency upgrades go — no L1→L2→L3 cycle, but still one independent fresh-agent review — along with pure question answering / exploration that produces no file edits (no requirement).
 
@@ -179,6 +179,8 @@ Once you've confirmed this skill applies to the current task, jump to the releva
 
 | You are about to... | Read this reference |
 |---|---|
+| Run a small, low-risk change in Light Mode | `references/light-mode.md` — the four-field brief, the Full-Mode gate, the fresh-eyes tier check |
+| Understand existing code before L1 (the pre-step) | `references/loop-1-design.md` — "L1 pre-step: Understand before designing" (read-only Explore sweep, not a loop) |
 | Draft `docs/design/<task-slug>.md` (L1) | `references/loop-1-design.md` — required sections, main agent procedure, review subagent prompt template |
 | Draft `docs/implementation/<task-slug>.md` (L2) | `references/loop-2-implementation.md` — Phase breakdown, review subagent prompt template |
 | Start a Phase (L3) — Workflow mode (recommended) | `references/loop-3-workflow.md` — how to invoke `l3-phase.js`, args, return values |
@@ -187,6 +189,7 @@ Once you've confirmed this skill applies to the current task, jump to the releva
 | Run external-process / E2E verification | `references/loop-3-development.md` (E2E section: pre-flight, isolated spawn, archival) |
 | Close out the task: end-to-end review, document consolidation (F) | `references/end-to-end-review.md` |
 | Encounter ambiguity, breaking change, or unverifiable acceptance | `references/escalation-rules.md` |
+| Escalate a review to an adversarial panel (load-bearing / high-risk artifact) | `references/multi-voter-review.md` — N fresh voters, mechanical union; `reviewMode: 'panel'` in `l3-phase.js` |
 | Audit CLAUDE.md / cross-file consistency | `references/claude-md-integration.md` |
 
 ## Commit conventions (cross-cutting)

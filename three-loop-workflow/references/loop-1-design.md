@@ -102,6 +102,8 @@ The main agent edits the doc directly — no separate fix subagent at L1 (scale 
 
 > Spawn this review as a fresh default subagent (a new general-purpose subagent, separate from the agent that drafted the document); no special agent type is required — role isolation, not a particular agent type, is what matters.
 
+> **Optional escalation**: for a load-bearing or high-risk design, escalate to an adversarial **panel** review (N fresh voters, mechanical union of findings) — see `references/multi-voter-review.md`.
+
 ## Review subagent prompt template
 
 Substitute the bracketed values, increment the round counter, and spawn a fresh subagent per round. The subagent must never receive the literal `{{round}}` string.

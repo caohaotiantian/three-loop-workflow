@@ -55,7 +55,10 @@ const DEV_SCHEMA = {
 }
 
 const MAX_ROUNDS = 3
-const { phaseLabel, phaseSpec, designDocPath, implDocPath } = args
+// reviewMode: 'single' (default) | 'panel'. Panel mode runs an adversarial multi-voter
+// review (see references/multi-voter-review.md) INSIDE one review round — the N voters do
+// not each consume a round. panelVoters defaults to 3 (an overridable arg, not a constant).
+const { phaseLabel, phaseSpec, designDocPath, implDocPath, reviewMode = 'single', panelVoters = 3 } = args
 
 // Retry-once wrapper. A transient agent failure (thrown error or null/undefined
 // return) is retried once; a second failure returns null so the caller can emit
@@ -71,6 +74,39 @@ async function tryAgent(prompt, opts) {
     }
   }
   return null
+}
+
+// Adversarial multi-voter review (reviewMode === 'panel'). N fresh voters review the same
+// diff through distinct adversarial angles, in parallel, within ONE review round. The
+// severe/general counts are the MECHANICAL UNION across voters (computed here, no agent in
+// the counting path): an issue is severe if ANY voter says so. Union strengthens both
+// termination fields — panel mode can only make the gate stricter. Returns a verdict shaped
+// like REVIEW_SCHEMA, or null if every voter failed. See references/multi-voter-review.md.
+const PANEL_ANGLES = [
+  'SCOPE CREEP / Simplicity First: anything beyond the stated deliverables.',
+  'UNVERIFIABLE ACCEPTANCE / Goal-Driven Execution: criteria not mechanically checkable.',
+  'MISSING ALTERNATIVES / Think Before Coding: single-option decisions, silent defaults.',
+  'SURGICAL CHANGES: drive-by edits, process-narration comments, contract drift.',
+  'CORRECTNESS: bugs, contradictions, broken references, off-by-one, dead logic.',
+]
+async function panelReview(basePrompt, round) {
+  const n = Math.max(1, Math.min(panelVoters, PANEL_ANGLES.length))
+  const verdicts = (await parallel(
+    Array.from({ length: n }, (_, i) => () => agent(
+      `${basePrompt}\n\n[Adversarial angle — try to REFUTE that the change is ready] ${PANEL_ANGLES[i]}`,
+      { label: `review:${phaseLabel}:r${round}:voter${i + 1}`, phase: 'Review', schema: REVIEW_SCHEMA }
+    ))
+  )).filter(Boolean)
+  if (verdicts.length === 0) return null
+  const uniq = (arr) => Array.from(new Set(arr))
+  const severe = uniq(verdicts.flatMap(v => v.severe || []))
+  const general = uniq(verdicts.flatMap(v => v.general || []))
+  return {
+    severe, general,
+    severe_count: severe.length,
+    general_count: general.length,
+    verdict: severe.length > 0 ? 'severe-nonconformance' : (general.length > 0 ? 'needs-fix' : 'pass'),
+  }
 }
 
 // ── Step 1: Dev ──────────────────────────────────────────────
@@ -110,14 +146,15 @@ let fixApplied = false
 while (round <= MAX_ROUNDS) {
   log(`${phaseLabel}: review round ${round}/${MAX_ROUNDS} (prior generals: ${priorGeneralCount === Infinity ? 'n/a' : priorGeneralCount})`)
 
-  const review = await tryAgent(
+  const reviewPrompt =
     `You are the review subagent for ${phaseLabel} round ${round}. Your FIRST tool call MUST be ` +
     `\`git diff ${baseSha}..${devBranch}\` to see exactly the changes under review (and ` +
     `\`git log ${baseSha}..${devBranch}\` to check commit conventions). Review that diff ` +
     `against design doc ${designDocPath} and impl doc ${implDocPath}. ` +
-    `Return a ReviewVerdict (see references/schemas.md).`,
-    { label: `review:${phaseLabel}:r${round}`, phase: 'Review', schema: REVIEW_SCHEMA }
-  )
+    `Return a ReviewVerdict (see references/schemas.md).`
+  const review = reviewMode === 'panel'
+    ? await panelReview(reviewPrompt, round)
+    : await tryAgent(reviewPrompt, { label: `review:${phaseLabel}:r${round}`, phase: 'Review', schema: REVIEW_SCHEMA })
 
   if (!review) return { status: 'agent-error', phaseLabel, round, stage: 'review' }
 
