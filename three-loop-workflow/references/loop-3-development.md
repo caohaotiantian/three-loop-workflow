@@ -32,8 +32,8 @@ flowchart TD
 
     Ask[Escalate]
     PhaseEnd[Main agent personally runs<br/>TEST-CMD and every ACCEPT-CMD<br/>recorded as commit trailer]
-    E2EGate{Modifies a<br/>contract file?}
-    E2E[Run external-process E2E]
+    E2EGate{Contract or externally<br/>observable change?}
+    E2E[Run E2E / behavior verification]
     Done([Phase k green, advance to k+1])
 
     Start --> Dev --> Conflict
@@ -63,7 +63,7 @@ Notes on the diagram:
 - **R is a single phase-wide budget shared by review and accept.** The per-Phase cap of 3 is one pool: the accept loop continues the same counter the review loop left off (it does not get a fresh 3). A review-heavy Phase may therefore reach accept with R already at the cap and escalate on the first accept failure — by design, not a bug. Under two-generation termination, any Phase that required a fix needs a subsequent clean review round before it can close (so a fixed Phase takes at least two review rounds). **L3-only clean-first-round relaxation** (Workflow mode, `references/l3-phase.js`): a Phase whose *first* review is fully clean — zero severe AND zero general — with no fix applied closes in a single round. L1 and L2 keep the strict two-generation rule.
 - **Accept failures loop back to step 3, not step 2.** The accept subagent re-runs commands without re-spawning the review subagent — the review already passed, so the failure is a code/test problem rather than a code-quality problem.
 - **Phase-end main-agent verification** sits between the accept pass and the E2E gate, so its result is captured in the Phase commit trailer regardless of whether E2E is triggered.
-- **The E2E gate is conditional.** Pure internal refactors, test changes, and README updates skip the E2E branch and rely on `<TEST-CMD>` only.
+- **The E2E / behavior gate is conditional.** It fires for a contract change OR an externally observable behavior change (UI / CLI / endpoint / user-visible output). Pure internal refactors, test-only changes, and README updates skip it and rely on `<TEST-CMD>` only.
 
 > For structured output from review subagents (step 2), see `references/schemas.md` (`ReviewVerdict` schema).
 
@@ -113,9 +113,17 @@ Test-Cmd: pytest tests/ -v (exit 0, 142 passed)
 
 ### When to trigger
 
-Only when the task modifies an **external behavior contract**: contract files declared by the CLAUDE.md _load-bearing-docs_ role (such as SKILL.md, public API spec) or entry scripts / endpoints directly referenced by them.
+Trigger when **either** holds:
+- the task modifies an **external behavior contract**: contract files declared by the CLAUDE.md _load-bearing-docs_ role (such as SKILL.md, public API spec) or entry scripts / endpoints directly referenced by them; **or**
+- the task **introduces or changes externally observable behavior** — a UI surface, a CLI command, an endpoint, or a user-visible output. Green unit tests are not a good app; observing the real behavior catches broken flows, wrong output, and regressions tests miss.
 
-**Skip the E2E branch** for: pure internal refactors, test changes, and README updates. These rely on `<TEST-CMD>` only.
+**Skip the E2E / behavior branch** for: pure internal refactors, test-only changes, and README updates. These rely on `<TEST-CMD>` only.
+
+### Behavior verification (gating)
+
+When the trigger fires because the change is externally observable, a **fresh subagent that is NOT the dev author of the Phase** drives the app along the new user path and records the observed behavior against the design's measurable Acceptance Criteria. This is a **gating** check, not decorative: an observed behavior that does not match a design Acceptance Criterion is a blocking finding that routes through the normal step-4 fix / round-cap machinery — never "observed, noted". Emit a structured pass/fail (AcceptVerdict-style, see `references/schemas.md`) so closure stays mechanical rather than "looks right".
+
+Recommended drivers: the `/run` and `/verify` bundled skills (build and run the app to confirm a change works, without falling back to tests or type checks); for a non-standard launch (db/env/graphical/multi-step) `/run-skill-generator` produces a project-specific runner. The zero-install fallback is the existing manual smoke test (walk the entry-point flow by hand). Bake no project launch constants into the skill — the per-project recipe lives outside it.
 
 ### Pre-flight check (zero cost, no paid API calls)
 

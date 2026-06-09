@@ -23,8 +23,8 @@ Produce `docs/implementation/<task-slug>.md` (or append a new Phase to an existi
 ## Main agent procedure
 
 1. Draft based on the passed design document. **Forbidden** to introduce new requirements not present in the design document. If a gap is discovered, push the item back to L1 instead of patching it locally.
-2. Phase granularity principles:
-    - About 2 to 4 days of work per Phase, independently committable, verifiable in CI.
+2. Phase granularity principles (scope-based, not time-based):
+    - A Phase is the smallest set of changes that is independently committable, leaves `<TEST-CMD>` green, and maps to a contiguous block of Deliverables. Most small features are a single Phase; split only when one of those invariants would be violated. **Do not pad a Phase to fill calendar time — agentic execution makes wall-clock estimates meaningless.**
     - `<TEST-CMD>` is fully green at the end of every Phase.
     - Every Phase declares at least one shell-reproducible `<ACCEPT-CMD>` (pytest selector, script invocation, or other deterministic command).
 3. On encountering ambiguity (e.g., an acceptance criterion that cannot be translated to an executable test), immediately escalate or push the item back to L1 for design revision before re-entering this loop.
@@ -111,7 +111,7 @@ changed to "Implementation Document Review Report".
 
 ## Common L2 traps
 
-- Phases too large (>1 week of work) — break them down so each is independently committable and CI-verifiable.
+- Phases that bundle unrelated Deliverables or leave `<TEST-CMD>` red mid-Phase — split so each Phase is independently committable and CI-verifiable. Size by scope (one contiguous block of Deliverables), never by wall-clock time.
 - Acceptance commands written as English prose ("run the tests and check the output looks right") instead of an actual shell command — must be a literal command anyone can paste.
 - Implementation tasks listed before test tasks — reverses TDD order and is a severe issue.
 - Quietly adding requirements not in the design doc — must roll back to L1 instead. The trace test (every changed line maps to a Deliverable) starts here.

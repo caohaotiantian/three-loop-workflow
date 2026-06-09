@@ -26,6 +26,8 @@ Throughout this skill, `<TEST-CMD>` denotes the project test command (typically 
 
 When a load-bearing doc is **first introduced** (or first retroactively classified as load-bearing), a one-page retroactive design brief plus an independent agent review with two consecutive clean rounds may substitute for the full three-loop cycle. Any subsequent modification must follow the formal procedure.
 
+**Cost expectation.** A full L1 → L2 → L3 → F cycle spawns roughly 8–15 fresh subagents (L1 and L2 reviews + per-Phase dev/review/accept/fix + one F review) and produces two committed documents before merge. Choose to apply the full cycle deliberately — it buys drift-resistance and fresh-eyes review, and it is heavier than a single pass.
+
 **Role isolation rule** (applies to every loop): a single subagent must never both author and review the same artifact. Reviews are performed by a fresh subagent that receives only the artifact, the relevant prompt template, and the linked design / impl docs.
 
 ## When this skill does NOT apply
@@ -206,7 +208,7 @@ Detailed examples and the four-corner role table are in `references/loop-3-devel
 
 - L1 closed? `docs/design/<task-slug>.md` exists, all 8 required sections present, review subagent reports zero severe + one prior round zero general.
 - L2 closed? `docs/implementation/<task-slug>.md` exists, every Phase has runnable `<ACCEPT-CMD>`, review subagent reports zero severe + one prior round zero general.
-- Phase closed? Accept subagent reports pass on every command, main agent personally re-ran `<TEST-CMD>` and every `<ACCEPT-CMD>`, results recorded as commit trailers. If a contract file was modified, E2E gate executed or skip-reason recorded.
+- Phase closed? Accept subagent reports pass on every command, main agent personally re-ran `<TEST-CMD>` and every `<ACCEPT-CMD>`, results recorded as commit trailers. If a contract file was modified **or the change is externally observable** (UI / CLI / endpoint / user-visible output), the E2E / behavior gate executed or a skip-reason recorded.
 - Task closed? End-to-end review (F) completed per `references/end-to-end-review.md` — including step 5 document consolidation (closure block added, ephemera pruned, fresh-subagent review verdict pass), all `e2e/*` worktrees and unreferenced `.e2e-artifacts/` directories cleaned up.
 
 If any of these is "no", you have not closed that stage — return to the relevant reference and continue, or escalate.

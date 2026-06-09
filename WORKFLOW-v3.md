@@ -303,7 +303,7 @@ Produce `docs/implementation/<task-slug>.md` (or append a new Phase file) such
 
 1. Draft based on the passed design document. Forbidden to introduce new requirements not in the design document.
 2. Phase granularity principles:
-	- About 2 to 4 days of work per Phase, independently committable, and verifiable in CI.
+	- Scope-based, not time-based: a Phase is the smallest change that is independently committable, leaves `<TEST-CMD>` green, and maps to a contiguous block of Deliverables. Do not pad a Phase to fill calendar time — agentic execution makes wall-clock estimates meaningless.
 	- `<TEST-CMD>` is fully green at the end of every Phase.
 	- Every Phase declares at least one shell-reproducible `<ACCEPT-CMD>` (pytest selector, script invocation, or other deterministic command).
 3. On encountering ambiguity (for example an acceptance criterion that cannot be translated to an executable test), immediately return to section 2.3 step 3, or push the item back to the design document for revision before re-entering this loop.
@@ -494,7 +494,7 @@ procedure in section 4.1 and `references/loop-3-development.md` instead.
 
 ### 4.3 External-Process / End-to-End Verification (Triggered as Needed)
 
-**Trigger condition**: only when the task modifies an **external behavior contract**, that is, the contract files declared by the CLAUDE.md _load-bearing-docs_ role (such as SKILL.md, public API spec) or entry scripts / endpoints directly referenced by them. Pure internal refactors, test changes, and README updates rely on `<TEST-CMD>` only and **do not** re-run external processes.
+**Trigger condition**: only when the task modifies an **external behavior contract**, that is, the contract files declared by the CLAUDE.md _load-bearing-docs_ role (such as SKILL.md, public API spec) or entry scripts / endpoints directly referenced by them, OR introduces or changes externally observable behavior (a UI surface, a CLI command, an endpoint, or a user-visible output; a fresh non-author subagent then drives the app and checks the observed behavior against the design Acceptance Criteria as a gating step, see `references/loop-3-development.md` "Behavior verification"). Pure internal refactors, test changes, and README updates rely on `<TEST-CMD>` only and **do not** re-run external processes.
 
 > The example below uses the scenario "load and run a skill via a real CLI subprocess" (suitable for agent / skill / CLI tool projects). Web service projects can replace the example with "start the service in an isolated container plus run end-to-end test scripts". The general principles preserved are: **isolated worktree, ephemeral sandbox, artifact archival, automatic cleanup**.
 

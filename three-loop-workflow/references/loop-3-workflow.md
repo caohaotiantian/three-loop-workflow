@@ -66,6 +66,17 @@ git branch -d <result.branch>
 | `designDocPath` | string | Relative path to the design doc |
 | `implDocPath` | string | Relative path to the impl doc |
 
+## Agent budgeting
+
+The dynamic-workflow runtime caps a run at **16 concurrent / 1000 total** agents (per the
+Claude Code workflows docs). `l3-phase.js` spawns its agents **sequentially** (dev → review →
+fix → accept, at most ~1 live at a time, far under 16; a handful per Phase, far under 1000), so
+it never approaches either cap — the caps matter only if you add a fan-out mode (e.g. the
+optional review panel, `references/multi-voter-review.md`). Note these caps govern the
+*workflow runtime* only: the L1 / L2 / F reviews are **main-agent-spawned subagents**, not
+workflow-runtime agents, so they are not bounded by 16/1000. To gauge spend before a large run,
+the workflows docs recommend running on a small slice first and watching `/workflows`.
+
 ## Structured output schemas
 
 The script uses three schemas from `references/schemas.md`:
