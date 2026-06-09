@@ -1,7 +1,11 @@
 # Design — Skill Orchestration Upgrade (v1.4)
 
 > Task slug: `2026-06-09-skill-orchestration-upgrade`
-> Status: open
+>
+> Status: closed
+> Closing-commit: PENDING
+> Closed-on: 2026-06-09
+> Deferred: none
 
 ## 1. Background and Purpose
 

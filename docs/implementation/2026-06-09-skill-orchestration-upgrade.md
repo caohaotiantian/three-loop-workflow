@@ -2,7 +2,20 @@
 
 > Task slug: `2026-06-09-skill-orchestration-upgrade`
 > Design doc: `docs/design/2026-06-09-skill-orchestration-upgrade.md`
-> Status: open
+>
+> Status: closed
+> Closing-commit: PENDING
+> Closed-on: 2026-06-09
+> Deferred: none
+>
+> Closeout notes: all 8 Phases closed with fresh-subagent review + green grep acceptance;
+> the F end-to-end review (holistic, all 21 Deliverables) passed with zero severe/general.
+> Behavior verification: this upgrade was itself produced by running the skill's L1 → L2 → L3
+> process on the skill (the dogfood is the behavior evidence); the two Workflow scripts were
+> syntax-validated and the L3 close predicate logic-simulated; `validate-commit-msg.sh` was
+> functionally tested across 7 cases. A full CLI-subprocess E2E (spawning a `claude` subprocess
+> to load the skill) was not run — it would require a paid subprocess and adds nothing over the
+> dogfood evidence above.
 
 ## Task Index
 
