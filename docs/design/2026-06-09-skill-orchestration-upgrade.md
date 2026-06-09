@@ -3,7 +3,7 @@
 > Task slug: `2026-06-09-skill-orchestration-upgrade`
 >
 > Status: closed
-> Closing-commit: PENDING
+> Closing-commit: 8460330
 > Closed-on: 2026-06-09
 > Deferred: none
 
@@ -61,12 +61,12 @@ in this repo; no behavior is changed in any consuming project except via the ski
 they already follow.
 
 **WS1 — L3 correctness foundation (lands first; everything else reviews against it)**
-- [ ] **P1** `l3-phase.js`: add required `baseSha` to `DEV_SCHEMA`/`DevResult`; dev agent
+- [x] **P1** `l3-phase.js`: add required `baseSha` to `DEV_SCHEMA`/`DevResult`; dev agent
   captures `git rev-parse HEAD` *before* editing; review + accept + fix prompts begin
   with a mandatory `git diff <baseSha>..HEAD` (and `git log` for commit checks); `baseSha`
   threaded to all fix rounds. Same unstated-diff gap fixed in the prose fallback
   (`loop-3-development.md` role table).
-- [ ] **P2** Remove the false "worktree isolation as code" claim at exactly two sites —
+- [x] **P2** Remove the false "worktree isolation as code" claim at exactly two sites —
   `loop-3-workflow.md:6` and `loop-3-development.md:5` — and replace with the three *real*
   guarantees (round caps, structured verdicts, two-generation termination) + "dev writes to
   the main working tree, no git worktree isolation, so accept commands see the correct
@@ -75,37 +75,37 @@ they already follow.
   the script never invokes (the script passes no `isolation` option), so they are dead in
   context. **Do not** touch the legitimate E2E worktree machinery (the real `git worktree
   add` in the E2E section of `loop-3-development.md`/`loop-3-workflow.md`), which is correct.
-- [ ] **P15a** Add an editor-visible load-bearing comment to `l3-phase.js` asserting the
+- [x] **P15a** Add an editor-visible load-bearing comment to `l3-phase.js` asserting the
   fresh-spawn / role-isolation invariant.
-- [ ] **P15b** Disambiguate transient agent failure from deadlock: retry each `agent()`
+- [x] **P15b** Disambiguate transient agent failure from deadlock: retry each `agent()`
   once (try/catch covering throw *and* null return); on second failure return a new
   `agent-error` status (distinct from `cap-exhausted`) with a defined main-agent action
   in `loop-3-workflow.md`.
 
 **WS2 — source-of-truth + drift gate (D-Canonical)**
-- [ ] **P4a** Make skill files canonical: add a "Derived — do not edit directly; the
+- [x] **P4a** Make skill files canonical: add a "Derived — do not edit directly; the
   three-loop-workflow skill is the source of truth" banner to `WORKFLOW-v3.md`; update
   `README.md`/`README-cn.md` and `claude-md-integration.md` so every declaration agrees.
-- [ ] **P4b** Add a **token-scoped** grep consistency check to `CLAUDE.md` Common Commands
+- [x] **P4b** Add a **token-scoped** grep consistency check to `CLAUDE.md` Common Commands
   that fails if named tokens diverge between `WORKFLOW-v3.md` and the skill (five role
   names, `fix(phaseN-roundR)`, "five questions", termination wording).
-- [ ] **P4c** Delete the now-false transitional supersedes note at
+- [x] **P4c** Delete the now-false transitional supersedes note at
   `loop-2-implementation.md:93-95`; demote `claude-md-integration.md:91` temporal wording
   to a standing invariant.
-- [ ] **P4d** Diagram/return-table accuracy: note that a phase cannot close on review
+- [x] **P4d** Diagram/return-table accuracy: note that a phase cannot close on review
   round 1 (two-generation rule); note that `status:'closed'` does **not** discharge the
   main-agent PhaseEnd re-run or the E2E gate.
-- [ ] **P3** (docs-only) Document that the L3 round cap `R` is a single phase-wide budget
+- [x] **P3** (docs-only) Document that the L3 round cap `R` is a single phase-wide budget
   shared by review and accept (a review-heavy phase may reach accept with no fix budget —
   by design). **No code change** (the proposed `acceptRound = 1` was refuted: it would
   relax the round cap).
 
 **WS3 — quality ceiling (raise output excellence)**
-- [ ] **P6** L1 pre-step "Understand before designing": an Explore-based, read-only
+- [x] **P6** L1 pre-step "Understand before designing": an Explore-based, read-only
   codebase-understanding sweep feeding L1 (not a loop — no round counter, no review).
   Triggers on tasks touching existing code; no-ops on greenfield. Flags the Explore/Plan
   CLAUDE.md-non-inheritance trap. Optional main-agent `parallel()` fan-out + judge merge.
-- [ ] **P7** Behavior-observation verification: broaden the E2E trigger to include any
+- [x] **P7** Behavior-observation verification: broaden the E2E trigger to include any
   externally observable behavior (UI / CLI / endpoint / user-visible output); a **fresh
   non-author** subagent drives the app and checks observed behavior against design
   Acceptance Criteria as a **gating** finding; `/run` and `/verify` as recommended drivers
@@ -113,22 +113,22 @@ they already follow.
   load-bearing copy (the mermaid gate label, the skip note, SKILL.md success definition +
   closed-Phase row, and WORKFLOW-v3.md), and update `end-to-end-review.md` step 3 so
   closeout evidence includes a behavior observation, not only exit-code tallies.
-- [ ] **P12** Declare-or-exclude quality budgets: L1 section 7 must declare a measured
+- [x] **P12** Declare-or-exclude quality budgets: L1 section 7 must declare a measured
   budget (latency / throughput / bundle size / a11y score) for user-facing / hot-path /
   interface changes, or record an explicit Scope Boundary exclusion; missing-and-not-
   excluded is a **general** issue at L1 review. Realized at L2 as a runnable `<ACCEPT-CMD>`.
-- [ ] **P13** Replace the wall-clock phase metric at all three sites it appears
+- [x] **P13** Replace the wall-clock phase metric at all three sites it appears
   (`loop-2-implementation.md:27` "2 to 4 days", `loop-2-implementation.md:117` ">1 week",
   `WORKFLOW-v3.md:299` "2 to 4 days") with scope invariants (independently committable;
   leaves `<TEST-CMD>` green; maps to a contiguous block of Deliverables) + "do not pad a
   Phase to fill calendar time". (Drop the originally-proposed "exactly one regression
   surface" invariant — undefined term, forces over-splitting.)
-- [ ] **P14** State the skill's own cost: a 2-3 line spawn-count expectation near the
+- [x] **P14** State the skill's own cost: a 2-3 line spawn-count expectation near the
   applicability table; correctly-scoped concurrency caps (16/1000 govern the workflow
   runtime only) in `loop-3-workflow.md`.
 
 **WS4 — tiering so the discipline is actually run (D-Scope default)**
-- [ ] **P9** Gated Light/Full tier replacing the binary applicability table, routed to a
+- [x] **P9** Gated Light/Full tier replacing the binary applicability table, routed to a
   new `references/light-mode.md`. Light keeps the four non-negotiables (inline four-field
   brief, fresh-reviewer diff review, round-cap→escalation, four principles) and drops the
   separate L2 doc + collapses F to "acceptance green + one-line closure note". A **hard
@@ -138,20 +138,20 @@ they already follow.
   Plan mode is a drafting affordance, not the artifact. Folds in the description
   over-trigger carve-out (trivial non-commitment-clause edits to load-bearing docs get one
   independent review, not the full cycle).
-- [ ] **P10** Relax the two-generation tax in **L3 only** (D-TwoGen): `l3-phase.js` closes
+- [x] **P10** Relax the two-generation tax in **L3 only** (D-TwoGen): `l3-phase.js` closes
   a phase on a single clean round **iff no fix was applied** (`fixApplied` gate); the
   moment a fix lands, two-generation re-engages. Guard the fix-spawn so it does not run on
   a clean round; update `schemas.md` closure formula and every restatement site. L1/L2
   prose two-generation rule unchanged.
 
 **WS5 — heavy optional orchestration modes (D-Scope; opt-in, zero-install fallback)**
-- [ ] **P8** Optional adversarial review panel: `references/multi-voter-review.md` +
+- [x] **P8** Optional adversarial review panel: `references/multi-voter-review.md` +
   `references/review-panel.js`. N (default 3, overridable arg) fresh reviewers in
   `parallel()`, each returning the existing `ReviewVerdict`; **union counts computed
   mechanically in the script** (never by an agent) and fed to the termination check; any
   dedup agent is merge-only and may not change counts. `reviewMode:'single'|'panel'`
   defaults to `single`. Gated to load-bearing/high-risk artifacts.
-- [ ] **P5** Optional tool-restricted reviewer bundle: `references/optional-subagents.md`
+- [x] **P5** Optional tool-restricted reviewer bundle: `references/optional-subagents.md`
   with built-in `.claude/agents` definitions (`three-loop-design-reviewer` /
   `-impl-reviewer` / `-l3-reviewer`: `tools: Read, Grep, Glob, Bash`, no Edit/Write,
   `skills:[three-loop-workflow]` preload; optional Haiku `-accept-runner`). Honest
@@ -159,16 +159,16 @@ they already follow.
   `agent(prompt,{schema})` path). Registered in the cross-file consistency table. Bold
   README note: optional built-in agents, **not** the external plugin v1.3.2 removed; skill
   still runs zero-install.
-- [ ] **P11** Optional commit-prefix `PreToolUse` hook:
+- [x] **P11** Optional commit-prefix `PreToolUse` hook:
   `references/validate-commit-msg.sh` + documented `settings.json` hook. Enforces the
   prefix **grammar** only (honestly described as a lint complementing the semantic
   review, not "Surgical Changes enforced"). Narrow matcher; exempts `chore:`/`docs:`/the
   closeout commit. Soften the "enforced mechanically" prose at the three sites.
-- [ ] **P16-1** (mandatory even if no team mode is used) Bind role isolation to teammate
+- [x] **P16-1** (mandatory even if no team mode is used) Bind role isolation to teammate
   **identity** at `SKILL.md` and `loop-3-development.md`: a subagent that authored (or
   self-claimed dev for) an artifact may never claim its review/accept; lead plan-approval
   is not the fresh-reviewer gate.
-- [ ] **P16-2** (optional) `references/loop-3-teams.md`: three narrow agent-team modes
+- [x] **P16-2** (optional) `references/loop-3-teams.md`: three narrow agent-team modes
   behind `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS`, each with a sequential-subagent fallback
   (competing-hypothesis L1 debugging; parallel multi-lens F review; cross-layer L3 with
   mandatory disjoint file ownership). "When NOT to use a team" box pins the default path
@@ -176,11 +176,11 @@ they already follow.
   explicitly excluded (no in-team user gate).
 
 **WS6 — release packaging**
-- [ ] Version bump to `1.4.0` in `SKILL.md` metadata; `README.md` + `README-cn.md`
+- [x] Version bump to `1.4.0` in `SKILL.md` metadata; `README.md` + `README-cn.md`
   "What's new" v1.4 row (CN mirrors EN per Language Policy).
-- [ ] Update `CLAUDE.md` load-bearing list / common-commands for any new load-bearing
+- [x] Update `CLAUDE.md` load-bearing list / common-commands for any new load-bearing
   files and the grep gate.
-- [ ] Rebuild `three-loop-workflow.skill` zip; sync installed copy (if present).
+- [x] Rebuild `three-loop-workflow.skill` zip; sync installed copy (if present).
 
 ## 3. Scope Boundary (explicitly NOT in scope)
 

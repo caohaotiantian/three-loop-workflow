@@ -4,7 +4,7 @@
 > Design doc: `docs/design/2026-06-09-skill-orchestration-upgrade.md`
 >
 > Status: closed
-> Closing-commit: PENDING
+> Closing-commit: 8460330
 > Closed-on: 2026-06-09
 > Deferred: none
 >
