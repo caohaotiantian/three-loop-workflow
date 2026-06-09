@@ -3,11 +3,8 @@
 The default review is a single fresh reviewer per round. The two-generation termination rule
 guards against a *noisy* reviewer (one that flags phantom issues), but it cannot catch a
 *blind* reviewer (one that misses a real issue every round). For a load-bearing or high-risk
-artifact, escalate to a **panel**: N independent fresh reviewers vote in parallel, and their
-findings are unioned. This is the dynamic-workflows trustworthiness pattern — independent
-agents adversarially cross-checking — applied to the review corner.
-
-This is an **optional escalation**, not the default. Small, low-risk changes pay nothing.
+artifact, escalate to a **panel**: N independent fresh reviewers vote in parallel and their
+findings are unioned (the dynamic-workflows cross-checking pattern applied to the review corner).
 
 ## When to escalate to a panel
 
@@ -33,10 +30,9 @@ path**:
   union counts are what feed the termination check.
 
 Because both counts are unions, panel mode makes **both** termination fields strictly harder to
-satisfy (more severe findings to clear, and a harder "prior round zero general"). It can only
-**add** findings — never remove one — so it strictly strengthens the gate and never lowers the
-bar. A dedup step, if any, is **merge-only**: it may collapse byte-identical duplicate strings
-for fix-prompt readability, but may never lower a count or demote a severe to a general.
+satisfy — it can only **add** findings, never remove one, so it strengthens the gate and never
+lowers the bar. Any dedup is **merge-only** (collapse byte-identical duplicates for readability;
+never lower a count or demote a severe to a general).
 
 > **Why there is no "dedup judge" agent.** A single agent that reduces the union would itself be
 > an un-paneled solo reviewer — reintroducing the exact blind-single-reviewer failure the panel

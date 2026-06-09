@@ -48,7 +48,9 @@ Run these substeps in order:
     - The impl doc stays as a separate file (impl docs are per-task by construction; do not merge them).
 
     Larger designs stay as standalone files. When in doubt, do not merge.
-5. **Spawn a fresh review subagent** with the prompt template below. One round only. The subagent's sole job is to confirm the consolidation removed only ephemeral content and preserved every load-bearing claim. Severe findings here escalate to the user — do not roll a second round of consolidation, because that pattern silently invites information loss.
+5. **Spawn a fresh review subagent** with the prompt template below (one round only). Severe findings escalate to the user — do not roll a second consolidation round, which silently invites information loss.
+
+> For structured output from this review subagent, see `references/schemas.md` (`ReviewVerdict` schema) — the Consolidation Review Report maps onto its severe / general / verdict fields.
 
 ### Consolidation review subagent prompt template
 

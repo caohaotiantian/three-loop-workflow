@@ -11,10 +11,10 @@ not author-asserted.
 
 Light Mode applies only when **all** of the following are true:
 
-- the change touches **≤ 3 non-load-bearing files** (treat ">3 files OR in doubt" as → Full;
-  do not game the line by splitting one change into two tasks);
-- **no breaking change** (schema, exit code, CLI argument, storage layout, external protocol,
-  directory structure);
+- the change touches **≤ 3 non-load-bearing files** (>3 → Full; don't game the line by
+  splitting one change into two tasks);
+- **no breaking change** (schema / exit code / CLI / storage / protocol / directory — the
+  canonical trigger list is in `references/escalation-rules.md`);
 - **no new external contract**;
 - **no unresolved >1-option design decision** and **no magic-number / threshold decision**.
 

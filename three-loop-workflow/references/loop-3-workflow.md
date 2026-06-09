@@ -1,18 +1,14 @@
 # L3: Workflow-Based Phase Execution (Recommended)
 
-This file describes how to invoke `references/l3-phase.js` to run an L3 Phase
-deterministically. The Workflow-based mode is **recommended** over the manual
-prose-driven mode (`references/loop-3-development.md`) because it enforces round caps,
-structured verdicts, and the two-generation termination condition as deterministic code
-rather than prose instructions. Dev agents write directly to the main working tree
-(no git worktree isolation), so accept commands see the correct state; the review and
-accept subagents audit the dev changes via `git diff <baseSha>..<devBranch>` (the dev
-agent returns `baseSha` in `DevResult`).
+**Recommended** L3 execution mode: `references/l3-phase.js` enforces the round caps, structured
+verdicts, and two-generation termination as code rather than prose. The four-corner template
+and its guarantees are canonical in `references/loop-3-development.md`. Dev agents write to the
+main working tree (no worktree isolation); review and accept audit via the `baseSha` diff (see
+`references/schemas.md` `DevResult`).
 
 ## When to use this
 
-Use for every L3 Phase in normal operation. Fall back to the prose-driven mode only when:
-- The Workflow tool is unavailable (headless CI, restricted harness).
+Use for every L3 Phase; fall back to prose mode (`references/loop-3-development.md`) only when the Workflow tool is unavailable (headless CI, restricted harness).
 
 ## Invocation
 
@@ -69,23 +65,19 @@ git branch -d <result.branch>
 ## Agent budgeting
 
 The dynamic-workflow runtime caps a run at **16 concurrent / 1000 total** agents (per the
-Claude Code workflows docs). `l3-phase.js` spawns its agents **sequentially** (dev → review →
-fix → accept, at most ~1 live at a time, far under 16; a handful per Phase, far under 1000), so
-it never approaches either cap — the caps matter only if you add a fan-out mode (e.g. the
-optional review panel, `references/multi-voter-review.md`). Note these caps govern the
-*workflow runtime* only: the L1 / L2 / F reviews are **main-agent-spawned subagents**, not
-workflow-runtime agents, so they are not bounded by 16/1000. To gauge spend before a large run,
-the workflows docs recommend running on a small slice first and watching `/workflows`.
+Claude Code workflows docs). `l3-phase.js` spawns agents **sequentially** (~1 live at a time),
+so it never approaches either cap — they matter only if you add a fan-out mode (e.g. the
+optional review panel, `references/multi-voter-review.md`). These caps govern the *workflow
+runtime* only: L1/L2/F reviews are **main-agent-spawned subagents**, not bounded by 16/1000. To
+gauge spend, run a small slice first and watch `/workflows`.
 
 ## Structured output schemas
 
 The script uses three schemas from `references/schemas.md`:
 - `ReviewVerdict` — for the review subagent (step 2)
 - `AcceptVerdict` — for the accept subagent (step 3)
-- `DevResult` — for the dev subagent (step 1); `branch` field is **required**
+- `DevResult` — for the dev subagent (step 1)
 
 ## Prose-driven fallback
 
-If this script cannot be used, follow `references/loop-3-development.md` (manual/fallback mode).
-The four-corner template, role responsibilities, commit conventions, and E2E gate described
-there remain authoritative regardless of which mode is used.
+If this script cannot be used, follow `references/loop-3-development.md` (manual/fallback mode) — its four-corner template and guarantees are authoritative regardless of mode.

@@ -40,7 +40,7 @@ review, L3 review corner). Pass as `agent(reviewPrompt, { schema: ReviewVerdict 
 }
 ```
 
-Loop-closure check (replaces English string matching). Two forms:
+Loop-closure check. Two forms:
 
 - **L1 / L2 — strict two-generation** (a clean first round still requires a confirming round):
 ```

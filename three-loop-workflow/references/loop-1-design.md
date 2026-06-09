@@ -4,14 +4,14 @@
 
 Produce a **self-contained** `docs/design/<task-slug>.md` such that any fresh agent can complete subsequent work using only that file plus the upstream design documents it explicitly references. No context from the current session is required.
 
-If `docs/design/` does not yet exist, the first task simply runs `mkdir -p docs/design docs/implementation` at the repository root. No pre-planned directory structure or README index is maintained.
+If `docs/design/` does not yet exist, create it per SKILL.md "Document creation convention" (`mkdir -p docs/design docs/implementation` at the repo root).
 
 ## L1 pre-step: Understand before designing
 
 Design quality is bounded by understanding quality. Before drafting, when the task **touches
-existing code**, the main agent runs a read-only codebase-understanding sweep. This is a
-**pre-step, not a loop**: no review subagent, no round counter, no termination condition — it
-only gathers inputs for the design.
+existing code**, the main agent runs a read-only codebase-understanding sweep — a **pre-step,
+not a loop** (no review subagent, round counter, or termination condition); it only gathers
+design inputs.
 
 - **Trigger**: any task that modifies existing code. Required when the change spans more than
   one module or touches a load-bearing doc; optional for a trivial single-file change.
