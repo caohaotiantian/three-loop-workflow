@@ -40,14 +40,23 @@ review, L3 review corner). Pass as `agent(reviewPrompt, { schema: ReviewVerdict 
 }
 ```
 
-Loop-closure check (replaces English string matching):
+Loop-closure check (replaces English string matching). Two forms:
+
+- **L1 / L2 — strict two-generation** (a clean first round still requires a confirming round):
 ```
 closed = (verdict == "pass") || (severe_count == 0 && round > 1 && prior_general_count == 0)
+```
+- **L3 only — clean-first-round relaxation** (encoded in `references/l3-phase.js`): a Phase
+  additionally closes on a single round when the first review is fully clean AND no fix was
+  applied. The moment any fix lands, `fixApplied` is set and two-generation re-engages:
+```
+closed = severe_count == 0 && ( (!fixApplied && general_count == 0) || (round > 1 && prior_general_count == 0) )
 ```
 
 The `pass` verdict signals the review subagent is confident the document is ready.
 `severe_count == 0` with a prior clean general round is the mechanical two-generation
-termination condition encoded as numbers.
+termination condition encoded as numbers. The L3 relaxation removes only the tax on a
+correct-first-time Phase; a round with any unresolved severe or general issue can never close.
 
 ## AcceptVerdict
 

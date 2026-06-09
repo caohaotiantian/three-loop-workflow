@@ -97,10 +97,15 @@ const baseSha = devResult.baseSha   // diff base for the review/accept fresh-eye
 
 // ── Review loop ───────────────────────────────────────────────
 // `round` starts at 1 and increments on every fix cycle.
-// Two-generation termination: `round > 1 && priorGeneralCount === 0`
+// Termination (L3-only relaxation, see references/schemas.md): a Phase closes on a
+// single round when the first review is fully clean AND no fix was applied
+// (`!fixApplied && general_count === 0`); the moment any fix lands, the standard
+// two-generation rule re-engages (`round > 1 && priorGeneralCount === 0`). This relaxes
+// only the clean-first-round tax for L3; L1/L2 keep strict two-generation.
 phase('Review')
 let round = 1
 let priorGeneralCount = Infinity
+let fixApplied = false
 
 while (round <= MAX_ROUNDS) {
   log(`${phaseLabel}: review round ${round}/${MAX_ROUNDS} (prior generals: ${priorGeneralCount === Infinity ? 'n/a' : priorGeneralCount})`)
@@ -116,22 +121,34 @@ while (round <= MAX_ROUNDS) {
 
   if (!review) return { status: 'agent-error', phaseLabel, round, stage: 'review' }
 
-  const reviewPasses = review.severe_count === 0 && round > 1 && priorGeneralCount === 0
+  const noIssues = review.severe_count === 0 && review.general_count === 0
+  const reviewPasses = review.severe_count === 0 &&
+    ((!fixApplied && review.general_count === 0) || (round > 1 && priorGeneralCount === 0))
   priorGeneralCount = review.general_count
 
   if (reviewPasses) break  // exit review loop, enter accept loop
 
   round++
   if (round > MAX_ROUNDS) return { status: 'cap-exhausted', phaseLabel, round, stage: 'review' }
-  log(`${phaseLabel}: review issues remain (severe=${review.severe_count} general=${review.general_count}), running fix round ${round}`)
-  phase('Fix')
-  await tryAgent(
-    `You are the fix subagent for ${phaseLabel} review round ${round}. Fix the following review issues on branch "${devBranch}" ` +
-    `(inspect the cumulative diff with \`git diff ${baseSha}..${devBranch}\`). ` +
-    `Surgical Changes only — commit fixes to the same branch.\n\nSevere: ${review.severe.join('; ')}\nGeneral: ${review.general.join('; ')}`,
-    { label: `fix:review:${phaseLabel}:r${round}`, phase: 'Fix' }
-  )
-  phase('Review')
+
+  if (!noIssues) {
+    // Real issues remain — run a fix. This sets fixApplied, re-engaging two-generation
+    // (a fix can introduce a new defect, so a confirming clean round is then required).
+    fixApplied = true
+    log(`${phaseLabel}: review issues remain (severe=${review.severe_count} general=${review.general_count}), running fix round ${round}`)
+    phase('Fix')
+    await tryAgent(
+      `You are the fix subagent for ${phaseLabel} review round ${round}. Fix the following review issues on branch "${devBranch}" ` +
+      `(inspect the cumulative diff with \`git diff ${baseSha}..${devBranch}\`). ` +
+      `Surgical Changes only — commit fixes to the same branch.\n\nSevere: ${review.severe.join('; ')}\nGeneral: ${review.general.join('; ')}`,
+      { label: `fix:review:${phaseLabel}:r${round}`, phase: 'Fix' }
+    )
+    phase('Review')
+  } else {
+    // Clean round but two-generation not yet satisfied (a prior fix's confirming round):
+    // do NOT spawn a fix — just re-review to obtain the confirming generation.
+    log(`${phaseLabel}: clean round; running confirming review round ${round}`)
+  }
 }
 
 // ── Accept loop ───────────────────────────────────────────────

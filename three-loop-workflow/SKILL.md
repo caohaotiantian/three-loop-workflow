@@ -152,6 +152,7 @@ Each loop must satisfy its termination condition before advancing. Hitting the r
 
 **Shared termination condition (all loops)**:
 - **Pass**: the review subagent reports zero severe issues this round, AND one consecutive prior round reported zero general issues. Exit the loop.
+  - **L3-only clean-first-round relaxation** (Workflow mode, `references/l3-phase.js`): a Phase also closes on a *single* round when its first review is fully clean — zero severe AND zero general — and no fix was applied. The moment any fix lands, the standard two-generation rule re-engages. This removes only the tax on correct-first-time work; a round with any unresolved issue never closes. **L1 and L2 keep the strict two-generation rule** (there the second clean round is fresh-reviewer corroboration, not a post-fix re-check).
 - **Hard cap, per domain**: 3 rounds, counted independently. L1 / L2 / L3 do not share rounds — even if L1 takes all 3 rounds to pass, L2 still starts at round 1. L3 is counted independently per Phase. Hitting cap → escalate, never relax the bar.
 - **Round counter substitution**: increment `{{round}}` before spawning each review subagent. The subagent never receives the literal `{{round}}` string.
 - L1 / L2 fixes are made directly by the main agent — no separate fix subagent (scale is small). L3 uses the four-corner template (dev / review / accept / fix), each role a fresh subagent.

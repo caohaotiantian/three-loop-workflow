@@ -271,6 +271,7 @@ pass / needs fix / severe non-conformance
 ### 2.5 Termination Conditions (shared by L1, L2, L3)
 
 - **Pass**: the review subagent reports zero severe issues this round, and one consecutive round reports zero general issues. Exit the current loop.
+- **L3-only clean-first-round relaxation** (Workflow mode, `references/l3-phase.js`): a Phase also closes on a single round when its first review is fully clean (zero severe and zero general) and no fix was applied; any fix re-engages two-generation. L1 and L2 keep the strict rule above (their second clean round is fresh-reviewer corroboration, not a post-fix re-check).
 - **Hard cap, per domain**: L1 and L2 are counted independently with a cap of 3 rounds each. L3 is counted independently per Phase, also capped at 3. **No cross-domain accumulation**: even if L1 takes all 3 rounds to pass, L2 still starts at round 1. If any single domain fails to clear severe issues by round 3, suspend the loop and escalate via AskUserQuestion to the user with a deadlock report.
 - **Round counter substitution**: the main agent increments `{{round}}` before spawning each review subagent. The subagent must never receive the literal `{{round}}` string.
 - Fixes are made directly by the main agent. No separate subagent is spawned for fixes (the scale is small).
