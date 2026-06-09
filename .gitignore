@@ -24,3 +24,6 @@ Thumbs.db
 
 # Packaged skill archives (built on demand; distributed via GitHub releases)
 *.skill
+
+# Harness session-continuation artifacts
+.omo/
