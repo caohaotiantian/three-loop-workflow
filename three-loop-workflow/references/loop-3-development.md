@@ -71,6 +71,8 @@ Notes on the diagram:
 
 > **Optional escalation**: for a load-bearing or high-risk Phase, run the review corner as an adversarial **panel** — pass `reviewMode: 'panel'` to `l3-phase.js`, or run `references/review-panel.js` directly. See `references/multi-voter-review.md`.
 
+> **Optional**: if the `three-loop-l3-reviewer` / `three-loop-accept-runner` agents (`references/optional-subagents.md`) are installed, spawn them by name (note: tool restrictions apply on the manual path, not the Workflow `agent(prompt,{schema})` path); the skill runs zero-install without them.
+
 ## Role responsibilities
 
 | Role | Input | Output | Forbidden |
@@ -92,7 +94,7 @@ Notes on the diagram:
 ## Commit conventions
 
 - **Phase opener**: `feat(phaseN): <one-line summary>` or `fix(phaseN): …` depending on change nature.
-- **Within-round fix**: `fix(phaseN-roundR): <failing-item-keyword>`. The keyword must name a failing item from the review or accept report. Drive-by edits leave no valid keyword and thus cannot be committed under this convention — that is how Surgical Changes is enforced mechanically.
+- **Within-round fix**: `fix(phaseN-roundR): <failing-item-keyword>`. The keyword must name a failing item from the review or accept report — a drive-by edit has no valid keyword to name. The keyword is named by the author and **checked by the review subagent against the diff** (optionally pre-screened by the commit-prefix lint hook `references/validate-commit-msg.sh`, which enforces only the prefix grammar, not surgical-ness). The prefix alone does not prove a change is surgical; the review corner does.
 - **Trailers** record `<TEST-CMD>` exit code and key `<ACCEPT-CMD>` results.
 - **Do not** mention AI involvement, model names, or agent tooling in commit messages or PR descriptions.
 

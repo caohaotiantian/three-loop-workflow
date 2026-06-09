@@ -190,6 +190,8 @@ Once you've confirmed this skill applies to the current task, jump to the releva
 | Close out the task: end-to-end review, document consolidation (F) | `references/end-to-end-review.md` |
 | Encounter ambiguity, breaking change, or unverifiable acceptance | `references/escalation-rules.md` |
 | Escalate a review to an adversarial panel (load-bearing / high-risk artifact) | `references/multi-voter-review.md` — N fresh voters, mechanical union; `reviewMode: 'panel'` in `l3-phase.js` |
+| Install optional tool-restricted reviewer agents (built-in `.claude/agents`, model routing) | `references/optional-subagents.md` — definitions, the honest enforcement boundary, mandatory fallback |
+| Use agent-team modes (behavior-bug debate, cross-layer L3, parallel F review) | `references/loop-3-teams.md` — three modes, the identity guardrail, "when NOT to use a team" |
 | Audit CLAUDE.md / cross-file consistency | `references/claude-md-integration.md` |
 
 ## Commit conventions (cross-cutting)
@@ -197,7 +199,7 @@ Once you've confirmed this skill applies to the current task, jump to the releva
 Every code-modifying commit produced inside L3 follows these conventions:
 
 - **Phase opener**: `feat(phaseN): <one-line summary>` or `fix(phaseN): …` depending on change nature.
-- **Within-round fix**: `fix(phaseN-roundR): <failing-item-keyword>`. The keyword must name a failing item from the review or accept report — drive-by edits leave no valid keyword and thus cannot be committed under this convention. This is how Surgical Changes is enforced mechanically.
+- **Within-round fix**: `fix(phaseN-roundR): <failing-item-keyword>`. The keyword must name a failing item from the review or accept report — a drive-by edit has no valid keyword to name. The keyword is named by the author and **checked by the review subagent against the diff** (optionally pre-screened by a commit-prefix lint hook, `references/validate-commit-msg.sh`); the prefix grammar alone does not prove a change is surgical — the review corner does.
 - **Trailers** record `<TEST-CMD>` exit code and key `<ACCEPT-CMD>` results.
 - **Do not** mention AI involvement, model names, or agent tooling in commit messages or PR descriptions.
 

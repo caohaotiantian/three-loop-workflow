@@ -104,6 +104,8 @@ The main agent edits the doc directly — no separate fix subagent at L1 (scale 
 
 > **Optional escalation**: for a load-bearing or high-risk design, escalate to an adversarial **panel** review (N fresh voters, mechanical union of findings) — see `references/multi-voter-review.md`.
 
+> **Optional**: if the `three-loop-design-reviewer` agent (`references/optional-subagents.md`) is installed, spawn it by name; the skill runs zero-install with a fresh default subagent without it.
+
 ## Review subagent prompt template
 
 Substitute the bracketed values, increment the round counter, and spawn a fresh subagent per round. The subagent must never receive the literal `{{round}}` string.

@@ -53,6 +53,8 @@ Four non-negotiable principles every subagent inherits:
 
 The skill is **self-contained** — it depends on no external plugin. Every subagent / Workflow node runs on the built-in default subagent, so installing this skill alone is sufficient.
 
+**Optional** reviewer agents (`three-loop-workflow/references/optional-subagents.md`) add tool-restricted, model-routed reviewers — these are **built-in Claude Code `.claude/agents` files, not the external plugin v1.3.2 removed**, and the skill still runs zero-install without them.
+
 ### Claude Code
 
 Drop the skill folder into one of the standard locations:

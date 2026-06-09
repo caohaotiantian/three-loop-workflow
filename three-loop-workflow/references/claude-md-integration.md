@@ -77,7 +77,7 @@ Items written in _italics_ are **roles**, not literal heading names. References 
 
 | Clause category | Source of truth | Required reference site |
 |---|---|---|
-| Coding philosophy (Think Before Coding, Simplicity First, Surgical Changes, Goal-Driven Execution) | skill `SKILL.md` "Core principles" | review subagent prompts in `references/loop-1-design.md`, `references/loop-2-implementation.md`, `references/loop-3-development.md` (any violation is a severe issue) |
+| Coding philosophy (Think Before Coding, Simplicity First, Surgical Changes, Goal-Driven Execution) | skill `SKILL.md` "Core principles" | review subagent prompts in `references/loop-1-design.md`, `references/loop-2-implementation.md`, `references/loop-3-development.md`, and the agent bodies in `references/optional-subagents.md` (any violation is a severe issue) |
 | Adversarial review-panel angles (the four principles restated as voter lenses) | skill `SKILL.md` "Core principles" | `references/multi-voter-review.md` and the `ANGLES` list in `references/review-panel.js`; `PANEL_ANGLES` in `references/l3-phase.js` |
 | Three-loop trigger conditions (which tier applies) | skill `SKILL.md` "Which tier applies" | CLAUDE.md _repo-workflow_ role |
 | CLAUDE.md role vocabulary | this file ("The five required roles") | CLAUDE.md anchor map at the top of the file |

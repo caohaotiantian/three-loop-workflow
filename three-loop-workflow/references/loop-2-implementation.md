@@ -65,6 +65,8 @@ When an L2 rollback is triggered, the main agent must revert all L3 commits from
 
 > **Optional escalation**: for a load-bearing or high-risk implementation plan, escalate to an adversarial **panel** review (N fresh voters, mechanical union) — see `references/multi-voter-review.md`.
 
+> **Optional**: if the `three-loop-impl-reviewer` agent (`references/optional-subagents.md`) is installed, spawn it by name; the skill runs zero-install with a fresh default subagent without it.
+
 ## Review subagent prompt template
 
 ```plaintext
