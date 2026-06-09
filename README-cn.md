@@ -19,6 +19,7 @@ skill 文件(`SKILL.md` + `references/`)才是事实标准 —— 它们是 Clau
 | **v1.3.1** | `references/l3-phase.js` — 基于 Workflow 工具的 L3 阶段执行器（推荐模式）；`references/loop-3-workflow.md` — 调用指南；`references/schemas.md` 新增 AcceptVerdict 和 DevResult schema；SKILL.md 路由表新增 Workflow 模式行 |
 | **v1.3.2** | skill 现在是「自包含」(self-contained)的:所有 subagent/Workflow 节点都运行在内置的默认 subagent 上;移除了对 feature-dev 插件 agent 类型的依赖（从 SKILL.md 删除了 `agentType` 推荐列以及裸名 vs 命名空间评审 agent 的说明段落） |
 | **v1.3.3** | skill 不再诱发代码中的「过程叙述型注释」:在 SKILL.md 与 WORKFLOW-v3.md §0.3 新增明确的 Surgical Changes 规则（「注释解释代码,而非工作流」），并在 L3 评审中新增对其的检查项;`references/l3-phase.js` 范例已清除设计文档/决策/示意图引用 |
+| **v1.4** | **编排能力升级。** 正确性:L3 dev 改动通过 `baseSha` 物化 diff,并新增区别于「轮次耗尽」的 `agent-error` 状态(`l3-phase.js`);将 skill 文件确立为唯一权威来源,并加入 `three-loop-consistency` 漂移检查门;删除了关于 worktree 隔离的虚假声明。纪律调优:仅 L3 的「首轮即清洁」终止放宽;带门控的 **Light/Full 两档**(`references/light-mode.md`)及新鲜视角的分档复核;基于范围(而非工时)的 Phase 定义;成本预期说明。质量上限:L1「先理解再设计」Explore 前置步骤;门控式**行为验证**(`/run`、`/verify`);声明或显式排除性能/UX/无障碍预算。可选模式(均为可选、零安装回退):对抗式**多投票评审面板**及机械并集(`references/review-panel.js`、`multi-voter-review.md`);受工具限制、按模型路由的**评审 agent**(`references/optional-subagents.md`);提交前缀 lint 钩子(`references/validate-commit-msg.sh`);**agent 团队**模式(`references/loop-3-teams.md`) |
 
 ## 什么是三循环工作流
 

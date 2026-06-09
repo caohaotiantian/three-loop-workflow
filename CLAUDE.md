@@ -19,8 +19,9 @@ The following files are protected by the full L1 → L2 → L3 cycle:
 
 - `three-loop-workflow/SKILL.md`
 - `three-loop-workflow/references/*.md` (all reference files)
-- `three-loop-workflow/references/l3-phase.js`
-- `WORKFLOW-v3.md`
+- `three-loop-workflow/references/*.js` (`l3-phase.js`, `review-panel.js` — Workflow scripts)
+- `three-loop-workflow/references/*.sh` (`check-consistency.sh`, `check-workflow-syntax.sh`, `validate-commit-msg.sh` — gate/hook helpers)
+- `WORKFLOW-v3.md` (derived spec-level narrative; the skill is the source of truth)
 
 ## Language Policy
 
@@ -44,9 +45,12 @@ of `README.md`.
 ## Engineering Norms
 
 - This repo distributes a Claude skill, not application code. The primary artifacts
-  are Markdown files and one JavaScript Workflow script (`references/l3-phase.js`).
+  are Markdown files, two JavaScript Workflow scripts (`references/l3-phase.js`,
+  `references/review-panel.js`), and shell gate/hook helpers (`references/*.sh`).
 - Follow the skill's own four core principles: Think Before Coding, Simplicity First,
   Surgical Changes, Goal-Driven Execution.
-- `l3-phase.js` is plain JavaScript (no TypeScript, no `Date.now()`, no `Math.random()`).
+- The Workflow scripts (`l3-phase.js`, `review-panel.js`) are plain JavaScript (no
+  TypeScript, no `Date.now()`, no `Math.random()`); validate them with
+  `check-workflow-syntax.sh`, not `node --check`.
 - Do not add new CLAUDE.md roles without updating the anchor map above and all
   downstream reference files that read those roles.
