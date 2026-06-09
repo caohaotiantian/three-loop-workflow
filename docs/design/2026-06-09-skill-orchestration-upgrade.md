@@ -6,6 +6,11 @@
 > Closing-commit: 8460330
 > Closed-on: 2026-06-09
 > Deferred: none
+>
+> Follow-up (post-closeout, same day): `WORKFLOW-v3.md` was removed entirely. The canonical
+> flip (D-Canonical / P4a) made the derived spec redundant, so the "Derived" banner was
+> superseded by outright deletion (user-authorized). The `three-loop-consistency` check was
+> repurposed from spec-vs-skill comparison to verifying intra-skill commitment-clause tokens.
 
 ## 1. Background and Purpose
 

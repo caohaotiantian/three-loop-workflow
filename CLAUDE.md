@@ -21,22 +21,21 @@ The following files are protected by the full L1 → L2 → L3 cycle:
 - `three-loop-workflow/references/*.md` (all reference files)
 - `three-loop-workflow/references/*.js` (`l3-phase.js`, `review-panel.js` — Workflow scripts)
 - `three-loop-workflow/references/*.sh` (`check-consistency.sh`, `check-workflow-syntax.sh`, `validate-commit-msg.sh` — gate/hook helpers)
-- `WORKFLOW-v3.md` (derived spec-level narrative; the skill is the source of truth)
 
 ## Language Policy
 
 All skill files and process documents: English. Terminology must be consistent with
-existing `docs/design/`, `docs/implementation/`, the skill's `SKILL.md`, and
-`WORKFLOW-v3.md`. The only exception is `README-cn.md`, which is a Chinese translation
-of `README.md`.
+existing `docs/design/`, `docs/implementation/`, and the skill's `SKILL.md`. The only
+exception is `README-cn.md`, which is a Chinese translation of `README.md`.
 
 ## Common Commands
 
 - `<TEST-CMD>`: N/A — this repo has no unit-test suite; acceptance is verified by
   grep-based checks over the modified files, plus the two gates below.
 - three-loop-consistency check: `bash three-loop-workflow/references/check-consistency.sh` —
-  fails if a named token (the five role names, `fix(phaseN-roundR)`, "five questions", the
-  two-generation termination wording) drifts between `WORKFLOW-v3.md` and the skill files.
+  fails if a commitment-clause token (the five role names, `fix(phaseN-roundR)`, "five
+  questions", the two-generation termination wording) is missing from its source file or a
+  paired reference site within the skill.
 - Workflow-script syntax check: `bash three-loop-workflow/references/check-workflow-syntax.sh <file.js>` —
   reliably parses a Workflow script (`node --check` mis-parses these `export`+top-level-`return` files).
 - Zip rebuild (from repo root): `zip -r three-loop-workflow.skill three-loop-workflow/`
