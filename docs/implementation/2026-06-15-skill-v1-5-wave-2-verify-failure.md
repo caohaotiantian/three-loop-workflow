@@ -1,5 +1,13 @@
 # Implementation — v1.5 Wave 2: verify-don't-label + failure-handling depth
 
+```
+Status: closed (wave)
+Phase-commits: fb52474 (Phase 1, Group C), b4f2bce (Phase 2, Group D)
+Closed-on: 2026-06-15
+PhaseEnd: Phase 1 14/14 ACCEPT-CMDs; Phase 2 14/14; both gates green; SKILL.md untouched (pinned f43d105)
+Behavioral [B]: AC-W2-BEH-C1 PASS ({"flagged_missing_test":true}); AC-W2-BEH-C3 PASS ({"ran_whole_change_review":true,"flagged_cross_phase_defect":true})
+```
+
 **Slug:** `2026-06-15-skill-v1-5-wave-2-verify-failure` (matches the design doc)
 **Design doc:** `docs/design/2026-06-15-skill-v1-5-wave-2-verify-failure.md`
 **Umbrella:** `docs/design/2026-06-15-skill-v1-5-compliance-hardening.md` (§3, §4b binding)
