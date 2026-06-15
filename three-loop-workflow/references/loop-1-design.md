@@ -171,8 +171,8 @@ contract files.
      itself (termination / escalation / tier / principle / rationalization
      rule): do not credit that the rule merely reads correctly — demand a
      concrete demonstration that the edited rule changes agent behavior (a
-     before/after, or a runnable check). A behavior rule asserted but never
-     observed is a severe issue.
+     before/after, or a runnable check). A behavior rule
+     asserted but never observed is a severe issue.
 5. Do not modify the document. Output only the review report.
 
 [Trip-wires] A clean first round does not close L1 — the two-generation rule needs a confirming clean round; an unresolved general issue blocks closure.
