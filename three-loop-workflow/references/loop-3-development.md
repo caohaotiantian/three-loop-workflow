@@ -80,7 +80,9 @@ Notes on the diagram:
 | **step 1: dev** | Phase task list in impl doc + design doc references + exports, immediate callers, and shared utilities of files being modified | Code changes (TDD: tests first), task-list checkboxes ticked | Modify the impl doc; expand scope unilaterally |
 | **step 2: review** | dev's diff (obtained as the review subagent's first action via `git diff <baseSha>..<devBranch>` — the dev returns `baseSha`, captured before editing) + design doc + impl doc + CLAUDE.md; confirm test changes precede/accompany production changes for new behavior — a body of new production code with no corresponding new test is a severe Goal-Driven Execution issue | Review report (severe / general / clarification, format per L1 template) | Modify code |
 | **step 3: accept** | Phase `<ACCEPT-CMD>` list from impl doc | Per-command exit code and key output, marked pass or fail; plus passed/failed/skipped/xfail tally per command (skipped tests are not passing tests) | Modify code or tests; interpret or judge output beyond the mechanical exit-code → pass/fail derivation (that is the review role's job) |
-| **step 4: fix** | Failing items from step 2 or step 3 | Minimal-scope code fix; commit prefix `fix(phaseN-roundR):` | Structural refactors; introducing new requirements outside the design doc |
+| **step 4: fix** | Failing items from step 2 or step 3, each item prefixed by a one-line root cause ('item X is caused by Y') | Minimal-scope code fix; commit prefix `fix(phaseN-roundR):`; for a correctness/behavior finding (not style/scope/comment): add a failing test that reproduces it first, then fix to green (red→green) | Structural refactors; introducing new requirements outside the design doc |
+
+Fix corner is debugging, not patching: name the root cause of each failing item before editing and change that cause, one at a time. If a failing item has no identifiable cause after investigation, escalate via the design-conflict / escalation path — do not ship a guess.
 
 > **Rationalizations — recognize and stop**: the review/accept/fix excuse trip-wires live in `references/escalation-rules.md`.
 

@@ -90,6 +90,9 @@ When any single domain (L1, L2, or a single L3 Phase) hits 3 rounds without clea
     - What was attempted each round.
     - Why each fix attempt did not close the item.
     - What the reviewer subagent's reasoning was (so the user can judge whether the reviewer is correct).
+    - **Evidence of where it breaks** — for each unresolved item, the failing acceptance command or reviewer-cited symptom (with its actual output) and the file/layer/value where expected and actual diverge. 'It keeps failing' is a story, not evidence.
+
+    Pattern check: if a different item failed each round, or fix scope grew each round, the cap is firing on an architectural/decomposition defect — not a local bug. Name the likely source (L1 design or L2 phase split) and make option (a) the recommended default per the existing L3→L1/L2 rollback routing. When per-round failures are stable and local, leave the three options flat.
 2. **Use AskUserQuestion** with options like:
     - **(a) revise upstream document** (design or impl) to remove the conflict.
     - **(b) accept a documented compromise** with explicit risk recorded in the design doc's Risks and Rollback section.
