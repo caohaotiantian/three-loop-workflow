@@ -37,5 +37,11 @@ require "five questions" "$SKILL/references/loop-2-implementation.md"
 require "zero severe"  "$SKILL/SKILL.md"
 require "zero general" "$SKILL/SKILL.md"
 
+# L3-only clean-first-round relaxation — source SKILL.md, reference site schemas.md.
+require "clean-first-round" "$SKILL/SKILL.md" "$SKILL/references/schemas.md"
+
+# AcceptResult fixApplied flag — source schemas.md, reference site l3-phase.js.
+require "fixApplied" "$SKILL/references/schemas.md" "$SKILL/references/l3-phase.js"
+
 if [ "$fail" -eq 0 ]; then echo "three-loop-consistency: OK"; fi
 exit "$fail"

@@ -97,7 +97,8 @@ When any single domain (L1, L2, or a single L3 Phase) hits 3 rounds without clea
     - **(a) revise upstream document** (design or impl) to remove the conflict.
     - **(b) accept a documented compromise** with explicit risk recorded in the design doc's Risks and Rollback section; the user MAY also authorize a single retry of the failing Phase with `models:{review|fix: <stronger-model>}` — an explicit user-authorized choice, never an automatic pre-escalation round.
     - **(c) drop the deliverable** from this task's scope and file a follow-up issue.
-3. **Do not silently retry round 4.** The 3-round cap exists precisely to force this conversation.
+3. **Meta-test the cap.** If the cap was hit because a SKILL rule was unclear, missing, or hard to find (not genuine task difficulty), classify it in one line — clear-but-ignored (discipline gap) / should-have-said-X (doc gap) / didn't-see-section-Y (organization gap) — and open a follow-up issue against the three-loop-workflow repo.
+4. **Do not silently retry round 4.** The 3-round cap exists precisely to force this conversation.
 
 ## Returning from escalation
 
