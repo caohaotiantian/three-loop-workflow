@@ -167,6 +167,12 @@ contract files.
    - Coding philosophy (Think Before Coding, Simplicity First, Surgical
      Changes, Goal-Driven Execution): any violation (silent defaults,
      speculative scope, missing trade-offs) is a severe issue.
+   - If the artifact is a discipline-rule edit to the three-loop skill
+     itself (termination / escalation / tier / principle / rationalization
+     rule): do not credit that the rule merely reads correctly — demand a
+     concrete demonstration that the edited rule changes agent behavior (a
+     before/after, or a runnable check). A behavior rule asserted but never
+     observed is a severe issue.
 5. Do not modify the document. Output only the review report.
 
 [Trip-wires] A clean first round does not close L1 — the two-generation rule needs a confirming clean round; an unresolved general issue blocks closure.

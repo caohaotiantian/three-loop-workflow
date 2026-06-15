@@ -202,5 +202,6 @@ A Phase is closed when ALL of the following hold:
 - Full `<TEST-CMD>` and every `<ACCEPT-CMD>` declared in the impl doc exit with code 0.
 - Main agent's personal re-run of `<TEST-CMD>` and `<ACCEPT-CMD>` matches the accept subagent's report (recorded as commit trailer).
 - If E2E is triggered: external-process artifacts contain no errors beyond what the contract file allows. The impl doc must declare pass conditions explicitly (e.g., "lint JSON returns clean: true" or "HTTP 200 + JSON schema validation passes").
+- Skill-self discipline edit: if a Phase edits a discipline rule of THIS skill (a termination condition, escalation trigger, tier boundary, principle, or rationalization counter), the accept step adds a GREEN behavioral check — spawn one fresh subagent with a pressure scenario + the post-edit rule, confirm it complies, and record `Behavioral-check: complied` as a commit trailer.
 
 If round counter R hits 3 without all conditions met → escalate per `references/escalation-rules.md`, do not relax the bar.

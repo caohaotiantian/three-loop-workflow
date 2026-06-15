@@ -13,6 +13,9 @@ All non-trivial changes use the three-loop-workflow skill. Entry point: `SKILL.m
 Load-bearing documents require the full L1 → L2 → L3 cycle. Escalation: open an
 issue or comment in the PR.
 
+- Before merging any edit to the tier table, escalation rules, or termination wording,
+  run the scenarios in `tests/scenarios/` via a fresh subagent and confirm each `expected` holds.
+
 ## Load-Bearing Documents
 
 The following files are protected by the full L1 → L2 → L3 cycle:
