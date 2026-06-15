@@ -1,5 +1,15 @@
 # Design — three-loop-workflow v1.5: compliance-hardening from superpowers
 
+```
+Status: CLOSED (program) — all 3 waves complete; all 32 lessons shipped
+Closed-on: 2026-06-15
+Waves: Wave 1 = f43d105 (Groups A+B, 10 lessons); Wave 2 = 9636566 (Groups C+D, 7 lessons); Wave 3 = ace3452 (Groups E+F+G, 15 lessons). 10+7+15 = 32.
+Branch: skill-v1.5-compliance-hardening (main untouched). SKILL.md v1.5.0; always-loaded surface net SHRANK (2888 → 2883 words).
+Program closeout (this wave's EER): installed-copy sync verified identical; standing tests/scenarios/ suite 4/4 PASS; C3 whole-change correctness review PASS (0/0); all gates green.
+Decomposition: the original single mega-cycle hit an L1 round-cap deadlock and was decomposed into 3 waves (§0) — which converged cleanly, validating the round cap.
+Deferred: README.md / README-cn.md updates (§3) — the v1.5 changes do not invalidate their level of description.
+```
+
 **Slug:** `2026-06-15-skill-v1-5-compliance-hardening`
 **Loop:** L1 (design) · revised after L1 panel round 1 (9 severe / 23 general addressed)
 **Primary design input:** `docs/design/2026-06-15-superpowers-comparison.md` (the report — 32 vetted lessons
