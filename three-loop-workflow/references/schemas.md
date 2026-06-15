@@ -58,6 +58,8 @@ The `pass` verdict signals the review subagent is confident the document is read
 termination condition encoded as numbers. The L3 relaxation removes only the tax on a
 correct-first-time Phase; a round with any unresolved severe or general issue can never close.
 
+> The F / EER closeout fresh-eyes whole-change correctness review (see end-to-end-review.md) reuses this same ReviewVerdict schema.
+
 ## AcceptVerdict
 
 Use this schema when spawning accept subagents (L3 step 3). Pass as `agent(acceptPrompt, { schema: AcceptVerdict })`.

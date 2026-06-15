@@ -122,6 +122,9 @@ const devResult = await tryAgent(
   `tasks below in the main working tree (no worktree isolation). Commit your changes to a branch ` +
   `named "${phaseLabel.replace(/\s+/g, '').toLowerCase()}-dev-r1" and return DevResult with the ` +
   `branch name, baseSha, a summary, and conflict=true if the design doc conflicts with any task.` +
+  ` For each new behavior, write its test FIRST and run it to confirm it FAILS for the right reason ` +
+  `(feature missing, not a typo/import error) before writing code; note in your summary that you ` +
+  `watched each new test fail.` +
   `\n\nDesign doc: ${designDocPath}\nImpl doc: ${implDocPath}\n\nPhase tasks:\n${phaseSpec}`,
   { label: `dev:${phaseLabel}`, phase: 'Dev', schema: DEV_SCHEMA }
 )
@@ -155,7 +158,10 @@ while (round <= MAX_ROUNDS) {
     `\`git log ${baseSha}..${devBranch}\` to check commit conventions). Review that diff ` +
     `against design doc ${designDocPath} and impl doc ${implDocPath}. ` +
     `Return a ReviewVerdict (see references/schemas.md). ` +
-    `Trip-wires (do not rationalize past these): read the diff, not the dev summary — the summary is not evidence; an unresolved general issue blocks closure.`
+    `Trip-wires (do not rationalize past these): read the diff, not the dev summary — the summary is not evidence; an unresolved general issue blocks closure.` +
+    ` For new behavior, confirm a corresponding new test precedes/accompanies the production change ` +
+    `(use the git log you already ran) — a body of new production code with no corresponding new test ` +
+    `is a severe Goal-Driven Execution issue.`
   const review = reviewMode === 'panel'
     ? await panelReview(reviewPrompt, round)
     : await tryAgent(reviewPrompt, { label: `review:${phaseLabel}:r${round}`, phase: 'Review', schema: REVIEW_SCHEMA })

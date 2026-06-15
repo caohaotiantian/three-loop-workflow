@@ -78,7 +78,7 @@ Notes on the diagram:
 | Role | Input | Output | Forbidden |
 |---|---|---|---|
 | **step 1: dev** | Phase task list in impl doc + design doc references + exports, immediate callers, and shared utilities of files being modified | Code changes (TDD: tests first), task-list checkboxes ticked | Modify the impl doc; expand scope unilaterally |
-| **step 2: review** | dev's diff (obtained as the review subagent's first action via `git diff <baseSha>..<devBranch>` — the dev returns `baseSha`, captured before editing) + design doc + impl doc + CLAUDE.md | Review report (severe / general / clarification, format per L1 template) | Modify code |
+| **step 2: review** | dev's diff (obtained as the review subagent's first action via `git diff <baseSha>..<devBranch>` — the dev returns `baseSha`, captured before editing) + design doc + impl doc + CLAUDE.md; confirm test changes precede/accompany production changes for new behavior — a body of new production code with no corresponding new test is a severe Goal-Driven Execution issue | Review report (severe / general / clarification, format per L1 template) | Modify code |
 | **step 3: accept** | Phase `<ACCEPT-CMD>` list from impl doc | Per-command exit code and key output, marked pass or fail; plus passed/failed/skipped/xfail tally per command (skipped tests are not passing tests) | Modify code or tests; interpret or judge output beyond the mechanical exit-code → pass/fail derivation (that is the review role's job) |
 | **step 4: fix** | Failing items from step 2 or step 3 | Minimal-scope code fix; commit prefix `fix(phaseN-roundR):` | Structural refactors; introducing new requirements outside the design doc |
 
@@ -90,7 +90,7 @@ Notes on the diagram:
 
 ## Main agent constraints (per Phase)
 
-- At the **end of each Phase**, the main agent personally runs `<TEST-CMD>` and every `<ACCEPT-CMD>` declared for that Phase in the impl doc. Results are recorded as trailers on the Phase commit.
+- At the **end of each Phase**, the main agent personally runs `<TEST-CMD>` and every `<ACCEPT-CMD>` declared for that Phase in the impl doc. Results are recorded as trailers on the Phase commit. The pasted exit codes and tally must come from THIS closing run; a recalled tally or the accept subagent's earlier report is not sufficient — re-run fresh and record this run's output.
 - If a dev subagent reports "the design doc conflicts with the task", the dev agent **must not** decide. Return to L1 or L2 to fix the source document.
 
 ## Commit conventions
