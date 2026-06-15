@@ -185,7 +185,12 @@ while (round <= MAX_ROUNDS) {
     log(`${phaseLabel}: review issues remain (severe=${review.severe_count} general=${review.general_count}), running fix round ${round}`)
     phase('Fix')
     await tryAgent(
-      `You are the fix subagent for ${phaseLabel} review round ${round}. Fix the following review issues on branch "${devBranch}" ` +
+      `You are the fix subagent for ${phaseLabel} review round ${round}. ` +
+      `Before editing, state the root cause of each item ('X is caused by Y'); make the smallest ` +
+      `change that addresses the cause, not the symptom; one cause at a time. ` +
+      `If a failing item is a correctness/behavior bug, write a failing test that reproduces it before ` +
+      `fixing (red→green); a style/scope/comment finding needs no test. ` +
+      `Fix the following review issues on branch "${devBranch}" ` +
       `(inspect the cumulative diff with \`git diff ${baseSha}..${devBranch}\`). ` +
       `Surgical Changes only — commit fixes to the same branch.\n\nSevere: ${review.severe.join('; ')}\nGeneral: ${review.general.join('; ')}`,
       { label: `fix:review:${phaseLabel}:r${round}`, phase: 'Fix' }
@@ -222,7 +227,13 @@ while (acceptRound <= MAX_ROUNDS) {
   log(`${phaseLabel}: accept failures: ${accept.failures.join('; ')}, running acceptFix round ${acceptRound}`)
   phase('Fix')
   await tryAgent(
-    `You are the fix subagent for ${phaseLabel} accept round ${acceptRound}. Fix the following accept failures on branch "${devBranch}" ` +
+    `You are the fix subagent for ${phaseLabel} accept round ${acceptRound}. ` +
+    `Before editing, state the root cause of each item ('X is caused by Y'); make the smallest ` +
+    `change that addresses the cause, not the symptom; one cause at a time. ` +
+    `If a failing item is a correctness/behavior bug, write a failing test that reproduces it before ` +
+    `fixing (red→green), unless the failing item is itself the reproducing test; a style/scope/comment ` +
+    `finding needs no test. ` +
+    `Fix the following accept failures on branch "${devBranch}" ` +
     `(diff base ${baseSha}). Commit fixes to the same branch.\n\nFailures: ${accept.failures.join('; ')}`,
     { label: `acceptFix:${phaseLabel}:r${acceptRound}`, phase: 'Fix' }
   )
