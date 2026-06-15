@@ -92,6 +92,8 @@ When a principle conflicts with apparent progress, the principle wins. Violation
 | L3 accept step | Goal-Driven Execution | Phase closure on author confidence rather than green commands |
 | Section 6 escalation | Think Before Coding | "Reasonable default" used to dodge a real decision |
 
+> **Rationalizations** (the excuses for dodging these principles, and the rule each breaks): see `references/escalation-rules.md` "Rationalizations — recognize and stop".
+
 ## The three loops at a glance
 
 ```mermaid

@@ -100,6 +100,8 @@ pass / needs fix / severe non-conformance
 
 ## Closure rule
 
+> **Rationalizations — recognize and stop**: closeout excuse trip-wires live in `references/escalation-rules.md`.
+
 The task is closed only after every checklist item completes. Author confidence is not a substitute — the deliverable checkbox state, the green command exit codes, and the consolidation-review verdict are.
 
 If a deliverable cannot be closed and a follow-up issue is filed instead, the closeout report must:

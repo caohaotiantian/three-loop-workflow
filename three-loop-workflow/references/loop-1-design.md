@@ -149,6 +149,8 @@ contract files.
      speculative scope, missing trade-offs) is a severe issue.
 5. Do not modify the document. Output only the review report.
 
+[Trip-wires] A clean first round does not close L1 — the two-generation rule needs a confirming clean round; an unresolved general issue blocks closure.
+
 [Output format]
 ## Design Document Review Report (round {{round}})
 

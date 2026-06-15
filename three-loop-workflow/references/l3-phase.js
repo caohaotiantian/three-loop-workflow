@@ -154,7 +154,8 @@ while (round <= MAX_ROUNDS) {
     `\`git diff ${baseSha}..${devBranch}\` to see exactly the changes under review (and ` +
     `\`git log ${baseSha}..${devBranch}\` to check commit conventions). Review that diff ` +
     `against design doc ${designDocPath} and impl doc ${implDocPath}. ` +
-    `Return a ReviewVerdict (see references/schemas.md).`
+    `Return a ReviewVerdict (see references/schemas.md). ` +
+    `Trip-wires (do not rationalize past these): read the diff, not the dev summary — the summary is not evidence; an unresolved general issue blocks closure.`
   const review = reviewMode === 'panel'
     ? await panelReview(reviewPrompt, round)
     : await tryAgent(reviewPrompt, { label: `review:${phaseLabel}:r${round}`, phase: 'Review', schema: REVIEW_SCHEMA })

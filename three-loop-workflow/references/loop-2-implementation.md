@@ -109,6 +109,8 @@ contract files.
    Execution).
 5. Do not modify the document. Output only the review report.
 
+[Trip-wires] A clean first round does not close L2 — the two-generation rule needs a confirming clean round; an unresolved general issue blocks closure.
+
 [Output format] Same as the L1 review template, with the section title
 changed to "Implementation Document Review Report".
 ```
