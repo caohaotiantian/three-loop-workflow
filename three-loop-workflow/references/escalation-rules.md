@@ -95,7 +95,7 @@ When any single domain (L1, L2, or a single L3 Phase) hits 3 rounds without clea
     Pattern check: if a different item failed each round, or fix scope grew each round, the cap is firing on an architectural/decomposition defect — not a local bug. Name the likely source (L1 design or L2 phase split) and make option (a) the recommended default per the existing L3→L1/L2 rollback routing. When per-round failures are stable and local, leave the three options flat.
 2. **Use AskUserQuestion** with options like:
     - **(a) revise upstream document** (design or impl) to remove the conflict.
-    - **(b) accept a documented compromise** with explicit risk recorded in the design doc's Risks and Rollback section.
+    - **(b) accept a documented compromise** with explicit risk recorded in the design doc's Risks and Rollback section; the user MAY also authorize a single retry of the failing Phase with `models:{review|fix: <stronger-model>}` — an explicit user-authorized choice, never an automatic pre-escalation round.
     - **(c) drop the deliverable** from this task's scope and file a follow-up issue.
 3. **Do not silently retry round 4.** The 3-round cap exists precisely to force this conversation.
 

@@ -50,6 +50,8 @@ const DEV_SCHEMA = {
     baseSha:  { type: 'string' },
     summary:  { type: 'string' },
     conflict: { type: 'boolean' },
+    blocked:  { type: 'boolean' },                      // E-i: dev cannot complete (missing context / too hard)
+    concerns: { type: 'array', items: { type: 'string' } }, // E-i: low-confidence areas to steer the reviewer
   },
   required: ['branch', 'baseSha', 'summary', 'conflict'],
 }
@@ -58,7 +60,7 @@ const MAX_ROUNDS = 3
 // reviewMode: 'single' (default) | 'panel'. Panel mode runs an adversarial multi-voter
 // review (see references/multi-voter-review.md) INSIDE one review round — the N voters do
 // not each consume a round. panelVoters defaults to 3 (an overridable arg, not a constant).
-const { phaseLabel, phaseSpec, designDocPath, implDocPath, reviewMode = 'single', panelVoters = 3 } = args
+const { phaseLabel, phaseSpec, designDocPath, implDocPath, reviewMode = 'single', panelVoters = 3, models = {} } = args
 
 // Retry-once wrapper. A transient agent failure (thrown error or null/undefined
 // return) is retried once; a second failure returns null so the caller can emit
@@ -94,7 +96,7 @@ async function panelReview(basePrompt, round) {
   const verdicts = (await parallel(
     Array.from({ length: n }, (_, i) => () => agent(
       `${basePrompt}\n\n[Adversarial angle — try to REFUTE that the change is ready] ${PANEL_ANGLES[i]}`,
-      { label: `review:${phaseLabel}:r${round}:voter${i + 1}`, phase: 'Review', schema: REVIEW_SCHEMA }
+      { label: `review:${phaseLabel}:r${round}:voter${i + 1}`, phase: 'Review', schema: REVIEW_SCHEMA, model: models.review }
     ))
   )).filter(Boolean)
   if (verdicts.length === 0) return null
@@ -116,26 +118,49 @@ async function panelReview(basePrompt, round) {
 phase('Dev')
 log(`${phaseLabel}: running dev subagent`)
 
-const devResult = await tryAgent(
-  `You are the dev subagent for ${phaseLabel}. FIRST, capture the diff base: run ` +
-  '`git rev-parse HEAD` BEFORE making any edit and return it as baseSha. Then implement the ' +
-  `tasks below in the main working tree (no worktree isolation). Commit your changes to a branch ` +
-  `named "${phaseLabel.replace(/\s+/g, '').toLowerCase()}-dev-r1" and return DevResult with the ` +
-  `branch name, baseSha, a summary, and conflict=true if the design doc conflicts with any task.` +
-  ` For each new behavior, write its test FIRST and run it to confirm it FAILS for the right reason ` +
-  `(feature missing, not a typo/import error) before writing code; note in your summary that you ` +
-  `watched each new test fail.` +
-  `\n\nDesign doc: ${designDocPath}\nImpl doc: ${implDocPath}\n\nPhase tasks:\n${phaseSpec}`,
-  { label: `dev:${phaseLabel}`, phase: 'Dev', schema: DEV_SCHEMA }
-)
+function devPrompt(extra) {
+  return `You are the dev subagent for ${phaseLabel}. FIRST, capture the diff base: run ` +
+    '`git rev-parse HEAD` BEFORE making any edit and return it as baseSha. Then implement the ' +
+    `tasks below in the main working tree (no worktree isolation). Commit your changes to a branch ` +
+    `named "${phaseLabel.replace(/\s+/g, '').toLowerCase()}-dev-r1" and return DevResult with the ` +
+    `branch name, baseSha, a summary; conflict=true if the design doc conflicts with any task; ` +
+    `blocked=true with concerns[] if you cannot complete it (missing context or too hard — do NOT ` +
+    `fabricate success); or concerns[] (blocked=false) to flag low-confidence areas for the reviewer. ` +
+    // C1 (Wave 2) — RETAINED verbatim; this TDD watch-it-fail directive must NOT be lost in the rewrite:
+    `For each new behavior, write its test FIRST and run it to confirm it FAILS for the right reason ` +
+    `(feature missing, not a typo/import error) before writing code; note in your summary that you watched each new test fail. ` +
+    // E-ii (Wave 3) — pre-handoff self-review pointer (folded into the dev prompt here):
+    `Before reporting, self-review your diff against SKILL.md §0.2 (overcomplication) and §0.3 (trace test, ` +
+    `no process-narration comments) and confirm each assigned checkbox is done; this self-review does NOT ` +
+    `replace the fresh review corner — both run.` +
+    (extra ? `\n\n${extra}` : '') +
+    `\n\nDesign doc: ${designDocPath}\nImpl doc: ${implDocPath}\n\nPhase tasks:\n${phaseSpec}`
+}
+
+let devResult = await tryAgent(devPrompt(''), { label: `dev:${phaseLabel}`, phase: 'Dev', schema: DEV_SCHEMA, model: models.dev })
 
 if (!devResult) return { status: 'agent-error', phaseLabel, round: 0, stage: 'dev', reason: 'dev agent failed after retry' }
 if (devResult.conflict) return { status: 'design-conflict', phaseLabel, round: 0, branch: devResult.branch }
 
-// Explicit null-branch guard (defense-in-depth; schema required:[] is primary gate)
+// E-i: a BLOCKED dev is re-dispatched AT MOST ONCE (its concerns become added context), then escalated.
+// The dev step has no round counter, so this one-retry bound is what stops it becoming an uncounted retry.
+if (devResult.blocked) {
+  const blockers = (devResult.concerns || []).join('; ')
+  log(`${phaseLabel}: dev BLOCKED (${blockers}); re-dispatching once with added context`)
+  const retry = await tryAgent(
+    devPrompt(`You previously reported BLOCKED on: ${blockers}. Treat this as added context and try once more; if still blocked, return blocked=true again.`),
+    { label: `dev:${phaseLabel}:re-dispatch`, phase: 'Dev', schema: DEV_SCHEMA, model: models.dev }
+  )
+  if (!retry) return { status: 'agent-error', phaseLabel, round: 0, stage: 'dev', reason: 'dev re-dispatch failed after retry' }
+  if (retry.conflict) return { status: 'design-conflict', phaseLabel, round: 0, branch: retry.branch }
+  if (retry.blocked) return { status: 'dev-escalation', phaseLabel, round: 0, stage: 'dev', concerns: retry.concerns || devResult.concerns }
+  devResult = retry
+}
+
 if (!devResult.branch) return { status: 'agent-error', phaseLabel, round: 0, stage: 'dev', reason: 'dev agent did not return branch name' }
 let devBranch = devResult.branch
 const baseSha = devResult.baseSha   // diff base for the review/accept fresh-eyes audit
+const devConcerns = (devResult.concerns || []).filter(Boolean)   // E-i: steer the reviewer
 
 // ── Review loop ───────────────────────────────────────────────
 // `round` starts at 1 and increments on every fix cycle.
@@ -161,10 +186,13 @@ while (round <= MAX_ROUNDS) {
     `Trip-wires (do not rationalize past these): read the diff, not the dev summary — the summary is not evidence; an unresolved general issue blocks closure.` +
     ` For new behavior, confirm a corresponding new test precedes/accompanies the production change ` +
     `(use the git log you already ran) — a body of new production code with no corresponding new test ` +
-    `is a severe Goal-Driven Execution issue.`
+    `is a severe Goal-Driven Execution issue.` +
+    (devConcerns.length ? ` The implementer flagged low confidence in: ${devConcerns.join('; ')} — scrutinize these areas first.` : '') +
+    ` Calibration: grade by actual severity. A genuine blocker is severe; a real but non-blocking defect is general; an advisory/cosmetic observation is a clarification (note-only). do not inflate a genuinely-misclassified should-fix item to severe — inflation burns the shared round budget and forces false escalations. This sharpens accuracy; it never lowers a real blocker, and the panel stays ADD-only.` +
+    ` Ground every finding: cite file:line (or section) from the diff/artifact; a pass must name at least one section read in full — verify by reading the diff, not the summary.`
   const review = reviewMode === 'panel'
     ? await panelReview(reviewPrompt, round)
-    : await tryAgent(reviewPrompt, { label: `review:${phaseLabel}:r${round}`, phase: 'Review', schema: REVIEW_SCHEMA })
+    : await tryAgent(reviewPrompt, { label: `review:${phaseLabel}:r${round}`, phase: 'Review', schema: REVIEW_SCHEMA, model: models.review })
 
   if (!review) return { status: 'agent-error', phaseLabel, round, stage: 'review' }
 
@@ -193,7 +221,7 @@ while (round <= MAX_ROUNDS) {
       `Fix the following review issues on branch "${devBranch}" ` +
       `(inspect the cumulative diff with \`git diff ${baseSha}..${devBranch}\`). ` +
       `Surgical Changes only — commit fixes to the same branch.\n\nSevere: ${review.severe.join('; ')}\nGeneral: ${review.general.join('; ')}`,
-      { label: `fix:review:${phaseLabel}:r${round}`, phase: 'Fix' }
+      { label: `fix:review:${phaseLabel}:r${round}`, phase: 'Fix', model: models.fix }
     )
     phase('Review')
   } else {
@@ -216,7 +244,7 @@ while (acceptRound <= MAX_ROUNDS) {
     `You are the accept subagent for ${phaseLabel}. The dev branch is "${devBranch}" (diff base ${baseSha}; ` +
     `inspect the changes with \`git diff ${baseSha}..${devBranch}\`). ` +
     `Run every ACCEPT-CMD listed in impl doc ${implDocPath} and return AcceptVerdict.`,
-    { label: `accept:${phaseLabel}:r${acceptRound}`, phase: 'Accept', schema: ACCEPT_SCHEMA }
+    { label: `accept:${phaseLabel}:r${acceptRound}`, phase: 'Accept', schema: ACCEPT_SCHEMA, model: models.accept }
   )
 
   if (!accept) return { status: 'agent-error', phaseLabel, round: acceptRound, stage: 'accept' }
@@ -235,7 +263,7 @@ while (acceptRound <= MAX_ROUNDS) {
     `finding needs no test. ` +
     `Fix the following accept failures on branch "${devBranch}" ` +
     `(diff base ${baseSha}). Commit fixes to the same branch.\n\nFailures: ${accept.failures.join('; ')}`,
-    { label: `acceptFix:${phaseLabel}:r${acceptRound}`, phase: 'Fix' }
+    { label: `acceptFix:${phaseLabel}:r${acceptRound}`, phase: 'Fix', model: models.fix }
   )
   phase('Accept')
 }

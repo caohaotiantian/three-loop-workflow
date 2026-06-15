@@ -38,6 +38,7 @@ Do NOT use a `name:` registry lookup — this script is not registered as a name
 | `'cap-exhausted'` | Round cap (3) hit without closure | Escalate to user with a deadlock report (see `references/escalation-rules.md`) |
 | `'agent-error'` | A dev/review/accept subagent failed (threw or returned null) twice in a row — infrastructure failure, **not** a review deadlock | Report the infrastructure failure; do **not** compose a deadlock report (there are no unresolved severe items to adjudicate); offer to relaunch the Workflow for this Phase. `result.stage` names the failing corner. |
 | `'design-conflict'` | Dev agent detected conflict | Rollback to L1 or L2 to fix the source document; `result.branch` contains the partial dev branch (clean up with `git branch -d result.branch`) |
+| `'dev-escalation'` | Dev reported BLOCKED twice (after one re-dispatch) | Main agent supplies missing context / a more capable model and relaunches, OR escalates to the user; do NOT compose a deadlock report (no unresolved severe items) |
 
 When `status === 'closed'`, `result.branch` contains the git branch with the accepted
 changes. The **main agent** (not the Workflow script) is responsible for merging:
@@ -61,6 +62,7 @@ git branch -d <result.branch>
 | `phaseSpec` | string | Full Phase task list verbatim from the impl doc |
 | `designDocPath` | string | Relative path to the design doc |
 | `implDocPath` | string | Relative path to the impl doc |
+| models | object, optional | per-corner model override {dev,review,accept,fix}; omit a corner for the harness default. See references/optional-subagents.md for routing rationale. |
 
 ## Agent budgeting
 
