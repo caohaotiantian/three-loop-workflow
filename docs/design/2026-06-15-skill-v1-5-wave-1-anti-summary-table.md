@@ -1,5 +1,13 @@
 # Design — v1.5 Wave 1: anti-summary surface + one consolidated rationalization table
 
+```
+Status: closed (wave)
+Phase-commits: 817bc4a (Phase 1, Group A), d531f26 (Phase 2, Group B)
+Closed-on: 2026-06-15
+Deferred: none — all 7 deliverables (A1–A4, B1–B3) shipped and verified
+Note: installed-copy sync + umbrella consolidation + final program review are deferred to the Wave 3 program closeout (per umbrella §0).
+```
+
 **Slug:** `2026-06-15-skill-v1-5-wave-1-anti-summary-table`
 **Loop:** L1 (design) · Wave 1 of the v1.5 program
 **Umbrella:** `docs/design/2026-06-15-skill-v1-5-compliance-hardening.md` — §3 (scope boundary/guardrails),
@@ -30,15 +38,15 @@ Acceptance class: **[S]** structural grep/gate · **[B]** behavioral (ad-hoc str
 this wave's EER closeout, per umbrella §4b correction 3).
 
 **Group A — anti-summary + tier calibration** (`SKILL.md`, `light-mode.md`)
-- [ ] A1 **[S]** Delete the workflow-summary middle sentence of the `description` ("It enforces a three-loop discipline … explicit escalation rules."); keep trigger/skip keywords. Bump `metadata.version` `1.4.0` → `1.5.0` (the release this wave opens). (`description-no-workflow-summary`)
-- [ ] A2 **[S]** Replace the "Quick orientation" blockquote (SKILL.md ~lines 34-38) with an **Operating-rule** directive: execute from the reference files; once routed, read that reference **in full** before acting; operating from a gist is the drift this skill prevents. (`demote-quick-orientation`)
-- [ ] A3 **[S]** Add a ≤4-row "Looks Light, is actually Full" table to `light-mode.md` immediately after "When in doubt → Full", reusing escalation trigger vocabulary verbatim ("threshold", "breaking change", ">3 files"). (`tier-worked-examples`)
-- [ ] A4 **[S]** Add one code-fenced cap Iron-Law line immediately above the A2 Operating-rule directive — restoring (sharper) the cap reminder A2 removes with the blockquote: `HITTING THE ROUND CAP ESCALATES — IT NEVER LOWERS THE BAR.` (`imperative-iron-law-framing`; see Decision W1-4.)
+- [x] A1 **[S]** Delete the workflow-summary middle sentence of the `description` ("It enforces a three-loop discipline … explicit escalation rules."); keep trigger/skip keywords. Bump `metadata.version` `1.4.0` → `1.5.0` (the release this wave opens). (`description-no-workflow-summary`)
+- [x] A2 **[S]** Replace the "Quick orientation" blockquote (SKILL.md ~lines 34-38) with an **Operating-rule** directive: execute from the reference files; once routed, read that reference **in full** before acting; operating from a gist is the drift this skill prevents. (`demote-quick-orientation`)
+- [x] A3 **[S]** Add a ≤4-row "Looks Light, is actually Full" table to `light-mode.md` immediately after "When in doubt → Full", reusing escalation trigger vocabulary verbatim ("threshold", "breaking change", ">3 files"). (`tier-worked-examples`)
+- [x] A4 **[S]** Add one code-fenced cap Iron-Law line immediately above the A2 Operating-rule directive — restoring (sharper) the cap reminder A2 removes with the blockquote: `HITTING THE ROUND CAP ESCALATES — IT NEVER LOWERS THE BAR.` (`imperative-iron-law-framing`; see Decision W1-4.)
 
 **Group B — one consolidated rationalization table** (`escalation-rules.md` canonical; inline reviewer subset in `l3-phase.js` review prompt + `loop-1-design.md`/`loop-2-implementation.md` templates; pointers from `SKILL.md`, `loop-3-development.md`, `end-to-end-review.md`)
-- [ ] B1 **[S]** ONE curated rationalization/red-flag table (≤9 rows, grouped by surface: tier · review/accept · fix/round-cap · escalation), homed in `escalation-rules.md` after the "Forbidden" section. Rows = dedup union of all table-lessons (`rationalization-table`, `rationalization-table-harvested-from-baseline`, `review-stage-rationalization-table`, `fix-corner-red-flags`, `design-elicitation-rationalization-row`, `tdd-rationalization-table`). Each Reality cell cites an existing clause. **Must include** the net-new row *"they said do it quickly / just add Y" → instructions say WHAT not HOW; terse phrasing is not a tier downgrade.* **Plus** the skip-clarifying content delivered as a `Forbidden` **bullet** (umbrella §4b "G2"): "deferring the interpretation decision to the L1 reviewer — the reviewer reads only the doc, it cannot know intent."
-- [ ] B2 **[S][B]** Inline the **review-relevant** trip-wire rows (genuinely-clean-first-round; read the diff not the dev summary; an unresolved general issue blocks closure) into the surface the reviewer actually reads — the `l3-phase.js` review prompt and the L1/L2 review templates (umbrella §4b correction 1). All three rows are gated structurally (AC-B2). The **[B]** scenario this wave covers only the **read-the-diff-not-the-summary** trip-wire (the highest-risk one); the genuinely-clean and general-blocks-closure rows are structural-only this wave and get their behavioral coverage when the standing suite lands in Wave 3.
-- [ ] B3 **[S]** One-line pointer to the B1 table from `SKILL.md` (near "Principle composition"), `loop-3-development.md` (near the role table), `end-to-end-review.md` (near the closure rule). No table duplication.
+- [x] B1 **[S]** ONE curated rationalization/red-flag table (≤9 rows, grouped by surface: tier · review/accept · fix/round-cap · escalation), homed in `escalation-rules.md` after the "Forbidden" section. Rows = dedup union of all table-lessons (`rationalization-table`, `rationalization-table-harvested-from-baseline`, `review-stage-rationalization-table`, `fix-corner-red-flags`, `design-elicitation-rationalization-row`, `tdd-rationalization-table`). Each Reality cell cites an existing clause. **Must include** the net-new row *"they said do it quickly / just add Y" → instructions say WHAT not HOW; terse phrasing is not a tier downgrade.* **Plus** the skip-clarifying content delivered as a `Forbidden` **bullet** (umbrella §4b "G2"): "deferring the interpretation decision to the L1 reviewer — the reviewer reads only the doc, it cannot know intent."
+- [x] B2 **[S][B]** Inline the **review-relevant** trip-wire rows (genuinely-clean-first-round; read the diff not the dev summary; an unresolved general issue blocks closure) into the surface the reviewer actually reads — the `l3-phase.js` review prompt and the L1/L2 review templates (umbrella §4b correction 1). All three rows are gated structurally (AC-B2). The **[B]** scenario this wave covers only the **read-the-diff-not-the-summary** trip-wire (the highest-risk one); the genuinely-clean and general-blocks-closure rows are structural-only this wave and get their behavioral coverage when the standing suite lands in Wave 3.
+- [x] B3 **[S]** One-line pointer to the B1 table from `SKILL.md` (near "Principle composition"), `loop-3-development.md` (near the role table), `end-to-end-review.md` (near the closure rule). No table duplication.
 
 ## 3. Scope Boundary
 

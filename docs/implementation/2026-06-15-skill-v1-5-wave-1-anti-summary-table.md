@@ -1,5 +1,13 @@
 # Implementation — v1.5 Wave 1: anti-summary surface + one consolidated rationalization table
 
+```
+Status: closed (wave)
+Phase-commits: 817bc4a (Phase 1), d531f26 (Phase 2)
+Closed-on: 2026-06-15
+PhaseEnd: Phase 1 10/10 ACCEPT-CMDs (SKILL.md wc -w 2863); Phase 2 15/15 (SKILL.md wc -w 2883); both gates green
+Behavioral [B] (AC-W1-BEH): PASS — reviewer read the diff and flagged the planted defect ({"read_diff":true,"flagged_defect":true})
+```
+
 **Slug:** `2026-06-15-skill-v1-5-wave-1-anti-summary-table` (matches the design doc)
 **Design doc:** `docs/design/2026-06-15-skill-v1-5-wave-1-anti-summary-table.md`
 **Umbrella:** `docs/design/2026-06-15-skill-v1-5-compliance-hardening.md` (§3, §4b binding)
