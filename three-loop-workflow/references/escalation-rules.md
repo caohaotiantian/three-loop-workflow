@@ -26,6 +26,25 @@ These rules apply across all three loops (L1, L2, L3) and the closeout review (F
 
 If you find yourself thinking "I'll just pick a sensible value and move on", stop. That is the exact failure mode this rule prevents.
 
+Also forbidden: **deferring an interpretation decision to the L1 reviewer** ("I'll note my assumption in the doc and the reviewer will catch it"). The L1 reviewer reads only the doc — it can challenge a contradiction or a single-option decision, but it cannot know the user's intent. Only the user can resolve an interpretation; a silently-resolved interpretation surfaced as a doc "assumption" was never decided, just hidden.
+
+## Rationalizations — recognize and stop
+
+The excuses agents generate under pressure, each with the rule it violates. Catching yourself
+thinking one of these means: re-run the relevant gate or escalate — do not proceed.
+
+| You catch yourself thinking | Reality → what to do |
+|---|---|
+| "It's only ~3 files / I'll split it into two tasks" | Still Full if any Full-Mode gate trips; splitting to game the ≤3 line is forbidden (light-mode.md Full-Mode gate). |
+| "The decision has an obvious winner" | If it truly has a clear winner it is not a >1-option decision; if you are arguing the point, it is one — surface it (§0.1; Question quality below). |
+| "They said do it quickly / just add Y" | Instructions say WHAT, not HOW; terse phrasing is not a tier downgrade (SKILL.md "Which tier applies"). |
+| "I'll just note the default/assumption in a comment" | A silent default is Forbidden (above) and violates comments-explain-code-not-workflow (§0.3); escalate instead. |
+| "First review came back clean, so I'm done" | A clean first round closes a Phase only under the L3 clean-first-round relaxation AND only if no fix was applied; L1/L2 always need the confirming generation; any fix re-engages two-generation (SKILL.md shared termination). |
+| "The dev summary says it's done" | Review and accept read the diff (`git diff <baseSha>..<branch>`), never the dev summary — the summary is not evidence. |
+| "An unresolved general issue is just advisory, ship it" | An unresolved general issue blocks two-generation closure; it is corroboration, not advice. |
+| "Quick patch now, investigate the cause later" | A symptom fix spends the shared round budget and forces a later clean round anyway; name the root cause first (loop-3-development.md fix corner). |
+| "One more fix attempt" (at round 3) | Round 3 escalates with a deadlock report, never a silent round 4 — the cap is the trigger, not a bug (Round-cap exhaustion below). |
+
 ## Question quality requirements
 
 Every escalation must include three things:

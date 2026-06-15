@@ -82,6 +82,8 @@ Notes on the diagram:
 | **step 3: accept** | Phase `<ACCEPT-CMD>` list from impl doc | Per-command exit code and key output, marked pass or fail; plus passed/failed/skipped/xfail tally per command (skipped tests are not passing tests) | Modify code or tests; interpret or judge output beyond the mechanical exit-code → pass/fail derivation (that is the review role's job) |
 | **step 4: fix** | Failing items from step 2 or step 3 | Minimal-scope code fix; commit prefix `fix(phaseN-roundR):` | Structural refactors; introducing new requirements outside the design doc |
 
+> **Rationalizations — recognize and stop**: the review/accept/fix excuse trip-wires live in `references/escalation-rules.md`.
+
 **Role isolation hard constraint**: within a single Phase, a single subagent takes only one role. The main agent spawns a fresh subagent per role per round. This binds to **identity**, not just to invocation: a subagent (or agent-team teammate) that authored or self-claimed the dev task for an artifact may never claim its review or accept — whether the second role would arrive by lead assignment, teammate self-claim, or lead plan-approval. Lead plan-approval is not the fresh-reviewer gate.
 
 > **Review check — process-narration comments.** The review subagent must flag any comment in the diff that narrates the workflow — round/cycle history, review-iteration notes, design-doc/decision references — rather than explaining the code, as a Surgical-Changes issue (see SKILL.md §0.3 "Comments explain the code, not the workflow").
