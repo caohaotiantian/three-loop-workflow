@@ -13,7 +13,7 @@ Before closing the task, the main agent must complete this checklist. Skip none.
     - `.e2e-artifacts/<task-slug>-*/` — review the directories produced by this task. Keep only those linked from the closeout report (as evidence). Delete the rest. None of them should ever be staged for commit (`.e2e-artifacts/` is gitignored on first use; verify the rule is in `.gitignore`).
 
    The git commands should produce empty output (apart from the main worktree). Leftover state from a crashed E2E run must be cleaned up, not committed.
-5. **Fresh-eyes whole-change correctness review (default — always runs).** Spawn a fresh non-author
+4b. **Fresh-eyes whole-change correctness review (default — always runs).** Spawn a fresh non-author
    subagent to read `git diff <first-phase-base>..HEAD` (the first Phase's base sha, recoverable from
    `git log`) against the design Deliverables + Acceptance Criteria. Scope: (a) every Deliverable is
    actually implemented (not just ticked), (b) no cross-phase regression or interface mismatch between
@@ -24,14 +24,14 @@ Before closing the task, the main agent must complete this checklist. Skip none.
    mode-2 already reviewed the assembled diff this task, that satisfies this step (folding in is an
    optimization, not a precondition). It is distinct from the conditional behavior-verification step
    (step 3): that checks observed app behavior; this checks the diff against Deliverables.
-6. **Consolidate task documents.** Run a single, focused consolidation pass over `docs/design/<task-slug>.md` and `docs/implementation/<task-slug>.md`. The point is to leave a clean, archive-quality record for future readers; **not** to refactor adjacent docs. See "Document consolidation" below for the exact procedure.
-7. **Write the final commit** per the commit conventions:
+5. **Consolidate task documents.** Run a single, focused consolidation pass over `docs/design/<task-slug>.md` and `docs/implementation/<task-slug>.md`. The point is to leave a clean, archive-quality record for future readers; **not** to refactor adjacent docs. See "Document consolidation" below for the exact procedure.
+6. **Write the final commit** per the commit conventions:
     - Phase opener prefix: `feat(...)` or `fix(...)`.
     - Trailers: `<TEST-CMD>` exit code and key `<ACCEPT-CMD>` results.
-    - The closing commit bundles both the final code state and the consolidated docs from step 6.
+    - The closing commit bundles both the final code state and the consolidated docs from step 5.
     - **Do not** mention AI involvement, model names, or agent tooling in commit messages or PR descriptions.
 
-## Document consolidation (step 6 detail)
+## Document consolidation (step 5 detail)
 
 Surgical Changes governs this step: edit only the two files this task created, and only to remove obsolete scaffolding or add a closure marker. Do not "tidy up" prior tasks' docs, rename files for consistency, or rewrite prose for style. If a prior doc is genuinely wrong, that is a separate task with its own L1 cycle.
 
