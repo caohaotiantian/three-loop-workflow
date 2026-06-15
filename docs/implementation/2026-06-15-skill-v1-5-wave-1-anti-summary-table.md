@@ -47,8 +47,12 @@ All file paths below are relative to the repo root; the skill lives under `three
 
   > **Operating rule**: execute this skill from the reference files, not from this page. Once routed to a
   > reference, read it in full before acting — do not paraphrase the procedure from a summary here. Operating
-  > from a gist is the drift this skill exists to prevent. If unsure which loop you are in, check the routing table.
+  > from a gist is the drift this skill exists to prevent. You cannot skip a loop. If unsure which loop you are in, check the routing table.
   ````
+
+  > **L3-review fix — MUST retain "You cannot skip a loop."** That rule lived only in the removed
+  > Quick-orientation blockquote; dropping it was the one real general from the Phase-1 panel. The clause
+  > adds ~5 words; SKILL.md `wc -w ≤ 2888` still holds (Phase-1 net ≈ 2863). Add a grep to AC: `grep -q "You cannot skip a loop" SKILL.md`.
 - **T3 (test):** `grep "Looks Light, is actually Full"` and `grep "splitting to dodge the line is still Full"` in `light-mode.md` 0→1.
 - **I3 (A3):** In `three-loop-workflow/references/light-mode.md`, insert the table directly **before the `## What Light Mode keeps` heading** (i.e. immediately after the "When Light Mode is allowed" paragraph that ends "…is always Full Mode." — the `## What Light Mode keeps` heading is the decisive anchor; do not split a paragraph):
 
@@ -74,6 +78,7 @@ grep -q 'version: "1.5.0"' SKILL.md
 ! grep -q "Quick orientation" SKILL.md
 grep -q "Operating rule" SKILL.md && grep -q "read it in full before acting" SKILL.md
 grep -q "ESCALATES — IT NEVER LOWERS THE BAR" SKILL.md
+grep -q "You cannot skip a loop" SKILL.md   # preserve the no-skip rule (L3-review fix)
 # A3
 grep -q "Looks Light, is actually Full" references/light-mode.md
 grep -q "splitting to dodge the line is still Full" references/light-mode.md
