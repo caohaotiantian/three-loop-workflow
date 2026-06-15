@@ -1,8 +1,8 @@
 ---
 name: three-loop-workflow
-description: Use this skill for any non-trivial functional change to a software project — implementing a new feature, fixing a behavior bug, optimizing performance, refactoring, or modifying a load-bearing process/contract file (CLAUDE.md, this skill itself, SKILL.md, OpenAPI specs, schema definitions, public API contracts). It enforces a three-loop discipline (L1 Design Document → L2 Implementation Document → L3 Development Work) with mandatory fresh-subagent reviews, round caps of 3 per domain, and explicit escalation rules. Trigger this skill whenever the user asks to implement, fix, refactor, optimize, build, or modify behavior in code — even when they say "just do X" or "quickly add Y". Skip only for pure typo fixes, doc reordering, dependency upgrades, and questions that do not change code.
+description: Use this skill for any non-trivial functional change to a software project — implementing a new feature, fixing a behavior bug, optimizing performance, refactoring, or modifying a load-bearing process/contract file (CLAUDE.md, this skill itself, SKILL.md, OpenAPI specs, schema definitions, public API contracts). Trigger this skill whenever the user asks to implement, fix, refactor, optimize, build, or modify behavior in code — even when they say "just do X" or "quickly add Y". Skip only for pure typo fixes, doc reordering, dependency upgrades, and questions that do not change code.
 metadata:
-  version: "1.4.0"
+  version: "1.5.0"
 ---
 
 # Three-Loop Development Workflow
@@ -31,11 +31,13 @@ When a load-bearing doc is **first introduced** (or first retroactively classifi
 
 **Role isolation rule** (every loop): a single subagent must never both author and review the same artifact — whether the second role would arrive via lead assignment, teammate self-claim, or lead plan-approval. Lead plan-approval is autonomous coordination, not the fresh-reviewer gate. Reviews use a fresh subagent that receives only the artifact, the prompt template, and the linked design/impl docs. (Agent-team specifics: `references/loop-3-teams.md`.)
 
-> **Quick orientation**: this skill runs three sequential loops (L1 Design → L2
-> Implementation → L3 Development). Each loop closes only when a fresh reviewer
-> reports zero severe issues this round AND zero general issues the prior round.
-> Round cap is 3 per loop; hitting it triggers AskUserQuestion — never a relaxed bar.
-> You cannot skip a loop. If unsure which loop you are in, check the routing table.
+```
+HITTING THE ROUND CAP ESCALATES — IT NEVER LOWERS THE BAR.
+```
+
+> **Operating rule**: execute this skill from the reference files, not from this page. Once routed to a
+> reference, read it in full before acting — do not paraphrase the procedure from a summary here. Operating
+> from a gist is the drift this skill exists to prevent. You cannot skip a loop. If unsure which loop you are in, check the routing table.
 
 **Round tracking with Tasks** (optional; recommended for tasks with >2 L1/L2 rounds): call `TaskCreate` at each loop start and `TaskUpdate` after each verdict, so the round-cap check survives context compaction — readable via `TaskGet` instead of conversational memory.
 

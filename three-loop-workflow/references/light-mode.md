@@ -23,6 +23,15 @@ non-commitment-clause* edit to a load-bearing doc (fixing a typo or formatting t
 rule) is the *None* tier — one independent review, not a cycle; any *substantive* edit to a
 load-bearing doc is always Full Mode.
 
+### Looks Light, is actually Full
+
+| Looks Light | Trigger fired → Full |
+|---|---|
+| "Just add a config flag defaulting to 30s" | default-threshold decision (no source-of-truth constant cited) |
+| "Rename a field in a stored JSON shape" | breaking change: storage layout |
+| "Split this one change into a 4th tiny file" | >3 files — splitting to dodge the line is still Full |
+| "Tweak a constant the algorithm already had" | still a threshold decision unless you cite an existing constant in docs/design/ or source |
+
 ## What Light Mode keeps (the four non-negotiables)
 
 1. **A short inline design brief** with exactly four mandatory fields — written to
