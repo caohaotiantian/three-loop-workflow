@@ -111,6 +111,10 @@ contract files.
 
 [Trip-wires] A clean first round does not close L2 — the two-generation rule needs a confirming clean round; an unresolved general issue blocks closure.
 
+[Calibration] Grade by actual severity: a genuine blocker is severe; a real but non-blocking defect is general; an advisory/cosmetic observation is a clarification. do not inflate a genuinely-misclassified should-fix item to severe — inflation burns the shared round budget and forces false escalations; this never lowers a real blocker.
+
+[Grounding] Ground every finding: cite file:line (or section) from the diff/artifact; a pass must name at least one section read in full — verify by reading the diff, not the summary.
+
 [Output format] Same as the L1 review template, with the section title
 changed to "Implementation Document Review Report".
 ```

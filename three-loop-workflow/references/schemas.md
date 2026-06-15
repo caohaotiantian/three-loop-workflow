@@ -16,17 +16,17 @@ review, L3 review corner). Pass as `agent(reviewPrompt, { schema: ReviewVerdict 
     "severe": {
       "type": "array",
       "items": { "type": "string" },
-      "description": "Severe issues that block loop advancement"
+      "description": "blocks advancement: a correctness/contract/core-principle violation or a lost load-bearing rule"
     },
     "general": {
       "type": "array",
       "items": { "type": "string" },
-      "description": "General issues recommended to fix this round"
+      "description": "a real, should-fix-this-round defect that is not blocking; counts toward the two-generation rule"
     },
     "clarifications": {
       "type": "array",
       "items": { "type": "string" },
-      "description": "Items requiring main agent to consult user"
+      "description": "note-only / needs user input; never counted"
     },
     "verdict": {
       "type": "string",
@@ -39,6 +39,12 @@ review, L3 review corner). Pass as `agent(reviewPrompt, { schema: ReviewVerdict 
   "required": ["severe", "general", "verdict", "severe_count", "general_count"]
 }
 ```
+
+Calibration: grade by actual severity. A genuine blocker is severe; a real but non-blocking
+defect is general; an advisory/cosmetic observation is a clarification (note-only). do not inflate
+a genuinely-misclassified should-fix item to severe — inflation burns the shared round budget and
+forces false escalations. This sharpens accuracy; it never lowers a real blocker, and the panel
+stays ADD-only. When unsure between severe and general, it is general.
 
 Loop-closure check. Two forms:
 
@@ -105,6 +111,15 @@ Use this schema when spawning dev subagents (L3 step 1). Pass as `agent(devPromp
     "conflict": {
       "type": "boolean",
       "description": "true if the dev agent detected a conflict between the design doc and the implementation task; triggers design-conflict return from l3-phase.js"
+    },
+    "blocked": {
+      "type": "boolean",
+      "description": "true if the dev agent cannot complete the task (missing context or too hard); triggers a bounded one-time re-dispatch (concerns become added context) then a dev-escalation return from l3-phase.js — do NOT fabricate success"
+    },
+    "concerns": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "low-confidence areas the dev wants the reviewer to scrutinize first; when blocked=false these are interpolated into the review prompt to steer the fresh-eyes audit"
     }
   },
   "required": ["branch", "baseSha", "summary", "conflict"]
