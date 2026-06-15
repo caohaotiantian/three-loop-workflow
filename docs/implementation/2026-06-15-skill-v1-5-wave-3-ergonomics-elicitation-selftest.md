@@ -1,5 +1,14 @@
 # Implementation — v1.5 Wave 3: ergonomics + elicitation + self-testing
 
+```
+Status: closed (wave)
+Phase-commits: a2cc04c (Phase E), 373916f (Phase F), ace3452 (Phase G)
+Closed-on: 2026-06-15
+PhaseEnd: Phase E 21/21 ACCEPT-CMDs (control-flow manually verified bounded); Phase F 9/9; Phase G 14/14; all gates green; SKILL.md untouched
+Behavioral [B] (standing tests/scenarios/ suite): 4/4 PASS — quickly-add→Full, threshold→escalate, clean-after-fix→no-close, dev-blocked→bounded-redispatch-then-escalate
+C3 whole-change correctness review (entire v1.5 diff): PASS (0 severe / 0 general) — cross-wave l3-phase.js integrity, no scope creep, prior rules preserved
+```
+
 **Slug:** `2026-06-15-skill-v1-5-wave-3-ergonomics-elicitation-selftest` (matches the design doc)
 **Design doc:** `docs/design/2026-06-15-skill-v1-5-wave-3-ergonomics-elicitation-selftest.md`
 **Umbrella:** `docs/design/2026-06-15-skill-v1-5-compliance-hardening.md` (§3, §4b binding)

@@ -1,5 +1,13 @@
 # Design — v1.5 Wave 3: dev/review ergonomics + design elicitation + skill self-testing
 
+```
+Status: closed (wave)
+Phase-commits: a2cc04c (Phase E — ergonomics/control-flow), 373916f (Phase F — elicitation), ace3452 (Phase G — self-testing)
+Closed-on: 2026-06-15
+Deferred: none — all 16 deliverables (E-i…E-vi, F-i…F-iv, G-i…G-vi) shipped and verified
+Note: SKILL.md untouched this wave. Program closeout (installed-copy sync, umbrella consolidation, scenario-suite + C3 whole-change review) ran as this wave's EER — see umbrella §0.
+```
+
 **Slug:** `2026-06-15-skill-v1-5-wave-3-ergonomics-elicitation-selftest`
 **Loop:** L1 (design) · Wave 3 (final) of the v1.5 program
 **Umbrella:** `docs/design/2026-06-15-skill-v1-5-compliance-hardening.md` — **§2 Groups E/F/G hold the verbatim
@@ -28,26 +36,26 @@ Class **[S]** structural / **[B]** behavioral (pressure-scenario, now the *stand
 suite from G-i). Edit shape per the umbrella §2 entry cited; wave-specific decisions in §4.
 
 **Group E — dev/review ergonomics** (`schemas.md`, `l3-phase.js`, `loop-3-workflow.md`, `loop-3-development.md`, `loop-1-design.md`, `loop-2-implementation.md`)
-- [ ] E-i **[S][B]** Dev status signal — `dev-status-enum`. Add `concerns: string[]` + `blocked` boolean to DevResult (`schemas.md`) and DEV_SCHEMA (`l3-phase.js`); keep `conflict`. **Control-flow** (`l3-phase.js` after the dev call): `blocked` → return/handle a `dev-escalation` that re-dispatches the dev **at most once** (with added context/stronger model) then escalates (Decision W3-2); `concerns` (not blocked) → interpolate into the review prompt ("The implementer flagged low confidence in: <concerns> — scrutinize these first"). One return-row in `loop-3-workflow.md`.
-- [ ] E-ii **[S]** Pre-handoff dev self-review pointer — `dev-self-review-before-handoff`. `l3-phase.js` dev prompt + `loop-3-development.md` dev role Output: self-review vs SKILL.md §0.2/§0.3 + watched-fail tests; "both run — does not replace the fresh review".
-- [ ] E-iii **[S]** Reviewer severity-calibration — `reviewer-calibration-clause`. Canonical sentence in `schemas.md`; inline copy in the L1 template, L2 template, **and** `l3-phase.js` review prompt (the surfaces the reviewer reads, §4b-1). Targets genuinely-misclassified items only; **must not relax the bar** (§4b-4); no praise section (§4b-6). *(Note: an ad-hoc calibration line already lives in the per-phase runners used in Waves 1-2; E-iii makes it a permanent part of the shipped review prompt.)*
-- [ ] E-iv **[S]** Three-tier severity sharpened in place — `three-tier-severity`. `schemas.md` ReviewVerdict descriptions (severe = blocker; general = should-fix-this-round, counts toward two-generation; clarifications = note-only) + "when unsure between severe and general, it is general." No new array.
-- [ ] E-v **[S]** Verify-by-diff grounding — `do-not-trust-report`. One grounding line per review template (L1/L2/L3 prompt): findings cite file:line / section; a pass names what was read.
-- [ ] E-vi **[S]** Per-corner model override — `model-selection-by-fragility`. `l3-phase.js`: destructure `models = {}`; pass `models.dev/review/accept/fix` (all four) into the respective `agent()` opts (panel voters use `models.review`); undefined → harness default (no behavior change). One Args row in `loop-3-workflow.md`. Plus an optional "retry once with a stronger review/fix model" clause in the `escalation-rules.md` deadlock options (user-authorized; never automatic).
+- [x] E-i **[S][B]** Dev status signal — `dev-status-enum`. Add `concerns: string[]` + `blocked` boolean to DevResult (`schemas.md`) and DEV_SCHEMA (`l3-phase.js`); keep `conflict`. **Control-flow** (`l3-phase.js` after the dev call): `blocked` → return/handle a `dev-escalation` that re-dispatches the dev **at most once** (with added context/stronger model) then escalates (Decision W3-2); `concerns` (not blocked) → interpolate into the review prompt ("The implementer flagged low confidence in: <concerns> — scrutinize these first"). One return-row in `loop-3-workflow.md`.
+- [x] E-ii **[S]** Pre-handoff dev self-review pointer — `dev-self-review-before-handoff`. `l3-phase.js` dev prompt + `loop-3-development.md` dev role Output: self-review vs SKILL.md §0.2/§0.3 + watched-fail tests; "both run — does not replace the fresh review".
+- [x] E-iii **[S]** Reviewer severity-calibration — `reviewer-calibration-clause`. Canonical sentence in `schemas.md`; inline copy in the L1 template, L2 template, **and** `l3-phase.js` review prompt (the surfaces the reviewer reads, §4b-1). Targets genuinely-misclassified items only; **must not relax the bar** (§4b-4); no praise section (§4b-6). *(Note: an ad-hoc calibration line already lives in the per-phase runners used in Waves 1-2; E-iii makes it a permanent part of the shipped review prompt.)*
+- [x] E-iv **[S]** Three-tier severity sharpened in place — `three-tier-severity`. `schemas.md` ReviewVerdict descriptions (severe = blocker; general = should-fix-this-round, counts toward two-generation; clarifications = note-only) + "when unsure between severe and general, it is general." No new array.
+- [x] E-v **[S]** Verify-by-diff grounding — `do-not-trust-report`. One grounding line per review template (L1/L2/L3 prompt): findings cite file:line / section; a pass names what was read.
+- [x] E-vi **[S]** Per-corner model override — `model-selection-by-fragility`. `l3-phase.js`: destructure `models = {}`; pass `models.dev/review/accept/fix` (all four) into the respective `agent()` opts (panel voters use `models.review`); undefined → harness default (no behavior change). One Args row in `loop-3-workflow.md`. Plus an optional "retry once with a stronger review/fix model" clause in the `escalation-rules.md` deadlock options (user-authorized; never automatic).
 
 **Group F — design elicitation (L1/L2)** (`loop-1-design.md`, `loop-2-implementation.md`)
-- [ ] F-i **[S]** Gated intent-confirmation L1 pre-step — `l1-elicitation-dialogue`. "L1 pre-step B: Confirm intent before drafting", gated to under-determined requests only (fully-specified or Light-Mode skip); references escalation-rules.md for the question bar (does not restate). Reject the unconditional HARD-GATE.
-- [ ] F-ii **[S]** Free pre-spawn self-review gate — `l1-cheap-self-review-before-fresh-reviewer`. Reframe "Common L1/L2 traps" into "Self-review before spawning the reviewer (free — does not increment {{round}})"; never substitutes for fresh review.
-- [ ] F-iii **[S]** L2 zero-context reader calibration — `l2-zero-context-reader-model`. One calibration sentence in `loop-2-implementation.md` "Main agent procedure" + one "Placeholder vagueness" trap bullet.
-- [ ] F-iv **[S]** Multi-subsystem decomposition signal — `l1-scope-decomposition-precheck`. One escalation-signal bullet in `loop-1-design.md` procedure step 3 (one design doc = one coherent subsystem).
+- [x] F-i **[S]** Gated intent-confirmation L1 pre-step — `l1-elicitation-dialogue`. "L1 pre-step B: Confirm intent before drafting", gated to under-determined requests only (fully-specified or Light-Mode skip); references escalation-rules.md for the question bar (does not restate). Reject the unconditional HARD-GATE.
+- [x] F-ii **[S]** Free pre-spawn self-review gate — `l1-cheap-self-review-before-fresh-reviewer`. Reframe "Common L1/L2 traps" into "Self-review before spawning the reviewer (free — does not increment {{round}})"; never substitutes for fresh review.
+- [x] F-iii **[S]** L2 zero-context reader calibration — `l2-zero-context-reader-model`. One calibration sentence in `loop-2-implementation.md` "Main agent procedure" + one "Placeholder vagueness" trap bullet.
+- [x] F-iv **[S]** Multi-subsystem decomposition signal — `l1-scope-decomposition-precheck`. One escalation-signal bullet in `loop-1-design.md` procedure step 3 (one design doc = one coherent subsystem).
 
 **Group G — skill self-testing** (`tests/scenarios/`, `CLAUDE.md`, `check-consistency.sh`, `loop-3-development.md`, `escalation-rules.md`, `loop-1-design.md`)
-- [ ] G-i **[S][B]** Standing pressure-scenario suite — `pressure-scenario-suite-for-tier-and-escalation`. ≥4 scenarios under **repo-root `tests/scenarios/`** (Decision W3-3): (1) "quickly add Y" actually Full → expects Full; (2) threshold decision under sunk-cost → expects escalation w/ options+rec+rationale; (3) clean review after a fix → expects no one-round close; (4) dev `blocked`/`concerns` → expects bounded re-dispatch/escalate. Each declares a structured `expected` (schema + field value) per §4b-3.
-- [ ] G-ii **[S]** CLAUDE.md _repo-workflow_ bullet — run `tests/scenarios/` via fresh subagents before merging any tier/escalation/termination edit.
-- [ ] G-iii **[S]** `check-consistency.sh` pairings — `consolidate-termination-canonical`. **Exactly two** tokens: `clean-first-round` and `fixApplied` (§4b-7). Must keep `check-consistency.sh` exit 0.
-- [ ] G-iv **[S]** Watch-it-fail gate for skill discipline edits — `watch-it-fail-gate-for-skill-edits`. A note in `loop-3-development.md` Phase-termination conditions, gated to skill-self discipline edits.
-- [ ] G-v **[S]** Meta-test classification bullet — `meta-test-on-cap-exhaustion-deadlock`. `escalation-rules.md` deadlock procedure: classify why the cap was hit (discipline gap / doc gap / organization gap) → follow-up issue.
-- [ ] G-vi **[S]** Distrust-framing for skill-edit reviews — `adversarial-distrust-framing-in-maintenance-review`. One conditional bullet in the `loop-1-design.md` review template: a discipline-rule edit demands a concrete behavior demonstration; an asserted-but-unobserved behavior rule is severe.
+- [x] G-i **[S][B]** Standing pressure-scenario suite — `pressure-scenario-suite-for-tier-and-escalation`. ≥4 scenarios under **repo-root `tests/scenarios/`** (Decision W3-3): (1) "quickly add Y" actually Full → expects Full; (2) threshold decision under sunk-cost → expects escalation w/ options+rec+rationale; (3) clean review after a fix → expects no one-round close; (4) dev `blocked`/`concerns` → expects bounded re-dispatch/escalate. Each declares a structured `expected` (schema + field value) per §4b-3.
+- [x] G-ii **[S]** CLAUDE.md _repo-workflow_ bullet — run `tests/scenarios/` via fresh subagents before merging any tier/escalation/termination edit.
+- [x] G-iii **[S]** `check-consistency.sh` pairings — `consolidate-termination-canonical`. **Exactly two** tokens: `clean-first-round` and `fixApplied` (§4b-7). Must keep `check-consistency.sh` exit 0.
+- [x] G-iv **[S]** Watch-it-fail gate for skill discipline edits — `watch-it-fail-gate-for-skill-edits`. A note in `loop-3-development.md` Phase-termination conditions, gated to skill-self discipline edits.
+- [x] G-v **[S]** Meta-test classification bullet — `meta-test-on-cap-exhaustion-deadlock`. `escalation-rules.md` deadlock procedure: classify why the cap was hit (discipline gap / doc gap / organization gap) → follow-up issue.
+- [x] G-vi **[S]** Distrust-framing for skill-edit reviews — `adversarial-distrust-framing-in-maintenance-review`. One conditional bullet in the `loop-1-design.md` review template: a discipline-rule edit demands a concrete behavior demonstration; an asserted-but-unobserved behavior rule is severe.
 
 ## 3. Scope Boundary
 
