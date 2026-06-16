@@ -30,6 +30,16 @@ The `scriptPath` must point to the installed skill copy. If the skill is install
 user-globally: `~/.claude/skills/three-loop-workflow/references/l3-phase.js`.
 Do NOT use a `name:` registry lookup — this script is not registered as a named workflow.
 
+## Resumption (none)
+
+`l3-phase.js` is **not resumable** — it holds all Phase state in memory (round counter, dev branch,
+diff base, `fixApplied`) and persists nothing. An interrupted run (agent timeout, session loss,
+harness restart) restarts at round 1 and re-dispatches the dev corner. Because the dev branch name is
+round-stable (`<phase>-dev-r1`, not run-stable), **before relaunching an interrupted Phase the main
+agent MUST delete the prior dev branch** (`git branch -D <phase>-dev-r1`) so the re-run does not stack
+duplicate commits onto it. This applies to the `agent-error` and `dev-escalation` relaunch rows in the
+Return values table below: delete the branch first, then relaunch.
+
 ## Return values
 
 | `result.status` | Meaning | Main agent action |

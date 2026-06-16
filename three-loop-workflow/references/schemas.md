@@ -98,7 +98,7 @@ Use this schema when spawning dev subagents (L3 step 1). Pass as `agent(devPromp
   "properties": {
     "branch": {
       "type": "string",
-      "description": "git branch name where changes were committed (e.g. 'phase1-dev-r1'); REQUIRED — the script treats a missing branch as a dev failure"
+      "description": "git branch name where changes were committed (e.g. 'phase1-dev-r1' — created ONCE per Phase and reused across all fix rounds; the '-r1' suffix is fixed, not per-round); REQUIRED — the script treats a missing branch as a dev failure"
     },
     "baseSha": {
       "type": "string",
