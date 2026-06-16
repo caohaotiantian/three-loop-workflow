@@ -2,7 +2,7 @@
 
 Slug: `2026-06-16-audit-repair` (matches `docs/design/2026-06-16-audit-repair.md`)
 Status: closed
-Closing-commit: <recorded in the follow-up closeout commit>
+Closing-commit: a88159f
 Closed-on: 2026-06-16
 Deferred: none
 Notes: L2 passed review rounds 1–4. L3 ran in manual/fallback mode (dev pre-verified at L2, fresh
