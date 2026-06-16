@@ -2,7 +2,7 @@
 
 Slug: `2026-06-16-audit-2-followups`
 Status: closed
-Closing-commit: <pending>
+Closing-commit: 3e707f7
 Closed-on: 2026-06-16
 Deferred: none
 Notes: Finishes the two loose ends from `2026-06-16-audit-2-repair` — F1 resolves that cycle's recorded
