@@ -72,8 +72,8 @@ cp -r three-loop-workflow ~/.claude/skills/
 Or package it as a single distributable `.skill` file:
 
 ```bash
-# from the repo root
-zip -r three-loop-workflow.skill three-loop-workflow/
+# from the repo root (rm first so a stale archive can't keep already-removed files)
+rm -f three-loop-workflow.skill && zip -r three-loop-workflow.skill three-loop-workflow/
 # produces three-loop-workflow.skill — a zip Claude Code recognizes
 ```
 

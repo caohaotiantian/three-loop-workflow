@@ -16,7 +16,7 @@ Thumbs.db
 *.swp
 *.swo
 
-# Skill workflow ephemera (per WORKFLOW-v3.md section 4.3.3)
+# Skill workflow ephemera (L3/F worktree artifacts; see references/loop-3-development.md)
 .e2e-artifacts/
 
 # Skill-creator iteration workspaces (kept local, not distributed)

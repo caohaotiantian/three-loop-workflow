@@ -7,7 +7,7 @@
 - _common-commands_     → "## Common Commands"
 - _engineering-norms_   → "## Engineering Norms"
 
-This repo distributes the **three-loop-workflow** Claude skill (currently **v1.5.0**). It is the
+This repo distributes the **three-loop-workflow** Claude skill (currently **v1.5.1**). It is the
 canonical case where the load-bearing documents *are* the product: the skill is maintained by its
 own L1 → L2 → L3 → F discipline.
 
@@ -58,8 +58,10 @@ which is a Chinese translation of `README.md`.
   — reliably parses a Workflow script (`node --check` mis-parses these `export`+top-level-`return` files).
 - **Behavioral scenarios:** run each `tests/scenarios/*.md` via a fresh subagent against the current skill
   and assert the file's `expected` field (see the Development Workflow behavioral gate).
-- **Zip rebuild** (from repo root): `zip -r three-loop-workflow.skill three-loop-workflow/`
-- **Installed-copy sync** (if an installed copy exists): `cp -r three-loop-workflow/. "$HOME/.claude/skills/three-loop-workflow/"`
+- **Zip rebuild** (from repo root): `rm -f three-loop-workflow.skill && zip -r three-loop-workflow.skill three-loop-workflow/`
+  (the `rm -f` first so a stale archive cannot retain files that were removed from `three-loop-workflow/`).
+- **Installed-copy sync** (if an installed copy exists): `rsync -a --delete three-loop-workflow/ "$HOME/.claude/skills/three-loop-workflow/"`
+  (`--delete` so removed files do not linger in the installed copy; a plain `cp -r` would leave them behind).
 
 ## Engineering Norms
 

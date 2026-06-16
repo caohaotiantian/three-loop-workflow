@@ -26,7 +26,7 @@ path**:
 
 - an issue is **severe** for the round if **any** voter marks it severe;
 - likewise **general**;
-- `severe_count` / `general_count` are the sizes of the unioned sets, and those pre-dedup
+- `severe_count` / `general_count` are the sizes of the unioned (deduped) sets, and those
   union counts are what feed the termination check.
 
 Because both counts are unions, panel mode makes **both** termination fields strictly harder to

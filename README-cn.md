@@ -72,8 +72,8 @@ cp -r three-loop-workflow ~/.claude/skills/
 或打包成单个可分发的 `.skill` 文件:
 
 ```bash
-# 在仓库根目录执行
-zip -r three-loop-workflow.skill three-loop-workflow/
+# 在仓库根目录执行(先删除旧包,避免残留已从 three-loop-workflow/ 删除的文件)
+rm -f three-loop-workflow.skill && zip -r three-loop-workflow.skill three-loop-workflow/
 # 产出 three-loop-workflow.skill —— Claude Code 可识别的 zip 包
 ```
 

@@ -59,7 +59,7 @@ For the `agent-error` and `dev-escalation` relaunch rows in the Return values ta
 | `'closed'` | Phase accepted | Record `result.branch` commit in trailer; advance to next Phase |
 | `'cap-exhausted'` | Round cap (3) hit without closure | Escalate to user with a deadlock report (see `references/escalation-rules.md`) |
 | `'agent-error'` | A dev/review/accept subagent failed (threw or returned null) twice in a row — infrastructure failure, **not** a review deadlock. In panel mode, an insufficient surviving voter **quorum** (a single `null` from the panel) on an otherwise-clean panel also returns this — degraded coverage, not a deadlock | Report the infrastructure failure; do **not** compose a deadlock report (there are no unresolved severe items to adjudicate); offer to relaunch the Workflow for this Phase (in the panel-quorum case, re-run the panel). `result.stage` names the failing corner. |
-| `'design-conflict'` | Dev agent detected conflict | Rollback to L1 or L2 to fix the source document; `result.branch` contains the partial dev branch (clean up with `git branch -d result.branch`) |
+| `'design-conflict'` | Dev agent detected conflict | Rollback to L1 or L2 to fix the source document; `result.branch` contains the partial dev branch (clean up with `git branch -D <result.branch>` — the partial branch is unmerged, so safe-delete `-d` would refuse it) |
 | `'dev-escalation'` | Dev reported BLOCKED twice (after one re-dispatch) | Main agent supplies missing context / a more capable model and relaunches, OR escalates to the user; do NOT compose a deadlock report (no unresolved severe items) |
 
 When `status === 'closed'`, `result.branch` contains the git branch with the accepted
