@@ -20,17 +20,21 @@ INPUT="$(cat)"
 if command -v jq >/dev/null 2>&1; then
   CMD="$(printf '%s' "$INPUT" | jq -r '.tool_input.command // empty')"
 else
-  CMD="$(printf '%s' "$INPUT" | sed -n 's/.*"command"[[:space:]]*:[[:space:]]*"\(.*\)".*/\1/p')"
+  CMD="$(printf '%s' "$INPUT" | sed -n 's/.*"command"[[:space:]]*:[[:space:]]*"\([^"\\]*\(\\.[^"\\]*\)*\)".*/\1/p')"
   # The sed-captured JSON value keeps backslash-escaped quotes; unescape so the standard
   # JSON-escaped -m "..." form parses like the jq path (closes the no-jq fail-open).
   CMD="${CMD//\\\"/\"}"
 fi
 
-# Police only `git commit`. Everything else passes untouched.
-case "$CMD" in
-  *"git commit"*) ;;
-  *) exit 0 ;;
-esac
+# Police a `git commit`, tolerating global options between `git` and the subcommand
+# (`git -C <path> commit`, `git -c k=v commit`, `git --no-pager commit`). Each intervening unit is
+# an option flag (`-x` / `--x`) optionally followed by ONE bare argument (its value, e.g. the path
+# after `-C` or the `k=v` after `-c`); `commit` is matched only at a token boundary. So
+# `git commit-graph`, `git status`, `git diff main commit -m ...` (a ref named "commit"), and a
+# path containing "commit" do NOT match — only an actual `commit` subcommand does.
+if ! printf '%s' "$CMD" | grep -Eq '(^|[^[:alnum:]_-])git[[:space:]]+(-[^[:space:]]+[[:space:]]+([^-[:space:]][^[:space:]]*[[:space:]]+)?)*commit([[:space:]]|$)'; then
+  exit 0
+fi
 
 # First-flag-anchored message extraction: the first -m / clustered -[a-z]*m flag, then the first
 # quoted run. awk match() is leftmost, so this takes the SUBJECT (first -m), not a trailing body -m,
