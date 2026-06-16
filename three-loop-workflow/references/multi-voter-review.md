@@ -43,8 +43,10 @@ round counting and cap → escalation are unchanged: the N voters do **not** eac
 
 > **Voter failures.** A voter that soft-fails is dropped (the union is computed over the
 > survivors) and logged; this can **narrow** the panel but never makes the gate weaker than a
-> clean single reviewer. If **every** voter fails, the panel returns a blocking
-> non-conformance — never a silent pass.
+> clean single reviewer. If **every** voter fails, the *standalone* `review-panel.js` returns a
+> blocking non-conformance, while the *inline* `l3-phase.js` path returns `null` → an `agent-error`
+> status (an infrastructure failure, distinct from a review deadlock — see `loop-3-workflow.md`).
+> Neither is a silent pass.
 
 ## How to invoke
 
@@ -53,5 +55,6 @@ round counting and cap → escalation are unchanged: the N voters do **not** eac
 - **Standalone (e.g. an L1/L2 design or impl review):** run the `references/review-panel.js`
   Workflow with `{ reviewPrompt, voters, label }`; it returns the aggregated `ReviewVerdict`.
 
-Both paths implement the identical mechanical-union logic. `panelVoters` / `voters` is an
+Both paths implement the identical mechanical-union *counting* logic (they differ only in how a
+total voter failure is surfaced — see Voter failures above). `panelVoters` / `voters` is an
 overridable argument, never a project constant — portability is preserved.

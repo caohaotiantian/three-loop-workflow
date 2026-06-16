@@ -106,8 +106,9 @@ async function panelReview(basePrompt, round) {
   const uniq = (arr) => Array.from(new Set(arr))
   const severe = uniq(verdicts.flatMap(v => v.severe || []))
   const general = uniq(verdicts.flatMap(v => v.general || []))
+  const clarifications = uniq(verdicts.flatMap(v => v.clarifications || []))
   return {
-    severe, general,
+    severe, general, clarifications,
     severe_count: severe.length,
     general_count: general.length,
     verdict: severe.length > 0 ? 'severe-nonconformance' : (general.length > 0 ? 'needs-fix' : 'pass'),
@@ -204,7 +205,7 @@ while (round <= MAX_ROUNDS) {
   if (reviewPasses) break  // exit review loop, enter accept loop
 
   round++
-  if (round > MAX_ROUNDS) return { status: 'cap-exhausted', phaseLabel, round, stage: 'review' }
+  if (round > MAX_ROUNDS) return { status: 'cap-exhausted', phaseLabel, round: MAX_ROUNDS, stage: 'review' }
 
   if (!noIssues) {
     // Real issues remain — run a fix. This sets fixApplied, re-engaging two-generation
@@ -251,7 +252,7 @@ while (acceptRound <= MAX_ROUNDS) {
   if (accept.all_pass) return { status: 'closed', phaseLabel, round: acceptRound, branch: devBranch }
 
   acceptRound++
-  if (acceptRound > MAX_ROUNDS) return { status: 'cap-exhausted', phaseLabel, round: acceptRound, stage: 'accept' }
+  if (acceptRound > MAX_ROUNDS) return { status: 'cap-exhausted', phaseLabel, round: MAX_ROUNDS, stage: 'accept' }
   log(`${phaseLabel}: accept failures: ${accept.failures.join('; ')}, running acceptFix round ${acceptRound}`)
   phase('Fix')
   await tryAgent(
@@ -268,4 +269,4 @@ while (acceptRound <= MAX_ROUNDS) {
   phase('Accept')
 }
 
-return { status: 'cap-exhausted', phaseLabel, round: acceptRound, stage: 'accept-loop-exit' }
+return { status: 'cap-exhausted', phaseLabel, round: MAX_ROUNDS, stage: 'accept-loop-exit' }
