@@ -32,6 +32,9 @@ fi
 # after `-C` or the `k=v` after `-c`); `commit` is matched only at a token boundary. So
 # `git commit-graph`, `git status`, `git diff main commit -m ...` (a ref named "commit"), and a
 # path containing "commit" do NOT match — only an actual `commit` subcommand does.
+# Known limitation: a global-option value containing whitespace (e.g. `-C "/my repo"`) splits into two
+# tokens and is not recognized — the lint treats it as a non-commit and passes unscreened; uncommon for
+# a phase commit, and the fresh-review corner still judges the diff (this is a lint, not an airtight gate).
 if ! printf '%s' "$CMD" | grep -Eq '(^|[^[:alnum:]_-])git[[:space:]]+(-[^[:space:]]+[[:space:]]+([^-[:space:]][^[:space:]]*[[:space:]]+)?)*commit([[:space:]]|$)'; then
   exit 0
 fi
