@@ -2,7 +2,7 @@
 
 Slug: `2026-06-16-audit-repair`
 Status: closed
-Closing-commit: <recorded in the follow-up closeout commit>
+Closing-commit: a88159f
 Closed-on: 2026-06-16
 Deferred: none (all Deliverables A1–A8, B1–B3, C1–C8, D1–D3, E1–E6, F1–F6 shipped)
 Notes: L1 passed review rounds 1–4 (3-voter panel → resolution → fresh → confirming); L2 passed rounds
