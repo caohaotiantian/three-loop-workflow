@@ -1,7 +1,13 @@
 # Implementation — Panel quorum floor (I1)
 
 Slug: `2026-06-16-panel-quorum` (matches `docs/design/2026-06-16-panel-quorum.md`)
-Status: draft
+Status: closed
+Closing-commit: <recorded in the follow-up closeout commit>
+Closed-on: 2026-06-16
+Deferred: none
+Notes: manual/fallback L3 (pre-verified predicate); fresh review of the diff confirmed predicate
+equivalence across both scripts, findings-preserved, and single-path untouched. ACCEPT 7/7 +
+quorum truth-table 17/17. No L2 rollback → no Deprecated section.
 
 ## Task Index
 
