@@ -58,7 +58,7 @@ if printf '%s' "$MSG" | grep -Eq '^(feat|fix)\(phase'; then
   exit 2
 fi
 
-# Other conventional-commit prefixes are allowed (chore/docs/closeout/refactor/test/...).
+# Other conventional-commit prefixes are allowed (chore/docs/refactor/test/...).
 if printf '%s' "$MSG" | grep -Eq '^(feat|fix|chore|docs|refactor|test|perf|build|ci)(\([^)]+\))?: '; then
   exit 0
 fi
