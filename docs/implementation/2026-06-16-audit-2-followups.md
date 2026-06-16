@@ -2,7 +2,7 @@
 
 Slug: `2026-06-16-audit-2-followups` (matches `docs/design/2026-06-16-audit-2-followups.md`)
 Status: closed
-Closing-commit: <pending>
+Closing-commit: 3e707f7
 Closed-on: 2026-06-16
 Deferred: none
 Notes: Implements design `2026-06-16-audit-2-followups` Phases F1 (`end-to-end-review.md` report-block
