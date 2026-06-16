@@ -1,6 +1,19 @@
 # Design: audit-2 follow-ups
 
 Slug: `2026-06-16-audit-2-followups`
+Status: closed
+Closing-commit: <pending>
+Closed-on: 2026-06-16
+Deferred: none
+Notes: Finishes the two loose ends from `2026-06-16-audit-2-repair` — F1 resolves that cycle's recorded
+"Advisory follow-up" (the `end-to-end-review.md:121` closure-rule report block now covers a deferred
+finding, completing the D-D2 broadening); F2 closes the Phase-B review clarification by documenting the
+whitespace-in-global-option-value limitation (comment-only, no behavior change). L1 passed rounds 1–2
+(clean + confirming, two-generation); L2 rounds 1–2; L3 closed both phases on a clean first review
+(clean-first-round relaxation, no fix applied). F whole-change review 0 severe / 0 general; the closeout
+scenario still grades `record-and-defer`; consistency + workflow-syntax gates green; `SKILL.md` untouched
+(`wc -w` 2860). Folds into the unreleased v1.5.1 (no version bump). Loose coupling to audit-2-repair (one
+advisory item completed), not a supersession — no cross-link per the convention.
 
 ## 1. Background and Purpose
 
@@ -30,13 +43,13 @@ twin). F2 makes the lint's known boundary honest and discoverable instead of sil
 ## 2. Deliverables
 
 **Phase F1 — closeout report-requirement generalization** (`references/end-to-end-review.md`)
-- [ ] F1: Generalize the closure-rule report block (`:121-126`) so it covers a deferred **item of
+- [x] F1: Generalize the closure-rule report block (`:121-126`) so it covers a deferred **item of
   either class** (a Deliverable left unticked, or a correctness finding from step 4b left unfixed):
   name the item **and its class**, state why it could not be closed/fixed, link the follow-up issue
   ID (also on the `Deferred:` line), and confirm the deferral does not break the closed items.
 
 **Phase F2 — commit-lint limitation note** (`references/validate-commit-msg.sh`)
-- [ ] F2: Add a one-line **known-limitation note** to the policing-block comment (`:29-34`) stating
+- [x] F2: Add a one-line **known-limitation note** to the policing-block comment (`:29-34`) stating
   that a global-option value containing whitespace (e.g. `-C "/my repo"`) is not recognized — the
   lint treats it as a non-commit and passes; uncommon, and the review corner still judges the diff.
   **No regex/behavior change.**

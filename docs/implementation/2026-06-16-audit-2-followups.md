@@ -1,6 +1,14 @@
 # Implementation: audit-2 follow-ups
 
 Slug: `2026-06-16-audit-2-followups` (matches `docs/design/2026-06-16-audit-2-followups.md`)
+Status: closed
+Closing-commit: <pending>
+Closed-on: 2026-06-16
+Deferred: none
+Notes: Implements design `2026-06-16-audit-2-followups` Phases F1 (`end-to-end-review.md` report-block
+generalization) and F2 (`validate-commit-msg.sh` limitation note, comment-only). Acceptance: distinctive-
+phrase greps pass; F2 Phase-B behavior matrix byte-identical to pre-edit (jq + no-jq, no bleed);
+consistency + workflow-syntax gates green; `bash -n` clean. No L2 rollback (no Deprecated section).
 
 ## 1. Task Index
 
