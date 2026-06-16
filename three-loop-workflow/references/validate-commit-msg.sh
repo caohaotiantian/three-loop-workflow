@@ -16,11 +16,14 @@ set -uo pipefail
 
 INPUT="$(cat)"
 
-# Extract the command. Prefer jq; fall back to a best-effort sed.
+# Extract the command. Prefer jq; fall back to a best-effort sed + JSON-unescape.
 if command -v jq >/dev/null 2>&1; then
   CMD="$(printf '%s' "$INPUT" | jq -r '.tool_input.command // empty')"
 else
   CMD="$(printf '%s' "$INPUT" | sed -n 's/.*"command"[[:space:]]*:[[:space:]]*"\(.*\)".*/\1/p')"
+  # The sed-captured JSON value keeps backslash-escaped quotes; unescape so the standard
+  # JSON-escaped -m "..." form parses like the jq path (closes the no-jq fail-open).
+  CMD="${CMD//\\\"/\"}"
 fi
 
 # Police only `git commit`. Everything else passes untouched.
@@ -29,13 +32,25 @@ case "$CMD" in
   *) exit 0 ;;
 esac
 
-# Best-effort message extraction from -m "...". Other forms (-F, -C, --amend, heredoc) are not
-# parsed and pass through — this is a lint, not an airtight gate.
-MSG="$(printf '%s' "$CMD" | sed -n "s/.*-m[[:space:]]*['\"]\\([^'\"]*\\).*/\\1/p" | head -n1)"
+# First-flag-anchored message extraction: the first -m / clustered -[a-z]*m flag, then the first
+# quoted run. awk match() is leftmost, so this takes the SUBJECT (first -m), not a trailing body -m,
+# and handles -am/clustered flags in the same construct. Other forms (-F, -C, --amend without -m,
+# heredoc) yield empty and pass through — this is a lint, not an airtight gate. A double-quoted
+# subject containing an apostrophe is handled; a single-quoted -m '...' subject with an embedded
+# apostrophe may still truncate (a documented limitation, not worth quote-aware parsing here).
+MSG="$(printf '%s' "$CMD" | awk '
+  {
+    if (match($0, /-[A-Za-z]*m[ \t]*["'\'']/)) {
+      q = substr($0, RSTART + RLENGTH - 1, 1)
+      rest = substr($0, RSTART + RLENGTH)
+      p = index(rest, q)
+      print (p > 0 ? substr(rest, 1, p - 1) : rest)
+    }
+  }')"
 [ -z "$MSG" ] && exit 0
 
-# Phase commits must use the (phaseN) / (phaseN-roundR) form.
-if printf '%s' "$MSG" | grep -Eq '^(feat|fix)\(phase[0-9]+(-round[0-9]+)?\): '; then
+# Phase commits must use the (phaseN) / (phaseN-roundR) form (1-indexed; phase0/round0 rejected).
+if printf '%s' "$MSG" | grep -Eq '^(feat|fix)\(phase[1-9][0-9]*(-round[1-9][0-9]*)?\): '; then
   exit 0
 fi
 if printf '%s' "$MSG" | grep -Eq '^(feat|fix)\(phase'; then
