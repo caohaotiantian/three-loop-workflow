@@ -30,6 +30,18 @@ The `scriptPath` must point to the installed skill copy. If the skill is install
 user-globally: `~/.claude/skills/three-loop-workflow/references/l3-phase.js`.
 Do NOT use a `name:` registry lookup — this script is not registered as a named workflow.
 
+> **Arg delivery (why the script parses `args`).** Some Workflow runtimes hand the script its global
+> `args` as a **JSON string** — a verbatim pass-through of the tool-call parameter — rather than a
+> parsed object, even when the caller passes a real object as shown above. `l3-phase.js` therefore
+> **normalizes `args`** (parses a string, validates the shape) before reading its fields. That
+> `JSON.parse(args)` is **intentional and load-bearing — do not delete it as "dead code"**; without it
+> the destructure yields all-`undefined` fields and the run dies with a cryptic
+> `undefined is not an object (evaluating 'phaseLabel.replace')`. If instead the script throws an
+> **arg-validation `Error`** (missing/malformed args), the *invocation* is wrong — fix the args you
+> passed. A thrown arg error is **not** a sign the Workflow runner is unavailable, so do **not** fall
+> back to prose mode (`loop-3-development.md`) on its account; the prose fallback is for when the
+> Workflow *tool itself* cannot run (headless CI, restricted harness).
+
 ## Resumption
 
 `l3-phase.js` holds Phase state in process memory (round counter, dev branch, diff base, `fixApplied`)
