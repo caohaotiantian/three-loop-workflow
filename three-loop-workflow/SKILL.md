@@ -1,6 +1,6 @@
 ---
 name: three-loop-workflow
-description: Use this skill for any non-trivial functional change to a software project — implementing a new feature, fixing a behavior bug, optimizing performance, refactoring, or modifying a load-bearing process/contract file (CLAUDE.md, this skill itself, SKILL.md, OpenAPI specs, schema definitions, public API contracts). Trigger this skill whenever the user asks to implement, fix, refactor, optimize, build, or modify behavior in code — even when they say "just do X" or "quickly add Y". Skip only for pure typo fixes, doc reordering, dependency upgrades, and questions that do not change code.
+description: Use this skill for any non-trivial functional change to a software project — implementing a new feature, fixing a behavior bug, optimizing performance, refactoring, or modifying a load-bearing process/contract file (CLAUDE.md, this skill itself, SKILL.md, OpenAPI specs, schema definitions, public API contracts). Trigger this skill whenever the user asks to implement, fix, refactor, optimize, build, or modify behavior in code — even when they say "just do X" or "quickly add Y". Skip the full cycle (these still get one fresh-agent review) for pure typo fixes, doc reordering, and dependency upgrades; skip entirely only for questions with no file edits.
 metadata:
   version: "1.5.0"
 ---
@@ -19,15 +19,15 @@ This skill runs in two tiers. **Full Mode** is the complete L1 → L2 → L3 →
 
 | Tier | When | What runs |
 |---|---|---|
-| **Full Mode** | Any load-bearing file (CLAUDE.md, this skill, SKILL.md, OpenAPI specs, schema definitions, public API contracts); any breaking change; any unresolved >1-option design decision; any magic-number / threshold decision; or a change touching more than ~3 files. **When in doubt → Full.** Deleting a load-bearing doc is Full **plus** mandatory AskUserQuestion before any file is deleted (see `references/escalation-rules.md`). | Full L1 → L2 → L3 → F |
+| **Full Mode** | Any load-bearing file (CLAUDE.md, this skill, SKILL.md, OpenAPI specs, schema definitions, public API contracts); any breaking change; any unresolved >1-option design decision; any magic-number / threshold decision; or a change touching more than 3 files. **When in doubt → Full.** Deleting a load-bearing doc is Full **plus** mandatory AskUserQuestion before any file is deleted (see `references/escalation-rules.md`). | Full L1 → L2 → L3 → F |
 | **Light Mode** | ≤ 3 non-load-bearing files, no breaking change, no new external contract, no unresolved decision. Typical small features, bug fixes, and local refactors land here. | `references/light-mode.md`: four-field brief → fresh-reviewer diff review → accept → one-line closure |
-| **None** | Pure typo / doc reordering / dependency upgrade (one independent fresh-agent review, no cycle); or a question with no file edits (no requirement). A *trivial, non-commitment-clause* edit to a load-bearing doc (a typo that changes no rule) is None — one review, not the full cycle; a *substantive* load-bearing edit is always Full. | one independent review, or nothing |
+| **None** | Pure typo / doc reordering / dependency upgrade (one independent fresh-agent review, no cycle); or a question with no file edits (no requirement). A *trivial, non-commitment-clause* edit to a load-bearing doc (a typo that changes no rule) is None — one review, not the full cycle; a *substantive* load-bearing edit is always Full. The single None reviewer must re-confirm the edit changes no rule; if it touches any commitment clause, it rejects None and routes to Full. | one independent review, or nothing |
 
-The Full-Mode gate is a **hard filter**: any "yes" forces Full Mode. Tier choice is fresh-eyes-enforced, not author-asserted — the Light-Mode reviewer re-runs this gate against the diff (see `references/light-mode.md`).
+The Full-Mode gate is a **hard filter**: any "yes" forces Full Mode. Tier choice is fresh-eyes-enforced, not author-asserted — the Light-Mode and None-tier reviewers re-run this gate against the diff (see `references/light-mode.md`).
 
-When a load-bearing doc is **first introduced** (or first retroactively classified as load-bearing), a one-page retroactive design brief plus an independent agent review with two consecutive clean rounds may substitute for the full three-loop cycle. Any subsequent modification must follow the formal procedure.
+When a load-bearing doc is **first introduced** (or first retroactively classified as load-bearing), a one-page retroactive design brief plus an independent agent review meeting the standard two-generation termination may substitute for the full three-loop cycle. Any subsequent modification must follow the formal procedure.
 
-**Cost expectation.** A full L1 → L2 → L3 → F cycle spawns roughly 8–15 fresh subagents (L1/L2 reviews + per-Phase dev/review/accept/fix + one F review) and produces two committed documents before merge. Apply it deliberately; it is heavier than a single pass.
+**Cost expectation.** A full cycle is deliberately heavier than one pass (≈8–15 fresh subagents, two committed docs) — see `references/loop-3-workflow.md`.
 
 **Role isolation rule** (every loop): a single subagent must never both author and review the same artifact — whether the second role would arrive via lead assignment, teammate self-claim, or lead plan-approval. Lead plan-approval is autonomous coordination, not the fresh-reviewer gate. Reviews use a fresh subagent that receives only the artifact, the prompt template, and the linked design/impl docs. (Agent-team specifics: `references/loop-3-teams.md`.)
 
@@ -39,7 +39,7 @@ HITTING THE ROUND CAP ESCALATES — IT NEVER LOWERS THE BAR.
 > reference, read it in full before acting — do not paraphrase the procedure from a summary here. Operating
 > from a gist is the drift this skill exists to prevent. You cannot skip a loop. If unsure which loop you are in, check the routing table.
 
-**Round tracking with Tasks** (optional; recommended for tasks with >2 L1/L2 rounds): call `TaskCreate` at each loop start and `TaskUpdate` after each verdict, so the round-cap check survives context compaction — readable via `TaskGet` instead of conversational memory.
+**Round tracking** (optional): keep round-cap state in Tasks so it survives context compaction — see `references/loop-3-workflow.md`.
 
 ## Core principles (non-negotiable, every loop, every subagent)
 
@@ -90,7 +90,7 @@ When a principle conflicts with apparent progress, the principle wins. Violation
 | L3 dev step | Surgical Changes | Drive-by refactors, formatting churn, opportunistic deletions |
 | L3 fix step | Surgical Changes | Structural rewrites disguised as fixes |
 | L3 accept step | Goal-Driven Execution | Phase closure on author confidence rather than green commands |
-| Section 6 escalation | Think Before Coding | "Reasonable default" used to dodge a real decision |
+| Escalation (references/escalation-rules.md) | Think Before Coding | "Reasonable default" used to dodge a real decision |
 
 > **Rationalizations** (the excuses for dodging these principles, and the rule each breaks): see `references/escalation-rules.md` "Rationalizations — recognize and stop".
 

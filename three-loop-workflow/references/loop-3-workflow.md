@@ -83,3 +83,15 @@ The script uses three schemas from `references/schemas.md`:
 ## Prose-driven fallback
 
 If this script cannot be used, follow `references/loop-3-development.md` (manual/fallback mode) — its four-corner template and guarantees are authoritative regardless of mode.
+
+## Cost expectation
+
+A full L1 → L2 → L3 → F cycle spawns roughly 8–15 fresh subagents (L1/L2 reviews + per-Phase
+dev/review/accept/fix + one F review) and produces two committed documents before merge. Apply it
+deliberately; it is heavier than a single pass.
+
+## Round tracking with Tasks
+
+Optional; recommended for tasks with >2 L1/L2 rounds: call `TaskCreate` at each loop start and
+`TaskUpdate` after each verdict, so the round-cap check survives context compaction — readable via
+`TaskGet` instead of conversational memory.
