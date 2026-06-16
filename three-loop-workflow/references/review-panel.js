@@ -57,15 +57,6 @@ const verdicts = (await parallel(
   ))
 )).filter(Boolean)
 
-if (verdicts.length === 0) {
-  // Treat a total panel failure as a blocking non-conformance, not a silent pass.
-  return { severe: ['panel: all voters failed'], general: [], clarifications: [], verdict: 'severe-nonconformance', severe_count: 1, general_count: 0 }
-}
-
-// A soft-failed voter is dropped (no retry): the union is over fewer voters, which can
-// narrow but never weaken the gate vs a clean single reviewer. Surface it rather than hide it.
-if (verdicts.length < N) log(`${label}: ${N - verdicts.length}/${N} voters failed; union over ${verdicts.length} (narrower, never weaker)`)
-
 // ── MECHANICAL UNION (no agent in the counting path) ─────────────────────────
 // An issue is severe for the round if ANY voter marks it severe; likewise general. The
 // counts fed to the termination check are the sizes of the unioned sets. `uniq` removes
@@ -77,6 +68,19 @@ const uniq = (arr) => Array.from(new Set(arr))
 const severe = uniq(verdicts.flatMap(v => v.severe || []))
 const general = uniq(verdicts.flatMap(v => v.general || []))
 const clarifications = uniq(verdicts.flatMap(v => v.clarifications || []))
+
+// A clean verdict requires a surviving quorum (strict majority of requested voters): a clean result
+// from a sub-quorum panel is an unproven negative, so the standalone path fails closed (it has no
+// round machine) — the caller re-runs the panel rather than advancing on degraded coverage. Findings
+// are reported regardless of survivor count; 0 survivors is the degenerate sub-case.
+const quorum = Math.floor(N / 2) + 1
+if (verdicts.length < N) log(`${label}: ${verdicts.length}/${N} voters survived${verdicts.length < quorum ? ` (<${quorum} quorum)` : ''}`)
+if (severe.length === 0 && general.length === 0 && verdicts.length < quorum) {
+  const msg = verdicts.length === 0
+    ? 'panel: all voters failed'
+    : `panel: only ${verdicts.length}/${N} voters survived — below the ${quorum}-quorum needed to confirm a clean verdict; re-run the panel`
+  return { severe: [msg], general: [], clarifications: [], verdict: 'severe-nonconformance', severe_count: 1, general_count: 0 }
+}
 
 return {
   severe,

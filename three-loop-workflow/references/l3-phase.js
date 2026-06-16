@@ -99,14 +99,18 @@ async function panelReview(basePrompt, round) {
       { label: `review:${phaseLabel}:r${round}:voter${i + 1}`, phase: 'Review', schema: REVIEW_SCHEMA, model: models.review }
     ))
   )).filter(Boolean)
-  if (verdicts.length === 0) return null
-  // A soft-failed voter is dropped (no retry): the union is over fewer voters, which can
-  // narrow but never weaken the gate vs a clean single reviewer. Surface it rather than hide it.
-  if (verdicts.length < n) log(`${phaseLabel}: panel r${round} — ${n - verdicts.length}/${n} voters failed; union over ${verdicts.length} (narrower, never weaker)`)
   const uniq = (arr) => Array.from(new Set(arr))
   const severe = uniq(verdicts.flatMap(v => v.severe || []))
   const general = uniq(verdicts.flatMap(v => v.general || []))
   const clarifications = uniq(verdicts.flatMap(v => v.clarifications || []))
+  // A soft-failed voter is dropped (no retry): the union over fewer voters can narrow but never weaken
+  // the gate vs a single reviewer. But a CLEAN verdict needs a surviving quorum (strict majority): a
+  // clean result from a sub-quorum panel is an unproven negative, so it must NOT pass — return null →
+  // the caller emits agent-error and the main agent re-runs the panel. Findings (severe/general) are
+  // reported regardless of survivor count; 0 survivors is the degenerate sub-case.
+  const quorum = Math.floor(n / 2) + 1
+  if (verdicts.length < n) log(`${phaseLabel}: panel r${round} — ${verdicts.length}/${n} voters survived${verdicts.length < quorum ? ` (<${quorum} quorum)` : ''}`)
+  if (severe.length === 0 && general.length === 0 && verdicts.length < quorum) return null
   return {
     severe, general, clarifications,
     severe_count: severe.length,
