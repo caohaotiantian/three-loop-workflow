@@ -1,7 +1,16 @@
 # Design — Audit-repair hardening (v1.5.x)
 
 Slug: `2026-06-16-audit-repair`
-Status: L1 passed (review rounds 1–4: 3-voter panel → resolution check → fresh → confirming; two-generation satisfied)
+Status: closed
+Closing-commit: <recorded in the follow-up closeout commit>
+Closed-on: 2026-06-16
+Deferred: none (all Deliverables A1–A8, B1–B3, C1–C8, D1–D3, E1–E6, F1–F6 shipped)
+Notes: L1 passed review rounds 1–4 (3-voter panel → resolution → fresh → confirming); L2 passed rounds
+1–4; L3 Phases A–F each closed by a fresh review; F whole-change correctness review passed; all 10
+`tests/scenarios/` graded to their `expected` by fresh subagents. Version bumped 1.5.0 → 1.5.1.
+Final `SKILL.md` `wc -w` = 2876 (the D5 budget measured 2874 for Phase C; Phase E's `license: MIT`
+frontmatter add brought it to 2876 — both ≤ the 2888 ceiling). Decision D2's intended packaging was
+"untrack + build in CI"; D1 = MIT license.
 
 ## 1. Background and Purpose
 
