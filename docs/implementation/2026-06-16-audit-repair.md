@@ -1,7 +1,15 @@
 # Implementation — Audit-repair hardening (v1.5.x)
 
 Slug: `2026-06-16-audit-repair` (matches `docs/design/2026-06-16-audit-repair.md`)
-Status: L2 passed (review rounds 1–4: 3-voter panel → resolution+fresh → confirming; two-generation satisfied)
+Status: closed
+Closing-commit: <recorded in the follow-up closeout commit>
+Closed-on: 2026-06-16
+Deferred: none
+Notes: L2 passed review rounds 1–4. L3 ran in manual/fallback mode (dev pre-verified at L2, fresh
+review + ACCEPT-CMDs per Phase). Phases A/B/C/E/F closed on a clean first review; Phase D took one fix
+round (a doc directional pointer) then two confirming clean rounds. No L2 rollback occurred, so there
+is no Deprecated section to prune. Whole-task gates at F: consistency 0, workflow-syntax 0,
+`wc -w` 2876 ≤ 2888, artifact builds, all 10 scenarios graded to `expected`.
 
 ## Task Index
 
