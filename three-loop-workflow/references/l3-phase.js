@@ -60,7 +60,20 @@ const MAX_ROUNDS = 3
 // reviewMode: 'single' (default) | 'panel'. Panel mode runs an adversarial multi-voter
 // review (see references/multi-voter-review.md) INSIDE one review round — the N voters do
 // not each consume a round. panelVoters defaults to 3 (an overridable arg, not a constant).
-const { phaseLabel, phaseSpec, designDocPath, implDocPath, reviewMode = 'single', panelVoters = 3, models = {} } = args
+// Harness arg normalization (load-bearing — do NOT remove as "dead"): some Workflow runtimes deliver
+// `args` to the script as a JSON STRING (verbatim tool-call pass-through), not a parsed object. Parse +
+// validate so EVERY malformed-args path lands on the descriptive throw below — never a cryptic
+// `phaseLabel.replace`/destructure crash that misreads as "args delivery is broken" (it is not).
+// Tolerant of an object OR a JSON string. See references/loop-3-workflow.md "Invocation" (Arg delivery).
+let inputs
+try { inputs = (typeof args === 'string') ? JSON.parse(args) : args } catch (e) { inputs = null }
+if (!inputs || typeof inputs !== 'object') {
+  throw new Error('l3-phase.js: args missing or not a valid object / JSON string — pass {phaseLabel, phaseSpec, designDocPath, implDocPath} per references/loop-3-workflow.md "Invocation". A thrown arg error means the invocation is wrong, NOT that the Workflow runner is unavailable; fix the args, do not fall back to prose.')
+}
+const { phaseLabel, phaseSpec, designDocPath, implDocPath, reviewMode = 'single', panelVoters = 3, models = {} } = inputs
+if (!phaseLabel || !phaseSpec || !designDocPath || !implDocPath) {
+  throw new Error('l3-phase.js: missing required arg(s) phaseLabel/phaseSpec/designDocPath/implDocPath — pass args per references/loop-3-workflow.md "Invocation".')
+}
 
 // Retry-once wrapper. A transient agent failure (thrown error or null/undefined
 // return) is retried once; a second failure returns null so the caller can emit

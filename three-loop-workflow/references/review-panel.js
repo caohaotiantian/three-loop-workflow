@@ -44,7 +44,16 @@ const ANGLES = [
   'CORRECTNESS: bugs, contradictions, broken references, off-by-one, dead or unreachable logic.',
 ]
 
-const { reviewPrompt, voters = 3, label = 'review' } = args
+// Harness arg normalization (see l3-phase.js — load-bearing, do NOT remove as "dead"): `args` may be
+// delivered as a JSON STRING rather than a parsed object; parse + validate so a malformed call lands on
+// the descriptive throw below instead of a cryptic destructure crash. Tolerant of an object OR a JSON
+// string. See references/multi-voter-review.md "How to invoke".
+let inputs
+try { inputs = (typeof args === 'string') ? JSON.parse(args) : args } catch (e) { inputs = null }
+if (!inputs || typeof inputs !== 'object' || !inputs.reviewPrompt) {
+  throw new Error('review-panel.js: args missing or has no reviewPrompt — pass args as an object (or JSON string) per references/multi-voter-review.md. A thrown arg error means the invocation is wrong, not that the Workflow runner is unavailable.')
+}
+const { reviewPrompt, voters = 3, label = 'review' } = inputs
 const N = Math.max(1, Math.min(voters, ANGLES.length))
 
 phase('Panel')
