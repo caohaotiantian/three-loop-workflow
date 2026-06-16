@@ -162,7 +162,7 @@ criterion (§7) passes. Acceptance class per item: **[S]** = structural grep/gat
 - [ ] F-iv **[S]** Multi-subsystem decomposition escalation signal in L1 procedure step 3 (`l1-scope-decomposition-precheck`).
 
 **Phase G — Skill self-testing** (`tests/scenarios/`, `CLAUDE.md`, `check-consistency.sh`, `loop-3-development.md`, `escalation-rules.md`, `loop-1-design.md`)
-- [ ] G-i **[B]** ~4 pressure scenarios under `tests/scenarios/` (§4 Decision 3): (1) "quickly add Y" that is actually Full → expects Full; (2) threshold decision under sunk-cost → expects escalation with options+recommendation+rationale; (3) clean review after a fix → expects no one-round close; (4) dev `blocked`/`concerns` → expects bounded re-dispatch/escalation, not silent success. Each file states its expected_behavior. This suite **is the [B] gate** for C1/C3/E-i (`pressure-scenario-suite-for-tier-and-escalation`).
+- [ ] G-i **[B]** ~4 pressure scenarios under `tests/scenarios/` (§4 Decision 3): (1) "quickly add Y" that is actually Full → expects Full; (2) threshold decision under sunk-cost → expects escalation with options+recommendation+rationale; (3) clean review after a fix → expects no one-round close; (4) dev `blocked`/`concerns` → expects bounded re-dispatch/escalation, not silent success. Each file states its expected behavior (an `expected:` field). This suite **is the [B] gate** for C1/C3/E-i (`pressure-scenario-suite-for-tier-and-escalation`).
 - [ ] G-ii **[S]** CLAUDE.md _repo-workflow_ bullet: run `tests/scenarios/` via fresh subagents before merging any tier/escalation/termination edit (the obligation is now mechanically exercised at F closure, §7).
 - [ ] G-iii **[S]** `check-consistency.sh` pairings for **exactly two** tokens — `clean-first-round` and `fixApplied` (`consolidate-termination-canonical`); the report's scope. No pairing for free-prose calibration sentences (§4 Decision 7 / not a stable token).
 - [ ] G-iv **[S]** Watch-it-fail behavioral-check note for the skill's own discipline edits, in `loop-3-development.md` Phase-termination conditions, gated to skill-self discipline edits (`watch-it-fail-gate-for-skill-edits`).
@@ -316,7 +316,7 @@ as contradicting the report and resting on an unverifiable "zero-overlap" check.
 
 Two classes. **Structural [S]** = a `grep`/`ls`/gate, each anchored to a unique new-content string (§5
 rule). **Behavioral [B]** = a `tests/scenarios/` scenario run by a fresh subagent at F; the recorded
-expected_behavior must hold. A deliverable is ticked only when **all** its class-appropriate ACs pass and
+expected behavior must hold. A deliverable is ticked only when **all** its class-appropriate ACs pass and
 the global gates stay green.
 
 **Global (checked at F, and per-phase where the phase touches the relevant file)**
@@ -345,7 +345,7 @@ the global gates stay green.
 
 **Behavioral (run at F; §4 Decision 4)**
 - **AC-BEH.** For each `tests/scenarios/` file, a fresh subagent is given the scenario + the **post-edit**
-  skill and must produce the file's expected_behavior. All must pass. This is the closing gate for the
+  skill and must produce the file's expected behavior. All must pass. This is the closing gate for the
   **[B]** deliverables: C1 (agent watches the test fail / reviewer flags tests-after), C3 (the whole-change
   correctness review is actually performed and can block), E-i (`blocked` → bounded re-dispatch then
   escalate; `concerns` → review prompt steered), plus the tier (A/quickly→Full), termination
@@ -376,7 +376,7 @@ the global gates stay green.
 - **F-ii.** `loop-1-design.md` and `loop-2-implementation.md` contain "Self-review before spawning the reviewer (free … does not increment {{round}})".
 - **F-iii.** `loop-2-implementation.md` contains the zero-context calibration sentence + a "Placeholder vagueness" trap bullet.
 - **F-iv.** `loop-1-design.md` procedure step 3 contains a "Multi-subsystem request" escalation bullet.
-- **G-i.** `tests/scenarios/` contains ≥4 scenario files, each with an `expected_behavior` line. [B] anchor for AC-BEH.
+- **G-i.** `tests/scenarios/` contains ≥4 scenario files, each with an `expected:` line. [B] anchor for AC-BEH.
 - **G-ii.** `CLAUDE.md` _repo-workflow_ contains a bullet referencing `tests/scenarios/`.
 - **G-iii.** `check-consistency.sh` contains `require` lines pairing `clean-first-round` and `fixApplied`; AC-G1 still passes.
 - **G-iv.** `loop-3-development.md` Phase-termination conditions contain a skill-self watch-it-fail behavioral-check note.
@@ -395,7 +395,7 @@ the global gates stay green.
 | Installed copy diverges / A1 unverified on this machine | Low | AC-G5 distinguishes synced vs absent (explicit recorded state). |
 | Report line numbers shifted | High/Low-impact | Dev corner anchors on text (§5). |
 | Scope too large for one cycle (all 32, 7 phases, most files) | Medium | Phased, independently committable; round caps force escalation not half-done merges; report's first-cut tension acknowledged (Decision 1). |
-| Behavioral gate (AC-BEH) itself flaky/subjective | Medium | Scenarios are concrete A/B/C with a single expected_behavior; run by fresh subagents; a scenario that cannot produce a crisp pass/fail is rewritten, not rubber-stamped. |
+| Behavioral gate (AC-BEH) itself flaky/subjective | Medium | Scenarios are concrete A/B/C with a single expected behavior; run by fresh subagents; a scenario that cannot produce a crisp pass/fail is rewritten, not rubber-stamped. |
 
 Overall rollback: every phase is a separate commit with green gates; reverting any phase restores the
 prior green state. No data migration, no external state.

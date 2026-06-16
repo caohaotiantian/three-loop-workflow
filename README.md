@@ -76,6 +76,9 @@ zip -r three-loop-workflow.skill three-loop-workflow/
 # produces three-loop-workflow.skill — a zip Claude Code recognizes
 ```
 
+Tagged releases (`v*`) also ship a prebuilt `.skill`, attached to the GitHub release by
+`.github/workflows/release.yml` — so you can download it instead of building locally.
+
 ### Claude.ai
 
 Upload the packaged `.skill` file via the Skill management page.
@@ -141,3 +144,11 @@ See `three-loop-workflow/references/claude-md-integration.md` for the full conve
 This skill is **load-bearing by its own definition**. Modifying `SKILL.md` or any `references/*.md` triggers the full L1 → L2 → L3 cycle.
 
 One transitional clause: when a load-bearing doc is first introduced (or first retroactively classified as load-bearing), a one-page retroactive design brief plus an independent review with two consecutive clean rounds may substitute for the full cycle. Subsequent modifications must follow the formal procedure.
+
+## License
+
+MIT — see [LICENSE](./LICENSE).
+
+## Acknowledgments
+
+The v1.5 human-factors / craft concepts (the rationalization / red-flag table, the anti-summary description thesis, calibrated severity) were adapted from the [superpowers](https://github.com/obra/superpowers) skill collection (Jesse Vincent, MIT).

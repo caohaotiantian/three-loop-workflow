@@ -22,7 +22,8 @@ Thumbs.db
 # Skill-creator iteration workspaces (kept local, not distributed)
 *-workspace/
 
-# Packaged skill archives (built on demand; distributed via GitHub releases)
+# Packaged skill archives — built on demand and attached to GitHub releases by
+# .github/workflows/release.yml (not committed to source)
 *.skill
 
 # Harness session-continuation artifacts
