@@ -361,6 +361,14 @@ they already follow.
 
 ## 7. Acceptance Criteria (measurable / automatable — grep over modified files)
 
+> **Stale-marker (2026-06-16):** validated at v1.4 ship; these criteria are **historical**, not live
+> contracts. Several no longer run as written: those that grep `WORKFLOW-v3.md` error or vacuously
+> pass (that file was removed by this same v1.4 release); `grep three-loop-consistency CLAUDE.md` and
+> `grep '1.4' SKILL.md` no longer match (the gate is now referenced by script path; the shipped
+> version advanced to 1.5.x); AC-P2b/AC-P4a literal anchors drifted while their intent is met. Lesson
+> (carried into later designs): prefer token-level anchors that survive paraphrase over exact-prose
+> greps. Do not re-run this section as a live gate.
+
 Each criterion is a shell-runnable check from the repo root. `PASS` = the grep exits as
 stated. These become per-phase `<ACCEPT-CMD>`s in the impl doc.
 
