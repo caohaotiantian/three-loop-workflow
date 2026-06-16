@@ -1,7 +1,14 @@
 # Design — Panel quorum floor (I1)
 
 Slug: `2026-06-16-panel-quorum`
-Status: draft
+Status: closed
+Closing-commit: <recorded in the follow-up closeout commit>
+Closed-on: 2026-06-16
+Deferred: none (Q1–Q5 all shipped)
+Notes: L1 passed review rounds 1–3 (two-generation), L2 rounds 1–2; L3 closed on a clean first review
+(clean-first-round relaxation). F whole-change review satisfied by the L3 review, which audited the
+complete `git diff` (all 4 files) against Q1–Q5. 17/17 quorum truth-table; consistency + workflow-syntax
+gates green. Ships in the unreleased v1.5.1.
 
 ## 1. Background and Purpose
 
