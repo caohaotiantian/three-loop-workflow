@@ -47,7 +47,10 @@ the diff and escalates to Full on any commitment-clause touch — mirroring the 
    Plan mode (shift-tab) is the idiomatic way to *draft* this brief, but the brief — not the
    transcript-resident plan — is the artifact the fresh reviewer reads.
 2. **The same fresh-reviewer diff review** — author ≠ reviewer. A fresh subagent reviews the
-   diff against the brief.
+   diff against the brief. **Termination**: a fully-clean first review (zero severe, zero
+   general) closes the change; the moment any fix is applied, a confirming clean round is
+   required — the same clean-first-round rule L3 uses (`references/schemas.md`). Light Mode is
+   the lighter tier, so it takes the relaxation rather than the strict L1/L2 two-generation rule.
 3. **The same round-cap → escalation** — 3 rounds, then escalate; never relax the bar.
 4. **The four core principles** — Think Before Coding, Simplicity First, Surgical Changes,
    Goal-Driven Execution.
