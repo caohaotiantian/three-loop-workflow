@@ -22,6 +22,8 @@ Produce `docs/implementation/<task-slug>.md` (or append a new Phase to an existi
 
 ## Main agent procedure
 
+Calibration: write each Phase for an engineer with zero context for this codebase and no view of this session — exact file paths, exact acceptance commands, and the business invariant each test protects. Assume nothing is obvious.
+
 1. Draft based on the passed design document. **Forbidden** to introduce new requirements not present in the design document. If a gap is discovered, push the item back to L1 instead of patching it locally.
 2. Phase granularity principles (scope-based, not time-based):
     - A Phase is the smallest set of changes that is independently committable, leaves `<TEST-CMD>` green, and maps to a contiguous block of Deliverables. Most small features are a single Phase; split only when one of those invariants would be violated. **Do not pad a Phase to fill calendar time — agentic execution makes wall-clock estimates meaningless.**
@@ -109,14 +111,23 @@ contract files.
    Execution).
 5. Do not modify the document. Output only the review report.
 
+[Trip-wires] A clean first round does not close L2 — the two-generation rule needs a confirming clean round; an unresolved general issue blocks closure.
+
+[Calibration] Grade by actual severity: a genuine blocker is severe; a real but non-blocking defect is general; an advisory/cosmetic observation is a clarification. do not inflate a genuinely-misclassified should-fix item to severe — inflation burns the shared round budget and forces false escalations; this never lowers a real blocker.
+
+[Grounding] Ground every finding: cite file:line (or section) from the diff/artifact; a pass must name at least one section read in full — verify by reading the diff, not the summary.
+
 [Output format] Same as the L1 review template, with the section title
 changed to "Implementation Document Review Report".
 ```
 
-## Common L2 traps
+## Self-review before spawning the reviewer (free — does not increment {{round}}) — Common L2 traps
+
+Before spawning the reviewer, re-read your draft once against this list and fix inline; this pass produces no verdict and never substitutes for the fresh review.
 
 - Phases that bundle unrelated Deliverables or leave `<TEST-CMD>` red mid-Phase — split so each Phase is independently committable and CI-verifiable. Size by scope (one contiguous block of Deliverables), never by wall-clock time.
 - Acceptance commands written as English prose ("run the tests and check the output looks right") instead of an actual shell command — must be a literal command anyone can paste.
 - Implementation tasks listed before test tasks — reverses TDD order and is a severe issue.
 - Quietly adding requirements not in the design doc — must roll back to L1 instead. The trace test (every changed line maps to a Deliverable) starts here.
 - Missing regression protection for earlier Phases — without it, later Phases drift silently.
+- Placeholder vagueness — "add validation" / "handle edge cases" / "write tests for the above" without naming the case/invariant or supplying the test; a fresh agent cannot act on it.

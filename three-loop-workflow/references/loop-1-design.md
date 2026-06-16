@@ -33,6 +33,24 @@ design inputs.
   ("if you cannot articulate why surrounding code is structured a way, stop and ask"). It does
   **not** replace procedure step 1 (reading existing `docs/design/*.md`) — that still runs.
 
+## L1 pre-step B: Confirm intent before drafting
+
+When the request is **under-determined** — the goal, success condition, or solution shape is
+not yet pinned — confirm intent with the user *before* drafting the 8-section document. This is
+a **pre-step, not a loop** and not an unconditional gate: it is gated to under-determined
+requests only. **Skip it** when the request is already fully specified (every Key Design
+Decision and Acceptance Criterion is determined by the ask), or under Light Mode.
+
+- **Ask clarifying questions one at a time** (multiple-choice preferred over open-ended), so the
+  user answers cheaply and the design space stays visible.
+- **Present 2-3 candidate approaches with a led recommendation** before you draft Key Design
+  Decisions, so the chosen direction is the user's, not silently inferred.
+- **Gate the 8-section draft on confirmed intent**: do not write the full document until the
+  goal and approach are confirmed.
+
+Question quality and degraded-mode handling follow `references/escalation-rules.md` ("Question
+quality requirements" and "Degraded mode") — not restated here.
+
 ## Required sections (all 8 must be present)
 
 1. **Background and Purpose**: why we are doing this, what happens if we do not.
@@ -66,6 +84,8 @@ design inputs.
     - Multiple candidate options whose trade-offs have no clear winner
     - Possible conflict with an existing design where it is unclear whether to follow the design or the patch
     - Breaking changes: schema, exit codes, CLI arguments, storage layout, external protocol, directory structure
+    - Multi-subsystem request: the ask spans two or more independently designable and shippable subsystems (one design doc = one coherent subsystem). Escalate the decomposition; run a separate L1→L2→L3→F cycle per subsystem.
+   These signals are **reactive** triggers fired while drafting; they do not substitute for the **proactive** "L1 pre-step B: Confirm intent before drafting" run before drafting on an under-determined request.
 4. After the first draft, spawn the review subagent (template below). Increment `{{round}}` first.
 
 ## Loop dynamic
@@ -141,13 +161,26 @@ contract files.
      comparison?
    - Is the scope boundary tight enough, with no smuggled-in extensions?
    - Do risks and rollback cover the most likely failure paths?
-   - For a user-facing / hot-path / interface change: is a quality budget
-     declared as a measured criterion, or explicitly excluded in the Scope
-     Boundary? A missing-and-not-excluded budget is a general issue.
+   - For a user-facing / hot-path / interface change:
+     apply the section-7 quality-budget rule (declare a measured budget or
+     exclude it in Scope Boundary; a missing-and-not-excluded budget is a
+     general issue).
    - Coding philosophy (Think Before Coding, Simplicity First, Surgical
      Changes, Goal-Driven Execution): any violation (silent defaults,
      speculative scope, missing trade-offs) is a severe issue.
+   - If the artifact is a discipline-rule edit to the three-loop skill
+     itself (termination / escalation / tier / principle / rationalization
+     rule): do not credit that the rule merely reads correctly — demand a
+     concrete demonstration that the edited rule changes agent behavior (a
+     before/after, or a runnable check). A behavior rule
+     asserted but never observed is a severe issue.
 5. Do not modify the document. Output only the review report.
+
+[Trip-wires] A clean first round does not close L1 — the two-generation rule needs a confirming clean round; an unresolved general issue blocks closure.
+
+[Calibration] Grade by actual severity: a genuine blocker is severe; a real but non-blocking defect is general; an advisory/cosmetic observation is a clarification. do not inflate a genuinely-misclassified should-fix item to severe — inflation burns the shared round budget and forces false escalations; this never lowers a real blocker.
+
+[Grounding] Ground every finding: cite file:line (or section) from the diff/artifact; a pass must name at least one section read in full — verify by reading the diff, not the summary.
 
 [Output format]
 ## Design Document Review Report (round {{round}})
@@ -165,7 +198,9 @@ contract files.
 pass / needs fix / severe non-conformance
 ```
 
-## Common L1 traps
+## Self-review before spawning the reviewer (free — does not increment {{round}}) — Common L1 traps
+
+Before spawning the reviewer, re-read your draft once against this list and fix inline; this pass produces no verdict and never substitutes for the fresh review.
 
 - Writing acceptance criteria like "code is clean" or "performance is good" — these are not mechanically verifiable, so they will be rejected at L2 anyway. Write the measurement (a benchmark threshold, a regex over output, a specific test that must pass).
 - Listing only one design option without alternatives — violates Think Before Coding and is automatically a severe issue at review.

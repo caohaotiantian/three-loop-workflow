@@ -21,7 +21,17 @@ Light Mode applies only when **all** of the following are true:
 If any of these fails, the change is **Full Mode**. **When in doubt → Full.** A *trivial,
 non-commitment-clause* edit to a load-bearing doc (fixing a typo or formatting that changes no
 rule) is the *None* tier — one independent review, not a cycle; any *substantive* edit to a
-load-bearing doc is always Full Mode.
+load-bearing doc is always Full Mode. The None reviewer re-runs the trivial/substantive test against
+the diff and escalates to Full on any commitment-clause touch — mirroring the Light-Mode gate below.
+
+### Looks Light, is actually Full
+
+| Looks Light | Trigger fired → Full |
+|---|---|
+| "Just add a config flag defaulting to 30s" | default-threshold decision (no source-of-truth constant cited) |
+| "Rename a field in a stored JSON shape" | breaking change: storage layout |
+| "Split this one change into a 4th tiny file" | >3 files — splitting to dodge the line is still Full |
+| "Tweak a constant the algorithm already had" | still a threshold decision unless you cite an existing constant in docs/design/ or source |
 
 ## What Light Mode keeps (the four non-negotiables)
 
@@ -37,7 +47,10 @@ load-bearing doc is always Full Mode.
    Plan mode (shift-tab) is the idiomatic way to *draft* this brief, but the brief — not the
    transcript-resident plan — is the artifact the fresh reviewer reads.
 2. **The same fresh-reviewer diff review** — author ≠ reviewer. A fresh subagent reviews the
-   diff against the brief.
+   diff against the brief. **Termination**: a fully-clean first review (zero severe, zero
+   general) closes the change; the moment any fix is applied, a confirming clean round is
+   required — the same clean-first-round rule L3 uses (`references/schemas.md`). Light Mode is
+   the lighter tier, so it takes the relaxation rather than the strict L1/L2 two-generation rule.
 3. **The same round-cap → escalation** — 3 rounds, then escalate; never relax the bar.
 4. **The four core principles** — Think Before Coding, Simplicity First, Surgical Changes,
    Goal-Driven Execution.

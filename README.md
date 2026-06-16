@@ -19,6 +19,8 @@ The skill files (`SKILL.md` + `references/`) are the single source of truth — 
 | **v1.3.2** | Skill is now self-contained: all subagent/Workflow nodes run on the built-in default subagent; removed the dependency on the feature-dev plugin's agent types (`agentType` recommendation column and the bare-vs-namespaced `code-reviewer` paragraph dropped from SKILL.md) |
 | **v1.3.3** | Skill no longer induces process-narration comments in code: explicit Surgical-Changes rule ("comments explain the code, not the workflow") added to SKILL.md, plus an L3 review check that flags them; the `references/l3-phase.js` exemplar scrubbed of design-doc/decision/diagram references |
 | **v1.4** | **Orchestration upgrade.** Correctness: L3 dev diff materialized via `baseSha` + an `agent-error` status distinct from cap-exhaustion (`l3-phase.js`); the skill files made the **sole source of truth** (the redundant derived `WORKFLOW-v3.md` spec removed) with a `three-loop-consistency` self-check; false worktree-isolation claims removed. Discipline tuning: L3-only clean-first-round termination relaxation; gated **Light/Full tier** (`references/light-mode.md`) with a fresh-eyes tier check; scope-based phases; cost expectation. Quality ceiling: L1 "understand before designing" Explore pre-step; gating **behavior verification** (`/run`, `/verify`); declare-or-exclude perf/UX/a11y budgets. Optional modes (opt-in, zero-install fallback): adversarial **review panel** with mechanical union (`references/review-panel.js`, `multi-voter-review.md`); tool-restricted **reviewer agents** with model routing (`references/optional-subagents.md`); commit-prefix lint hook (`references/validate-commit-msg.sh`); **agent-team** modes (`references/loop-3-teams.md`) |
+| **v1.5** | **Compliance-hardening** (32 vetted lessons from a comparison with the `superpowers` skill collection, shipped in 3 waves). **Anti-summary:** the always-loaded `description` no longer paraphrases the workflow and the "Quick orientation" box became a *read-the-reference-in-full* directive — the always-loaded surface net **shrank**. **Human-factors:** one consolidated rationalization / red-flag table (`escalation-rules.md`) plus inline reviewer trip-wires where the reviewer actually reads. **Verify, don't label:** TDD watch-it-fail is reviewer-checked from the git log; closeout requires *fresh* command output; a fresh-eyes **whole-change correctness review** now runs by default at F (not just doc-consolidation). **Failure-handling:** root-cause gate + failing-reproduction-test in the fix corner; round-cap exhaustion reframed as a possible design/decomposition defect; evidence-based deadlock reports. **Ergonomics:** honest dev status (`blocked` / `concerns[]` with a bounded single re-dispatch → `dev-escalation`); per-corner `models` routing; calibrated severity (anti-inflation); verify-by-diff grounding. **Elicitation:** gated intent-confirmation L1 pre-step; free pre-spawn self-review; multi-subsystem decomposition signal. **Self-testing:** a standing `tests/scenarios/` behavioral suite + maintenance gates (`check-consistency.sh` now also pairs `clean-first-round` / `fixApplied`) — the skill now tests its own discipline under pressure |
+| **v1.5.1** | **Audit-repair hardening** (from a multi-lens self-audit). The consistency gate now genuinely pins the `two-generation` token across its source files (it had been a comment-only no-op) and enforces a `wc -w` ceiling on the always-loaded `SKILL.md`; the commit-prefix lint extracts the subject from the *first* `-m` (multi-`-m` commits went unvalidated) and JSON-unescapes its no-jq fallback; the None tier now requires the reviewer to re-confirm a load-bearing edit changes no rule; `l3-phase.js` unions `clarifications` and reports the round that actually ran on cap-exhaustion; +6 behavioral scenarios (tier-down, None boundary, design-conflict rollback, delete-asks-first, disguised rule-change, dep-upgrade review); MIT `LICENSE` + superpowers acknowledgment; the packaged `.skill` is now built in CI on a `v*` tag instead of committed; the adversarial review **panel** now requires a surviving voter quorum (⌊N/2⌋+1) to render a clean PASS — a panel that loses most voters re-runs instead of silently passing on one. A **second self-audit round** then closed nine more load-bearing gaps: the documented L1/L2 closure no longer collapses the strict `two-generation` rule into a single clean round (the reviewer-emitted `verdict` is no longer a closure authority, and a gate guard forbids it returning); the commit-prefix lint now screens a `git commit` invoked with global options (`git -C` / `-c` / `--no-pager`) and its no-jq fallback no longer over-captures trailing fields; the skill-self behavioral check is discharged by the main agent (the mechanical accept corner cannot run it) and a dev-escalation no longer drops the original blockers; the accept corner stays exit-code-only while the skip/xfail tally moves to the PhaseEnd re-run, and a general finding at the closeout whole-change review is recorded/deferred instead of vanishing; Light Mode's termination rule is now stated, and the tier-table file-count trigger and None cell were tightened (net-negative on `SKILL.md` word count) |
 
 ## What is the three-loop workflow?
 
@@ -70,9 +72,13 @@ cp -r three-loop-workflow ~/.claude/skills/
 Or package it as a single distributable `.skill` file:
 
 ```bash
-cd /home/fedora/workflow && zip -r three-loop-workflow.skill three-loop-workflow/
+# from the repo root (rm first so a stale archive can't keep already-removed files)
+rm -f three-loop-workflow.skill && zip -r three-loop-workflow.skill three-loop-workflow/
 # produces three-loop-workflow.skill — a zip Claude Code recognizes
 ```
+
+Tagged releases (`v*`) also ship a prebuilt `.skill`, attached to the GitHub release by
+`.github/workflows/release.yml` — so you can download it instead of building locally.
 
 ### Claude.ai
 
@@ -127,6 +133,9 @@ See `three-loop-workflow/references/claude-md-integration.md` for the full conve
 │       ├── check-consistency.sh      three-loop-consistency self-check
 │       ├── check-workflow-syntax.sh  Workflow-script syntax gate
 │       └── validate-commit-msg.sh    Optional commit-prefix lint hook
+├── tests/scenarios/                  Standing pressure-scenario suite — the v1.5 behavioral gate (run before
+│                                     merging tier/escalation/termination edits; not shipped in the .skill, not load-bearing)
+├── docs/design/, docs/implementation/  Per-task L1/L2 archives (created on demand)
 ├── README.md                         this file
 └── README-cn.md                      Chinese version
 ```
@@ -136,3 +145,11 @@ See `three-loop-workflow/references/claude-md-integration.md` for the full conve
 This skill is **load-bearing by its own definition**. Modifying `SKILL.md` or any `references/*.md` triggers the full L1 → L2 → L3 cycle.
 
 One transitional clause: when a load-bearing doc is first introduced (or first retroactively classified as load-bearing), a one-page retroactive design brief plus an independent review with two consecutive clean rounds may substitute for the full cycle. Subsequent modifications must follow the formal procedure.
+
+## License
+
+MIT — see [LICENSE](./LICENSE).
+
+## Acknowledgments
+
+The v1.5 human-factors / craft concepts (the rationalization / red-flag table, the anti-summary description thesis, calibrated severity) were adapted from the [superpowers](https://github.com/obra/superpowers) skill collection (Jesse Vincent, MIT).
