@@ -102,6 +102,11 @@ Grouped by L3 Phase (exact edits specified at L2). Each `[ ]` is a finished arti
 - [ ] D3 (M6): `references/loop-3-workflow.md` documents that `l3-phase.js` is **not** resumable
   (all phase state is in-memory; an interrupted run restarts at round 1 and must delete the prior
   `-dev-r1` branch before relaunch), and `l3-phase.js` carries a matching load-bearing comment.
+  > **Corrected 2026-06-16 (post-closeout):** this deliverable was wrong — the Workflow runtime journals
+  > and **resumes within-session** (cached `agent()` results; deterministic replay via the no-`Date.now`/
+  > `Math.random` rule). The shipped "Resumption" section + `l3-phase.js` comment were re-corrected to
+  > scope the restart/duplicate-commit hazard to *cross-session* fresh starts only. See the audit report
+  > M6 correction note.
 
 **Phase E — non-load-bearing (direct edits, one fresh review)**
 - [ ] E1 (H4): root `LICENSE` (MIT, `Copyright (c) 2026 caohaotiantian`); `## License` section in
