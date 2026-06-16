@@ -19,7 +19,10 @@ Before closing the task, the main agent must complete this checklist. Skip none.
    actually implemented (not just ticked), (b) no cross-phase regression or interface mismatch between
    Phases, (c) no scope creep beyond the design. Emit `ReviewVerdict` (`references/schemas.md`). A severe
    finding routes to **one bounded fix round, then escalate** (there is no per-Phase round counter at
-   closeout) and **blocks closure** — author confidence does not substitute. This step
+   closeout) and **blocks closure** — author confidence does not substitute. A **general** finding does
+   not block closure but **does not silently vanish**: record it in the closeout report and either fix it
+   in the same bounded round (if cheap) or file a follow-up issue and list it on the closure block
+   `Deferred:` line as a deferred finding. This step
    **runs on the default single-agent path even when no panel/teams slot exists**; if the optional L3 panel or teams
    mode-2 already reviewed the assembled diff this task, that satisfies this step (folding in is an
    optimization, not a precondition). It is distinct from the conditional behavior-verification step
@@ -46,9 +49,9 @@ Run these substeps in order:
     Status: closed
     Closing-commit: <short-sha>
     Closed-on: <UTC date, YYYY-MM-DD>
-    Deferred: <issue-id>, <issue-id>   # or "none"
+    Deferred: <class> — <desc> (<issue-id>), ...   # class = deliverable | finding; or "none"
     ```
-    `Deferred` lists every Deliverable that was unticked at closeout, with its follow-up issue ID. If none, write `none`.
+    `Deferred` lists each deferred item with its class and follow-up issue ID. Two classes: a **deferred deliverable** (a Deliverable left unticked at closeout) or a **deferred finding** (a correctness finding left unfixed — e.g. a general from the step 4b whole-change review). If none, write `none`.
 3. **Cross-link supersedes / superseded-by.** If this task's design extended or replaced a prior `docs/design/*.md`:
     - In the new doc, add `Supersedes: <prior-task-slug>` to the closure block.
     - In the prior doc, add `Superseded-by: <this-task-slug>` to its closure block.
@@ -90,8 +93,8 @@ ephemeral content and preserved every load-bearing claim.
 3. Any load-bearing line removed without a redirect (Supersedes link,
    merged-into target) is a severe issue.
 4. Confirm the closure block is present, the Closing-commit SHA exists
-   in `git log`, and every Deferred deliverable has a follow-up issue
-   ID.
+   in `git log`, and every Deferred item (deliverable or finding) has a
+   follow-up issue ID.
 5. Confirm Supersedes / Superseded-by links, if present, point to real
    files. No dangling links.
 6. Do not modify any document. Output only the review report.
