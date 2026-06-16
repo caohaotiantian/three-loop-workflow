@@ -1,6 +1,15 @@
 # Implementation: Round-2 self-audit repair
 
 Slug: `2026-06-16-audit-2-repair` (matches `docs/design/2026-06-16-audit-2-repair.md`)
+Status: closed
+Closing-commit: <pending>
+Closed-on: 2026-06-16
+Deferred: none
+Notes: Implements design `2026-06-16-audit-2-repair` Phases A–E. Acceptance: every per-Phase
+`<ACCEPT-CMD>` exits 0 (re-run fresh at closeout); consistency + workflow-syntax gates green;
+`tests/scenarios/` 13/13 graded to `expected` by fresh subagents. No L2 rollback occurred (no Deprecated
+section). B2 shipped a more robust escape-aware `sed` than the doc's literal example (it handles any
+`\`-escape, not just `\"`) — a sound deviation confirmed at L3 + F review.
 
 ## 1. Task Index
 

@@ -1,6 +1,19 @@
 # Design: Round-2 self-audit repair (substantive load-bearing findings)
 
 Slug: `2026-06-16-audit-2-repair`
+Status: closed
+Closing-commit: <pending>
+Closed-on: 2026-06-16
+Deferred: none
+Notes: L1 passed rounds 1–4 (2 severe + 4 general found and fixed; two-generation pass on the clean
+confirming round). L2 passed rounds 1–3 (1 severe shape-only-acceptance + 2 general fixed). L3 Phases:
+A closed clean-first-round (A5 scenario graded); B rounds 1–3 (a false-positive on a ref named "commit"
+found+fixed, two-generation); C clean-first-round; D rounds 1–3 (a 4th incomplete-broadening `Deferred:`
+site found+fixed, two-generation; D3 scenario graded); E clean-first-round + behavioral gate 13/13. F
+whole-change correctness review passed (0 severe / 0 general). `SKILL.md` `wc -w` 2876 → 2860 (anti-bloat
+held). Consistency + workflow-syntax gates green throughout. Folds into the unreleased v1.5.1.
+Advisory follow-up (out of audit-2 scope): the `end-to-end-review.md` closure-rule report block (~:121)
+still describes only the deferred-deliverable path; a later task could generalize it to deferred findings.
 
 ## 1. Background and Purpose
 
@@ -27,29 +40,29 @@ transcript, not a committed file).
 Grouped into five independently-committable Phases.
 
 **Phase A — Termination-contract integrity** (`references/schemas.md`, `references/check-consistency.sh`)
-- [ ] A1: Drop the `(verdict == "pass")` disjunct from the L1/L2 closure formula at `schemas.md:53` so closure is count-driven, matching the L3 form and `SKILL.md:154`.
-- [ ] A2: Reconcile the `verdict` enum description (`schemas.md:34`) so `pass` is a single-round readiness signal (zero severe AND zero general **this** round), not a "last round" claim a single reviewer cannot compute. Ensure all `verdict`-describing sentences in `schemas.md` agree after the edit (the enum at :34, the prose at :62, and the A3 note) — no residual "last round" wording.
-- [ ] A3: Add one line to `schemas.md` stating the mechanical closure decision uses only `severe_count`/`general_count`, never the `verdict` string. (`verdict` stays `required` — producers always emit it; no schema-contract or code change.)
-- [ ] A4: Add a regression guard to `check-consistency.sh` that fails if `schemas.md` reintroduces `verdict == "pass"` as a closure condition. Guard must be proven to fail (delete/inject test), not a comment-only no-op.
-- [ ] A5 (behavioral observation): add `tests/scenarios/l1-clean-first-round-still-confirms.md` — an orchestrator applying the `schemas.md` closure formula literally, L1 round 1 returned `verdict:"pass", severe_count:0, general_count:0`; expected the loop is **not** closed (a confirming round is required). This scenario **distinguishes** the fix: pre-edit the `(verdict=="pass")` disjunct closes it (wrong); post-edit the count-driven formula needs `round > 1` (correct). It observes the A1 rule change, not just the prose.
+- [x] A1: Drop the `(verdict == "pass")` disjunct from the L1/L2 closure formula at `schemas.md:53` so closure is count-driven, matching the L3 form and `SKILL.md:154`.
+- [x] A2: Reconcile the `verdict` enum description (`schemas.md:34`) so `pass` is a single-round readiness signal (zero severe AND zero general **this** round), not a "last round" claim a single reviewer cannot compute. Ensure all `verdict`-describing sentences in `schemas.md` agree after the edit (the enum at :34, the prose at :62, and the A3 note) — no residual "last round" wording.
+- [x] A3: Add one line to `schemas.md` stating the mechanical closure decision uses only `severe_count`/`general_count`, never the `verdict` string. (`verdict` stays `required` — producers always emit it; no schema-contract or code change.)
+- [x] A4: Add a regression guard to `check-consistency.sh` that fails if `schemas.md` reintroduces `verdict == "pass"` as a closure condition. Guard must be proven to fail (delete/inject test), not a comment-only no-op.
+- [x] A5 (behavioral observation): add `tests/scenarios/l1-clean-first-round-still-confirms.md` — an orchestrator applying the `schemas.md` closure formula literally, L1 round 1 returned `verdict:"pass", severe_count:0, general_count:0`; expected the loop is **not** closed (a confirming round is required). This scenario **distinguishes** the fix: pre-edit the `(verdict=="pass")` disjunct closes it (wrong); post-edit the count-driven formula needs `round > 1` (correct). It observes the A1 rule change, not just the prose.
 
 **Phase B — Commit-msg gate hardening** (`references/validate-commit-msg.sh`)
-- [ ] B1: Loosen the policing match so a `git commit` invoked with intervening global options (`git -C <path> commit`, `git -c k=v commit`, `git --no-pager commit`) is still screened. The match must tolerate option tokens **and their bare arguments** (e.g. `-C <path>`) between `git` and `commit`.
-- [ ] B2: Fix the no-jq `sed` fallback (`validate-commit-msg.sh:23`) so the `command` capture stops at the first unescaped closing quote instead of greedily bleeding across trailing JSON fields (`description`, …).
+- [x] B1: Loosen the policing match so a `git commit` invoked with intervening global options (`git -C <path> commit`, `git -c k=v commit`, `git --no-pager commit`) is still screened. The match must tolerate option tokens **and their bare arguments** (e.g. `-C <path>`) between `git` and `commit`.
+- [x] B2: Fix the no-jq `sed` fallback (`validate-commit-msg.sh:23`) so the `command` capture stops at the first unescaped closing quote instead of greedily bleeding across trailing JSON fields (`description`, …).
 
 **Phase C — L3 path completeness** (`references/loop-3-development.md`, `references/loop-3-workflow.md`, `references/l3-phase.js`)
-- [ ] C1: Re-attribute the skill-self behavioral check off the accept corner (which never runs it on the recommended Workflow path and is barred from judging) onto the main-agent post-Workflow discharge list in `loop-3-workflow.md`; reword `loop-3-development.md:205` to be path-independent. **Ownership must be consistent across all sites**: the owner statement and any `Behavioral-check: complied` trailer instruction in `loop-3-development.md` (~199-205), the discharge block in `loop-3-workflow.md:72-77`, and the per-Phase self-check in `SKILL.md:197` — a fix that moves one site but leaves the trailer/self-check attributed to the accept corner re-creates the drift.
-- [ ] C2: Make the dev-escalation `concerns` fallback length-aware at `l3-phase.js:161` so an empty retry array does not mask the original blockers.
+- [x] C1: Re-attribute the skill-self behavioral check off the accept corner (which never runs it on the recommended Workflow path and is barred from judging) onto the main-agent post-Workflow discharge list in `loop-3-workflow.md`; reword `loop-3-development.md:205` to be path-independent. **Ownership must be consistent across all sites**: the owner statement and any `Behavioral-check: complied` trailer instruction in `loop-3-development.md` (~199-205), the discharge block in `loop-3-workflow.md:72-77`, and the per-Phase self-check in `SKILL.md:197` — a fix that moves one site but leaves the trailer/self-check attributed to the accept corner re-creates the drift.
+- [x] C2: Make the dev-escalation `concerns` fallback length-aware at `l3-phase.js:161` so an empty retry array does not mask the original blockers.
 
 **Phase D — Accept / closeout contract** (`references/schemas.md`, `references/loop-3-development.md`, `references/end-to-end-review.md`)
-- [ ] D1: Re-attribute the per-command passed/failed/skipped/xfail tally from the accept subagent (which `AcceptVerdict` cannot carry and which is forbidden from interpreting output) to the main-agent PhaseEnd re-run; soften `loop-3-development.md:82` accordingly so the "skipped tests are not passing tests" guard has an owner that can actually apply it. (`loop-3-development.md:95` already references the closing-run tally; D1 only re-points the skip/xfail guard there and softens :82 — it adds no new requirement at :95.)
-- [ ] D2: Add a general-finding disposition to F-closeout step 4b (`end-to-end-review.md`): a general finding from the whole-change correctness review is recorded and either fixed in the same bounded round or filed as a follow-up listed in the closure block `Deferred:` line — it does not silently vanish. Per **D-D2**, also broaden the `Deferred:` line definition at `end-to-end-review.md:51` to two named item classes (deferred deliverable | deferred finding), each with a follow-up issue ID, so the line is not silently overloaded.
-- [ ] D3 (behavioral observation): add `tests/scenarios/closeout-general-finding-deferred.md` — the F-closeout 4b whole-change review returned zero severe but one general finding, not fixed this round; expected the task does **not** close clean — the general is recorded and routed to the closure block `Deferred:` line / a follow-up. Observes the D2 rule change (pre-edit 4b defines only the severe disposition, so the general could vanish; post-edit it must be recorded).
+- [x] D1: Re-attribute the per-command passed/failed/skipped/xfail tally from the accept subagent (which `AcceptVerdict` cannot carry and which is forbidden from interpreting output) to the main-agent PhaseEnd re-run; soften `loop-3-development.md:82` accordingly so the "skipped tests are not passing tests" guard has an owner that can actually apply it. (`loop-3-development.md:95` already references the closing-run tally; D1 only re-points the skip/xfail guard there and softens :82 — it adds no new requirement at :95.)
+- [x] D2: Add a general-finding disposition to F-closeout step 4b (`end-to-end-review.md`): a general finding from the whole-change correctness review is recorded and either fixed in the same bounded round or filed as a follow-up listed in the closure block `Deferred:` line — it does not silently vanish. Per **D-D2**, also broaden the `Deferred:` line definition at `end-to-end-review.md:51` to two named item classes (deferred deliverable | deferred finding), each with a follow-up issue ID, so the line is not silently overloaded.
+- [x] D3 (behavioral observation): add `tests/scenarios/closeout-general-finding-deferred.md` — the F-closeout 4b whole-change review returned zero severe but one general finding, not fixed this round; expected the task does **not** close clean — the general is recorded and routed to the closure block `Deferred:` line / a follow-up. Observes the D2 rule change (pre-edit 4b defines only the severe disposition, so the general could vanish; post-edit it must be recorded).
 
 **Phase E — Light-Mode termination + SKILL.md surface** (`references/light-mode.md`, `SKILL.md`)
-- [ ] E1: Pin Light Mode's termination rule explicitly. **Primary edit in `light-mode.md`** (state the rule: a fully-clean first review closes; the moment any fix lands, a confirming clean round is required). **Plus a minimal `SKILL.md:155` touch** so its "L3-only clean-first-round relaxation" wording is not contradicted — note Light Mode mirrors the relaxation, with a pointer to `references/light-mode.md`. The `clean-first-round` token (paired `SKILL.md` ↔ `schemas.md` by `check-consistency.sh:45`) and the `two-generation` token must survive the edit. **Decision: clean-first-round relaxation** (see §4 D-E1).
-- [ ] E2: Qualify the Full-Mode file-count trigger at `SKILL.md:23` ("more than 3 files" → "more than 3 non-load-bearing files") to match the predicate used everywhere else.
-- [ ] E3: De-densify the `SKILL.md:25` None cell — keep the routing outcome plus a pointer to `references/light-mode.md`, push the trivial/substantive adjudication detail (already in `light-mode.md`) into the reference. Must net word-neutral-or-negative on `SKILL.md`.
+- [x] E1: Pin Light Mode's termination rule explicitly. **Primary edit in `light-mode.md`** (state the rule: a fully-clean first review closes; the moment any fix lands, a confirming clean round is required). **Plus a minimal `SKILL.md:155` touch** so its "L3-only clean-first-round relaxation" wording is not contradicted — note Light Mode mirrors the relaxation, with a pointer to `references/light-mode.md`. The `clean-first-round` token (paired `SKILL.md` ↔ `schemas.md` by `check-consistency.sh:45`) and the `two-generation` token must survive the edit. **Decision: clean-first-round relaxation** (see §4 D-E1).
+- [x] E2: Qualify the Full-Mode file-count trigger at `SKILL.md:23` ("more than 3 files" → "more than 3 non-load-bearing files") to match the predicate used everywhere else.
+- [x] E3: De-densify the `SKILL.md:25` None cell — keep the routing outcome plus a pointer to `references/light-mode.md`, push the trivial/substantive adjudication detail (already in `light-mode.md`) into the reference. Must net word-neutral-or-negative on `SKILL.md`.
 
 ## 3. Scope Boundary (NOT in scope)
 
