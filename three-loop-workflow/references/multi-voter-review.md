@@ -47,6 +47,12 @@ round counting and cap → escalation are unchanged: the N voters do **not** eac
 > blocking non-conformance, while the *inline* `l3-phase.js` path returns `null` → an `agent-error`
 > status (an infrastructure failure, distinct from a review deadlock — see `loop-3-workflow.md`).
 > Neither is a silent pass.
+>
+> A clean **PASS** additionally requires a surviving **quorum** — a strict majority of the requested
+> voters, `⌊N/2⌋+1`. Below quorum a *clean* panel does **not** pass; it is treated like a total
+> failure (standalone → blocking; inline → `null` → `agent-error`) so the caller re-runs rather than
+> advancing on coverage that has shrunk toward a single reviewer. A below-quorum panel that *found*
+> severe/general issues still reports them — the quorum gates only the clean-pass boundary.
 
 ## How to invoke
 
