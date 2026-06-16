@@ -2,7 +2,7 @@
 
 Slug: `2026-06-16-audit-2-repair`
 Status: closed
-Closing-commit: <pending>
+Closing-commit: c01967f
 Closed-on: 2026-06-16
 Deferred: none
 Notes: L1 passed rounds 1–4 (2 severe + 4 general found and fixed; two-generation pass on the clean

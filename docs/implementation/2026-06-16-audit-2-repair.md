@@ -2,7 +2,7 @@
 
 Slug: `2026-06-16-audit-2-repair` (matches `docs/design/2026-06-16-audit-2-repair.md`)
 Status: closed
-Closing-commit: <pending>
+Closing-commit: c01967f
 Closed-on: 2026-06-16
 Deferred: none
 Notes: Implements design `2026-06-16-audit-2-repair` Phases A–E. Acceptance: every per-Phase
