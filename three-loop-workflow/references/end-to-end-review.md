@@ -118,9 +118,9 @@ pass / needs fix / severe non-conformance
 
 The task is closed only after every checklist item completes. Author confidence is not a substitute — the deliverable checkbox state, the green command exit codes, and the consolidation-review verdict are.
 
-If a deliverable cannot be closed and a follow-up issue is filed instead, the closeout report must:
+If an item — a Deliverable left unticked, or a correctness finding from step 4b left unfixed — cannot be closed/fixed in this task and a follow-up issue is filed instead, the closeout report must:
 
-- Name the deliverable.
-- State why it could not be closed in this task.
+- Name the item and its class (deliverable or finding).
+- State why it could not be closed/fixed in this task.
 - Link the follow-up issue ID (also recorded in the closure block's `Deferred:` line).
-- Confirm that the unfinished work does not break the items that *were* closed (otherwise the entire task is not yet ready for closeout).
+- Confirm that the deferred work does not break the items that *were* closed (otherwise the entire task is not yet ready for closeout).
