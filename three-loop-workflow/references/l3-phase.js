@@ -158,7 +158,7 @@ if (devResult.blocked) {
   )
   if (!retry) return { status: 'agent-error', phaseLabel, round: 0, stage: 'dev', reason: 'dev re-dispatch failed after retry' }
   if (retry.conflict) return { status: 'design-conflict', phaseLabel, round: 0, branch: retry.branch }
-  if (retry.blocked) return { status: 'dev-escalation', phaseLabel, round: 0, stage: 'dev', concerns: retry.concerns || devResult.concerns }
+  if (retry.blocked) return { status: 'dev-escalation', phaseLabel, round: 0, stage: 'dev', concerns: (retry.concerns && retry.concerns.length) ? retry.concerns : (devResult.concerns || []) }
   devResult = retry
 }
 
