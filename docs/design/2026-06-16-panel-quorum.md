@@ -2,7 +2,7 @@
 
 Slug: `2026-06-16-panel-quorum`
 Status: closed
-Closing-commit: <recorded in the follow-up closeout commit>
+Closing-commit: 2e0e42a
 Closed-on: 2026-06-16
 Deferred: none (Q1–Q5 all shipped)
 Notes: L1 passed review rounds 1–3 (two-generation), L2 rounds 1–2; L3 closed on a clean first review

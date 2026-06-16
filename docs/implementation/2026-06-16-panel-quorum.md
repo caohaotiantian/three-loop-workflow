@@ -2,7 +2,7 @@
 
 Slug: `2026-06-16-panel-quorum` (matches `docs/design/2026-06-16-panel-quorum.md`)
 Status: closed
-Closing-commit: <recorded in the follow-up closeout commit>
+Closing-commit: 2e0e42a
 Closed-on: 2026-06-16
 Deferred: none
 Notes: manual/fallback L3 (pre-verified predicate); fresh review of the diff confirmed predicate
