@@ -77,10 +77,14 @@ Notes on the diagram:
 
 | Role | Input | Output | Forbidden |
 |---|---|---|---|
-| **step 1: dev** | Phase task list in impl doc + design doc references + exports, immediate callers, and shared utilities of files being modified | Code changes (TDD: tests first), task-list checkboxes ticked | Modify the impl doc; expand scope unilaterally |
-| **step 2: review** | dev's diff (obtained as the review subagent's first action via `git diff <baseSha>..<devBranch>` — the dev returns `baseSha`, captured before editing) + design doc + impl doc + CLAUDE.md | Review report (severe / general / clarification, format per L1 template) | Modify code |
-| **step 3: accept** | Phase `<ACCEPT-CMD>` list from impl doc | Per-command exit code and key output, marked pass or fail; plus passed/failed/skipped/xfail tally per command (skipped tests are not passing tests) | Modify code or tests; interpret or judge output beyond the mechanical exit-code → pass/fail derivation (that is the review role's job) |
-| **step 4: fix** | Failing items from step 2 or step 3 | Minimal-scope code fix; commit prefix `fix(phaseN-roundR):` | Structural refactors; introducing new requirements outside the design doc |
+| **step 1: dev** | Phase task list in impl doc + design doc references + exports, immediate callers, and shared utilities of files being modified | Code changes (TDD: tests first), task-list checkboxes ticked. Before reporting: self-review your diff against SKILL.md §0.2 (overcomplication) and §0.3 (trace test + no process-narration comments), confirm each assigned checkbox and that each new behavior has a test you watched fail; this self-review does NOT replace the fresh review corner — both run. | Modify the impl doc; expand scope unilaterally |
+| **step 2: review** | dev's diff (obtained as the review subagent's first action via `git diff <baseSha>..<devBranch>` — the dev returns `baseSha`, captured before editing) + design doc + impl doc + CLAUDE.md; confirm test changes precede/accompany production changes for new behavior — a body of new production code with no corresponding new test is a severe Goal-Driven Execution issue | Review report (severe / general / clarification, format per L1 template) | Modify code |
+| **step 3: accept** | Phase `<ACCEPT-CMD>` list from impl doc | Per-command exit code and key output, marked pass or fail (mechanical exit-code → pass/fail derivation only; the per-command pass/fail/skip/xfail tally and the "skipped tests are not passing tests" check belong to the main agent's PhaseEnd re-run — see "Main agent constraints") | Modify code or tests; interpret or judge output beyond the mechanical exit-code → pass/fail derivation (that is the review role's job) |
+| **step 4: fix** | Failing items from step 2 or step 3, each item prefixed by a one-line root cause ('item X is caused by Y') | Minimal-scope code fix; commit prefix `fix(phaseN-roundR):`; for a correctness/behavior finding (not style/scope/comment): add a failing test that reproduces it first, then fix to green (red→green) | Structural refactors; introducing new requirements outside the design doc |
+
+Fix corner is debugging, not patching: name the root cause of each failing item before editing and change that cause, one at a time. If a failing item has no identifiable cause after investigation, escalate via the design-conflict / escalation path — do not ship a guess.
+
+> **Rationalizations — recognize and stop**: the review/accept/fix excuse trip-wires live in `references/escalation-rules.md`.
 
 **Role isolation hard constraint**: within a single Phase, a single subagent takes only one role. The main agent spawns a fresh subagent per role per round. This binds to **identity**, not just to invocation: a subagent (or agent-team teammate) that authored or self-claimed the dev task for an artifact may never claim its review or accept — whether the second role would arrive by lead assignment, teammate self-claim, or lead plan-approval. Lead plan-approval is not the fresh-reviewer gate.
 
@@ -88,7 +92,7 @@ Notes on the diagram:
 
 ## Main agent constraints (per Phase)
 
-- At the **end of each Phase**, the main agent personally runs `<TEST-CMD>` and every `<ACCEPT-CMD>` declared for that Phase in the impl doc. Results are recorded as trailers on the Phase commit.
+- At the **end of each Phase**, the main agent personally runs `<TEST-CMD>` and every `<ACCEPT-CMD>` declared for that Phase in the impl doc. Results are recorded as trailers on the Phase commit. The pasted exit codes and tally must come from THIS closing run; a recalled tally or the accept subagent's earlier report is not sufficient — re-run fresh and record this run's output. This tally is where the "skipped tests are not passing tests" check lands: a command that exits 0 with every test skipped is not a pass — flag it here, since the mechanical accept corner cannot judge it.
 - If a dev subagent reports "the design doc conflicts with the task", the dev agent **must not** decide. Return to L1 or L2 to fix the source document.
 
 ## Commit conventions
@@ -198,5 +202,6 @@ A Phase is closed when ALL of the following hold:
 - Full `<TEST-CMD>` and every `<ACCEPT-CMD>` declared in the impl doc exit with code 0.
 - Main agent's personal re-run of `<TEST-CMD>` and `<ACCEPT-CMD>` matches the accept subagent's report (recorded as commit trailer).
 - If E2E is triggered: external-process artifacts contain no errors beyond what the contract file allows. The impl doc must declare pass conditions explicitly (e.g., "lint JSON returns clean: true" or "HTTP 200 + JSON schema validation passes").
+- Skill-self discipline edit: if a Phase edits a discipline rule of THIS skill (a termination condition, escalation trigger, tier boundary, principle, or rationalization counter), the **main agent runs (after accept passes)** a GREEN behavioral check — spawn one fresh subagent with a pressure scenario + the post-edit rule, confirm it complies, and record `Behavioral-check: complied` as a commit trailer. (The accept corner is mechanical and never judges output, so on the recommended Workflow L3 path this is a main-agent post-Workflow discharge — see `references/loop-3-workflow.md`.)
 
 If round counter R hits 3 without all conditions met → escalate per `references/escalation-rules.md`, do not relax the bar.

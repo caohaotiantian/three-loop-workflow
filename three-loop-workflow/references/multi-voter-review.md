@@ -26,7 +26,7 @@ path**:
 
 - an issue is **severe** for the round if **any** voter marks it severe;
 - likewise **general**;
-- `severe_count` / `general_count` are the sizes of the unioned sets, and those pre-dedup
+- `severe_count` / `general_count` are the sizes of the unioned (deduped) sets, and those
   union counts are what feed the termination check.
 
 Because both counts are unions, panel mode makes **both** termination fields strictly harder to
@@ -43,8 +43,16 @@ round counting and cap → escalation are unchanged: the N voters do **not** eac
 
 > **Voter failures.** A voter that soft-fails is dropped (the union is computed over the
 > survivors) and logged; this can **narrow** the panel but never makes the gate weaker than a
-> clean single reviewer. If **every** voter fails, the panel returns a blocking
-> non-conformance — never a silent pass.
+> clean single reviewer. If **every** voter fails, the *standalone* `review-panel.js` returns a
+> blocking non-conformance, while the *inline* `l3-phase.js` path returns `null` → an `agent-error`
+> status (an infrastructure failure, distinct from a review deadlock — see `loop-3-workflow.md`).
+> Neither is a silent pass.
+>
+> A clean **PASS** additionally requires a surviving **quorum** — a strict majority of the requested
+> voters, `⌊N/2⌋+1`. Below quorum a *clean* panel does **not** pass; it is treated like a total
+> failure (standalone → blocking; inline → `null` → `agent-error`) so the caller re-runs rather than
+> advancing on coverage that has shrunk toward a single reviewer. A below-quorum panel that *found*
+> severe/general issues still reports them — the quorum gates only the clean-pass boundary.
 
 ## How to invoke
 
@@ -53,5 +61,6 @@ round counting and cap → escalation are unchanged: the N voters do **not** eac
 - **Standalone (e.g. an L1/L2 design or impl review):** run the `references/review-panel.js`
   Workflow with `{ reviewPrompt, voters, label }`; it returns the aggregated `ReviewVerdict`.
 
-Both paths implement the identical mechanical-union logic. `panelVoters` / `voters` is an
+Both paths implement the identical mechanical-union *counting* logic (they differ only in how a
+total voter failure is surfaced — see Voter failures above). `panelVoters` / `voters` is an
 overridable argument, never a project constant — portability is preserved.

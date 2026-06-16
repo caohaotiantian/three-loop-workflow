@@ -33,9 +33,35 @@ require "fix(phaseN-roundR)" "$SKILL/references/loop-3-development.md" "$SKILL/r
 # L2 review question count.
 require "five questions" "$SKILL/references/loop-2-implementation.md"
 
-# Two-generation termination wording.
+# Per-round cleanliness predicate (the single-round pass tokens), NOT the two-generation
+# termination rule (that is paired just below).
 require "zero severe"  "$SKILL/SKILL.md"
 require "zero general" "$SKILL/SKILL.md"
+
+# Two-generation termination RULE — canonical token paired across the files that state it.
+require "two-generation" "$SKILL/SKILL.md" "$SKILL/references/schemas.md" "$SKILL/references/loop-1-design.md" "$SKILL/references/loop-2-implementation.md" "$SKILL/references/escalation-rules.md"
+
+# L3-only clean-first-round relaxation — source SKILL.md, reference site schemas.md.
+require "clean-first-round" "$SKILL/SKILL.md" "$SKILL/references/schemas.md"
+
+# L3 clean-first-round fixApplied flag (ReviewVerdict closure formula) — source schemas.md, reference site l3-phase.js control flow.
+require "fixApplied" "$SKILL/references/schemas.md" "$SKILL/references/l3-phase.js"
+
+# Closure-authority guard: L1/L2 closure is count-driven (two-generation), NOT the reviewer-emitted
+# `verdict` string. A `verdict == "pass"` disjunct in a closure formula would let a single clean round
+# close L1/L2 (round-2 audit finding A1). Forbid it from re-entering schemas.md.
+if grep -qF 'verdict == "pass"' "$SKILL/references/schemas.md"; then
+  echo "DRIFT: [verdict-not-a-closure-authority] schemas.md reintroduced 'verdict == \"pass\"' as a closure condition; L1/L2 closure must be count-driven"
+  fail=1
+fi
+
+# Anti-bloat: the always-loaded SKILL.md surface has a hard word-count ceiling (v1.5 design).
+SKILL_WORDS="$(wc -w < "$SKILL/SKILL.md" | tr -d '[:space:]')"
+SKILL_WORD_CEILING=2888
+if [ "$SKILL_WORDS" -gt "$SKILL_WORD_CEILING" ]; then
+  echo "BLOAT: SKILL.md wc -w=$SKILL_WORDS exceeds ceiling $SKILL_WORD_CEILING"
+  fail=1
+fi
 
 if [ "$fail" -eq 0 ]; then echo "three-loop-consistency: OK"; fi
 exit "$fail"

@@ -26,6 +26,25 @@ These rules apply across all three loops (L1, L2, L3) and the closeout review (F
 
 If you find yourself thinking "I'll just pick a sensible value and move on", stop. That is the exact failure mode this rule prevents.
 
+Also forbidden: **deferring an interpretation decision to the L1 reviewer** ("I'll note my assumption in the doc and the reviewer will catch it"). The L1 reviewer reads only the doc — it can challenge a contradiction or a single-option decision, but it cannot know the user's intent. Only the user can resolve an interpretation; a silently-resolved interpretation surfaced as a doc "assumption" was never decided, just hidden.
+
+## Rationalizations — recognize and stop
+
+The excuses agents generate under pressure, each with the rule it violates. Catching yourself
+thinking one of these means: re-run the relevant gate or escalate — do not proceed.
+
+| You catch yourself thinking | Reality → what to do |
+|---|---|
+| "It's only ~3 files / I'll split it into two tasks" | Still Full if any Full-Mode gate trips; splitting to game the ≤3 line is forbidden (light-mode.md Full-Mode gate). |
+| "The decision has an obvious winner" | If it truly has a clear winner it is not a >1-option decision; if you are arguing the point, it is one — surface it (§0.1; Question quality below). |
+| "They said do it quickly / just add Y" | Instructions say WHAT, not HOW; terse phrasing is not a tier downgrade (SKILL.md "Which tier applies"). |
+| "I'll just note the default/assumption in a comment" | A silent default is Forbidden (above) and violates comments-explain-code-not-workflow (§0.3); escalate instead. |
+| "First review came back clean, so I'm done" | A clean first round closes a Phase only under the L3 clean-first-round relaxation AND only if no fix was applied; L1/L2 always need the confirming generation; any fix re-engages two-generation (SKILL.md shared termination). |
+| "The dev summary says it's done" | Review and accept read the diff (`git diff <baseSha>..<branch>`), never the dev summary — the summary is not evidence. |
+| "An unresolved general issue is just advisory, ship it" | An unresolved general issue blocks two-generation closure; it is corroboration, not advice. |
+| "Quick patch now, investigate the cause later" | A symptom fix spends the shared round budget and forces a later clean round anyway; name the root cause first (loop-3-development.md fix corner). |
+| "One more fix attempt" (at round 3) | Round 3 escalates with a deadlock report, never a silent round 4 — the cap is the trigger, not a bug (Round-cap exhaustion below). |
+
 ## Question quality requirements
 
 Every escalation must include three things:
@@ -71,11 +90,15 @@ When any single domain (L1, L2, or a single L3 Phase) hits 3 rounds without clea
     - What was attempted each round.
     - Why each fix attempt did not close the item.
     - What the reviewer subagent's reasoning was (so the user can judge whether the reviewer is correct).
+    - **Evidence of where it breaks** — for each unresolved item, the failing acceptance command or reviewer-cited symptom (with its actual output) and the file/layer/value where expected and actual diverge. 'It keeps failing' is a story, not evidence.
+
+    Pattern check: if a different item failed each round, or fix scope grew each round, the cap is firing on an architectural/decomposition defect — not a local bug. Name the likely source (L1 design or L2 phase split) and make option (a) the recommended default per the existing L3→L1/L2 rollback routing. When per-round failures are stable and local, leave the three options flat.
 2. **Use AskUserQuestion** with options like:
     - **(a) revise upstream document** (design or impl) to remove the conflict.
-    - **(b) accept a documented compromise** with explicit risk recorded in the design doc's Risks and Rollback section.
+    - **(b) accept a documented compromise** with explicit risk recorded in the design doc's Risks and Rollback section; the user MAY also authorize a single retry of the failing Phase with `models:{review|fix: <stronger-model>}` — an explicit user-authorized choice, never an automatic pre-escalation round.
     - **(c) drop the deliverable** from this task's scope and file a follow-up issue.
-3. **Do not silently retry round 4.** The 3-round cap exists precisely to force this conversation.
+3. **Meta-test the cap.** If the cap was hit because a SKILL rule was unclear, missing, or hard to find (not genuine task difficulty), classify it in one line — clear-but-ignored (discipline gap) / should-have-said-X (doc gap) / didn't-see-section-Y (organization gap) — and open a follow-up issue against the three-loop-workflow repo.
+4. **Do not silently retry round 4.** The 3-round cap exists precisely to force this conversation.
 
 ## Returning from escalation
 
