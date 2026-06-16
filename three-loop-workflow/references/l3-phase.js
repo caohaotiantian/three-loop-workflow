@@ -170,6 +170,9 @@ const devConcerns = (devResult.concerns || []).filter(Boolean)   // E-i: steer t
 // (`!fixApplied && general_count === 0`); the moment any fix lands, the standard
 // two-generation rule re-engages (`round > 1 && priorGeneralCount === 0`). This relaxes
 // only the clean-first-round tax for L3; L1/L2 keep strict two-generation.
+// NOT RESUMABLE: all Phase state below is in-memory; an interrupted run restarts at round 1. The
+// main agent must delete the round-stable <phase>-dev-r1 branch before relaunch to avoid stacking
+// duplicate commits. See references/loop-3-workflow.md "Resumption (none)".
 phase('Review')
 let round = 1
 let priorGeneralCount = Infinity

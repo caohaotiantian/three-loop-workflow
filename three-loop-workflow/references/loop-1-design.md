@@ -161,9 +161,10 @@ contract files.
      comparison?
    - Is the scope boundary tight enough, with no smuggled-in extensions?
    - Do risks and rollback cover the most likely failure paths?
-   - For a user-facing / hot-path / interface change: is a quality budget
-     declared as a measured criterion, or explicitly excluded in the Scope
-     Boundary? A missing-and-not-excluded budget is a general issue.
+   - For a user-facing / hot-path / interface change:
+     apply the section-7 quality-budget rule (declare a measured budget or
+     exclude it in Scope Boundary; a missing-and-not-excluded budget is a
+     general issue).
    - Coding philosophy (Think Before Coding, Simplicity First, Surgical
      Changes, Goal-Driven Execution): any violation (silent defaults,
      speculative scope, missing trade-offs) is a severe issue.
