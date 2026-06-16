@@ -31,7 +31,7 @@ review, L3 review corner). Pass as `agent(reviewPrompt, { schema: ReviewVerdict 
     "verdict": {
       "type": "string",
       "enum": ["pass", "needs-fix", "severe-nonconformance"],
-      "description": "pass = zero severe this round AND zero general last round; needs-fix = severe or general issues remain; severe-nonconformance = severe issues blocking advancement"
+      "description": "pass = zero severe AND zero general THIS round (a single-round readiness signal, not a closure authority); needs-fix = severe or general issues remain; severe-nonconformance = severe issues blocking advancement"
     },
     "severe_count": { "type": "number" },
     "general_count": { "type": "number" }
@@ -50,7 +50,7 @@ Loop-closure check. Two forms:
 
 - **L1 / L2 — strict two-generation** (a clean first round still requires a confirming round):
 ```
-closed = (verdict == "pass") || (severe_count == 0 && round > 1 && prior_general_count == 0)
+closed = (severe_count == 0 && round > 1 && prior_general_count == 0)
 ```
 - **L3 only — clean-first-round relaxation** (encoded in `references/l3-phase.js`): a Phase
   additionally closes on a single round when the first review is fully clean AND no fix was
@@ -59,7 +59,9 @@ closed = (verdict == "pass") || (severe_count == 0 && round > 1 && prior_general
 closed = severe_count == 0 && ( (!fixApplied && general_count == 0) || (round > 1 && prior_general_count == 0) )
 ```
 
-The `pass` verdict signals the review subagent is confident the document is ready.
+The `pass` verdict is a single-round readiness annotation from the review subagent; the
+mechanical closure decision above uses only `severe_count` / `general_count` and `round`, never
+the `verdict` string (it stays `required` only so producers always emit it).
 `severe_count == 0` with a prior clean general round is the mechanical two-generation
 termination condition encoded as numbers. The L3 relaxation removes only the tax on a
 correct-first-time Phase; a round with any unresolved severe or general issue can never close.

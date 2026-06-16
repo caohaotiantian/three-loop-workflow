@@ -47,6 +47,14 @@ require "clean-first-round" "$SKILL/SKILL.md" "$SKILL/references/schemas.md"
 # L3 clean-first-round fixApplied flag (ReviewVerdict closure formula) — source schemas.md, reference site l3-phase.js control flow.
 require "fixApplied" "$SKILL/references/schemas.md" "$SKILL/references/l3-phase.js"
 
+# Closure-authority guard: L1/L2 closure is count-driven (two-generation), NOT the reviewer-emitted
+# `verdict` string. A `verdict == "pass"` disjunct in a closure formula would let a single clean round
+# close L1/L2 (round-2 audit finding A1). Forbid it from re-entering schemas.md.
+if grep -qF 'verdict == "pass"' "$SKILL/references/schemas.md"; then
+  echo "DRIFT: [verdict-not-a-closure-authority] schemas.md reintroduced 'verdict == \"pass\"' as a closure condition; L1/L2 closure must be count-driven"
+  fail=1
+fi
+
 # Anti-bloat: the always-loaded SKILL.md surface has a hard word-count ceiling (v1.5 design).
 SKILL_WORDS="$(wc -w < "$SKILL/SKILL.md" | tr -d '[:space:]')"
 SKILL_WORD_CEILING=2888
