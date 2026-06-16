@@ -48,9 +48,12 @@ which is a Chinese translation of `README.md`.
   itself — the `tests/scenarios/` behavioral suite (also below).
 - **Consistency gate:** `bash three-loop-workflow/references/check-consistency.sh` — fails if a
   commitment-clause token is missing from its source file or a paired reference site within the skill.
-  Paired tokens: the five role names, `fix(phaseN-roundR)`, "five questions", the two-generation
-  termination wording, `clean-first-round` (SKILL.md ↔ schemas.md), and `fixApplied`
-  (schemas.md ↔ l3-phase.js).
+  Checked tokens — the five role names and "five questions" are single-file presence checks;
+  `fix(phaseN-roundR)`, the `two-generation` termination rule (paired across SKILL.md + schemas.md +
+  loop-1/loop-2 + escalation-rules), `clean-first-round` (SKILL.md ↔ schemas.md), and `fixApplied`
+  (schemas.md ↔ l3-phase.js) are paired-site checks. The `zero severe`/`zero general` tokens are the
+  per-round cleanliness predicate, not the termination rule. The gate also fails if `SKILL.md` exceeds
+  its `wc -w` word-count ceiling (2888).
 - **Workflow-script syntax gate:** `bash three-loop-workflow/references/check-workflow-syntax.sh <file.js>`
   — reliably parses a Workflow script (`node --check` mis-parses these `export`+top-level-`return` files).
 - **Behavioral scenarios:** run each `tests/scenarios/*.md` via a fresh subagent against the current skill

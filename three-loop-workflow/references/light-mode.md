@@ -21,7 +21,8 @@ Light Mode applies only when **all** of the following are true:
 If any of these fails, the change is **Full Mode**. **When in doubt → Full.** A *trivial,
 non-commitment-clause* edit to a load-bearing doc (fixing a typo or formatting that changes no
 rule) is the *None* tier — one independent review, not a cycle; any *substantive* edit to a
-load-bearing doc is always Full Mode.
+load-bearing doc is always Full Mode. The None reviewer re-runs the trivial/substantive test against
+the diff and escalates to Full on any commitment-clause touch — mirroring the Light-Mode gate below.
 
 ### Looks Light, is actually Full
 
