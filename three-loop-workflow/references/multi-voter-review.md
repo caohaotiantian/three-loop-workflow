@@ -64,3 +64,9 @@ round counting and cap → escalation are unchanged: the N voters do **not** eac
 Both paths implement the identical mechanical-union *counting* logic (they differ only in how a
 total voter failure is surfaced — see Voter failures above). `panelVoters` / `voters` is an
 overridable argument, never a project constant — portability is preserved.
+
+> **Arg delivery.** Like `l3-phase.js`, `review-panel.js` **normalizes its `args`** because some
+> Workflow runtimes deliver them as a **JSON string** rather than a parsed object (see
+> `loop-3-workflow.md` "Arg delivery"). The `JSON.parse(args)` is intentional and load-bearing — do
+> not remove it. A thrown arg-validation `Error` means the standalone invocation passed no
+> `reviewPrompt`; fix the call — it is not a Workflow-runner failure.
