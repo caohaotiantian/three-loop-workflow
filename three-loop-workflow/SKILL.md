@@ -2,7 +2,7 @@
 name: three-loop-workflow
 description: Use this skill for any non-trivial functional change to a software project — implementing a new feature, fixing a behavior bug, optimizing performance, refactoring, or modifying a load-bearing process/contract file (CLAUDE.md, this skill itself, SKILL.md, OpenAPI specs, schema definitions, public API contracts). Trigger this skill whenever the user asks to implement, fix, refactor, optimize, build, or modify behavior in code — even when they say "just do X" or "quickly add Y". Skip the full cycle (these still get one fresh-agent review) for pure typo fixes, doc reordering, and dependency upgrades; skip entirely only for questions with no file edits.
 metadata:
-  version: "1.5.2"
+  version: "1.6.0"
   license: MIT
 ---
 
@@ -20,7 +20,7 @@ This skill runs in two tiers. **Full Mode** is the complete L1 → L2 → L3 →
 
 | Tier | When | What runs |
 |---|---|---|
-| **Full Mode** | Any load-bearing file (CLAUDE.md, this skill, SKILL.md, OpenAPI specs, schema definitions, public API contracts); any breaking change; any unresolved >1-option design decision; any magic-number / threshold decision; or a change touching more than 3 non-load-bearing files. **When in doubt → Full.** Deleting a load-bearing doc is Full **plus** mandatory AskUserQuestion before any file is deleted (see `references/escalation-rules.md`). | Full L1 → L2 → L3 → F |
+| **Full Mode** | Any load-bearing file (CLAUDE.md, this skill, SKILL.md, OpenAPI specs, schema definitions, public API contracts); any breaking change; any migration (schema / data / config / storage / API-version / dependency); any unresolved >1-option design decision; any magic-number / threshold decision; or a change touching more than 3 non-load-bearing files. **When in doubt → Full.** Deleting a load-bearing doc is Full **plus** mandatory AskUserQuestion before any file is deleted (see `references/escalation-rules.md`). | Full L1 → L2 → L3 → F |
 | **Light Mode** | ≤ 3 non-load-bearing files, no breaking change, no new external contract, no unresolved decision. Typical small features, bug fixes, and local refactors land here. | `references/light-mode.md`: four-field brief → fresh-reviewer diff review → accept → one-line closure |
 | **None** | Pure typo / doc reordering / dependency upgrade (one independent fresh-agent review, no cycle); or a question with no file edits (no requirement). A trivial load-bearing edit that changes no rule is None; a substantive one is Full. The None reviewer re-confirms no rule changed and routes to Full on any commitment-clause touch (references/light-mode.md). | one independent review, or nothing |
 
@@ -192,10 +192,9 @@ Every code-modifying L3 commit: `feat(phaseN):` / `fix(phaseN):` for a Phase ope
 
 ## Self-check before claiming a loop is closed
 
-- L1 closed? `docs/design/<task-slug>.md` exists, all 8 required sections present, review subagent reports zero severe + one prior round zero general.
-- L2 closed? `docs/implementation/<task-slug>.md` exists, every Phase has runnable `<ACCEPT-CMD>`, review subagent reports zero severe + one prior round zero general.
+- L1 closed? `docs/design/<task-slug>.md` exists with all 8 required sections; L2 closed? `docs/implementation/<task-slug>.md` exists with a runnable `<ACCEPT-CMD>` per Phase. Both: review reports zero severe + one prior round zero general.
 - Phase closed? Accept subagent reports pass on every command, main agent personally re-ran `<TEST-CMD>` and every `<ACCEPT-CMD>`, results recorded as commit trailers. If a contract file was modified **or the change is externally observable** (UI / CLI / endpoint / user-visible output), the E2E / behavior gate executed or a skip-reason recorded.
-- Task closed? End-to-end review (F) completed per `references/end-to-end-review.md` — including step 5 document consolidation (closure block added, ephemera pruned, fresh-subagent review verdict pass), all `e2e/*` worktrees and unreferenced `.e2e-artifacts/` directories cleaned up.
+- Task closed? End-to-end review (F) completed per `references/end-to-end-review.md` — the project-wide closeout gates ran: repo-wide validation gates green, change-orphan cleanup sweep, whole-project blast-radius review, conditional migration verification, scoped project-doc reconciliation; plus document consolidation (closure block, ephemera pruned, fresh-subagent verdict pass) and `e2e/*` worktrees / unreferenced `.e2e-artifacts/` cleaned up.
 
 If any of these is "no", you have not closed that stage — return to the relevant reference and continue, or escalate.
 
