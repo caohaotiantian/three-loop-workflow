@@ -187,8 +187,12 @@ first edit of the cycle.
        `document consolidation`; the lowercase single word **`consolidation`** is present in all three
        (verified) and is the safe parity token — verify on disk before pinning.
      - fixture-existence loop (D7iii, accumulate form, after `cd "$ROOT"`; `tests/scenarios/` is at
-       repo root so the path is bare, **not** `$SKILL/`-prefixed):
-       `for s in <five slugs>; do test -f "tests/scenarios/$s.md" || { echo "DRIFT: missing fixture $s"; fail=1; }; done`
+       repo root so the path is bare, **not** `$SKILL/`-prefixed). **Guard the loop with
+       `if [ -d tests/scenarios ]; then … fi`**: `tests/scenarios/` is not shipped inside the skill
+       package, so the gate would false-fail when run from the installed copy / packaged `.skill` (where
+       `$ROOT` has no `tests/`). The guard keeps the check repo-only (caught at F closeout by running the
+       gate from the installed copy):
+       `if [ -d tests/scenarios ]; then for s in <five slugs>; do test -f "tests/scenarios/$s.md" || { echo "DRIFT: missing fixture $s"; fail=1; }; done; fi`
   3. Do **not** add a `require` for the bare `migration` tier-trigger word (intentionally un-pinned).
 - **Per-task acceptance command:**
   ```sh

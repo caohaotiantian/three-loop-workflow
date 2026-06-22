@@ -64,14 +64,19 @@ require "two-doc consolidation step above"      "$SKILL/references/end-to-end-re
 require "consolidation" "$SKILL/references/end-to-end-review.md" "$SKILL/SKILL.md" "$SKILL/references/loop-2-implementation.md"
 
 # F closeout behavioral fixtures — one per new closeout behavior (B1-B5); a dropped fixture must red-fail the gate.
-for s in closeout-blast-radius-untouched-caller closeout-runs-all-declared-gates \
-         closeout-orphan-sweep-not-scheduled closeout-migration-unverified-blocks \
-         closeout-doc-reconcile-changed-surface; do
-  if [ ! -f "tests/scenarios/$s.md" ]; then
-    echo "DRIFT: missing F-closeout behavioral fixture tests/scenarios/$s.md"
-    fail=1
-  fi
-done
+# Guarded by the suite's presence: tests/scenarios/ lives at the repo root and is NOT shipped inside the
+# skill package, so this check applies only when the gate runs in the repo (the installed copy / packaged
+# .skill has no tests/ dir — there the loop below would otherwise false-fail).
+if [ -d tests/scenarios ]; then
+  for s in closeout-blast-radius-untouched-caller closeout-runs-all-declared-gates \
+           closeout-orphan-sweep-not-scheduled closeout-migration-unverified-blocks \
+           closeout-doc-reconcile-changed-surface; do
+    if [ ! -f "tests/scenarios/$s.md" ]; then
+      echo "DRIFT: missing F-closeout behavioral fixture tests/scenarios/$s.md"
+      fail=1
+    fi
+  done
+fi
 
 # Closure-authority guard: L1/L2 closure is count-driven (two-generation), NOT the reviewer-emitted
 # `verdict` string. A `verdict == "pass"` disjunct in a closure formula would let a single clean round
