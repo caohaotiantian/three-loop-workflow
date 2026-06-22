@@ -255,6 +255,6 @@ does not reconstruct it from the design:
 
 ---
 Status: closed
-Closing-commit: (set at the closing commit on branch feat/f-phase-project-closeout)
+Closing-commit: 49d8690
 Closed-on: 2026-06-22
 Deferred: none
