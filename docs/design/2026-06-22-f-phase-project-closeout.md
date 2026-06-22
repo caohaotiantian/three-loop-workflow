@@ -329,10 +329,12 @@ All criteria are mechanically checkable:
   no-op the unedited skill already passes. **Coverage is mechanically enforced, not prose-only:**
   `check-consistency.sh` asserts all five fixture files exist, using the gate's accumulate-then-exit
   contract (set `fail=1`, do **not** short-circuit with `exit 1` — that would skip later `require`
-  checks): `for s in closeout-blast-radius-untouched-caller closeout-runs-all-declared-gates
+  checks), **guarded by `if [ -d tests/scenarios ]`** so it stays repo-only and does not false-fail
+  from the installed copy / packaged `.skill` (which ship no `tests/`): `if [ -d tests/scenarios ];
+  then for s in closeout-blast-radius-untouched-caller closeout-runs-all-declared-gates
   closeout-orphan-sweep-not-scheduled closeout-migration-unverified-blocks
   closeout-doc-reconcile-changed-surface; do test -f "tests/scenarios/$s.md" || { echo "DRIFT:
-  missing fixture $s"; fail=1; }; done`. Dropping a fixture red-fails the standing gate. There is
+  missing fixture $s"; fail=1; }; done; fi`. Dropping a fixture red-fails the standing gate. There is
   **no "at minimum" floor**.
 - **AC5 (behavioral — no regression):** every pre-existing `tests/scenarios/*.md`, run via a fresh
   subagent against the edited skill, still yields its `expected` outcome.
