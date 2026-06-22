@@ -85,6 +85,12 @@ Items written in _italics_ are **roles**, not literal heading names. References 
 | Commit prefix `fix(phaseN-roundR)` | `references/loop-3-development.md` "Commit conventions" | `references/loop-2-implementation.md` review template |
 | External-process E2E trigger | `references/loop-3-development.md` "When to trigger" | CLAUDE.md _repo-workflow_ role (one-line forward reference) |
 | Closeout document consolidation (closure block, ephemera pruning, supersedes links) | `references/end-to-end-review.md` "Document consolidation" | skill `SKILL.md` "Document closure convention"; `references/loop-2-implementation.md` Deprecated-section note |
+| Closeout whole-project review — `blast-radius` scan outside the diff (B1) | `references/end-to-end-review.md` | skill `SKILL.md` "Self-check" Task-closed bullet |
+| Closeout `repo-wide validation gates` — run every gate `_common-commands_` declares (B2) | `references/end-to-end-review.md` | skill `SKILL.md` "Self-check" Task-closed bullet |
+| Closeout `change-orphan` cleanup sweep (B3) | `references/end-to-end-review.md` | skill `SKILL.md` "Self-check" Task-closed bullet; `references/light-mode.md` |
+| Closeout conditional `migration verification` (B4) | `references/end-to-end-review.md` (defines the migration trigger; canonical) | skill `SKILL.md` "Self-check" Task-closed bullet |
+| Closeout scoped `project-doc reconciliation` (B5) | `references/end-to-end-review.md` | skill `SKILL.md` "Self-check" Task-closed bullet; `references/light-mode.md` |
+| Closeout consolidation↔reconciliation cross-reference delimiter (AC7) | `references/end-to-end-review.md` consolidation step (`project-doc reconciliation step below`) | `references/end-to-end-review.md` D5 step (`two-doc consolidation step above`) |
 | Load-bearing document list | skill `SKILL.md` "Which tier applies" + CLAUDE.md _load-bearing-docs_ role | All listed contract files cross-reference each other in their headers |
 | Language and terminology policy | CLAUDE.md _language-policy_ role | review subagent prompts in `references/loop-1-design.md` and `references/loop-2-implementation.md` |
 | Test command `<TEST-CMD>` | CLAUDE.md _common-commands_ role | the "acceptance command" section of every impl doc |
