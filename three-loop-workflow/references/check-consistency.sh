@@ -47,6 +47,37 @@ require "clean-first-round" "$SKILL/SKILL.md" "$SKILL/references/schemas.md"
 # L3 clean-first-round fixApplied flag (ReviewVerdict closure formula) — source schemas.md, reference site l3-phase.js control flow.
 require "fixApplied" "$SKILL/references/schemas.md" "$SKILL/references/l3-phase.js"
 
+# F closeout project-wide gates (B1-B5) — source end-to-end-review.md, reference site SKILL.md "Self-check"
+# Task-closed bullet; B3 (change-orphan) and B5 (project-doc reconciliation) are also echoed in light-mode.md.
+require "blast-radius"               "$SKILL/references/end-to-end-review.md" "$SKILL/SKILL.md"
+require "repo-wide validation gates" "$SKILL/references/end-to-end-review.md" "$SKILL/SKILL.md"
+require "change-orphan"              "$SKILL/references/end-to-end-review.md" "$SKILL/SKILL.md" "$SKILL/references/light-mode.md"
+require "migration verification"     "$SKILL/references/end-to-end-review.md" "$SKILL/SKILL.md"
+require "project-doc reconciliation" "$SKILL/references/end-to-end-review.md" "$SKILL/SKILL.md" "$SKILL/references/light-mode.md"
+
+# F closeout consolidation<->reconciliation cross-reference delimiter (AC7) — both directional literals
+# live in end-to-end-review.md (the consolidation step points down, the D5 reconciliation step points up).
+require "project-doc reconciliation step below" "$SKILL/references/end-to-end-review.md"
+require "two-doc consolidation step above"      "$SKILL/references/end-to-end-review.md"
+
+# Closeout document-consolidation clause — paired across its 3 sites (was table-registered only; now gated for parity).
+require "consolidation" "$SKILL/references/end-to-end-review.md" "$SKILL/SKILL.md" "$SKILL/references/loop-2-implementation.md"
+
+# F closeout behavioral fixtures — one per new closeout behavior (B1-B5); a dropped fixture must red-fail the gate.
+# Guarded by the suite's presence: tests/scenarios/ lives at the repo root and is NOT shipped inside the
+# skill package, so this check applies only when the gate runs in the repo (the installed copy / packaged
+# .skill has no tests/ dir — there the loop below would otherwise false-fail).
+if [ -d tests/scenarios ]; then
+  for s in closeout-blast-radius-untouched-caller closeout-runs-all-declared-gates \
+           closeout-orphan-sweep-not-scheduled closeout-migration-unverified-blocks \
+           closeout-doc-reconcile-changed-surface; do
+    if [ ! -f "tests/scenarios/$s.md" ]; then
+      echo "DRIFT: missing F-closeout behavioral fixture tests/scenarios/$s.md"
+      fail=1
+    fi
+  done
+fi
+
 # Closure-authority guard: L1/L2 closure is count-driven (two-generation), NOT the reviewer-emitted
 # `verdict` string. A `verdict == "pass"` disjunct in a closure formula would let a single clean round
 # close L1/L2 (round-2 audit finding A1). Forbid it from re-entering schemas.md.

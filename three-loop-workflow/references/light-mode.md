@@ -16,7 +16,10 @@ Light Mode applies only when **all** of the following are true:
 - **no breaking change** (schema / exit code / CLI / storage / protocol / directory — the
   canonical trigger list is in `references/escalation-rules.md`);
 - **no new external contract**;
-- **no unresolved >1-option design decision** and **no magic-number / threshold decision**.
+- **no unresolved >1-option design decision** and **no magic-number / threshold decision**;
+- **no migration** — any migration (schema / data / config / storage / API-version / dependency)
+  forces Full Mode: it is the highest-consequence case and the F migration-verification step (B4) must
+  run with full rigor (see `references/end-to-end-review.md`).
 
 If any of these fails, the change is **Full Mode**. **When in doubt → Full.** A *trivial,
 non-commitment-clause* edit to a load-bearing doc (fixing a typo or formatting that changes no
@@ -62,6 +65,13 @@ the diff and escalates to Full on any commitment-clause touch — mirroring the 
 - The **F closeout consolidation** collapses to: the acceptance command exits 0, plus a
   one-line closure note in the brief (do not silently skip it — the doc-graveyard-prevention
   intent is preserved at minimal cost).
+
+What Light Mode **keeps from the project-wide closeout**: even here, if the small change orphaned an
+artifact (a `change-orphan`) or made a project-facing doc stale, do the `change-orphan` sweep and the
+`project-doc reconciliation` before the one-line closure note. The collapsed F drops the *consolidation
+review*, not these whole-project hygiene checks. (Blast-radius is trivial at ≤3 files; B4 is
+Full-Mode-only by the migration gate above; B2's gates are already implied by Light Mode's own
+acceptance command — so none of B1/B2/B4 needs an echo here.)
 
 ## The gate is fresh-eyes-enforced
 
