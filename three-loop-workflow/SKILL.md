@@ -2,7 +2,7 @@
 name: three-loop-workflow
 description: Use this skill for any non-trivial functional change to a software project — implementing a new feature, fixing a behavior bug, optimizing performance, refactoring, or modifying a load-bearing process/contract file (CLAUDE.md, this skill itself, SKILL.md, OpenAPI specs, schema definitions, public API contracts). Trigger this skill whenever the user asks to implement, fix, refactor, optimize, build, or modify behavior in code — even when they say "just do X" or "quickly add Y". Skip the full cycle (these still get one fresh-agent review) for pure typo fixes, doc reordering, and dependency upgrades; skip entirely only for questions with no file edits.
 metadata:
-  version: "1.6.0"
+  version: "1.7.0"
   license: MIT
 ---
 

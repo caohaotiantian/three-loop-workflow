@@ -7,7 +7,7 @@
 - _common-commands_     → "## Common Commands"
 - _engineering-norms_   → "## Engineering Norms"
 
-This repo distributes the **three-loop-workflow** Claude skill (currently **v1.5.2**). It is the
+This repo distributes the **three-loop-workflow** Claude skill (currently **v1.7.0**). It is the
 canonical case where the load-bearing documents *are* the product: the skill is maintained by its
 own L1 → L2 → L3 → F discipline.
 

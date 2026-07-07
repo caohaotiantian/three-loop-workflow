@@ -1,5 +1,12 @@
 # Design: Failure Retrospective (turn a class of failure into a durable prevention)
 
+```
+Status: closed
+Closing-commit: b42900a
+Closed-on: 2026-07-07
+Deferred: none
+```
+
 Task slug: `2026-07-07-failure-retrospective`
 Tier: **Full Mode** (edits the load-bearing three-loop skill itself).
 Provenance: Cycle 1 of the backlog in `docs/analysis-2026-07-07-external-skills-comparison.md` (item #2,
