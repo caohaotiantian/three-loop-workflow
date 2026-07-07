@@ -2,7 +2,7 @@
 
 ```
 Status: closed
-Closing-commit: <CLOSING_SHA>
+Closing-commit: e4d0d20
 Closed-on: 2026-07-07
 Deferred: none  (Red-Flags checklist was descoped in L1 — see the scope note below, not a deferred item)
 ```
