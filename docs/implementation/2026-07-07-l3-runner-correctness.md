@@ -1,5 +1,12 @@
 # Implementation: L3 Handoff Footgun + Termination-Mechanic Fixtures
 
+```
+Status: closed
+Closing-commit: <CLOSING_SHA>
+Closed-on: 2026-07-08
+Deferred: none
+```
+
 Task slug: `2026-07-07-l3-runner-correctness`
 Design doc: `docs/design/2026-07-07-l3-runner-correctness.md` (L1-closed, 4 rounds).
 

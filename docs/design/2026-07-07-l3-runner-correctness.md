@@ -1,5 +1,12 @@
 # Design: L3 Handoff Footgun + Termination-Mechanic Fixtures
 
+```
+Status: closed
+Closing-commit: <CLOSING_SHA>
+Closed-on: 2026-07-08
+Deferred: none  (F11 accept-budget split to its own cycle 2026-07-08-l3-accept-budget — see scope note)
+```
+
 Task slug: `2026-07-07-l3-runner-correctness`
 Tier: **Full Mode** (edits load-bearing L3 reference docs + `l3-phase.js` prose).
 Provenance: Wave 1a of the approved audit backlog (`memory/improvement-waves-plan-2026-07-07`) — findings F3
