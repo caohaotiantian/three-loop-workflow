@@ -1,5 +1,12 @@
 # Design: L1 Evidence Rule (exhaust repo evidence before escalating a question)
 
+```
+Status: closed
+Closing-commit: <CLOSING_SHA>
+Closed-on: 2026-07-07
+Deferred: none  (Red-Flags checklist was descoped in L1 — see the scope note below, not a deferred item)
+```
+
 Task slug: `2026-07-07-l1-review-sharpening`
 Tier: **Full Mode** (edits the load-bearing three-loop skill: `references/loop-1-design.md` + `escalation-rules.md`).
 Provenance: Cycle 3 of `docs/analysis-2026-07-07-external-skills-comparison.md` (backlog item #6). Ported from
