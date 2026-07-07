@@ -2,7 +2,7 @@
 
 ```
 Status: closed
-Closing-commit: b42900a
+Closing-commit: 6657ac8
 Closed-on: 2026-07-07
 Deferred: none
 ```
