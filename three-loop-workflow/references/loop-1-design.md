@@ -185,6 +185,12 @@ contract files.
      concrete demonstration that the edited rule changes agent behavior (a
      before/after, or a runnable check). A behavior rule
      asserted but never observed is a severe issue.
+   - Also apply the `negation_positive` check: a **new** rule phrased as a
+     bare prohibition ("never X" / "do not X") that names a target behavior
+     expressible as a positive ("do Y") is a general issue — recommend the
+     positive rephrasing. A bare ban drags the forbidden behavior into the
+     reading agent's context and half-reads as an instruction to do it; keep
+     a prohibition only as a hard guardrail paired with the positive target.
 5. Do not modify the document. Output only the review report.
 
 [Trip-wires] A clean first round does not close L1 — the two-generation rule needs a confirming clean round; an unresolved general issue blocks closure.
