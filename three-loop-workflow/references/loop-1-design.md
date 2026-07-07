@@ -41,6 +41,17 @@ a **pre-step, not a loop** and not an unconditional gate: it is gated to under-d
 requests only. **Skip it** when the request is already fully specified (every Key Design
 Decision and Acceptance Criterion is determined by the ask), or under Light Mode.
 
+- **Evidence Rule — look up facts, escalate decisions** (`evidence_rule`). Before escalating any
+  clarifying question, first try to answer it from the codebase, existing `docs/design/`, and CLAUDE.md.
+  A **repo-answerable fact** (what a module currently does, which constant/pattern already exists, how a
+  caller is wired) is **looked up, not asked** — asking the user to confirm a fact the repository already
+  settles wastes their attention and invites a rubber-stamp of something that was never a decision. Only a
+  genuine **product-intent / preference / scope / risk-tolerance decision the repo cannot answer** is put to
+  the user. Do **not** rationalize a real decision as "a fact the repo can answer" and resolve it silently —
+  that is the forbidden silent default (`references/escalation-rules.md` "deferring an interpretation
+  decision… is forbidden"). This governs *whether* to ask; `references/escalation-rules.md` "Question
+  quality requirements" governs *how* to ask once a decision is confirmed. (Distinct from pre-step A's
+  Explore sweep, which gathers design inputs; this is the fact-vs-decision gate at question-formation time.)
 - **Ask clarifying questions one at a time** (multiple-choice preferred over open-ended), so the
   user answers cheaply and the design space stays visible.
 - **Present 2-3 candidate approaches with a led recommendation** before you draft Key Design

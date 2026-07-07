@@ -58,9 +58,12 @@ which is a Chinese translation of `README.md`.
   light-mode.md), plus the two F cross-reference literals and a bare-`consolidation` parity token. The
   failure-retrospective trigger is a **reference-only** paired token `failure_retrospective` (underscore,
   not a substring of the hyphenated file path) across failure-retrospective.md ↔ escalation-rules.md ↔
-  end-to-end-review.md ↔ light-mode.md — zero SKILL.md surface. The gate additionally asserts the five
-  `tests/scenarios/closeout-*.md` fixtures and the four `tests/scenarios/failure-retrospective-*.md`
-  fixtures exist. The gate also fails if `SKILL.md` exceeds its `wc -w` word-count ceiling (2888).
+  end-to-end-review.md ↔ light-mode.md — zero SKILL.md surface. The L1 Evidence Rule is a
+  reference-only paired token `evidence_rule` (underscore, non-substring) across loop-1-design.md ↔
+  escalation-rules.md. The gate additionally asserts the five
+  `tests/scenarios/closeout-*.md` fixtures, the four `tests/scenarios/failure-retrospective-*.md`
+  fixtures, and the two `tests/scenarios/l1-evidence-rule-*.md` fixtures exist. The gate also fails if
+  `SKILL.md` exceeds its `wc -w` word-count ceiling (2888).
 - **Workflow-script syntax gate:** `bash three-loop-workflow/references/check-workflow-syntax.sh <file.js>`
   — reliably parses a Workflow script (`node --check` mis-parses these `export`+top-level-`return` files).
 - **Behavioral scenarios:** run each `tests/scenarios/*.md` via a fresh subagent against the current skill
