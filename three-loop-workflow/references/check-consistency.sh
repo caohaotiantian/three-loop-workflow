@@ -69,6 +69,12 @@ require "consolidation" "$SKILL/references/end-to-end-review.md" "$SKILL/SKILL.m
 # trigger hook red-fails the gate. Zero SKILL.md cost (a conditional trigger does not earn always-loaded surface).
 require "failure_retrospective" "$SKILL/references/failure-retrospective.md" "$SKILL/references/escalation-rules.md" "$SKILL/references/end-to-end-review.md" "$SKILL/references/light-mode.md"
 
+# L1 Evidence Rule — reference-only paired token (underscore literal, NOT a substring of the hyphenated
+# fixture filenames l1-evidence-rule-*, so a bare fixture/path mention cannot satisfy it). Paired across the
+# rule's home (loop-1-design.md pre-step B) and its rationalization row (escalation-rules.md); dropping either
+# red-fails the gate. Zero SKILL.md cost.
+require "evidence_rule" "$SKILL/references/loop-1-design.md" "$SKILL/references/escalation-rules.md"
+
 # F closeout behavioral fixtures — one per new closeout behavior (B1-B5); a dropped fixture must red-fail the gate.
 # Guarded by the suite's presence: tests/scenarios/ lives at the repo root and is NOT shipped inside the
 # skill package, so this check applies only when the gate runs in the repo (the installed copy / packaged
@@ -90,6 +96,15 @@ if [ -d tests/scenarios ]; then
            failure-retrospective-severe-systemic-still-blocks failure-retrospective-loadbearing-prevention-defers; do
     if [ ! -f "tests/scenarios/$s.md" ]; then
       echo "DRIFT: missing failure-retrospective behavioral fixture tests/scenarios/$s.md"
+      fail=1
+    fi
+  done
+
+  # L1 Evidence Rule behavioral fixtures — one per failure direction (over-ask vs under-ask); separate loop +
+  # DRIFT message so a miss is not mislabeled.
+  for s in l1-evidence-rule-lookup-not-ask l1-evidence-rule-decision-still-escalates; do
+    if [ ! -f "tests/scenarios/$s.md" ]; then
+      echo "DRIFT: missing L1 evidence-rule behavioral fixture tests/scenarios/$s.md"
       fail=1
     fi
   done
