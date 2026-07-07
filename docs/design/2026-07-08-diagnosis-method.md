@@ -1,5 +1,12 @@
 # Design: A Diagnosis Method for the Fix Corner (ranked falsifiable hypotheses + discriminating evidence)
 
+```
+Status: closed
+Closing-commit: <CLOSING_SHA>
+Closed-on: 2026-07-08
+Deferred: none
+```
+
 Task slug: `2026-07-08-diagnosis-method`
 Tier: **Full Mode** (edits the load-bearing L3 fix-corner discipline: `loop-3-development.md`, `l3-phase.js`,
 `escalation-rules.md`).

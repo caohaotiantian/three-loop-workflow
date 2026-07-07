@@ -1,5 +1,12 @@
 # Implementation: Diagnosis Method for the Fix Corner
 
+```
+Status: closed
+Closing-commit: <CLOSING_SHA>
+Closed-on: 2026-07-08
+Deferred: none
+```
+
 Task slug: `2026-07-08-diagnosis-method`
 Design doc: `docs/design/2026-07-08-diagnosis-method.md` (L1-closed, 3 rounds).
 
