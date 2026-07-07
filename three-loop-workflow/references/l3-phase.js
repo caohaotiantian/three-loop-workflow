@@ -138,9 +138,10 @@ log(`${phaseLabel}: running dev subagent`)
 
 function devPrompt(extra) {
   return `You are the dev subagent for ${phaseLabel}. FIRST, capture the diff base: run ` +
-    '`git rev-parse HEAD` BEFORE making any edit and return it as baseSha. Then implement the ' +
-    `tasks below in the main working tree (no worktree isolation). Commit your changes to a branch ` +
-    `named "${phaseLabel.replace(/\s+/g, '').toLowerCase()}-dev-r1" and return DevResult with the ` +
+    '`git rev-parse HEAD` BEFORE making any edit and return it as baseSha. Then, BEFORE editing, create and ' +
+    `switch to a branch named "${phaseLabel.replace(/\s+/g, '').toLowerCase()}-dev-r1" off that baseSha ` +
+    '(`git checkout -b <name>`) so the integration branch stays at baseSha, then implement the ' +
+    `tasks below in the main working tree (no worktree isolation), committing to that branch. Return DevResult with the ` +
     `branch name, baseSha, a summary; conflict=true if the design doc conflicts with any task; ` +
     `blocked=true with concerns[] if you cannot complete it (missing context or too hard — do NOT ` +
     `fabricate success); or concerns[] (blocked=false) to flag low-confidence areas for the reviewer. ` +

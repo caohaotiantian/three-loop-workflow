@@ -118,6 +118,15 @@ if [ -d tests/scenarios ]; then
     echo "DRIFT: missing authoring-craft behavioral fixture tests/scenarios/skill-edit-bare-prohibition-flagged.md"
     fail=1
   fi
+
+  # L3 termination-mechanic fixtures — round-cap->deadlock escalation + clean-first-round positive close;
+  # separate block + DRIFT message so a miss is not mislabeled.
+  for s in l3-round-cap-deadlock-escalates l3-clean-first-round-closes-in-one; do
+    if [ ! -f "tests/scenarios/$s.md" ]; then
+      echo "DRIFT: missing L3 termination behavioral fixture tests/scenarios/$s.md"
+      fail=1
+    fi
+  done
 fi
 
 # Closure-authority guard: L1/L2 closure is count-driven (two-generation), NOT the reviewer-emitted
