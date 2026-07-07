@@ -1,5 +1,12 @@
 # Implementation: L1 Evidence Rule
 
+```
+Status: closed
+Closing-commit: <CLOSING_SHA>
+Closed-on: 2026-07-07
+Deferred: none
+```
+
 Task slug: `2026-07-07-l1-review-sharpening`
 Design doc: `docs/design/2026-07-07-l1-review-sharpening.md` (L1-closed).
 
