@@ -75,6 +75,10 @@ require "failure_retrospective" "$SKILL/references/failure-retrospective.md" "$S
 # red-fails the gate. Zero SKILL.md cost.
 require "evidence_rule" "$SKILL/references/loop-1-design.md" "$SKILL/references/escalation-rules.md"
 
+# Negation->positive check (skill-self-edit review branch) — single-file presence token (the check has one
+# home, like the role names / "five questions"); the behavioral fixture is the real protection.
+require "negation_positive" "$SKILL/references/loop-1-design.md"
+
 # F closeout behavioral fixtures — one per new closeout behavior (B1-B5); a dropped fixture must red-fail the gate.
 # Guarded by the suite's presence: tests/scenarios/ lives at the repo root and is NOT shipped inside the
 # skill package, so this check applies only when the gate runs in the repo (the installed copy / packaged
@@ -108,6 +112,12 @@ if [ -d tests/scenarios ]; then
       fail=1
     fi
   done
+
+  # Authoring-craft (negation->positive) behavioral fixture; separate block + DRIFT message.
+  if [ ! -f "tests/scenarios/skill-edit-bare-prohibition-flagged.md" ]; then
+    echo "DRIFT: missing authoring-craft behavioral fixture tests/scenarios/skill-edit-bare-prohibition-flagged.md"
+    fail=1
+  fi
 fi
 
 # Closure-authority guard: L1/L2 closure is count-driven (two-generation), NOT the reviewer-emitted
