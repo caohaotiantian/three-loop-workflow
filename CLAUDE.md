@@ -55,9 +55,12 @@ which is a Chinese translation of `README.md`.
   per-round cleanliness predicate, not the termination rule. The v1.6 project-wide-closeout clauses are
   also paired: `blast-radius`, `repo-wide validation gates`, `change-orphan`, `migration verification`,
   and `project-doc reconciliation` (each across end-to-end-review.md ↔ SKILL.md; the last two also ↔
-  light-mode.md), plus the two F cross-reference literals and a bare-`consolidation` parity token; the
-  gate additionally asserts the five `tests/scenarios/closeout-*.md` fixtures exist. The gate also
-  fails if `SKILL.md` exceeds its `wc -w` word-count ceiling (2888).
+  light-mode.md), plus the two F cross-reference literals and a bare-`consolidation` parity token. The
+  failure-retrospective trigger is a **reference-only** paired token `failure_retrospective` (underscore,
+  not a substring of the hyphenated file path) across failure-retrospective.md ↔ escalation-rules.md ↔
+  end-to-end-review.md ↔ light-mode.md — zero SKILL.md surface. The gate additionally asserts the five
+  `tests/scenarios/closeout-*.md` fixtures and the four `tests/scenarios/failure-retrospective-*.md`
+  fixtures exist. The gate also fails if `SKILL.md` exceeds its `wc -w` word-count ceiling (2888).
 - **Workflow-script syntax gate:** `bash three-loop-workflow/references/check-workflow-syntax.sh <file.js>`
   — reliably parses a Workflow script (`node --check` mis-parses these `export`+top-level-`return` files).
 - **Behavioral scenarios:** run each `tests/scenarios/*.md` via a fresh subagent against the current skill
