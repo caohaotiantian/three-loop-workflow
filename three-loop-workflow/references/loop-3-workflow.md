@@ -30,6 +30,11 @@ The `scriptPath` must point to the installed skill copy. If the skill is install
 user-globally: `~/.claude/skills/three-loop-workflow/references/l3-phase.js`.
 Do NOT use a `name:` registry lookup — this script is not registered as a named workflow.
 
+> **Before invoking, record your current branch name** (e.g. `git branch --show-current`). That is the
+> **integration branch** the accepted work fast-forwards back into. It is **not** returned in `DevResult`, and
+> the dev subagent's `git checkout -b` moves the shared working tree's HEAD onto the dev branch during the run —
+> so capture the integration branch name now, or you cannot return to it for the merge below.
+
 > **Arg delivery (why the script parses `args`).** Some Workflow runtimes hand the script its global
 > `args` as a **JSON string** — a verbatim pass-through of the tool-call parameter — rather than a
 > parsed object, even when the caller passes a real object as shown above. `l3-phase.js` therefore
@@ -75,8 +80,11 @@ For the `agent-error` and `dev-escalation` relaunch rows in the Return values ta
 | `'dev-escalation'` | Dev reported BLOCKED twice (after one re-dispatch) | Main agent supplies missing context / a more capable model and relaunches, OR escalates to the user; do NOT compose a deadlock report (no unresolved severe items) |
 
 When `status === 'closed'`, `result.branch` contains the git branch with the accepted
-changes. The **main agent** (not the Workflow script) is responsible for merging:
+changes. The **main agent** (not the Workflow script) is responsible for merging. HEAD is on the dev branch
+after the run, so **first check out the integration branch you recorded at invocation** (not a positional
+`git checkout -`, which is fragile across a cross-session restart), then fast-forward it:
 ```bash
+git checkout <recorded-integration-branch>   # return from the dev branch first
 git merge --ff-only <result.branch>
 git branch -d <result.branch>
 ```
