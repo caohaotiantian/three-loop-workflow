@@ -2,7 +2,7 @@
 
 ```
 Status: closed
-Closing-commit: <CLOSING_SHA>
+Closing-commit: cc28dc5
 Closed-on: 2026-07-07
 Deferred: none
 ```

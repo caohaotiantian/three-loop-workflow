@@ -2,7 +2,7 @@
 
 ```
 Status: closed
-Closing-commit: <CLOSING_SHA>
+Closing-commit: cc28dc5
 Closed-on: 2026-07-07
 Deferred: none  (backlog #3 meta-model doc, #4 leading-word sweep, #5 _Avoid_ guards, #1 in-place rewrite all
   dropped as duplicative/out-of-scope — see scope note; not issue-tracked deferrals)
