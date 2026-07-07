@@ -1,5 +1,12 @@
 # Design: Disambiguate the Dependency-Upgrade Tier Boundary (F2)
 
+```
+Status: closed
+Closing-commit: <CLOSING_SHA>
+Closed-on: 2026-07-08
+Deferred: none
+```
+
 Task slug: `2026-07-08-tier-boundary-dependency`
 Tier: **Full Mode** (edits the always-loaded SKILL.md tier table + frontmatter description).
 Provenance: Wave 1b of the approved audit backlog (`memory/improvement-waves-plan-2026-07-07`) — finding F2.
