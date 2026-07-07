@@ -1,5 +1,13 @@
 # Design: Negation→Positive check for skill-self edits (the one non-duplicative craft rule)
 
+```
+Status: closed
+Closing-commit: <CLOSING_SHA>
+Closed-on: 2026-07-07
+Deferred: none  (backlog #3 meta-model doc, #4 leading-word sweep, #5 _Avoid_ guards, #1 in-place rewrite all
+  dropped as duplicative/out-of-scope — see scope note; not issue-tracked deferrals)
+```
+
 Task slug: `2026-07-07-authoring-craft-lens`
 Tier: **Full Mode** (edits the load-bearing three-loop skill: `references/loop-1-design.md`).
 Provenance: Cycle 2 of `docs/analysis-2026-07-07-external-skills-comparison.md` (backlog #1 negation→positive).
@@ -45,7 +53,8 @@ available to the reading agent — a slow, measurable erosion of the skill's own
       keeping a prohibition **only** as a hard guardrail paired with the positive target. Carries the literal
       token `negation_positive`.
 - [ ] Behavioral fixture `tests/scenarios/skill-edit-bare-prohibition-flagged.md` — a skill-self edit that
-      **adds a new core principle** (a *principle*-category edit, so the skill-self-edit branch fires) phrased
+      **adds a new reference-level rule** (a *principle*-category edit that fires the skill-self-edit branch,
+      **not** a literal expansion of the four fixed SKILL.md §0 core principles) phrased
       as a bare prohibition, constructed to isolate the negation check on **all three** confounds: (i) it is a
       **new addition, not a rewrite** (Surgical/trace stay silent); (ii) it has **no semantic overlap with any
       existing principle** (0.1–0.4 stay silent) — e.g. a portability rule like *"Never hardcode absolute
