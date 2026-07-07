@@ -1,5 +1,12 @@
 # Implementation: Disambiguate the Dependency-Upgrade Tier Boundary
 
+```
+Status: closed
+Closing-commit: <CLOSING_SHA>
+Closed-on: 2026-07-08
+Deferred: none
+```
+
 Task slug: `2026-07-08-tier-boundary-dependency`
 Design doc: `docs/design/2026-07-08-tier-boundary-dependency.md` (L1-closed, 3 rounds).
 
