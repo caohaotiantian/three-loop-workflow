@@ -73,6 +73,13 @@ review*, not these whole-project hygiene checks. (Blast-radius is trivial at ≤
 Full-Mode-only by the migration gate above; B2's gates are already implied by Light Mode's own
 acceptance command — so none of B1/B2/B4 needs an echo here.)
 
+**Failure retrospective in Light Mode.** Light Mode inherits the **deadlock-path** `failure_retrospective`
+trigger through `references/escalation-rules.md` (that path is shared by all tiers); the **F-systemic** path
+is Full-only, because the collapsed F has no step-6 whole-project review. If a Light-Mode deadlock's surviving
+task-domain prevention targets a **load-bearing** surface, it defers as a `finding` like any other (a Light
+change cannot land a load-bearing prevention inline). A systemic Light-Mode risk that is neither trigger event
+escalates to Full via the fresh-eyes tier gate anyway.
+
 ## The gate is fresh-eyes-enforced
 
 The tier is chosen by the author, but the author's judgment is not trusted blindly. The

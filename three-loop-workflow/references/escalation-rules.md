@@ -44,6 +44,7 @@ thinking one of these means: re-run the relevant gate or escalate — do not pro
 | "An unresolved general issue is just advisory, ship it" | An unresolved general issue blocks two-generation closure; it is corroboration, not advice. |
 | "Quick patch now, investigate the cause later" | A symptom fix spends the shared round budget and forces a later clean round anyway; name the root cause first (loop-3-development.md fix corner). |
 | "One more fix attempt" (at round 3) | Round 3 escalates with a deadlock report, never a silent round 4 — the cap is the trigger, not a bug (Round-cap exhaustion below). |
+| "I'll just look this up / the repo can answer this" | Only if it is a **fact** — then yes, look it up (don't ask). But a genuine product/scope/risk **decision** is not a repo-answerable fact; guessing one and calling it "settled by the repo" is a silent default. Look up facts, escalate decisions (`evidence_rule`, loop-1-design.md pre-step B). |
 
 ## Question quality requirements
 
@@ -109,3 +110,16 @@ When the user answers, record the decision:
 - **In the commit message body** if it is a tactical decision that fits within an existing design clause.
 
 The trace test (every changed line maps to a Deliverable or an escalated decision) depends on these records being durable. A user reply in chat that never lands in a doc cannot anchor a future code change.
+
+## Failure retrospective (deadlock path)
+
+When the escalation was a **round-cap deadlock** and, on return, the **surviving unresolved failure is a
+task-domain class of bug** (the deliverable was kept — option b — not dropped or redesigned away), run the
+**failure retrospective** (`references/failure-retrospective.md`): record the class and drive a durable
+class-prevention onto an already-read surface. Emit `failure_retrospective: triggered`. If the deadlock's only
+cause was a skill-process gap and no task-domain class survives, emit `failure_retrospective: skipped` — the
+retrospective does not fire.
+
+This is **additive to**, never a replacement for, "Meta-test the cap" above: Meta-test files a skill-repo issue
+about the *skill-rule* gap; the retrospective lands a prevention for the *task-domain class*. Different
+subjects — a deadlock that is both runs both.
