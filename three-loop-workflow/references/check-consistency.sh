@@ -63,6 +63,12 @@ require "two-doc consolidation step above"      "$SKILL/references/end-to-end-re
 # Closeout document-consolidation clause — paired across its 3 sites (was table-registered only; now gated for parity).
 require "consolidation" "$SKILL/references/end-to-end-review.md" "$SKILL/SKILL.md" "$SKILL/references/loop-2-implementation.md"
 
+# Failure-retrospective trigger — reference-only paired token (underscore literal, NOT a substring of the
+# hyphenated file path references/failure-retrospective.md, so a bare cross-link cannot satisfy it). Paired
+# across the source reference and its two trigger sites plus the Light-Mode disposition clause, so a dropped
+# trigger hook red-fails the gate. Zero SKILL.md cost (a conditional trigger does not earn always-loaded surface).
+require "failure_retrospective" "$SKILL/references/failure-retrospective.md" "$SKILL/references/escalation-rules.md" "$SKILL/references/end-to-end-review.md" "$SKILL/references/light-mode.md"
+
 # F closeout behavioral fixtures — one per new closeout behavior (B1-B5); a dropped fixture must red-fail the gate.
 # Guarded by the suite's presence: tests/scenarios/ lives at the repo root and is NOT shipped inside the
 # skill package, so this check applies only when the gate runs in the repo (the installed copy / packaged
@@ -73,6 +79,17 @@ if [ -d tests/scenarios ]; then
            closeout-doc-reconcile-changed-surface; do
     if [ ! -f "tests/scenarios/$s.md" ]; then
       echo "DRIFT: missing F-closeout behavioral fixture tests/scenarios/$s.md"
+      fail=1
+    fi
+  done
+
+  # Failure-retrospective behavioral fixtures — one per trigger/invariant (trigger, dedup boundary,
+  # non-displacement, no-smuggle); a dropped fixture must red-fail the gate. Separate loop + DRIFT
+  # message so a miss is not mislabeled as an F-closeout fixture.
+  for s in failure-retrospective-deadlock-taskdomain-triggers failure-retrospective-skill-process-deadlock-skips \
+           failure-retrospective-severe-systemic-still-blocks failure-retrospective-loadbearing-prevention-defers; do
+    if [ ! -f "tests/scenarios/$s.md" ]; then
+      echo "DRIFT: missing failure-retrospective behavioral fixture tests/scenarios/$s.md"
       fail=1
     fi
   done

@@ -109,3 +109,16 @@ When the user answers, record the decision:
 - **In the commit message body** if it is a tactical decision that fits within an existing design clause.
 
 The trace test (every changed line maps to a Deliverable or an escalated decision) depends on these records being durable. A user reply in chat that never lands in a doc cannot anchor a future code change.
+
+## Failure retrospective (deadlock path)
+
+When the escalation was a **round-cap deadlock** and, on return, the **surviving unresolved failure is a
+task-domain class of bug** (the deliverable was kept — option b — not dropped or redesigned away), run the
+**failure retrospective** (`references/failure-retrospective.md`): record the class and drive a durable
+class-prevention onto an already-read surface. Emit `failure_retrospective: triggered`. If the deadlock's only
+cause was a skill-process gap and no task-domain class survives, emit `failure_retrospective: skipped` — the
+retrospective does not fire.
+
+This is **additive to**, never a replacement for, "Meta-test the cap" above: Meta-test files a skill-repo issue
+about the *skill-rule* gap; the retrospective lands a prevention for the *task-domain class*. Different
+subjects — a deadlock that is both runs both.
