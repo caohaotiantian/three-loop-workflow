@@ -2,7 +2,7 @@
 
 ```
 Status: closed
-Closing-commit: <CLOSING_SHA>
+Closing-commit: 389520c
 Closed-on: 2026-07-08
 Deferred: none  (F11 accept-budget split to its own cycle 2026-07-08-l3-accept-budget — see scope note)
 ```
