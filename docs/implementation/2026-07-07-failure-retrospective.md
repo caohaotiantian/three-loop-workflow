@@ -1,5 +1,12 @@
 # Implementation: Failure Retrospective
 
+```
+Status: closed
+Closing-commit: b42900a
+Closed-on: 2026-07-07
+Deferred: none
+```
+
 Task slug: `2026-07-07-failure-retrospective`
 Design doc: `docs/design/2026-07-07-failure-retrospective.md` (L1-closed).
 
