@@ -132,6 +132,10 @@ async function panelReview(basePrompt, round) {
   }
 }
 
+// The two fix prompts below carry the `diagnosis_method` clause (loop-3-development.md fix corner): when the
+// cause is not obvious, rank 3-5 falsifiable hypotheses and seek discriminating evidence before editing. The
+// clause is in the prompt prose; this comment carries the paired token for the consistency gate.
+
 // ── Step 1: Dev ──────────────────────────────────────────────
 phase('Dev')
 log(`${phaseLabel}: running dev subagent`)
@@ -240,6 +244,8 @@ while (round <= MAX_ROUNDS) {
       `You are the fix subagent for ${phaseLabel} review round ${round}. ` +
       `Before editing, state the root cause of each item ('X is caused by Y'); make the smallest ` +
       `change that addresses the cause, not the symptom; one cause at a time. ` +
+      `If the cause is not obvious, generate 3-5 ranked falsifiable hypotheses and seek discriminating ` +
+      `evidence before editing — do not anchor on the first plausible theory. ` +
       `If a failing item is a correctness/behavior bug, write a failing test that reproduces it before ` +
       `fixing (red→green); a style/scope/comment finding needs no test. ` +
       `Fix the following review issues on branch "${devBranch}" ` +
@@ -282,6 +288,8 @@ while (acceptRound <= MAX_ROUNDS) {
     `You are the fix subagent for ${phaseLabel} accept round ${acceptRound}. ` +
     `Before editing, state the root cause of each item ('X is caused by Y'); make the smallest ` +
     `change that addresses the cause, not the symptom; one cause at a time. ` +
+    `If the cause is not obvious, generate 3-5 ranked falsifiable hypotheses and seek discriminating ` +
+    `evidence before editing — do not anchor on the first plausible theory. ` +
     `If a failing item is a correctness/behavior bug, write a failing test that reproduces it before ` +
     `fixing (red→green), unless the failing item is itself the reproducing test; a style/scope/comment ` +
     `finding needs no test. ` +

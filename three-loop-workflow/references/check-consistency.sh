@@ -79,6 +79,10 @@ require "evidence_rule" "$SKILL/references/loop-1-design.md" "$SKILL/references/
 # home, like the role names / "five questions"); the behavioral fixture is the real protection.
 require "negation_positive" "$SKILL/references/loop-1-design.md"
 
+# Fix-corner diagnosis method — paired token across the method (loop-3-development.md), the fix prompts'
+# JS comment (l3-phase.js), and the rationalization row (escalation-rules.md). Distinctive underscore literal.
+require "diagnosis_method" "$SKILL/references/loop-3-development.md" "$SKILL/references/l3-phase.js" "$SKILL/references/escalation-rules.md"
+
 # F closeout behavioral fixtures — one per new closeout behavior (B1-B5); a dropped fixture must red-fail the gate.
 # Guarded by the suite's presence: tests/scenarios/ lives at the repo root and is NOT shipped inside the
 # skill package, so this check applies only when the gate runs in the repo (the installed copy / packaged
@@ -127,6 +131,12 @@ if [ -d tests/scenarios ]; then
       fail=1
     fi
   done
+
+  # Fix-corner diagnosis-method behavioral fixture; separate block + DRIFT message.
+  if [ ! -f "tests/scenarios/fix-corner-ranks-hypotheses-not-first-theory.md" ]; then
+    echo "DRIFT: missing diagnosis-method behavioral fixture tests/scenarios/fix-corner-ranks-hypotheses-not-first-theory.md"
+    fail=1
+  fi
 fi
 
 # Closure-authority guard: L1/L2 closure is count-driven (two-generation), NOT the reviewer-emitted
