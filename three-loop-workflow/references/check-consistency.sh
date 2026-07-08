@@ -60,8 +60,12 @@ require "project-doc reconciliation" "$SKILL/references/end-to-end-review.md" "$
 require "project-doc reconciliation step below" "$SKILL/references/end-to-end-review.md"
 require "two-doc consolidation step above"      "$SKILL/references/end-to-end-review.md"
 
-# Closeout document-consolidation clause — paired across its 3 sites (was table-registered only; now gated for parity).
-require "consolidation" "$SKILL/references/end-to-end-review.md" "$SKILL/SKILL.md" "$SKILL/references/loop-2-implementation.md"
+# Closeout document-consolidation clause (F15) — the ubiquitous bare word "consolidation" (15 incidental
+# occurrences across its old sites) gave near-zero drift protection, so it is strengthened to the distinctive
+# references-only marker `consolidation_pass`, paired across its two reference sites. SKILL.md is excluded by
+# design: its consolidation surface is covered by the always-loaded review + the SKILL.md word ceiling, not a
+# near-worthless bare-word grep.
+require "consolidation_pass" "$SKILL/references/end-to-end-review.md" "$SKILL/references/loop-2-implementation.md"
 
 # Failure-retrospective trigger — reference-only paired token (underscore literal, NOT a substring of the
 # hyphenated file path references/failure-retrospective.md, so a bare cross-link cannot satisfy it). Paired
