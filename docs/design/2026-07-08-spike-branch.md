@@ -1,5 +1,12 @@
 # Design: A Spike/Experiment Branch of the Evidence Rule (measurable-by-running questions)
 
+```
+Status: closed
+Closing-commit: <CLOSING_SHA>
+Closed-on: 2026-07-08
+Deferred: none
+```
+
 Task slug: `2026-07-08-spike-branch`
 Tier: **Full Mode** (edits the load-bearing L1 Evidence Rule: `loop-1-design.md`, `escalation-rules.md`).
 Provenance: Wave 2b of the approved audit backlog (`memory/improvement-waves-plan-2026-07-07`) — finding B2,
