@@ -2,7 +2,7 @@
 
 ```
 Status: closed
-Closing-commit: <CLOSING_SHA>
+Closing-commit: 9d3a9f3
 Closed-on: 2026-07-08
 Deferred: none
 ```
