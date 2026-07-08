@@ -7,7 +7,7 @@
 - _common-commands_     → "## Common Commands"
 - _engineering-norms_   → "## Engineering Norms"
 
-This repo distributes the **three-loop-workflow** Claude skill (currently **v1.12.1**). It is the
+This repo distributes the **three-loop-workflow** Claude skill (currently **v1.12.2**). It is the
 canonical case where the load-bearing documents *are* the product: the skill is maintained by its
 own L1 → L2 → L3 → F discipline.
 
@@ -55,7 +55,9 @@ which is a Chinese translation of `README.md`.
   per-round cleanliness predicate, not the termination rule. The v1.6 project-wide-closeout clauses are
   also paired: `blast-radius`, `repo-wide validation gates`, `change-orphan`, `migration verification`,
   and `project-doc reconciliation` (each across end-to-end-review.md ↔ SKILL.md; the last two also ↔
-  light-mode.md), plus the two F cross-reference literals and a bare-`consolidation` parity token. The
+  light-mode.md), plus the two F cross-reference literals and a distinctive `consolidation_pass` parity token
+  (references-only — F15 strengthened it from the old ubiquitous bare word `consolidation`, which gave near-zero
+  drift protection; SKILL.md is excluded, its consolidation surface covered by the always-loaded review + word ceiling). The
   failure-retrospective trigger is a **reference-only** paired token `failure_retrospective` (underscore,
   not a substring of the hyphenated file path) across failure-retrospective.md ↔ escalation-rules.md ↔
   end-to-end-review.md ↔ light-mode.md — zero SKILL.md surface. The L1 Evidence Rule is a
@@ -66,6 +68,9 @@ which is a Chinese translation of `README.md`.
   `negation_positive` in loop-1-design.md. The fix-corner **diagnosis method** is a paired token
   `diagnosis_method` across loop-3-development.md ↔ l3-phase.js (a JS comment) ↔ escalation-rules.md. The gate also byte-identity-checks the two adversarial
   panel-angle lists (`review-panel.js` `ANGLES` ↔ `l3-phase.js` `PANEL_ANGLES`) — the `panel-angles` sync check.
+  It likewise byte-identity-checks the `[Calibration]` and `[Grounding]` review-prompt lines shared by
+  loop-1-design.md ↔ loop-2-implementation.md — the calibration/grounding sync check (F6; the `[Trip-wires]`
+  line legitimately differs L1/L2 and l3-phase.js's panel copy is deliberately reworded, both excluded).
   The gate additionally asserts the five
   `tests/scenarios/closeout-*.md` fixtures, the four `tests/scenarios/failure-retrospective-*.md`
   fixtures, the three `tests/scenarios/l1-evidence-rule-*.md` fixtures,
@@ -73,7 +78,9 @@ which is a Chinese translation of `README.md`.
   `tests/scenarios/l1-unevidenced-external-claim-needs-source.md`, the two
   `tests/scenarios/l3-{round-cap-deadlock-escalates,clean-first-round-closes-in-one}.md` fixtures, and
   `tests/scenarios/fix-corner-ranks-hypotheses-not-first-theory.md` exist. The gate also fails if
-  `SKILL.md` exceeds its `wc -w` word-count ceiling (2888).
+  `SKILL.md` exceeds its `wc -w` word-count ceiling (2888), or if any single `references/*.md` exceeds the
+  per-file `REFS_WORD_CEILING` (env-overridable, default 3000) — the F4 anti-bloat lever that catches a
+  reference file ballooning without penalizing healthy SKILL.md→references/ redistribution.
 - **Workflow-script syntax gate:** `bash three-loop-workflow/references/check-workflow-syntax.sh <file.js>`
   — reliably parses a Workflow script (`node --check` mis-parses these `export`+top-level-`return` files).
 - **Behavioral scenarios:** run each `tests/scenarios/*.md` via a fresh subagent against the current skill
