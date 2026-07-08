@@ -98,11 +98,11 @@ async function tryAgent(prompt, opts) {
 // termination fields — panel mode can only make the gate stricter. Returns a verdict shaped
 // like REVIEW_SCHEMA, or null if every voter failed. See references/multi-voter-review.md.
 const PANEL_ANGLES = [
-  'SCOPE CREEP / Simplicity First: anything beyond the stated deliverables.',
-  'UNVERIFIABLE ACCEPTANCE / Goal-Driven Execution: criteria not mechanically checkable.',
-  'MISSING ALTERNATIVES / Think Before Coding: single-option decisions, silent defaults.',
-  'SURGICAL CHANGES: drive-by edits, process-narration comments, contract drift.',
-  'CORRECTNESS: bugs, contradictions, broken references, off-by-one, dead logic.',
+  'SCOPE CREEP / Simplicity First: anything beyond the stated deliverables; speculative abstraction.',
+  'UNVERIFIABLE ACCEPTANCE / Goal-Driven Execution: criteria or commands that are not mechanically checkable.',
+  'MISSING ALTERNATIVES / Think Before Coding: single-option decisions, silent defaults, unstated assumptions.',
+  'SURGICAL CHANGES: drive-by edits, process-narration comments, contract / cross-file drift.',
+  'CORRECTNESS: bugs, contradictions, broken references, off-by-one, dead or unreachable logic.',
 ]
 async function panelReview(basePrompt, round) {
   const n = Math.max(1, Math.min(panelVoters, PANEL_ANGLES.length))
