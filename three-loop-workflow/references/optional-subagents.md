@@ -2,24 +2,22 @@
 
 The skill runs **zero-install** on the built-in default subagent. This file is an **optional**
 upgrade: ready-to-copy `.claude/agents` definitions that turn the prose "Forbidden" columns into
-harness-enforced guarantees on the paths where they apply, route compute (a strong model on
-judgment, a cheap model on the mechanical accept corner), and preload the skill so reviewers
-cannot drift from it.
+harness-enforced guarantees where they apply, route compute (a strong model on judgment, a cheap one
+on the mechanical accept corner), and preload the skill so reviewers cannot drift from it.
 
-> **These are built-in Claude Code `.claude/agents` files — NOT an external plugin.** v1.3.2
-> deliberately removed the external-plugin dependency; this re-introduces *optional* reviewer
-> roles via the built-in agent mechanism, and the skill **still runs with no install** via the
-> mandatory fallback below.
+> **These are built-in Claude Code `.claude/agents` files — NOT an external plugin.** v1.3.2 removed
+> the external-plugin dependency; this re-introduces *optional* reviewer roles via the built-in agent
+> mechanism, and the skill **still runs with no install** via the mandatory fallback below.
 
 ## The honest enforcement boundary (read first)
 
-A `tools` allowlist makes a reviewer **physically unable to edit** — but only on the spawn paths
-that honor an agent *definition*: the manual L3 mode (Agent tool / `@`-mention / `--agent`) and
-the L1 / L2 reviews. The skill's **recommended L3 mode** spawns review/accept via the Workflow
-primitive `agent(prompt, { schema })` in `l3-phase.js`, which passes a prompt + schema, **not an
-agent-type name** — so the named-agent tool restriction **does not transfer** to that path. On the Workflow
-path, role isolation is still enforced (fresh spawn per role), but the read-only *tool* guarantee
-is not. Do not market the allowlist as a blanket guarantee; it hardens the manual/L1/L2 paths.
+A `tools` allowlist makes a reviewer **physically unable to edit** — but only on the spawn paths that
+honor an agent *definition*: the manual L3 mode (Agent tool / `@`-mention / `--agent`) and the L1 / L2
+reviews. The skill's **recommended L3 mode** spawns review/accept via the Workflow primitive
+`agent(prompt, { schema })` in `l3-phase.js`, which passes a prompt + schema, **not an agent-type name**
+— so the tool restriction **does not transfer** there. On that path role isolation still holds (fresh
+spawn per role) but the read-only *tool* guarantee does not. Do not market the allowlist as a blanket
+guarantee; it hardens the manual/L1/L2 paths.
 
 ## The definitions
 
@@ -84,13 +82,12 @@ AcceptVerdict.
 
 Notes:
 - **Model routing**: Opus where senior judgment lives (the reviewers); Haiku is acceptable for
-  `three-loop-accept-runner` **only because** the accept corner is forbidden from judging output
-  — it is pure exit-code → pass/fail. Cheap-model routing must never leak into the review or
+  `three-loop-accept-runner` **only because** the accept corner is forbidden from judging output — it is
+  pure exit-code → pass/fail. Cheap-model routing must never leak into the review or
   behavior-verification steps.
-- **`skills: [three-loop-workflow]` preload** injects the skill content so a reviewer cannot
-  forget the templates. It still receives the artifact (the diff + design/impl docs) and the
-  round-specific prompt — preload removes only the need to *re-read the skill's own templates*,
-  not the need to read the artifact.
+- **`skills: [three-loop-workflow]` preload** injects the skill so a reviewer cannot forget the
+  templates. It still receives the artifact (the diff + design/impl docs) and the round-specific prompt
+  — preload removes only the need to *re-read the skill's own templates*, not to read the artifact.
 
 ## Mandatory fallback (keeps the skill self-contained)
 
