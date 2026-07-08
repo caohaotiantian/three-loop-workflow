@@ -52,6 +52,21 @@ Decision and Acceptance Criterion is determined by the ask), or under Light Mode
   decision… is forbidden"). This governs *whether* to ask; `references/escalation-rules.md` "Question
   quality requirements" governs *how* to ask once a decision is confirmed. (Distinct from pre-step A's
   Explore sweep, which gathers design inputs; this is the fact-vs-decision gate at question-formation time.)
+- **Spike — run to answer a measurable question** (`spike_answer`). Some design-input questions are **neither**
+  a repo-answerable fact nor a product/scope decision: they can be settled **only by running a quick
+  experiment** (does the vendor SDK *actually* support the mode we need; what shape does a real external payload
+  take; can approach X clear the declared budget). Escalating such a question just bounces it back (the user
+  would have to run it too), and assuming the answer is a silent default. Instead, run a **spike**, tightly
+  bounded: **(a)** it is **throwaway, marked so from the first line, run in an ephemeral isolated worktree and
+  mechanically deleted after** (reuse the `references/loop-3-development.md` "Isolated spawn procedure":
+  `git worktree add` … `git worktree remove --force` + `rm -rf` — the code never lands in the main tree);
+  **(b)** its **only durable output is the answer + the question it answered**, recorded in the design doc's
+  **Key Design Decisions (section 4)** or **Dependencies and Assumptions (section 5)** — git is the memory;
+  **(c)** it stays **bounded to that question**: *record the answer, then design* — a spike does not authorize
+  starting the deliverable, and design still gates L3 (write the 8-section doc **after** the spike answers,
+  using the real number). Where no runner exists, the experiment degrades to a manual one-shot, but the
+  worktree isolation and delete still hold (git is always available — only the runner degrades). A spike is
+  **not** license to build the deliverable early; it produces one measurement and is discarded.
 - **Ask clarifying questions one at a time** (multiple-choice preferred over open-ended), so the
   user answers cheaply and the design space stays visible.
 - **Present 2-3 candidate approaches with a led recommendation** before you draft Key Design
