@@ -60,8 +60,12 @@ require "project-doc reconciliation" "$SKILL/references/end-to-end-review.md" "$
 require "project-doc reconciliation step below" "$SKILL/references/end-to-end-review.md"
 require "two-doc consolidation step above"      "$SKILL/references/end-to-end-review.md"
 
-# Closeout document-consolidation clause — paired across its 3 sites (was table-registered only; now gated for parity).
-require "consolidation" "$SKILL/references/end-to-end-review.md" "$SKILL/SKILL.md" "$SKILL/references/loop-2-implementation.md"
+# Closeout document-consolidation clause (F15) — the ubiquitous bare word "consolidation" (15 incidental
+# occurrences across its old sites) gave near-zero drift protection, so it is strengthened to the distinctive
+# references-only marker `consolidation_pass`, paired across its two reference sites. SKILL.md is excluded by
+# design: its consolidation surface is covered by the always-loaded review + the SKILL.md word ceiling, not a
+# near-worthless bare-word grep.
+require "consolidation_pass" "$SKILL/references/end-to-end-review.md" "$SKILL/references/loop-2-implementation.md"
 
 # Failure-retrospective trigger — reference-only paired token (underscore literal, NOT a substring of the
 # hyphenated file path references/failure-retrospective.md, so a bare cross-link cannot satisfy it). Paired
@@ -93,6 +97,19 @@ if ! diff <(extract_angles "$SKILL/references/review-panel.js" ANGLES) \
   echo "DRIFT: panel-angles — review-panel.js ANGLES != l3-phase.js PANEL_ANGLES (must be byte-identical)"
   fail=1
 fi
+
+# Calibration/grounding review-prompt sync (F6) — the [Calibration] and [Grounding] lines are byte-identical
+# between the L1 and L2 review templates (loop-1-design.md, loop-2-implementation.md) and can drift silently.
+# Gate byte-identity of each line (prefix-anchored single-line extraction). The [Trip-wires] line legitimately
+# differs ("close L1" vs "close L2") and is excluded; l3-phase.js's panel-context copy is deliberately reworded
+# and also excluded. Like panel-angles, this runs OUTSIDE the tests/scenarios guard (the templates ship in the package).
+for pat in '^\[Calibration\]' '^\[Grounding\]'; do
+  if ! diff <(grep -m1 -- "$pat" "$SKILL/references/loop-1-design.md") \
+            <(grep -m1 -- "$pat" "$SKILL/references/loop-2-implementation.md") >/dev/null 2>&1; then
+    echo "DRIFT: calibration/grounding — loop-1-design.md != loop-2-implementation.md ('$pat' line must be byte-identical)"
+    fail=1
+  fi
+done
 
 # Negation->positive check (skill-self-edit review branch) — single-file presence token (the check has one
 # home, like the role names / "five questions"); the behavioral fixture is the real protection.
@@ -180,6 +197,19 @@ if [ "$SKILL_WORDS" -gt "$SKILL_WORD_CEILING" ]; then
   echo "BLOAT: SKILL.md wc -w=$SKILL_WORDS exceeds ceiling $SKILL_WORD_CEILING"
   fail=1
 fi
+
+# Anti-bloat: per-file word budget for references/*.md (F4). references/ is where detail is deliberately pushed
+# out of the always-loaded SKILL.md, so a global references/ ceiling would fight that design; a uniform per-file
+# cap instead catches a single reference file ballooning without penalizing healthy redistribution. Env-overridable
+# (default 3000) so a red demo can trigger it without editing this script.
+REFS_WORD_CEILING="${REFS_WORD_CEILING:-3000}"
+for f in "$SKILL"/references/*.md; do
+  w="$(wc -w < "$f" | tr -d '[:space:]')"
+  if [ "$w" -gt "$REFS_WORD_CEILING" ]; then
+    echo "BLOAT: $f wc -w=$w exceeds references ceiling $REFS_WORD_CEILING"
+    fail=1
+  fi
+done
 
 if [ "$fail" -eq 0 ]; then echo "three-loop-consistency: OK"; fi
 exit "$fail"
