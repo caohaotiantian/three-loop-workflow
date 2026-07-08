@@ -191,6 +191,18 @@ contract files.
      apply the section-7 quality-budget rule (declare a measured budget or
      exclude it in Scope Boundary; a missing-and-not-excluded budget is a
      general issue).
+   - Verbatim evidence (`verbatim_evidence`): a load-bearing
+     **external/technical claim** stated as fact — how a caller / library /
+     API behaves, a contract shape, a value — must carry its **verbatim
+     source**: a copy-pasted `file:line` snippet, or a spike-/command-derived
+     value with its source. A claim stated as settled fact with no verbatim
+     backing — **confident or hedged** ("likely / seems to / typically" are
+     one tell; a *confident* unevidenced claim is the more dangerous case) —
+     is a general issue; demand the source (or a spike). You (the fresh-eyes
+     reviewer), not the author, own the external/technical + load-bearing
+     classification, so an author cannot dodge by recasting an API-behavior
+     claim as "intent". The positive rule: state the claim, then paste its
+     source.
    - Coding philosophy (Think Before Coding, Simplicity First, Surgical
      Changes, Goal-Driven Execution): any violation (silent defaults,
      speculative scope, missing trade-offs) is a severe issue.

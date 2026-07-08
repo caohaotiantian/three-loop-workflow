@@ -60,12 +60,15 @@ which is a Chinese translation of `README.md`.
   not a substring of the hyphenated file path) across failure-retrospective.md ↔ escalation-rules.md ↔
   end-to-end-review.md ↔ light-mode.md — zero SKILL.md surface. The L1 Evidence Rule is a
   reference-only paired token `evidence_rule` (underscore, non-substring) across loop-1-design.md ↔
-  escalation-rules.md; the Evidence Rule **spike branch** is a paired token `spike_answer` across the same two. The L1 skill-self-edit **negation→positive** check is a single-file token
+  escalation-rules.md; the Evidence Rule **spike branch** is a paired token `spike_answer` across the same two. The
+  **verbatim-evidence** standard (an external/technical claim needs its `file:line` source) is a paired token
+  `verbatim_evidence` across loop-1-design.md ↔ escalation-rules.md. The L1 skill-self-edit **negation→positive** check is a single-file token
   `negation_positive` in loop-1-design.md. The fix-corner **diagnosis method** is a paired token
   `diagnosis_method` across loop-3-development.md ↔ l3-phase.js (a JS comment) ↔ escalation-rules.md. The gate additionally asserts the five
   `tests/scenarios/closeout-*.md` fixtures, the four `tests/scenarios/failure-retrospective-*.md`
   fixtures, the three `tests/scenarios/l1-evidence-rule-*.md` fixtures,
-  `tests/scenarios/skill-edit-bare-prohibition-flagged.md`, the two
+  `tests/scenarios/skill-edit-bare-prohibition-flagged.md`,
+  `tests/scenarios/l1-unevidenced-external-claim-needs-source.md`, the two
   `tests/scenarios/l3-{round-cap-deadlock-escalates,clean-first-round-closes-in-one}.md` fixtures, and
   `tests/scenarios/fix-corner-ranks-hypotheses-not-first-theory.md` exist. The gate also fails if
   `SKILL.md` exceeds its `wc -w` word-count ceiling (2888).
