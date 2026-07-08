@@ -83,6 +83,17 @@ require "spike_answer" "$SKILL/references/loop-1-design.md" "$SKILL/references/e
 # (escalation-rules.md). An external/technical claim stated as fact needs its verbatim file:line source.
 require "verbatim_evidence" "$SKILL/references/loop-1-design.md" "$SKILL/references/escalation-rules.md"
 
+# Adversarial panel-angles sync (F1) — the five voter angles exist twice (review-panel.js ANGLES, l3-phase.js
+# PANEL_ANGLES). A registered commitment clause (claude-md-integration.md) but previously ungated → they drifted.
+# Gate byte-identity of the two arrays (block-anchored extraction; ends on a bracket-only line). Runs OUTSIDE
+# the tests/scenarios guard — the JS files ship in the package even where tests/ does not.
+extract_angles() { sed -n "/const $2 = \[/,/^]/p" "$1" | sed '1d;$d'; }
+if ! diff <(extract_angles "$SKILL/references/review-panel.js" ANGLES) \
+          <(extract_angles "$SKILL/references/l3-phase.js" PANEL_ANGLES) >/dev/null 2>&1; then
+  echo "DRIFT: panel-angles — review-panel.js ANGLES != l3-phase.js PANEL_ANGLES (must be byte-identical)"
+  fail=1
+fi
+
 # Negation->positive check (skill-self-edit review branch) — single-file presence token (the check has one
 # home, like the role names / "five questions"); the behavioral fixture is the real protection.
 require "negation_positive" "$SKILL/references/loop-1-design.md"
