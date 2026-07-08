@@ -1,5 +1,12 @@
 # Implementation: Gate the Adversarial Panel-Angles Sync
 
+```
+Status: closed
+Closing-commit: <CLOSING_SHA>
+Closed-on: 2026-07-08
+Deferred: none
+```
+
 Task slug: `2026-07-08-panel-angles-sync`
 Design doc: `docs/design/2026-07-08-panel-angles-sync.md` (L1-closed, 3 rounds).
 

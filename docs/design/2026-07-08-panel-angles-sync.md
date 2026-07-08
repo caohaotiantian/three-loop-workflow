@@ -1,5 +1,12 @@
 # Design: Gate the Adversarial Panel-Angles Sync (F1)
 
+```
+Status: closed
+Closing-commit: <CLOSING_SHA>
+Closed-on: 2026-07-08
+Deferred: none  (Wave 4 remainder — F5/F13/F14 trims, F15 token-strengthening, F6 calibration dedup, F4 references budget — see memory backlog)
+```
+
 Task slug: `2026-07-08-panel-angles-sync`
 Tier: **Full Mode** (edits load-bearing JS `review-panel.js` + `l3-phase.js` + the gate + `claude-md-integration.md`).
 Provenance: Wave 4 of the approved audit backlog (`memory/improvement-waves-plan-2026-07-07`) — finding F1
