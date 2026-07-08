@@ -94,6 +94,19 @@ if ! diff <(extract_angles "$SKILL/references/review-panel.js" ANGLES) \
   fail=1
 fi
 
+# Calibration/grounding review-prompt sync (F6) — the [Calibration] and [Grounding] lines are byte-identical
+# between the L1 and L2 review templates (loop-1-design.md, loop-2-implementation.md) and can drift silently.
+# Gate byte-identity of each line (prefix-anchored single-line extraction). The [Trip-wires] line legitimately
+# differs ("close L1" vs "close L2") and is excluded; l3-phase.js's panel-context copy is deliberately reworded
+# and also excluded. Like panel-angles, this runs OUTSIDE the tests/scenarios guard (the templates ship in the package).
+for pat in '^\[Calibration\]' '^\[Grounding\]'; do
+  if ! diff <(grep -m1 -- "$pat" "$SKILL/references/loop-1-design.md") \
+            <(grep -m1 -- "$pat" "$SKILL/references/loop-2-implementation.md") >/dev/null 2>&1; then
+    echo "DRIFT: calibration/grounding — loop-1-design.md != loop-2-implementation.md ('$pat' line must be byte-identical)"
+    fail=1
+  fi
+done
+
 # Negation->positive check (skill-self-edit review branch) — single-file presence token (the check has one
 # home, like the role names / "five questions"); the behavioral fixture is the real protection.
 require "negation_positive" "$SKILL/references/loop-1-design.md"
@@ -180,6 +193,19 @@ if [ "$SKILL_WORDS" -gt "$SKILL_WORD_CEILING" ]; then
   echo "BLOAT: SKILL.md wc -w=$SKILL_WORDS exceeds ceiling $SKILL_WORD_CEILING"
   fail=1
 fi
+
+# Anti-bloat: per-file word budget for references/*.md (F4). references/ is where detail is deliberately pushed
+# out of the always-loaded SKILL.md, so a global references/ ceiling would fight that design; a uniform per-file
+# cap instead catches a single reference file ballooning without penalizing healthy redistribution. Env-overridable
+# (default 3000) so a red demo can trigger it without editing this script.
+REFS_WORD_CEILING="${REFS_WORD_CEILING:-3000}"
+for f in "$SKILL"/references/*.md; do
+  w="$(wc -w < "$f" | tr -d '[:space:]')"
+  if [ "$w" -gt "$REFS_WORD_CEILING" ]; then
+    echo "BLOAT: $f wc -w=$w exceeds references ceiling $REFS_WORD_CEILING"
+    fail=1
+  fi
+done
 
 if [ "$fail" -eq 0 ]; then echo "three-loop-consistency: OK"; fi
 exit "$fail"
