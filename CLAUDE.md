@@ -7,7 +7,7 @@
 - _common-commands_     → "## Common Commands"
 - _engineering-norms_   → "## Engineering Norms"
 
-This repo distributes the **three-loop-workflow** Claude skill (currently **v1.10.0**). It is the
+This repo distributes the **three-loop-workflow** Claude skill (currently **v1.11.0**). It is the
 canonical case where the load-bearing documents *are* the product: the skill is maintained by its
 own L1 → L2 → L3 → F discipline.
 
@@ -60,11 +60,11 @@ which is a Chinese translation of `README.md`.
   not a substring of the hyphenated file path) across failure-retrospective.md ↔ escalation-rules.md ↔
   end-to-end-review.md ↔ light-mode.md — zero SKILL.md surface. The L1 Evidence Rule is a
   reference-only paired token `evidence_rule` (underscore, non-substring) across loop-1-design.md ↔
-  escalation-rules.md. The L1 skill-self-edit **negation→positive** check is a single-file token
+  escalation-rules.md; the Evidence Rule **spike branch** is a paired token `spike_answer` across the same two. The L1 skill-self-edit **negation→positive** check is a single-file token
   `negation_positive` in loop-1-design.md. The fix-corner **diagnosis method** is a paired token
   `diagnosis_method` across loop-3-development.md ↔ l3-phase.js (a JS comment) ↔ escalation-rules.md. The gate additionally asserts the five
   `tests/scenarios/closeout-*.md` fixtures, the four `tests/scenarios/failure-retrospective-*.md`
-  fixtures, the two `tests/scenarios/l1-evidence-rule-*.md` fixtures,
+  fixtures, the three `tests/scenarios/l1-evidence-rule-*.md` fixtures,
   `tests/scenarios/skill-edit-bare-prohibition-flagged.md`, the two
   `tests/scenarios/l3-{round-cap-deadlock-escalates,clean-first-round-closes-in-one}.md` fixtures, and
   `tests/scenarios/fix-corner-ranks-hypotheses-not-first-theory.md` exist. The gate also fails if

@@ -46,6 +46,7 @@ thinking one of these means: re-run the relevant gate or escalate — do not pro
 | "The first theory that fits is the cause" | Single-hypothesis anchoring is the top debugging failure. Generate 3-5 ranked **falsifiable** hypotheses and let **discriminating** evidence pick the cause, not the first plausible fit — distinct from the row above (that skips investigation; this stops at the first theory *during* it) (`diagnosis_method`, loop-3-development.md fix corner). |
 | "One more fix attempt" (at round 3) | Round 3 escalates with a deadlock report, never a silent round 4 — the cap is the trigger, not a bug (Round-cap exhaustion below). |
 | "I'll just look this up / the repo can answer this" | Only if it is a **fact** — then yes, look it up (don't ask). But a genuine product/scope/risk **decision** is not a repo-answerable fact; guessing one and calling it "settled by the repo" is a silent default. Look up facts, escalate decisions (`evidence_rule`, loop-1-design.md pre-step B). |
+| "I'll just build the real thing to see if it works" | A measurable-by-running question is answered by a **spike** — throwaway code whose *answer* (not its code) is the durable output, recorded in the design doc; the spike is deleted. Build the deliverable at **L3, after the design closes** — coding the real thing to test feasibility is the design-before-code violation the spike's throwaway bound prevents (`spike_answer`, loop-1-design.md pre-step B). |
 
 ## Question quality requirements
 
