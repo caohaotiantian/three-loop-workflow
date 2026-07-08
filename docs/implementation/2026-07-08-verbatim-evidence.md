@@ -1,5 +1,12 @@
 # Implementation: Verbatim-Evidence Standard for External/Technical Claims
 
+```
+Status: closed
+Closing-commit: <CLOSING_SHA>
+Closed-on: 2026-07-08
+Deferred: none
+```
+
 Task slug: `2026-07-08-verbatim-evidence`
 Design doc: `docs/design/2026-07-08-verbatim-evidence.md` (L1-closed, 4 rounds).
 
