@@ -1,5 +1,12 @@
 # Design — Wave 4 anti-bloat / hygiene tail (F5, F6, F13, F14, F15, F4)
 
+```
+Status: closed
+Closing-commit: <closeout-sha>
+Closed-on: 2026-07-08
+Deferred: none
+```
+
 ## 1. Background and Purpose
 
 The v1.9.0 self-audit + external re-mine produced a four-wave improvement plan whose substance
@@ -124,9 +131,10 @@ end-to-end-review.md 11 + SKILL.md 3 + loop-2 1.)
 
 ## 6. Relationship with Existing Designs
 
-- No prior `docs/design/*.md` remain (per-task archives were pruned to git history; only
-  `docs/audit-2026-06-16.md` persists). Terminology anchors: CLAUDE.md _common-commands_ / _language-policy_
-  roles, `SKILL.md`, and the existing `check-consistency.sh`.
+- Prior per-task `docs/design/*.md` exist (2026-06-22 … 2026-07-08 archives — closeout, craft-lens,
+  diagnosis-method, spike-branch, verbatim-evidence, panel-angles-sync, etc.), but none covers this
+  gate-hygiene / anti-bloat domain, so there is no design conflict. Terminology anchors: CLAUDE.md
+  _common-commands_ / _language-policy_ roles, `SKILL.md`, and the existing `check-consistency.sh`.
 - **F6 mirrors the shipped panel-angles sync** (`check-consistency.sh` lines 86–95; PR #13, v1.12.1) —
   same byte-identity-gate pattern, applied to a second duplicated block.
 - **F15 follows the shipped underscore-literal token convention** (`failure_retrospective`, `evidence_rule`,

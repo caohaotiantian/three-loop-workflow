@@ -1,10 +1,16 @@
 # Implementation — Wave 4 anti-bloat / hygiene tail
 
+```
+Status: closed
+Closing-commit: <closeout-sha>
+Closed-on: 2026-07-08
+Deferred: none
+```
+
 ## Task Index
 
 Design document: `docs/design/2026-07-08-wave4-antibloat-tail.md`.
-- Deliverables §2 (L17–45); Scope Boundary §3 (L47–65); Key Design Decisions §4 (L67–111);
-  Acceptance Criteria §7 (L136–163); Risks §8 (L157–171).
+- Deliverables §2; Scope Boundary §3; Key Design Decisions §4; Acceptance Criteria §7; Risks §8.
 - Phase↔Deliverable map: P1 → F6 (§2 L23), F4 (§2 L35); P2 → F15 (§2 L32); P3 → F5/F13/F14 (§2 L19,27,30);
   P4 → CLAUDE.md reconciliation (§2 L37) + version bump (§2 L38) + zip/sync (§2 L45).
 
