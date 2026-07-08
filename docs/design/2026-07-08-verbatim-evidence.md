@@ -1,5 +1,12 @@
 # Design: Verbatim-Evidence Standard for External/Technical Claims in Design Docs (A2)
 
+```
+Status: closed
+Closing-commit: <CLOSING_SHA>
+Closed-on: 2026-07-08
+Deferred: none  (Wave 3 A3 data-shape heuristic + B3 negative-space assessed separately — see scope note)
+```
+
 Task slug: `2026-07-08-verbatim-evidence`
 Tier: **Full Mode** (edits the load-bearing L1 design authoring + review template: `loop-1-design.md`,
 `escalation-rules.md`).
