@@ -191,6 +191,18 @@ contract files.
      apply the section-7 quality-budget rule (declare a measured budget or
      exclude it in Scope Boundary; a missing-and-not-excluded budget is a
      general issue).
+   - Verbatim evidence (`verbatim_evidence`): a load-bearing
+     **external/technical claim** stated as fact — how a caller / library /
+     API behaves, a contract shape, a value — must carry its **verbatim
+     source**: a copy-pasted `file:line` snippet, or a spike-/command-derived
+     value with its source. A claim stated as settled fact with no verbatim
+     backing — **confident or hedged** ("likely / seems to / typically" are
+     one tell; a *confident* unevidenced claim is the more dangerous case) —
+     is a general issue; demand the source (or a spike). You (the fresh-eyes
+     reviewer), not the author, own the external/technical + load-bearing
+     classification, so an author cannot dodge by recasting an API-behavior
+     claim as "intent". The positive rule: state the claim, then paste its
+     source.
    - Coding philosophy (Think Before Coding, Simplicity First, Surgical
      Changes, Goal-Driven Execution): any violation (silent defaults,
      speculative scope, missing trade-offs) is a severe issue.
@@ -239,3 +251,4 @@ Before spawning the reviewer, re-read your draft once against this list and fix 
 - Smuggling implementation details into the design doc — keep design at "what and why"; "how" belongs in L2.
 - Skipping Scope Boundary because "everything is in scope" — explicit non-goals are how Simplicity First gets enforced downstream.
 - Assuming "we'll figure it out" for risks and rollback — if you cannot describe rollback, you cannot ship the change.
+- Stating a load-bearing external/technical claim (how a caller / library / API behaves, a contract shape, a value) as settled fact without its **verbatim source** — the `verbatim_evidence` check will flag it. State the claim, then paste its `file:line` source (or a spike-derived value with its source); a confident-sounding claim with no backing is the most dangerous kind.

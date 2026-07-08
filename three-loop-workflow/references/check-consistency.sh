@@ -79,6 +79,10 @@ require "evidence_rule" "$SKILL/references/loop-1-design.md" "$SKILL/references/
 # row (escalation-rules.md). Separate from evidence_rule (the throwaway-answer discipline).
 require "spike_answer" "$SKILL/references/loop-1-design.md" "$SKILL/references/escalation-rules.md"
 
+# Verbatim-evidence standard — paired token across the rule (loop-1-design.md) and its rationalization row
+# (escalation-rules.md). An external/technical claim stated as fact needs its verbatim file:line source.
+require "verbatim_evidence" "$SKILL/references/loop-1-design.md" "$SKILL/references/escalation-rules.md"
+
 # Negation->positive check (skill-self-edit review branch) — single-file presence token (the check has one
 # home, like the role names / "five questions"); the behavioral fixture is the real protection.
 require "negation_positive" "$SKILL/references/loop-1-design.md"
@@ -140,6 +144,12 @@ if [ -d tests/scenarios ]; then
   # Fix-corner diagnosis-method behavioral fixture; separate block + DRIFT message.
   if [ ! -f "tests/scenarios/fix-corner-ranks-hypotheses-not-first-theory.md" ]; then
     echo "DRIFT: missing diagnosis-method behavioral fixture tests/scenarios/fix-corner-ranks-hypotheses-not-first-theory.md"
+    fail=1
+  fi
+
+  # Verbatim-evidence behavioral fixture; separate block + DRIFT message.
+  if [ ! -f "tests/scenarios/l1-unevidenced-external-claim-needs-source.md" ]; then
+    echo "DRIFT: missing verbatim-evidence behavioral fixture tests/scenarios/l1-unevidenced-external-claim-needs-source.md"
     fail=1
   fi
 fi
