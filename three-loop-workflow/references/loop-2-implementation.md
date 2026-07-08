@@ -57,7 +57,7 @@ flowchart LR
 
 ## Termination conditions
 
-Same as L1, with one addition: **the L2 round cap of 3 is counted independently**. If the design document is forced into rollback edits, the implementation document loop **must restart** from round 1. Commits already produced under the prior L3 cycle are listed by the main agent under a "Deprecated" section in `docs/implementation/<task-slug>.md` to prevent implementation drift. The Deprecated section is intentionally kept until task closeout — it gets pruned during F step 7 (document consolidation), since the git history will then preserve its content.
+Same as L1, with one addition: **the L2 round cap of 3 is counted independently**. If the design document is forced into rollback edits, the implementation document loop **must restart** from round 1. Commits already produced under the prior L3 cycle are listed by the main agent under a "Deprecated" section in `docs/implementation/<task-slug>.md` to prevent implementation drift. The Deprecated section is intentionally kept until task closeout — it gets pruned during F step 7 (the document `consolidation_pass`), since the git history will then preserve its content.
 
 When an L2 rollback is triggered, the main agent must revert all L3 commits from the prior cycle, or explicitly note them as retained with user authorization (reverting published commits requires AskUserQuestion first). Each rollback event appends a dated sub-entry to the Deprecated section — for example: `Deprecated — rollback 1 (YYYY-MM-DD): commits <sha>…` — so multiple rollback rounds remain distinguishable.
 
