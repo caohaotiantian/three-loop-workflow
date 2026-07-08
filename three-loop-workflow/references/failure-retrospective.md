@@ -5,11 +5,11 @@ failure this skill exists to prevent. When a **systemic** (class-level) failure 
 short root-cause and drives a concrete **class-prevention** onto a surface future work already reads. It is
 **lightweight and conditional** — a capability, not a ceremony; it does not fire on every bug fix.
 
-**Stateless by construction.** The trigger is a *within-invocation* event; this skill does **not** detect "we
-saw this class before" across tasks. "Systemic/recurring" always means a class-level pattern observable
-*within this invocation*. The cross-task payoff comes entirely from **where the prevention lands** — the test
-suite, `_engineering-norms_`, or a skill guardrail — not from cross-task detection. Git is the memory; no
-persistence machinery, no archive directory.
+**Stateless by construction.** The trigger is a *within-invocation* event; the skill does **not** detect "we saw
+this class before" across tasks — "systemic/recurring" always means a class-level pattern observable *within this
+invocation*. The cross-task payoff comes entirely from **where the prevention lands** (test suite,
+`_engineering-norms_`, or a skill guardrail), not from cross-task detection. Git is the memory — no persistence
+machinery, no archive directory.
 
 ## When it triggers (two observable events)
 
@@ -28,14 +28,13 @@ the escalation-return note on the deadlock path.
 
 ## The subject-partition (why it does not double-handle "Meta-test the cap")
 
-`escalation-rules.md` "Meta-test the cap" acts on a **different subject**: a *skill-process* gap (a SKILL rule
-that was unclear / missing / hard to find), which it routes to a skill-repo issue. The failure retrospective
-acts on the **task-domain class**. Because the two address different subjects, a deadlock that is **both**
-fires **both** paths — correct, not duplicative. The retrospective **skips** only when the deadlock's cause is
-a skill-process gap and **no task-domain class survives**. Encode the skip as **"task-domain class absent"** —
-never as "Meta-test also fired"; the two triggers carry no cross-suppression term. (Self-hosted note: in this
-repo the task domain *is* the skill, so both surfaces can be skill files; the `subject-partition` still holds
-because it is by *subject* — a rule-clarity gap vs a behavioral defect — not by file.)
+`escalation-rules.md` "Meta-test the cap" acts on a **different subject** — a *skill-process* gap (a SKILL rule
+unclear/missing/hard-to-find), routed to a skill-repo issue — whereas the retrospective acts on the
+**task-domain class**. Different subjects, so a deadlock that is **both** fires **both** paths (correct, not
+duplicative). The retrospective **skips** only when the cause is a skill-process gap and **no task-domain class
+survives**; encode that skip as **"task-domain class absent"**, never "Meta-test also fired" — the triggers carry
+no cross-suppression term. (Self-hosted: here the task domain *is* the skill, so both surfaces can be skill files;
+the `subject-partition` still holds because it partitions by *subject* — rule-clarity gap vs behavioral defect — not by file.)
 
 ## The record (three fields, in the closeout report / escalation-return note)
 
@@ -55,14 +54,14 @@ recorded and fixed-or-deferred). The class-prevention lands **separately**, gove
   schema/contract) → **always defer** it as a `finding`: a separate task with its own tier + its own fresh-eyes
   review (emit `prevention_disposition: deferred`). Landing it inline would smuggle a second Full cycle into
   closeout.
-- **Only a new `tests/scenarios/` fixture or a pure test file may land inline** (emit `prevention_disposition:
-  inline`) — and on the **deadlock path** only if produced *before* the review that will cover it. On the
-  **F-systemic path** the trigger fires *because* the step-6 review already ran, so nothing can be produced
-  "before" it: an F-path prevention therefore **always** takes its own None/Light review or defers — it is
-  never added post-review to the current closing commit.
+- **Only a new `tests/scenarios/` fixture or pure test file may land inline** (emit `prevention_disposition:
+  inline`), and on the **deadlock path** only if produced *before* the review that covers it. On the
+  **F-systemic path** the trigger fires *because* step-6's review already ran — nothing can precede it — so an
+  F-path prevention **always** takes its own None/Light review or defers; it is never added post-review to the
+  closing commit.
 
-The **three-field record is written regardless** — so even a deferred prevention beats a bare follow-up issue:
-it carries the class + the designed prevention + its target surface, ready for the follow-up task to execute.
+The **three-field record is written regardless**, so even a deferred prevention beats a bare follow-up issue:
+it carries the class, the prevention, and its target surface for the follow-up task to execute.
 
 ## Behavioral fixtures (the drift protection for this capability)
 
