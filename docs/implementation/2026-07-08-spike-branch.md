@@ -1,5 +1,12 @@
 # Implementation: Spike/Experiment Branch of the Evidence Rule
 
+```
+Status: closed
+Closing-commit: <CLOSING_SHA>
+Closed-on: 2026-07-08
+Deferred: none
+```
+
 Task slug: `2026-07-08-spike-branch`
 Design doc: `docs/design/2026-07-08-spike-branch.md` (L1-closed, 4 rounds).
 
