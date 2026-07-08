@@ -251,3 +251,4 @@ Before spawning the reviewer, re-read your draft once against this list and fix 
 - Smuggling implementation details into the design doc — keep design at "what and why"; "how" belongs in L2.
 - Skipping Scope Boundary because "everything is in scope" — explicit non-goals are how Simplicity First gets enforced downstream.
 - Assuming "we'll figure it out" for risks and rollback — if you cannot describe rollback, you cannot ship the change.
+- Stating a load-bearing external/technical claim (how a caller / library / API behaves, a contract shape, a value) as settled fact without its **verbatim source** — the `verbatim_evidence` check will flag it. State the claim, then paste its `file:line` source (or a spike-derived value with its source); a confident-sounding claim with no backing is the most dangerous kind.
