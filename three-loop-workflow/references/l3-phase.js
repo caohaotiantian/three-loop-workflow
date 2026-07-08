@@ -262,8 +262,13 @@ while (round <= MAX_ROUNDS) {
 }
 
 // ── Accept loop ───────────────────────────────────────────────
-// Accept failures route back to ACCEPT, not review.
-// The `acceptRound` counter shares the same cap pool as `round`.
+// Accept failures route back to ACCEPT, not review: the review already passed, so a failure
+// here is a code/test problem, not a code-quality one.
+// `acceptRound` deliberately SHARES the review cap pool (it starts at `round`, not 1). A separate
+// accept budget is intentionally NOT given: acceptFix commits are code the fresh-review gate never
+// sees, so widening accept's budget would multiply review-ungated churn to buy back a rare edge case
+// (a Phase that needed a review fix has no accept-fix slack). A Phase that exhausts the shared budget
+// escalates by design rather than grinding out extra unreviewed fix rounds.
 phase('Accept')
 let acceptRound = round
 
