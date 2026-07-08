@@ -75,6 +75,10 @@ require "failure_retrospective" "$SKILL/references/failure-retrospective.md" "$S
 # red-fails the gate. Zero SKILL.md cost.
 require "evidence_rule" "$SKILL/references/loop-1-design.md" "$SKILL/references/escalation-rules.md"
 
+# Evidence Rule spike branch — paired token across the spike rule (loop-1-design.md) and its rationalization
+# row (escalation-rules.md). Separate from evidence_rule (the throwaway-answer discipline).
+require "spike_answer" "$SKILL/references/loop-1-design.md" "$SKILL/references/escalation-rules.md"
+
 # Negation->positive check (skill-self-edit review branch) — single-file presence token (the check has one
 # home, like the role names / "five questions"); the behavioral fixture is the real protection.
 require "negation_positive" "$SKILL/references/loop-1-design.md"
@@ -110,7 +114,8 @@ if [ -d tests/scenarios ]; then
 
   # L1 Evidence Rule behavioral fixtures — one per failure direction (over-ask vs under-ask); separate loop +
   # DRIFT message so a miss is not mislabeled.
-  for s in l1-evidence-rule-lookup-not-ask l1-evidence-rule-decision-still-escalates; do
+  for s in l1-evidence-rule-lookup-not-ask l1-evidence-rule-decision-still-escalates \
+           l1-evidence-rule-spike-runs-experiment; do
     if [ ! -f "tests/scenarios/$s.md" ]; then
       echo "DRIFT: missing L1 evidence-rule behavioral fixture tests/scenarios/$s.md"
       fail=1
