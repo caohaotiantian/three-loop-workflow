@@ -7,7 +7,7 @@
 - _common-commands_     → "## Common Commands"
 - _engineering-norms_   → "## Engineering Norms"
 
-This repo distributes the **three-loop-workflow** Claude skill (currently **v1.12.0**). It is the
+This repo distributes the **three-loop-workflow** Claude skill (currently **v1.12.1**). It is the
 canonical case where the load-bearing documents *are* the product: the skill is maintained by its
 own L1 → L2 → L3 → F discipline.
 
@@ -64,7 +64,9 @@ which is a Chinese translation of `README.md`.
   **verbatim-evidence** standard (an external/technical claim needs its `file:line` source) is a paired token
   `verbatim_evidence` across loop-1-design.md ↔ escalation-rules.md. The L1 skill-self-edit **negation→positive** check is a single-file token
   `negation_positive` in loop-1-design.md. The fix-corner **diagnosis method** is a paired token
-  `diagnosis_method` across loop-3-development.md ↔ l3-phase.js (a JS comment) ↔ escalation-rules.md. The gate additionally asserts the five
+  `diagnosis_method` across loop-3-development.md ↔ l3-phase.js (a JS comment) ↔ escalation-rules.md. The gate also byte-identity-checks the two adversarial
+  panel-angle lists (`review-panel.js` `ANGLES` ↔ `l3-phase.js` `PANEL_ANGLES`) — the `panel-angles` sync check.
+  The gate additionally asserts the five
   `tests/scenarios/closeout-*.md` fixtures, the four `tests/scenarios/failure-retrospective-*.md`
   fixtures, the three `tests/scenarios/l1-evidence-rule-*.md` fixtures,
   `tests/scenarios/skill-edit-bare-prohibition-flagged.md`,
