@@ -125,6 +125,9 @@ require "negation_positive" "$SKILL/references/loop-1-design.md"
 # Fix-corner diagnosis method — paired token across the method (loop-3-development.md), the fix prompts'
 # JS comment (l3-phase.js), and the rationalization row (escalation-rules.md). Distinctive underscore literal.
 require "diagnosis_method" "$SKILL/references/loop-3-development.md" "$SKILL/references/l3-phase.js" "$SKILL/references/escalation-rules.md"
+# Fix-corner test-integrity (flake) rule — paired token across the rule (loop-3-development.md),
+# the fix prompts' JS comment (l3-phase.js), and the rationalization row (escalation-rules.md).
+require "test_integrity" "$SKILL/references/loop-3-development.md" "$SKILL/references/l3-phase.js" "$SKILL/references/escalation-rules.md"
 
 # F closeout behavioral fixtures — one per new closeout behavior (B1-B5); a dropped fixture must red-fail the gate.
 # Guarded by the suite's presence: tests/scenarios/ lives at the repo root and is NOT shipped inside the
@@ -179,6 +182,12 @@ if [ -d tests/scenarios ]; then
   # Fix-corner diagnosis-method behavioral fixture; separate block + DRIFT message.
   if [ ! -f "tests/scenarios/fix-corner-ranks-hypotheses-not-first-theory.md" ]; then
     echo "DRIFT: missing diagnosis-method behavioral fixture tests/scenarios/fix-corner-ranks-hypotheses-not-first-theory.md"
+    fail=1
+  fi
+
+  # Test-integrity (flake) behavioral fixture.
+  if [ ! -f "tests/scenarios/flake-not-masked-to-force-green.md" ]; then
+    echo "DRIFT: missing test-integrity behavioral fixture tests/scenarios/flake-not-masked-to-force-green.md"
     fail=1
   fi
 
