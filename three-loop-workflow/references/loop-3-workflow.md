@@ -10,6 +10,8 @@ main working tree (no worktree isolation); review and accept audit via the `base
 
 Use for every L3 Phase; fall back to prose mode (`references/loop-3-development.md`) only when the Workflow tool is unavailable (headless CI, restricted harness).
 
+Workflow mode is the **Claude-Code acceleration layer**. On runtimes without the Workflow tool (Codex, opencode) the manual/prose mode in `references/loop-3-development.md` is the **portable baseline** — same discipline, no orchestration automation. See `references/platforms.md`.
+
 ## Invocation
 
 From the main agent (after L1 and L2 docs are complete), invoke once per Phase:
