@@ -4,7 +4,7 @@ description: Use this skill for any non-trivial functional change to a software 
 license: MIT
 compatibility: Optimized for Claude Code (Workflow + subagents); Codex/opencode run manually with weaker reviewer-isolation. See references/platforms.md
 metadata:
-  version: "1.13.0"
+  version: "1.14.0"
 ---
 
 # Three-Loop Development Workflow
