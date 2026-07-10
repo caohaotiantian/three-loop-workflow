@@ -1,6 +1,6 @@
 # three-loop-workflow
 
-A disciplined three-loop workflow for non-trivial software changes, packaged as a Claude skill.
+A disciplined three-loop workflow for non-trivial software changes, packaged as a portable Agent Skill (runs on Claude Code, Codex, and opencode).
 
 中文版本 → [README-cn.md](./README-cn.md)
 
@@ -96,6 +96,18 @@ Tagged releases (`v*`) also ship a prebuilt `.skill`, attached to the GitHub rel
 ### Claude.ai
 
 Upload the packaged `.skill` file via the Skill management page.
+
+### Cross-platform install (Claude Code / Codex / opencode)
+
+The skill conforms to the agentskills.io open standard, so one canonical `three-loop-workflow/` folder runs on three runtimes:
+
+| Runtime | Install location |
+|---|---|
+| **Claude Code** | `.claude/skills/` (project) or `~/.claude/skills/` (user) |
+| **Codex** | `.agents/skills/` (or `$HOME/.agents/skills/`) |
+| **opencode** | reads both `.claude/skills/` and `.agents/skills/` natively — no separate install |
+
+Copying the folder into `.claude/skills/` and `.agents/skills/` covers all three. The discipline is runtime-agnostic; only the Workflow/subagent orchestration is a Claude-Code acceleration layer. See `three-loop-workflow/references/platforms.md` for the full capability matrix and the fresh-reviewer-isolation ladder.
 
 ## Project setup (one-time per repo)
 
