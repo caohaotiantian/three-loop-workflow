@@ -134,7 +134,7 @@ async function panelReview(basePrompt, round) {
 
 // The two fix prompts below carry the `diagnosis_method` clause (loop-3-development.md fix corner): when the
 // cause is not obvious, rank 3-5 falsifiable hypotheses and seek discriminating evidence before editing. The
-// clause is in the prompt prose; this comment carries the paired token for the consistency gate. They also carry the `test_integrity` clause (loop-3-development.md fix corner): a non-deterministic (flaky) failure is escalated as a flake, not masked; this comment carries the paired token for the consistency gate.
+// clause is in the prompt prose; this comment carries the paired token for the consistency gate. They also carry the `test_integrity` clause (loop-3-development.md fix corner): a non-deterministic (flaky) failure is escalated as a flake, not masked.
 
 // ── Step 1: Dev ──────────────────────────────────────────────
 phase('Dev')
