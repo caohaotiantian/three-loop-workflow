@@ -134,7 +134,7 @@ async function panelReview(basePrompt, round) {
 
 // The two fix prompts below carry the `diagnosis_method` clause (loop-3-development.md fix corner): when the
 // cause is not obvious, rank 3-5 falsifiable hypotheses and seek discriminating evidence before editing. The
-// clause is in the prompt prose; this comment carries the paired token for the consistency gate.
+// clause is in the prompt prose; this comment carries the paired token for the consistency gate. They also carry the `test_integrity` clause (loop-3-development.md fix corner): a non-deterministic (flaky) failure is escalated as a flake, not masked; this comment carries the paired token for the consistency gate.
 
 // ── Step 1: Dev ──────────────────────────────────────────────
 phase('Dev')
@@ -248,6 +248,7 @@ while (round <= MAX_ROUNDS) {
       `evidence before editing — do not anchor on the first plausible theory. ` +
       `If a failing item is a correctness/behavior bug, write a failing test that reproduces it before ` +
       `fixing (red→green); a style/scope/comment finding needs no test. ` +
+      `If a failing item is NON-DETERMINISTIC (it passes on re-run with no code change) it is a flake, not a regression in this diff: do NOT mask it — no disabling/skipping the test, loosening an assertion, blind retry, or timeout bump to force green; report the flake and escalate it as a separate concern. ` +
       `Fix the following review issues on branch "${devBranch}" ` +
       `(inspect the cumulative diff with \`git diff ${baseSha}..${devBranch}\`). ` +
       `Surgical Changes only — commit fixes to the same branch.\n\nSevere: ${review.severe.join('; ')}\nGeneral: ${review.general.join('; ')}`,
@@ -298,6 +299,7 @@ while (acceptRound <= MAX_ROUNDS) {
     `If a failing item is a correctness/behavior bug, write a failing test that reproduces it before ` +
     `fixing (red→green), unless the failing item is itself the reproducing test; a style/scope/comment ` +
     `finding needs no test. ` +
+    `If a failing item is NON-DETERMINISTIC (it passes on re-run with no code change) it is a flake, not a regression in this diff: do NOT mask it — no disabling/skipping the test, loosening an assertion, blind retry, or timeout bump to force green; report the flake and escalate it as a separate concern. ` +
     `Fix the following accept failures on branch "${devBranch}" ` +
     `(diff base ${baseSha}). Commit fixes to the same branch.\n\nFailures: ${accept.failures.join('; ')}`,
     { label: `acceptFix:${phaseLabel}:r${acceptRound}`, phase: 'Fix', model: models.fix }
