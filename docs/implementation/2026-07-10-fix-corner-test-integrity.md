@@ -1,8 +1,19 @@
 # Implementation — L3 fix-corner test-integrity (flake) rule
 
+```
+Status: closed
+Closing-commit: CLOSEOUT_SHA
+Closed-on: 2026-07-11
+Deferred: none
+```
+
 Slug: `2026-07-10-fix-corner-test-integrity` (identical to the design doc).
 Design: `docs/design/2026-07-10-fix-corner-test-integrity.md` — read first.
-Status: draft
+Closeout: L1 closed rounds 1-3 (adversarial panel; round-1 severe → spike → model-robustness reframe);
+L2 closed rounds 1-3; L3 implemented in 2 Phases (dev→review→accept, all ACCEPT-CMDs green); a
+well-calibrated fresh L3 review returned clean (0 severe / 0 general) and the skill-self behavioral
+discharge complied 3/3 (`Behavioral-check: complied`). E2E skipped: no externally observable runtime
+surface (skill process-doc + gate edit); behavior covered by the flake fixture + the design §5 spike.
 
 ## 1. Task Index (design → this doc)
 

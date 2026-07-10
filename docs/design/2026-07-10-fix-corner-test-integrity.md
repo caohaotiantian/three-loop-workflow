@@ -1,5 +1,12 @@
 # Design — L3 fix-corner test-integrity (flake) rule
 
+```
+Status: closed
+Closing-commit: CLOSEOUT_SHA
+Closed-on: 2026-07-11
+Deferred: none (flaky-*pass* / green-by-luck detection is a scoped exclusion — §3 — not deferred work)
+```
+
 Slug: `2026-07-10-fix-corner-test-integrity`
 Tier: **Full Mode** (edits the load-bearing L3 fix-corner discipline: `loop-3-development.md`,
 `l3-phase.js`, `escalation-rules.md`, `check-consistency.sh`).
@@ -8,7 +15,6 @@ Osmani), an **external companion-research** body cloned at `../loop-engineering`
 in the parent directory — **not** an in-repo tree; paths like `loop-engineering/docs/safety.md`
 below are external references, not this repo's files). The one transferable safety guardrail the
 three-loop skill did not yet carry.
-Status: draft (round 2 — revised after L1 panel round 1)
 
 ## 1. Background and Purpose
 
