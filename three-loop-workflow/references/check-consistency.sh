@@ -87,6 +87,13 @@ require "spike_answer" "$SKILL/references/loop-1-design.md" "$SKILL/references/e
 # (escalation-rules.md). An external/technical claim stated as fact needs its verbatim file:line source.
 require "verbatim_evidence" "$SKILL/references/loop-1-design.md" "$SKILL/references/escalation-rules.md"
 
+# Cross-runtime portability commitment — paired token across the SKILL.md portability routing pointer and
+# references/platforms.md (the install / capability / isolation source). Distinctive underscore literal (NOT a
+# substring of the hyphenated platforms.md path, so a bare cross-link cannot satisfy it); follows the
+# underscore-token precedent (evidence_rule / spike_answer / verbatim_evidence) — documented here in this
+# inline comment, NOT a claude-md-integration.md consistency-table row.
+require "cross_runtime" "$SKILL/SKILL.md" "$SKILL/references/platforms.md"
+
 # Adversarial panel-angles sync (F1) — the five voter angles exist twice (review-panel.js ANGLES, l3-phase.js
 # PANEL_ANGLES). A registered commitment clause (claude-md-integration.md) but previously ungated → they drifted.
 # Gate byte-identity of the two arrays (block-anchored extraction; ends on a bracket-only line). Runs OUTSIDE
@@ -180,6 +187,14 @@ if [ -d tests/scenarios ]; then
     echo "DRIFT: missing verbatim-evidence behavioral fixture tests/scenarios/l1-unevidenced-external-claim-needs-source.md"
     fail=1
   fi
+
+  # Cross-runtime isolation behavioral fixture — on a subagent-less runtime the review stays fresh (tier-2
+  # fresh/cleared context or tier-3 disclosed degradation), never a self-review; separate block + DRIFT
+  # message so a miss is not mislabeled.
+  if [ ! -f "tests/scenarios/no-subagent-review-stays-fresh.md" ]; then
+    echo "DRIFT: missing cross-runtime isolation behavioral fixture tests/scenarios/no-subagent-review-stays-fresh.md"
+    fail=1
+  fi
 fi
 
 # Closure-authority guard: L1/L2 closure is count-driven (two-generation), NOT the reviewer-emitted
@@ -190,9 +205,12 @@ if grep -qF 'verdict == "pass"' "$SKILL/references/schemas.md"; then
   fail=1
 fi
 
-# Anti-bloat: the always-loaded SKILL.md surface has a hard word-count ceiling (v1.5 design).
+# Anti-bloat: the always-loaded SKILL.md surface has a hard word-count ceiling (v1.5 design). Raised 2888 -> 2920
+# as a bounded one-time allowance for the v1.13.0 cross-runtime `compatibility` frontmatter field + the
+# platforms.md routing row (user-authorized R1 resolution) — a genuine new always-loaded capability, not a
+# licence for drift; the ceiling still blocks bloat.
 SKILL_WORDS="$(wc -w < "$SKILL/SKILL.md" | tr -d '[:space:]')"
-SKILL_WORD_CEILING=2888
+SKILL_WORD_CEILING=2920
 if [ "$SKILL_WORDS" -gt "$SKILL_WORD_CEILING" ]; then
   echo "BLOAT: SKILL.md wc -w=$SKILL_WORDS exceeds ceiling $SKILL_WORD_CEILING"
   fail=1

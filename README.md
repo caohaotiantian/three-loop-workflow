@@ -1,6 +1,6 @@
 # three-loop-workflow
 
-A disciplined three-loop workflow for non-trivial software changes, packaged as a Claude skill.
+A disciplined three-loop workflow for non-trivial software changes, packaged as a portable Agent Skill (runs on Claude Code, Codex, and opencode).
 
 中文版本 → [README-cn.md](./README-cn.md)
 
@@ -34,6 +34,7 @@ The skill files (`SKILL.md` + `references/`) are the single source of truth — 
 | **v1.12.1** | **Gate the adversarial panel-angles sync (gate-integrity hardening).** The five voter angles (the four principles restated as adversarial lenses + correctness) exist twice — `ANGLES` in `review-panel.js` and `PANEL_ANGLES` in `l3-phase.js` — as a *registered* commitment clause that was **ungated**, so the two had silently **drifted** (`l3-phase.js`'s copy had been trimmed, losing "speculative abstraction / unstated assumptions / cross-file drift / unreachable logic"): the standalone and inline panels were reviewing against subtly different lenses. Reconciled `PANEL_ANGLES` to the richer canonical `ANGLES` (strictly more coverage for the inline panel) and added a **block-anchored byte-identity gate** to `check-consistency.sh` (negative-tested: perturbing one string red-fails it) so any future divergence is caught. Zero SKILL.md surface. |
 | **v1.12.2** | **Wave-4 anti-bloat / gate-integrity tail (net-negative hygiene, no behavior change).** Six items: **F6** adds a byte-identity gate so the `[Calibration]`/`[Grounding]` review-prompt lines cannot silently drift between `loop-1-design.md` and `loop-2-implementation.md` (the same fix pattern as the v1.12.1 panel-angles sync; the `[Trip-wires]` line legitimately differs L1/L2 and is excluded). **F4** adds an env-overridable per-file word cap (default 3000) for `references/*.md`, catching a single reference file ballooning without penalizing the skill's push-detail-out-of-SKILL.md design. **F15** replaces the near-worthless bare-word gate token `consolidation` (15 incidental occurrences → false-green) with the distinctive references-only marker `consolidation_pass`. **F5/F13/F14** trim over-documented prose in `failure-retrospective.md`, `loop-3-teams.md`, and `optional-subagents.md` with every gated token, fixture-asserted field, and behavioral rule preserved (the four `failure-retrospective-*` fixtures still pass cold). Zero SKILL.md prose surface (only the frontmatter version bumped). |
 | **v1.12.3** | **Close F11 (L3 accept-loop budget starvation) as won't-fix.** Records — as a design-rationale comment at `l3-phase.js`'s `acceptRound = round` line — *why* the accept loop deliberately shares the review round-cap budget rather than getting its own: acceptFix commits are code the fresh-review gate never sees, so a separate accept budget would multiply review-ungated churn to buy back a rare edge case (a Phase that needed a review fix has no accept-fix slack); a Phase that exhausts the shared budget escalates by design. The alternative of routing acceptFix back through review (which *would* close that bypass) was weighed and declined for now — a full L3 redesign to close a hole with zero observed instances of opening. Comment-only, no behavior change; the comment follows §0.3 (explains the code, no audit labels). Zero SKILL.md prose surface. |
+| **v1.13.0** | **Cross-runtime portability (Claude Code / Codex / opencode).** The skill's structure already conforms to the agentskills.io open standard, so it runs on three agent runtimes off one canonical folder; this release makes that explicit without changing any discipline rule. A new `references/platforms.md` carries the per-runtime **install/discovery matrix** (`.claude/skills/` for Claude Code, `.agents/skills/` for Codex, both for opencode), the **capability map** from each Claude-Code mechanism to its manual-mode realization (incl. `AskUserQuestion → STOP:QUESTION`), and the **fresh-reviewer-isolation ladder** (spawned subagent → fresh/cleared context → disclosed degradation, honest that a subagent-less runtime cannot self-enforce isolation). `SKILL.md` gains a top-level `compatibility` frontmatter field + a dedicated routing row, and reframes the L3 orchestration split so **Workflow mode is named the Claude-Code acceleration layer and manual mode the portable baseline** Codex/opencode run (existing vocabulary; D8 restates that manual mode keeps the L3 clean-first-round relaxation, changing no rule). A paired `cross_runtime` drift token + a new `no-subagent-review-stays-fresh` behavioral fixture gate the SKILL.md ↔ platforms.md pair. The always-loaded word ceiling was raised once, **2888 → 2920**, as a bounded, user-authorized allowance for the honest `compatibility` field + the routing row — a genuine new capability, not a licence for drift. |
 
 ## What is the three-loop workflow?
 
@@ -96,6 +97,18 @@ Tagged releases (`v*`) also ship a prebuilt `.skill`, attached to the GitHub rel
 ### Claude.ai
 
 Upload the packaged `.skill` file via the Skill management page.
+
+### Cross-platform install (Claude Code / Codex / opencode)
+
+The skill conforms to the agentskills.io open standard, so one canonical `three-loop-workflow/` folder runs on three runtimes:
+
+| Runtime | Install location |
+|---|---|
+| **Claude Code** | `.claude/skills/` (project) or `~/.claude/skills/` (user) |
+| **Codex** | `.agents/skills/` (or `$HOME/.agents/skills/`) |
+| **opencode** | reads both `.claude/skills/` and `.agents/skills/` natively — no separate install |
+
+Copying the folder into `.claude/skills/` and `.agents/skills/` covers all three. The discipline is runtime-agnostic; only the Workflow/subagent orchestration is a Claude-Code acceleration layer. See `three-loop-workflow/references/platforms.md` for the full capability matrix and the fresh-reviewer-isolation ladder.
 
 ## Project setup (one-time per repo)
 

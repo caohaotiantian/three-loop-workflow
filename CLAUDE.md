@@ -7,7 +7,7 @@
 - _common-commands_     → "## Common Commands"
 - _engineering-norms_   → "## Engineering Norms"
 
-This repo distributes the **three-loop-workflow** Claude skill (currently **v1.12.3**). It is the
+This repo distributes the **three-loop-workflow** Claude skill (currently **v1.13.0**). It is the
 canonical case where the load-bearing documents *are* the product: the skill is maintained by its
 own L1 → L2 → L3 → F discipline.
 
@@ -50,7 +50,7 @@ which is a Chinese translation of `README.md`.
   acceptance check. It fails if any of: a commitment-clause token is missing from its source file or a
   paired reference site; a byte-identity pair drifts (the panel-angles voter lists, or the `[Calibration]`/
   `[Grounding]` review-prompt lines shared by the L1/L2 templates); a required `tests/scenarios/*.md`
-  behavioral fixture is absent; `SKILL.md` exceeds its `wc -w` ceiling (2888); or any single `references/*.md`
+  behavioral fixture is absent; `SKILL.md` exceeds its `wc -w` ceiling (2920); or any single `references/*.md`
   exceeds the per-file `REFS_WORD_CEILING` (default 3000, env-overridable). **The script's own inline comments
   are the authoritative, per-check reference** — read them there; do not maintain a parallel token catalog in
   this file (that duplication is what this note removed).

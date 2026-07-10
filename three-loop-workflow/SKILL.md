@@ -1,9 +1,10 @@
 ---
 name: three-loop-workflow
 description: Use this skill for any non-trivial functional change to a software project — implementing a new feature, fixing a behavior bug, optimizing performance, refactoring, or modifying a load-bearing process/contract file (CLAUDE.md, this skill itself, SKILL.md, OpenAPI specs, schema definitions, public API contracts). Trigger this skill whenever the user asks to implement, fix, refactor, optimize, build, or modify behavior in code — even when they say "just do X" or "quickly add Y". Skip the full cycle (these still get one fresh-agent review) for pure typo fixes, doc reordering, and minor/patch dependency upgrades; skip entirely only for questions with no file edits.
+license: MIT
+compatibility: Optimized for Claude Code (Workflow + subagents); Codex/opencode run manually with weaker reviewer-isolation. See references/platforms.md
 metadata:
-  version: "1.12.3"
-  license: MIT
+  version: "1.13.0"
 ---
 
 # Three-Loop Development Workflow
@@ -175,8 +176,9 @@ Once you've confirmed this skill applies to the current task, jump to the releva
 | Understand existing code before L1 (the pre-step) | `references/loop-1-design.md` — "L1 pre-step: Understand before designing" (read-only Explore sweep, not a loop) |
 | Draft `docs/design/<task-slug>.md` (L1) | `references/loop-1-design.md` — required sections, main agent procedure, review subagent prompt template |
 | Draft `docs/implementation/<task-slug>.md` (L2) | `references/loop-2-implementation.md` — Phase breakdown, review subagent prompt template |
-| Start a Phase (L3) — Workflow mode (recommended) | `references/loop-3-workflow.md` — how to invoke `l3-phase.js`, args, return values |
-| Start a Phase (L3) — manual/fallback mode: dev → review → accept → fix | `references/loop-3-development.md` — four-corner subagent template, role table, commit conventions |
+| Start a Phase (L3) — Workflow mode (Claude-Code acceleration layer, recommended) | `references/loop-3-workflow.md` — invoke `l3-phase.js`, args |
+| Start a Phase (L3) — manual mode (portable baseline): dev → review → accept → fix | `references/loop-3-development.md` — four-corner template, commit conventions |
+| Run this skill on **Codex or opencode** (not Claude Code) | `references/platforms.md` — install, capability map, isolation ladder (`cross_runtime`) |
 | Encounter an implementation-document conflict during L3 dev | `references/loop-2-implementation.md` — restart L2 from round 1; list deprecated L3 commits in a Deprecated section |
 | Run external-process / E2E verification | `references/loop-3-development.md` (E2E section: pre-flight, isolated spawn, archival) |
 | Close out the task: end-to-end review, document consolidation (F) | `references/end-to-end-review.md` |
