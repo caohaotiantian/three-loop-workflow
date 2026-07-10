@@ -244,8 +244,10 @@ Assumptions:
   fresh-reviewer-isolation definition (a distinctive isolation-ladder phrase), the **portability drift token**
   (the single paired token from D7, also asserted in SKILL.md by AC1), and the L3 termination-scope restatement
   (D8 — the manual path keeps the L3 clean-first-round relaxation, pointing to `loop-3-development.md:63`).
-- **AC4** — SKILL.md word count ≤ its pre-change baseline of **2880** (`wc -w`): net-neutral or net-negative on
-  the always-loaded surface.
+- **AC4** — SKILL.md word count ≤ **2920** (`wc -w`) — the ceiling raised from 2888 per the R1 escalation
+  resolution (below). Strict net-neutral (≤2880) proved **infeasible**: a feasibility spike showed the spec
+  `compatibility` field is an irreducible ~15 always-loaded words, and the skill was already 8 words from its
+  ceiling with no reclaimable fat after 12 anti-bloat versions.
 - **AC5** — `check-workflow-syntax.sh` passes for both `l3-phase.js` and `review-panel.js` (regression guard:
   the JS scripts are not edited).
 - **AC6** — the new `tests/scenarios/*.md` fixture exists and is registered in `check-consistency.sh`. Run via
@@ -269,6 +271,12 @@ Assumptions:
   the reframed orchestration/routing region; AC4 + the gate `wc -w` check fail loudly otherwise. If net-neutral
   is infeasible without harming clarity, **escalate the ceiling as its own decision** (do not compress unrelated
   prose, do not silently bump). Rollback: revert the SKILL.md hunk.
+  - **Resolution (2026-07-10, user-authorized escalation):** the feasibility spike confirmed net-neutral is
+    impossible (minimal footprint = +15 words; the `compatibility` field is irreducibly ~15 words). The user
+    authorized a modest, bounded, one-time ceiling bump **2888 → 2920** (`check-consistency.sh`
+    `SKILL_WORD_CEILING`) to fit the honest `compatibility` field + a discoverable `platforms.md` routing row.
+    Rationale: the ceiling blocks *bloat* (redundant/summary content), not a genuine new always-loaded
+    capability; the skill was already maximally lean. AC4 is updated to ≤2920 accordingly.
 - **R2 — a reframe edit silently changes a discipline rule.** Mitigation: Scope Boundary forbids it; AC9 (full
   behavioral suite) + the gate's rule tokens (`two-generation`, `zero severe`, tier tokens) red-fail a dropped
   or altered rule; the skill-self behavioral GREEN check applies to any rule the reframe touches.

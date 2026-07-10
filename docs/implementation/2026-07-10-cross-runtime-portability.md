@@ -96,7 +96,11 @@ edit; each acceptance command below is written before its edit and must pass aft
    - add `require "cross_runtime" "$SKILL/SKILL.md" "$SKILL/references/platforms.md"` with an inline comment
      (following the `evidence_rule`/`spike_answer` precedent);
    - register `no-subagent-review-stays-fresh` in the `tests/scenarios/` required-fixture set (inside the
-     existing `if [ -d tests/scenarios ]` guard), with its own DRIFT message.
+     existing `if [ -d tests/scenarios ]` guard), with its own DRIFT message;
+   - **raise `SKILL_WORD_CEILING` from `2888` to `2920`** — the user-authorized R1 escalation resolution (see
+     design §7 AC4 + §8 R1 Resolution). Update the inline comment to note the bump was for the v1.13.0
+     cross-runtime `compatibility` field + platforms routing row (a bounded one-time increase for a genuine
+     new always-loaded capability, not bloat).
 3. Edit `three-loop-workflow/SKILL.md` **frontmatter**: promote `license: MIT` to top-level (remove it from
    `metadata`); add `compatibility:` (1–500 chars) declaring Claude-Code-optimized + Codex/opencode manual
    mode, honest about the isolation caveat, pointing to `references/platforms.md`; set `metadata.version` to
@@ -104,11 +108,12 @@ edit; each acceptance command below is written before its edit and must pass aft
    indicator char (`{ [ # & * ! | > @ " '`) and no bare `": "` (colon-space) inside it — so the real YAML
    parsers on Codex/opencode (the readers this change serves) accept it; the stdlib acceptance check validates
    fields, not YAML well-formedness, so this is an authoring constraint, not a gated one.
-4. Edit `three-loop-workflow/SKILL.md` **body**: add one routing-table row → `references/platforms.md`
-   (carrying the `cross_runtime` token); reword the `SKILL.md:179` "manual/fallback mode" routing label to
-   runtime-neutral phrasing; add the minimal reframe (manual mode = portable baseline; Workflow = Claude-Code
-   acceleration layer) in existing vocabulary. Keep `wc -w` **≤ 2880** by tightening wording only within the
-   reframed routing/orchestration region.
+4. Edit `three-loop-workflow/SKILL.md` **body**: add one dedicated routing-table row → `references/platforms.md`
+   (discoverable "Run this skill on Codex or opencode" row, carrying the `cross_runtime` token); reword the
+   `SKILL.md:179` "manual/fallback mode" routing label to runtime-neutral phrasing (manual mode = portable
+   baseline; Workflow = Claude-Code acceleration layer) in existing vocabulary. Keep `wc -w` **≤ 2920** (the
+   raised ceiling); still tighten wording within the reframed routing/orchestration region so the net increase
+   stays as small as the honest content allows (target the ~2905–2915 band, not the 2920 max — leave slack).
 5. Edit `README.md` and `README-cn.md`: add the v1.13.0 row to the "What's new" changelog table (paired with
    this Phase's version bump so the changelog and frontmatter agree).
 
@@ -138,7 +143,8 @@ edit; each acceptance command below is written before its edit and must pass aft
   print('OK frontmatter')
   PY
   ```
-- `w=$(wc -w < three-loop-workflow/SKILL.md); [ "$w" -le 2880 ] && echo "OK ($w)"`  (design AC4)
+- `w=$(wc -w < three-loop-workflow/SKILL.md); [ "$w" -le 2920 ] && echo "OK ($w)"`  (design AC4 — raised ceiling)
+- `grep -q "SKILL_WORD_CEILING=2920" three-loop-workflow/references/check-consistency.sh && echo OK`  (the gate ceiling was raised to 2920 per the R1 resolution)
 - `grep -q "platforms.md" three-loop-workflow/SKILL.md && grep -q "cross_runtime" three-loop-workflow/SKILL.md && echo OK`
 - `grep -q "1.13.0" README.md && grep -q "1.13.0" README-cn.md && echo OK`  (changelog row paired with the bump)
 - `bash three-loop-workflow/references/check-consistency.sh; echo "exit=$?"`  → `three-loop-consistency: OK`, `exit=0` (design AC1)
@@ -172,8 +178,8 @@ trailer.
 - Four-corner subagent template: `references/loop-3-development.md`.
 - Commit conventions: SKILL.md "Commit conventions" (`feat(phaseN):` / `fix(phaseN-roundR):`); no AI mention in
   the narrative; `Claude-Session:` trailer per repo practice; `<TEST-CMD>` result as a trailer.
-- Anti-bloat: SKILL.md `wc -w` ≤ 2888 (gate); each `references/*.md` ≤ 3000 (gate). This change targets SKILL.md
-  net-neutral vs the 2880 baseline (AC4).
+- Anti-bloat: SKILL.md `wc -w` ≤ **2920** (gate, raised from 2888 by the user-authorized R1 resolution); each
+  `references/*.md` ≤ 3000 (gate). This change targets the ~2905–2915 band (AC4), leaving slack under 2920.
 
 ## Data and Fixture Dependencies
 
@@ -193,4 +199,6 @@ trailer.
 - **Full `tests/scenarios/*.md` behavioral suite** (the existing fixtures + the new one; the suite is globbed,
   not counted) must each yield its `expected` verdict at the Phase-2 behavioral check and again at F — protects
   every discipline rule the reframe sits next to (termination, tier, escalation).
-- **SKILL.md `wc -w` ≤ 2880** (AC4) — protects the always-loaded surface from bloat.
+- **SKILL.md `wc -w` ≤ 2920** (AC4, raised ceiling) — protects the always-loaded surface from bloat (the
+  bounded bump is a one-time, user-authorized allowance for the new cross-runtime capability, not a licence for
+  drift).
