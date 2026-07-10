@@ -1,5 +1,12 @@
 # Design: Cross-runtime portability (Claude Code / Codex / opencode)
 
+```
+Status: closed
+Closing-commit: 533ca60
+Closed-on: 2026-07-10
+Deferred: none
+```
+
 Slug: `2026-07-10-cross-runtime-portability` · Target version: **v1.13.0** · Tier: **Full** (load-bearing:
 SKILL.md + references + frontmatter). Aligned scope (AskUserQuestion, 2026-07-10): **portable-baseline
 reframe** + **document per-platform install**. Upstream evidence:
@@ -234,7 +241,7 @@ Assumptions:
 
 - **AC1** — `bash three-loop-workflow/references/check-consistency.sh` exits 0: all existing commitment-clause
   tokens intact, the new portability drift token present in both sites, the new fixture registered, SKILL.md
-  ≤ 2888 words, every `references/*.md` ≤ 3000 words.
+  ≤ 2920 words (the raised ceiling — see AC4 / R1 Resolution), every `references/*.md` ≤ 3000 words.
 - **AC2** — SKILL.md frontmatter parses as valid YAML and contains a **top-level** `license: MIT`, a
   `compatibility` value of length 1–500, and `metadata.version: "1.13.0"`, **and `metadata` no longer carries a
   `license` key** (the promotion is a **move**, not a copy — D2). Verify: `python3 -c` with `yaml.safe_load` +

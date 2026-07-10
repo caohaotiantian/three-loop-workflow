@@ -1,5 +1,12 @@
 # Implementation: Cross-runtime portability (Claude Code / Codex / opencode)
 
+```
+Status: closed
+Closing-commit: 533ca60
+Closed-on: 2026-07-10
+Deferred: none
+```
+
 Slug: `2026-07-10-cross-runtime-portability` (identical to the design doc). Design:
 `docs/design/2026-07-10-cross-runtime-portability.md`. Target version: **v1.13.0**.
 
