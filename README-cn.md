@@ -1,6 +1,6 @@
 # three-loop-workflow
 
-为非平凡的软件变更提供严格三循环工作流,以 Claude skill 形式打包发布。
+为非平凡的软件变更提供严格三循环工作流,以可移植的 Agent Skill 形式打包发布(可运行于 Claude Code、Codex 与 opencode)。
 
 English version → [README.md](./README.md)
 
@@ -96,6 +96,18 @@ rm -f three-loop-workflow.skill && zip -r three-loop-workflow.skill three-loop-w
 ### Claude.ai
 
 在 Skill 管理页上传打包好的 `.skill` 文件。
+
+### 跨平台安装(Claude Code / Codex / opencode)
+
+本 skill 遵循 agentskills.io 开放标准,因此同一份规范来源 `three-loop-workflow/` 文件夹可运行于三种运行时:
+
+| 运行时 | 安装位置 |
+|---|---|
+| **Claude Code** | `.claude/skills/`(项目级)或 `~/.claude/skills/`(用户级) |
+| **Codex** | `.agents/skills/`(或 `$HOME/.agents/skills/`) |
+| **opencode** | 原生读取 `.claude/skills/` 与 `.agents/skills/` 两处 —— 无需单独安装 |
+
+把文件夹复制到 `.claude/skills/` 与 `.agents/skills/` 即可覆盖全部三种运行时。纪律本身与运行时无关;只有 Workflow / subagent 编排属于 Claude Code 的加速层(acceleration layer)。完整能力矩阵与「新鲜评审者隔离阶梯」见 `three-loop-workflow/references/platforms.md`。
 
 ## 项目接入(每个仓库一次)
 
