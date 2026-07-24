@@ -2,7 +2,7 @@
 
 ```
 Status: closed
-Closing-commit: 533ca60
+Closing-commit: eb5636e
 Closed-on: 2026-07-10
 Deferred: none
 ```
@@ -28,7 +28,7 @@ Slug: `2026-07-10-cross-runtime-portability` (identical to the design doc). Desi
 - **`claude-md-integration.md` consistency table is NOT edited.** Per the R7 clarification: the recent
   single-purpose paired tokens (`evidence_rule`, `spike_answer`, `verbatim_evidence`, `failure_retrospective`,
   `diagnosis_method`, `negation_positive`) are all gated in `check-consistency.sh` with an inline comment and
-  **no** table row, and commit `4476a4f` made the script's inline comments "the authoritative per-check
+  **no** table row, and commit `292f708` made the script's inline comments "the authoritative per-check
   reference." `cross_runtime` follows that precedent: an inline-commented gate, documented there, no table row.
 - **Packaging is not a committed Phase.** `*.skill` is gitignored and CI-built on the `v1.13.0` tag
   (`.github/workflows/release.yml`); the local `.skill` rebuild + installed-copy `rsync` are F-time

@@ -2,7 +2,7 @@
 
 ```
 Status: closed
-Closing-commit: fc4de83
+Closing-commit: d4c88ad
 Closed-on: 2026-07-08
 Deferred: none  (Wave 3 A3 data-shape heuristic + B3 negative-space assessed separately — see scope note)
 ```

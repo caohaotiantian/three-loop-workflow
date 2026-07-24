@@ -2,7 +2,7 @@
 
 ```
 Status: closed
-Closing-commit: 6657ac8
+Closing-commit: 6bb1a02
 Closed-on: 2026-07-07
 Deferred: none
 ```
@@ -244,6 +244,6 @@ Quality budget: N/A — no user-facing behavior, hot path, or interface surface.
 - **Risk: silent drift of a trigger hook.** Mitigation: the **distinctive** `failure_retrospective` paired
   token (not path-satisfiable) red-fails the gate if a hook is dropped, across all four sites incl. light-mode.
 - **Risk: gate false-fail on the packaged copy.** Mitigation: fixture checks inside the `[ -d tests/scenarios ]`
-  guard (the already-fixed pattern from commit `36c14fa`).
+  guard (the already-fixed pattern from commit `0193762`).
 - **Rollback:** additive Markdown + four fixtures + gate lines. No migration, no persisted state. Revert the
   branch. Reversible by construction.

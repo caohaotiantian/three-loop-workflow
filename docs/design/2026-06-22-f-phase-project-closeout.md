@@ -376,6 +376,6 @@ D8 before→after matrix. No latency/throughput/bundle budget applies — explic
 
 ---
 Status: closed
-Closing-commit: 49d8690
+Closing-commit: de31926
 Closed-on: 2026-06-22
 Deferred: none

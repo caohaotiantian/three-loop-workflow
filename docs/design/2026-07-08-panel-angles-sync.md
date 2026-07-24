@@ -2,7 +2,7 @@
 
 ```
 Status: closed
-Closing-commit: e0cc8dc
+Closing-commit: 6bdfe59
 Closed-on: 2026-07-08
 Deferred: none  (Wave 4 remainder — F5/F13/F14 trims, F15 token-strengthening, F6 calibration dedup, F4 references budget — see memory backlog)
 ```

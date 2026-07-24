@@ -2,7 +2,7 @@
 
 ```
 Status: closed
-Closing-commit: f68479f
+Closing-commit: 87ea750
 Closed-on: 2026-07-11
 Deferred: none (flaky-*pass* / green-by-luck detection is a scoped exclusion — §3 — not deferred work)
 ```

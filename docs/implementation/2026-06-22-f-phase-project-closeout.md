@@ -259,6 +259,6 @@ does not reconstruct it from the design:
 
 ---
 Status: closed
-Closing-commit: 49d8690
+Closing-commit: de31926
 Closed-on: 2026-06-22
 Deferred: none
