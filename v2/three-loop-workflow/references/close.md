@@ -41,7 +41,7 @@ An unverified migration is a blocking issue. It does not close on "the code look
 
 ## 5. Documentation
 
-Reconcile only what this change actually made stale: the README if behavior it documents moved, CLAUDE.md if a command or norm changed, API docs if a contract changed.
+Reconcile only what this change actually made stale: the README if behavior it documents moved, the project guide if a command or norm changed, API docs if a contract changed.
 
 Scope this tightly. A closeout pass is not an invitation to rewrite the docs.
 

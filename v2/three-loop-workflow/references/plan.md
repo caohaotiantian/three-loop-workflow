@@ -10,7 +10,7 @@ Design quality is bounded by understanding quality. Before writing the plan, map
 
 For anything spanning more than one module, delegate this to read-only **Explore** subagents and merge their findings — that keeps a large read out of your own context. Skip it for greenfield work and single-file changes.
 
-> **Explore and Plan subagents do not see CLAUDE.md or git status.** If the sweep must honor a project constraint — a language policy, a naming rule, an engineering norm — restate that constraint in the delegation prompt. It will not be inherited.
+> **Explore and Plan subagents do not see the project guide or git status.** If the sweep must honor a project constraint — a language policy, a naming rule, an engineering norm — restate that constraint in the delegation prompt. It will not be inherited.
 
 ## The fields
 
@@ -30,7 +30,7 @@ At **Deep** depth, record alternatives *before* choosing, not as post-hoc justif
 
 ## Facts vs. decisions
 
-Before asking the user anything, try to answer it from the code, from git history, and from CLAUDE.md.
+Before asking the user anything, try to answer it from the code, from git history, and from the project guide.
 
 - **A fact the repo settles** — what a module does today, which constant already exists, how a caller is wired — is **looked up, never asked**. Asking someone to confirm what the code already says invites a rubber-stamp of something that was never a decision.
 - **A product, scope, or risk-tolerance judgment the repo cannot answer** goes to the user.

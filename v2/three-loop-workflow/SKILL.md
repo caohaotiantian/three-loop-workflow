@@ -1,6 +1,6 @@
 ---
 name: three-loop-workflow
-description: Structured workflow for non-trivial code changes — features, behavior fixes, refactors, performance work, and edits to contract files (CLAUDE.md, this skill, OpenAPI specs, schemas, public APIs). Chooses a proportionate depth, records decisions and non-goals in a durable plan file, verifies with the project's own gates, and reviews the diff with a fresh reviewer. Use when a change needs more than a single obvious edit, or when it touches a published contract.
+description: Structured workflow for non-trivial code changes — features, behavior fixes, refactors, performance work, and edits to contract files (AGENTS.md, CLAUDE.md, this skill, OpenAPI specs, schemas, public APIs). Chooses a proportionate depth, records decisions and non-goals in a durable plan file, verifies with the project's own gates, and reviews the diff with a fresh reviewer. Use when a change needs more than a single obvious edit, or when it touches a published contract.
 license: MIT
 compatibility: Claude Code (subagents, hooks, Workflow). Codex/opencode run the manual path — see references/platforms.md
 metadata:
@@ -11,6 +11,8 @@ metadata:
 
 **Plan → Build → Close.** Depth is chosen per change. Most changes run a short Plan, a Build, and no Close.
 
+**The project guide** is this repo's agent instruction file — `AGENTS.md`, `CLAUDE.md`, or both. Read whichever exist; projects keeping both usually put shared rules in `AGENTS.md` and runtime-specific ones in `CLAUDE.md`. It names sections by *role* (`_load-bearing-docs_`, `_common-commands_`, `_engineering-norms_`, …) via an anchor map at its top, so this skill can reference a role without knowing your headings.
+
 ## 1. Choose depth — first, before reading anything else
 
 Two questions: **if this is wrong, how much breaks?** and **how hard is it to undo?**
@@ -19,7 +21,7 @@ Two questions: **if this is wrong, how much breaks?** and **how hard is it to un
 |---|---|---|
 | **Direct** | Contained and reversible. Typo, comment, formatting, doc reordering, local rename, patch/minor dependency bump. | Make the change. Run the gates (§3). Done. |
 | **Standard** | Default for real work. A feature, a behavior fix, a refactor, a perf change — contained blast radius, revertable with one commit. | Plan brief → build → gates → one fresh-reviewer diff review → fix. |
-| **Deep** | Any one of: a breaking change to a published contract (schema, exit code, CLI, wire protocol, storage layout); a migration of persisted data or config; an edit that changes a rule in a contract file listed under CLAUDE.md _load-bearing-docs_; or a decision with no clear winner that the repository cannot answer. | Standard, plus: alternatives recorded before choosing, phased build, and a Close pass. |
+| **Deep** | Any one of: a breaking change to a published contract (schema, exit code, CLI, wire protocol, storage layout); a migration of persisted data or config; an edit that changes a rule in a contract file listed under the project guide's _load-bearing-docs_; or a decision with no clear winner that the repository cannot answer. | Standard, plus: alternatives recorded before choosing, phased build, and a Close pass. |
 
 Between Direct and Standard, choose **Standard**. Between Standard and Deep, the Deep list is a **checklist, not a vibe** — if no item fires, Standard is correct. Do not upgrade the whole change because one corner of it is risky; run Standard and escalate that corner.
 
@@ -41,7 +43,7 @@ Keep it short. This is working state, not a deliverable.
 
 ## 3. Gates before agents
 
-Before any reviewer looks at anything, run the project's own mechanical checks — typecheck, lint, build, tests — from CLAUDE.md _common-commands_. They cost near-zero context and catch the most common defect in generated code: an API that does not exist.
+Before any reviewer looks at anything, run the project's own mechanical checks — typecheck, lint, build, tests — from the project guide's _common-commands_. They cost near-zero context and catch the most common defect in generated code: an API that does not exist.
 
 An agent's opinion about code that does not compile is worthless. Gates first, every time.
 

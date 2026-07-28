@@ -10,7 +10,7 @@ A silent default is a decision nobody made and no later reviewer can challenge. 
 | A breaking change to a published contract — schema, exit code, CLI, wire protocol, storage layout | The change, plus what migration costs |
 | A threshold or magic number with no source | Cite an existing constant if one exists; otherwise ask |
 | Legacy fields on a schema: keep, migrate, or drop | The options, plus the surface each one touches |
-| Deleting a file listed under CLAUDE.md _load-bearing-docs_ | Which contract it fulfills, what replaces it, and every file that references it — **ask before deleting** |
+| Deleting a file listed under the project guide's _load-bearing-docs_ | Which contract it fulfills, what replaces it, and every file that references it — **ask before deleting** |
 | The action exceeds your authority: pushing to main, deleting outside the workspace, sending anything externally | Ask for authorization first |
 | Credentials, network, or permissions are missing | Verify the actual failure first, then report what you found |
 | Another in-flight task overlaps this domain | The overlap, and whether to merge or serialize |

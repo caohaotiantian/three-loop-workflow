@@ -14,7 +14,7 @@ If the plan conflicts with what you find in the code, stop and say so. Do not de
 
 ## Gates
 
-Run the project's mechanical checks from CLAUDE.md _common-commands_: typecheck, lint, build, tests. Run them yourself, in this session, and paste the real output.
+Run the project's mechanical checks from the project guide's _common-commands_: typecheck, lint, build, tests. Run them yourself, in this session, and paste the real output.
 
 - Do this **before** spawning a reviewer. Reviewing code that does not compile wastes a subagent on defects the compiler already found.
 - A recalled result is not a result. Re-run and paste this run's output.

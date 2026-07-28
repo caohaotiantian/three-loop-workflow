@@ -10,6 +10,12 @@
 
 One canonical folder; copy or symlink it. The layout conforms to the open Agent Skills structure, so nothing runtime-specific lives in `SKILL.md`.
 
+## The project guide
+
+This skill never names a fixed instruction file. It reads **`AGENTS.md`, `CLAUDE.md`, or both** — whichever your repo has — and resolves sections through the role anchor map inside them, so it works unchanged on a repo that has only one.
+
+`AGENTS.md` is the cross-tool standard (originated at OpenAI, now under the Linux Foundation's Agentic AI Foundation); `CLAUDE.md` is Claude Code's. If you keep both, the common pattern is shared rules in `AGENTS.md` and runtime-specific ones in `CLAUDE.md`, wired together with an `@AGENTS.md` import or a symlink. The hook unions the patterns from both rather than picking one.
+
 ## What degrades off Claude Code
 
 | Mechanism | Claude Code | Elsewhere |
@@ -30,7 +36,7 @@ The skill runs fine without any of these. Install them when you want the rule to
 
 ### `require-plan.sh` — no contract edit without a plan
 
-Blocks `Edit`/`Write` on any file matching a pattern under your CLAUDE.md _load-bearing-docs_ section when `.agent/plan.md` does not exist.
+Blocks `Edit`/`Write` on any file matching a pattern under the project guide's _load-bearing-docs_ section when `.agent/plan.md` does not exist.
 
 ```json
 {
@@ -46,7 +52,9 @@ Blocks `Edit`/`Write` on any file matching a pattern under your CLAUDE.md _load-
 }
 ```
 
-It reads the role → heading indirection from CLAUDE.md, so it follows your project's own headings. With no CLAUDE.md, or no such section, it protects nothing and allows everything — it fails open by design, because a hook that blocks edits on a misconfigured repo is worse than the rule it enforces.
+It resolves the project guide (`AGENTS.md`, `CLAUDE.md`, or both — unioning the patterns when both exist) and reads the role → heading indirection from it, so it follows your project's own headings. With neither file, or no such section, it protects nothing and allows everything — it fails open by design, because a hook that blocks edits on a misconfigured repo is worse than the rule it enforces.
+
+Override the resolution with `THREE_LOOP_GUIDE=path/to/file`.
 
 Override for a deliberate exception: `THREE_LOOP_PLAN=/path/to/plan`.
 
