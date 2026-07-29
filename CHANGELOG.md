@@ -2,6 +2,33 @@
 
 Full version history for the three-loop-workflow skill. See [README.md](./README.md) for what the skill is, when it applies, and how to install it.
 
+## v2.0.0 — a ground-up rewrite
+
+**Breaking.** v2 replaces v1 rather than extending it. Every loop name, tier name, reference path and script name changed; a v1 install is not forward-compatible. See [docs/announcement-v2.0.0.md](./docs/announcement-v2.0.0.md) for the upgrade path and [docs/why-v2.md](./docs/why-v2.md) for the evidence behind each decision.
+
+| | v1.14.0 | v2.0.0 |
+|---|---|---|
+| `SKILL.md` | 2,915 words | **1,259 words** |
+| Total prose | 21,802 words | **5,854 words** |
+| Files in the skill | 20 | **8** |
+| Committed documents per task | 2 | **0** (ephemeral `.agent/plan.md`) |
+
+**Structure.** L1 → L2 → L3 → F becomes **Plan → Build → Close**. L1 and L2 were one plan artificially cut in two; merging them removed the slug protocol, the rollback protocol, the Deprecated-section convention, and an entire review loop. Full/Light/None becomes **Direct/Standard/Deep**, graded on blast radius and reversibility with a checklist for the deep tier rather than a disjunction of qualitative predicates. The per-task `docs/design/` + `docs/implementation/` archive — 43,822 words against 27,896 words of shipped product, read by no human — is replaced by a single gitignored `.agent/plan.md`.
+
+**Gates before agents.** The project's own typecheck/lint/build/test now run *before* any reviewer is spawned. v1 mentioned them once, in a parenthetical.
+
+**Two reviewers on Deep work, one on Standard — measured, not assumed.** Four design documents × three independent reviewers, then all 116 findings blinded, shuffled and re-judged by two adversarial adjudicators each: coverage **56.5%** with one reviewer, **85.5%** with two, averaged over every reviewer ordering. A third adds ~14%. This result *reversed* the plan, which had been to delete the confirming round.
+
+**Triage before counting.** The same validation exposed poor reviewer precision — only 50–70% of findings graded *blocking* survived adjudication, and 30–46% of the rest. Closure is now computed from *confirmed* findings. `phase.js` increments the round counter only when a fix actually runs, fixing the starvation in v1's runner where one general finding left zero accept-fix budget and two fix rounds reported cap-exhausted on a clean round 3.
+
+**Deletions with stated grounds.** `check-consistency.sh` is gone: replacing `SKILL.md`'s central termination rule with its exact semantic opposite, leaving the token present in an HTML comment, still returned `three-loop-consistency: OK`, exit 0. The five-voter panel and its anti-inflation clause are gone (a reviewer told to be conservative reports less). The separate accept subagent is gone. Both hook scripts are gone; v2 enforces nothing mechanically and says so.
+
+**Tests that can fail.** v1's `tests/scenarios/` was measured at **0% discrimination** — 6 fixtures, both arms, skill-off 6/6 and skill-on 6/6, green for 16 releases while carrying no information. The replacement runs every fixture with the skill loaded *and* withheld, and reports a fixture both arms pass as INVALID rather than green. Current state: 6/6 guards held, 1/1 discriminating fixture valid. Two fixtures written as discriminating failed to discriminate and were demoted to guards in `expected.json` rather than quietly relabelled.
+
+**Known-incomplete, stated rather than hidden:** `close.md` is carried on argument, not evidence; the two-reviewer result was measured on design documents, not diffs; the "clean first review is weak evidence" corollary is inferred from the detection rate, never directly observed; and 5 of 7 fixtures showed that under Opus 5 most of this discipline is redundant with the model's own judgment. What survives is the specific and counter-intuitive.
+
+## v1 history
+
 | Version | Key additions |
 |---|---|
 | **v1.3** | `agentType` recommendation column in routing table; `references/schemas.md` (ReviewVerdict schema); `## When this skill does NOT apply` table; Quick orientation box; Common failure modes table; Document naming convention; TaskCreate round-tracking guidance |

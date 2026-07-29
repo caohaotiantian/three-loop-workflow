@@ -19,7 +19,7 @@ The scenario supplies **facts**. The skill supplies the **rule**. If the fixture
 
 **Do not:**
 
-- State the governing rule. *"But L1/L2 use the strict two-generation rule…"* — the fixture just answered itself.
+- State the governing rule. *"But Deep changes take two independent reviewers…"* — the fixture just answered itself.
 - Label the pressures. A `Combined pressures: sunk cost, authority, minimization` list tells the reader the trap is a trap.
 - Apply the rule to the facts for the reader. *"But this touches an authentication contract"* is the whole decision.
 - Write self-incriminating distractors. *"(A) Run a silent round 4 — the cap is 'just a guideline'"* is not a choice anyone picks.

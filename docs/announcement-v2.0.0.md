@@ -1,0 +1,96 @@
+# three-loop-workflow v2.0.0
+
+**A ground-up rewrite. The skill is 78% smaller and every name in it changed.**
+
+中文版 → [announcement-v2.0.0-cn.md](./announcement-v2.0.0-cn.md)
+
+---
+
+## What you get
+
+| | v1.14.0 | v2.0.0 |
+|---|---|---|
+| `SKILL.md` (loaded every time) | 2,915 words | **1,259 words** |
+| Total prose | 21,802 words | **5,854 words** |
+| Files | 20 | **8** |
+| Documents committed per task | 2 | **0** |
+
+The discipline survived. The delivery did not.
+
+**Plan → Build → Close** replaces L1 → L2 → L3 → F. L1 and L2 were one plan cut in two; merging them
+removed an entire review loop, the slug protocol, and the rollback protocol. The plan is now a single
+gitignored `.agent/plan.md` — not two committed documents. The old per-task archive had reached 43,822
+words against 27,896 words of actual product, and no human ever read it.
+
+**Direct / Standard / Deep** replaces Full / Light / None, graded on two questions: *if this is wrong,
+how much breaks?* and *how hard is it to undo?* The deep tier is now a **checklist, not a vibe** — if no
+item fires, Standard is correct. One risky corner no longer upgrades an entire change.
+
+**Gates run before reviewers, always.** Your project's typecheck, lint, build and tests run before any
+subagent is spawned. v1 mentioned this once, in a parenthetical.
+
+**Two reviewers on Deep work, one on Standard — measured, not guessed.** On four real design documents
+with three independent reviewers each, one reviewer found 56.5% of the defects; two found 85.5%. A
+third adds about 14%. Reviewers miss *different* things — only 19% of defects were caught by all three.
+
+**Findings are triaged before they are counted.** The same measurement showed only 50–70% of findings
+graded *blocking* survive adversarial checking, and 30–46% of the rest. Closure now computes on
+confirmed findings, so a defect that is not real can no longer burn a fix round or falsely exhaust the
+round cap.
+
+**Two things were deleted for failing their own test.** The consistency gate returned `OK`, exit 0,
+after its central termination rule had been replaced with the exact opposite. The behavioral suite was
+run with the skill withheld and passed 6/6 — identical to the skill-on arm, 0% discrimination, green for
+sixteen releases while measuring nothing. The replacement suite runs both arms and reports a fixture
+both arms pass as **INVALID** rather than green.
+
+---
+
+## Upgrading
+
+**Replace the folder. Do not copy into it.** v1 and v2 share a directory name and no file names —
+copying v2 over v1 leaves all 20 v1 files in place, and the skill will route to references that
+contradict the ones it ships with.
+
+```bash
+rm -rf ~/.claude/skills/three-loop-workflow
+cp -r three-loop-workflow ~/.claude/skills/
+
+# or
+rsync -a --delete three-loop-workflow/ ~/.claude/skills/three-loop-workflow/
+```
+
+Then:
+
+- **Add `.agent/` to your `.gitignore`.** That is where the plan now lives.
+- **Remove any hook wiring.** If your `settings.json` invokes `require-plan.sh` or
+  `validate-commit-msg.sh` from this skill, delete those entries — the scripts no longer ship, and a
+  hook pointing at a missing command fails on every edit.
+- **Your `CLAUDE.md` anchor map still works, unchanged.** Same five roles. If you keep an `AGENTS.md`,
+  v2 reads that too, and reads both when both exist.
+- **`docs/design/` and `docs/implementation/` are no longer written.** Existing archives are yours to
+  keep or delete; nothing reads them.
+- **Update any project doc quoting the old terms.** L1/L2/L3/F → Plan/Build/Close. Full/Light/None →
+  Deep/Standard/Direct. severe/general → blocking/non-blocking.
+
+Staying on v1 is supported in the sense that it still exists — `git checkout v1.14.0`, or download the
+`.skill` from the v1.14.0 release. It will not change again.
+
+---
+
+## Two things you should know before adopting it
+
+**v2 enforces nothing mechanically.** v1 shipped hooks that could block an edit. v2 does not. Every rule
+in it is a request the agent can decline. This was a deliberate call, and it is stated here rather than
+buried, because "no contract edit without a plan" went from a guarantee to a convention.
+
+**Most of this discipline is redundant with Opus 5's own judgment.** We measured that too. Of seven
+behavioral fixtures, six were answered correctly by an agent forbidden to read the skill. Only one
+discriminated — the counter-intuitive rule that one risky corner does not upgrade the whole change. The
+skill's value is concentrated in the specific and surprising rules, not in the ones that restate good
+engineering. We publish this because you will find it in `tests/expected.json` anyway, which ships.
+
+---
+
+The full account — every experiment, every number, and the five mistakes made while building it — is in
+[why-v2.md](./why-v2.md).
