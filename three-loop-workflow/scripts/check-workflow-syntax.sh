@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Syntax-check a three-loop-workflow Workflow script (l3-phase.js / review-panel.js).
+# Syntax-check a three-loop-workflow Workflow script (phase.js / run-scenarios.js).
 # These scripts mix `export const meta` with top-level await/return, so they are valid
 # as neither standalone CommonJS nor standalone ESM — `node --check` cannot gate them
 # (it auto-detects module syntax and silently passes broken input). Instead we strip the

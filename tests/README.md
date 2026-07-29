@@ -8,7 +8,7 @@ That is not a style preference. The v1 suite was measured: 6 fixtures, both arms
 
 ```bash
 # From the repo root, in Claude Code:
-Workflow({ scriptPath: "v2/tests/run-scenarios.js" })
+Workflow({ scriptPath: "tests/run-scenarios.js" })
 ```
 
 Every fixture runs twice — once with the skill loaded, once with an agent forbidden to read it. The runner reports per-fixture discrimination and fails on any fixture where both arms agree.

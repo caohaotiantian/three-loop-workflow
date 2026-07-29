@@ -12,8 +12,8 @@ export const meta = {
 // which is exactly what happened to the v1 suite (0/6 discrimination, 33 fixtures).
 
 const REPO = args?.repo || '/Users/deepsky/Documents/projects/three-loop-workflow'
-const SKILL = args?.skill || REPO + '/v2/three-loop-workflow'
-const DIR = args?.dir || REPO + '/v2/tests/scenarios'
+const SKILL = args?.skill || REPO + '/three-loop-workflow'
+const DIR = args?.dir || REPO + '/tests/scenarios'
 // Fixture names are deliberately opaque. A descriptive filename (…-is-standard.md,
 // flake-NOT-masked.md) is an answer key handed to the control arm — measured: the control
 // reported it could have answered from the filename alone.
@@ -92,7 +92,7 @@ const SCORE_SCHEMA = {
 
 const score = await agent(
   `Score a two-arm behavioral scenario run for the three-loop-workflow skill.\n\n` +
-  `The correct answers live in ${REPO}/v2/tests/expected.json, keyed by fixture filename — read it. They are ` +
+  `The correct answers live in ${REPO}/tests/expected.json, keyed by fixture filename — read it. They are ` +
   `deliberately NOT in the scenario files, so neither arm could see them. Compare both arms' answers to it.\n\n` +
   `Each fixture declares a "kind" in expected.json. Judge it against its OWN kind:\n\n` +
   `kind = "discriminating" — the skill's rule is supposed to change the answer:\n` +
