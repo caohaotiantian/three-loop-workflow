@@ -73,9 +73,58 @@ Name the root cause before you edit — `item X is caused by Y` — and change t
 
 For a correctness bug, write the failing test first, then fix to green. For style, scope, or comment findings, no test is needed.
 
-Commit fixes to the same branch: `fix(<phase>): <the failing item>`. The message names a real finding; a drive-by edit has nothing to name.
+Commit fixes to the same branch, naming the failing item — a drive-by edit has nothing to name. Format: see Commits, below.
 
 Then re-run the gates and re-review. The cycle ends when blocking count is zero and gates are green.
+
+## Commits
+
+**Derive the convention, don't impose one.** Before your first commit, read `git log --oneline -20` and match what is there — prefix style, capitalization, scope vocabulary, whether bodies are used. A repo whose history reads `[api] fix null deref` is not asking for `fix(api): …`, and an agent that "corrects" it has made the history worse while feeling helpful.
+
+With no discernible convention, default to Conventional Commits: `<type>(<scope>): <summary>`, with a body explaining *why* when the change is not self-evident.
+
+Whatever the format, two things hold:
+
+- **The message names the phase and the item it addresses**, so it ties back to the plan. Under Conventional that is `fix(phase2): off-by-one in bucket refill`; under another convention, carry the same two facts in that convention's shape.
+- **Gate output goes in the trailers** (see Gates, above).
+
+**One logical change per commit.** The test: can this commit be reverted alone without taking something unrelated with it? That is what keeps `bisect` and `revert` usable.
+
+**If the change breaks a published contract, stop and check your depth.** That is a Deep-tier trigger, and escalating it is `escalation.md`'s first row. Discovering it mid-build is normal; committing past it is not. Mark it however your convention marks breakage — Conventional uses `!` or a `BREAKING CHANGE:` footer.
+
+## Parallel work and worktrees
+
+Phases run sequentially and share one working tree; `scripts/phase.js` assumes exactly that. **A branch name is not isolation** — two writers in one checkout overwrite each other's files, and the second one's diff will contain the first one's work.
+
+If you deviate from that and run writers concurrently — parallel phases, an agent team, two experiments at once — give each writer its own worktree, and run that writer's gates inside it. Gates are not read-only: they leave build output, caches and coverage data behind.
+
+**Where to put them.** Outside the repository, grouped under one hidden sibling:
+
+```
+~/projects/
+  myrepo/                     # main worktree
+  .myrepo-worktrees/
+    phase-2-ratelimit/
+```
+
+**Anchor the path to the repo root.** `git worktree add` resolves a relative path against your *current directory*, not the repository — so `../.myrepo-worktrees/x` run from `myrepo/src/` silently creates it **inside** the repo, and run from another worktree it nests one inside the other. Git creates the intermediate directories and exits 0 both times, so nothing warns you:
+
+```bash
+root=$(git rev-parse --show-toplevel)
+git -C "$root" worktree add -b phase-2-ratelimit \
+  "$root/../.$(basename "$root")-worktrees/phase-2-ratelimit"
+```
+
+Outside the repository is the property that matters: a worktree inside one lands in the index as an embedded-repo entry, and a worktree nested in a worktree confuses tooling. The leading dot is tidiness, not safety. For a throwaway spike, `$TMPDIR` is simpler still.
+
+**What actually bites:**
+
+- One branch per worktree — git refuses the same branch twice unless you force it.
+- Remove with `git worktree remove <path>`, not `rm -rf`. If you already deleted the directory by hand, `git worktree prune` clears the stale metadata.
+- Use `--detach` for throwaway work so you do not strand disposable branches.
+- **Dependencies are not shared.** `node_modules`, virtualenvs and build caches are per-worktree and need reinstalling. On a large project that setup can exceed what parallelism saves — measure before assuming it is a win.
+
+On Claude Code, the Workflow tool takes `isolation: 'worktree'` per agent and handles creation and teardown, including the cleanup you would otherwise forget. It costs a few hundred milliseconds and disk per agent, so reach for it when writers actually overlap — not by default.
 
 ## Diagnosis — when the cause is not obvious
 

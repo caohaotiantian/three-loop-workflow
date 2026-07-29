@@ -64,10 +64,10 @@ Blocks a `git commit` whose scope begins with `phase` but does not match v1's `(
 
 **Do not install this yet.** Two known problems:
 
-- It enforces v1's round-numbered vocabulary, which v2 does not use. v2's convention is `fix(<phase>): <failing item>` with an arbitrary label, so the hook never fires on a v2 commit — it is near-inert here.
+- It enforces v1's round-numbered vocabulary. v2 does not mandate a format at all — it derives the convention from the repository's own history (`build.md`, "Commits"), so this hook encodes a rule v2 no longer states, and never fires on a scope that does not begin with `phase`.
 - It contains **no AI-attribution check**, despite v1 documenting one. `feat: generated with Claude Code` passes, exit 0.
 
-Either adapt it to v2's convention and add the attribution check, or delete it. It is listed here because it ships in the directory, not because it works.
+Delete it, or rewrite it to check only what is project-independent — an AI-attribution trailer, a push to a protected branch. Commit *grammar* is the wrong thing to hard-code now that the convention is derived per repository. It is listed here because it ships in the directory, not because it works.
 
 ## What not to enforce with hooks
 
