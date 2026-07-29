@@ -7,74 +7,103 @@
 - _common-commands_     → "## Common Commands"
 - _engineering-norms_   → "## Engineering Norms"
 
-This repo distributes the **three-loop-workflow** Claude skill (currently **v1.14.0**). It is the
-canonical case where the load-bearing documents *are* the product: the skill is maintained by its
-own L1 → L2 → L3 → F discipline.
+This repo distributes the **three-loop-workflow** Claude skill. Two versions live here:
+
+- `three-loop-workflow/` — **v1.14.0, shipped.** What users install today.
+- `v2/` — **a ground-up rewrite, staged and unpromoted.** Not shipped, not installed, not yet run on a
+  real task. See `v2/README.md` for what changed and on what evidence.
+
+It is the canonical case where the load-bearing documents *are* the product.
 
 ## Development Workflow
 
-All non-trivial changes use the three-loop-workflow skill. Entry point: `three-loop-workflow/SKILL.md`.
-Load-bearing documents require the full L1 → L2 → L3 → F cycle; the Light/Full/None tier gate lives in the
-skill (`references/light-mode.md`) and is fresh-eyes-enforced. Escalation: open an issue or comment in the PR.
+Changes to the **shipped** skill (`three-loop-workflow/`) follow that skill's own L1 → L2 → L3 → F cycle.
+Entry point: `three-loop-workflow/SKILL.md`.
 
-- **Behavioral gate (v1.5).** Before merging any edit to the tier table, the escalation rules, or the
-  termination wording, run the pressure scenarios in `tests/scenarios/` via a fresh subagent and confirm
-  each `expected` field holds. These scenarios are the skill's behavioral acceptance fixture — they catch a
-  discipline regression that the grep/gate checks cannot.
+Work on **v2** follows v2's discipline — `v2/three-loop-workflow/SKILL.md`: choose a depth, write
+`.agent/plan.md`, run the gates before spawning a reviewer, review the diff with a fresh subagent, triage
+findings before counting them. Dogfooding v2 is the point; it is how v2 earns promotion.
+
+Escalation: open an issue or comment in the PR.
+
+**On gating.** Two things this repo previously treated as acceptance gates do not work. Both were measured
+on 2026-07-28 and neither should block or bless a merge on its own:
+
+- `check-consistency.sh` is **bypassable**. Replacing `SKILL.md`'s central termination rule with its
+  semantic opposite, leaving the token present in an HTML comment, still returned
+  `three-loop-consistency: OK`, exit 0. Roughly 100 of its 242 lines are `grep -qF` presence checks, and
+  presence of a word is not presence of a rule.
+- `tests/scenarios/` has **0% discrimination**. Six fixtures were run with the skill loaded and with it
+  withheld: skill-off passed 6/6, skill-on passed 6/6. All 12 runs self-reported that the scenario text
+  stated the answer; 9 of 9 files inspected had the same defect. It has been green for 16 releases while
+  carrying no information.
+
+Use `v2/tests/run-scenarios.js` instead — it runs both arms and fails a fixture that both arms pass.
 
 ## Load-Bearing Documents
 
-Protected by the full L1 → L2 → L3 → F cycle:
+Protected by the full cycle:
 
 - `three-loop-workflow/SKILL.md`
-- `three-loop-workflow/references/*.md` (all reference files)
-- `three-loop-workflow/references/*.js` (`l3-phase.js`, `review-panel.js` — Workflow scripts)
-- `three-loop-workflow/references/*.sh` (`check-consistency.sh`, `check-workflow-syntax.sh`, `validate-commit-msg.sh` — gate/hook helpers)
+- `three-loop-workflow/references/*.md`
+- `three-loop-workflow/references/*.js`
+- `three-loop-workflow/references/*.sh`
+- `v2/three-loop-workflow/SKILL.md`
+- `v2/three-loop-workflow/references/*.md`
+- `v2/three-loop-workflow/scripts/*.js`
+- `v2/three-loop-workflow/scripts/*.sh`
+- `CLAUDE.md`
 
-**Not** load-bearing — edited directly (one fresh-agent review, no full cycle): `tests/scenarios/*.md`
-(the behavioral suite), `README.md` / `README-cn.md`, and the `docs/design/` + `docs/implementation/`
-per-task archives.
+**Not** load-bearing — edited directly with one fresh-agent review: `tests/scenarios/*.md`,
+`v2/tests/**`, `README.md` / `README-cn.md`, `CHANGELOG*.md`, and the `docs/design/` +
+`docs/implementation/` per-task archives.
 
 ## Language Policy
 
-All skill files and process documents: English. Terminology must be consistent with existing
-`docs/design/`, `docs/implementation/`, and the skill's `SKILL.md`. The only exception is `README-cn.md`,
-which is a Chinese translation of `README.md`.
+All skill files and process documents: English. Terminology must be consistent with the shipped
+`SKILL.md` and, for v2 work, with `v2/three-loop-workflow/SKILL.md` — the two use **different
+vocabularies on purpose** (v1: L1/L2/L3/F, Full/Light/None, severe/general; v2: Plan/Build/Close,
+Direct/Standard/Deep, blocking/non-blocking). Do not mix them in one file.
+
+The only exception to English is `README-cn.md`, a Chinese translation of `README.md`.
 
 ## Common Commands
 
-- `<TEST-CMD>`: N/A — this repo has no unit-test suite. Acceptance is grep-based checks over the modified
-  files, the two gates below (consistency + workflow-syntax), and — for any edit to the discipline
-  itself — the `tests/scenarios/` behavioral suite (also below).
-- **Consistency gate:** `bash three-loop-workflow/references/check-consistency.sh` — the authoritative
-  acceptance check. It fails if any of: a commitment-clause token is missing from its source file or a
-  paired reference site; a byte-identity pair drifts (the panel-angles voter lists, or the `[Calibration]`/
-  `[Grounding]` review-prompt lines shared by the L1/L2 templates); a required `tests/scenarios/*.md`
-  behavioral fixture is absent; `SKILL.md` exceeds its `wc -w` ceiling (2920); or any single `references/*.md`
-  exceeds the per-file `REFS_WORD_CEILING` (default 3000, env-overridable). **The script's own inline comments
-  are the authoritative, per-check reference** — read them there; do not maintain a parallel token catalog in
-  this file (that duplication is what this note removed).
+- `<TEST-CMD>`: N/A — no unit-test suite. Acceptance is the gates below plus, for any change to the
+  discipline itself, the two-arm scenario suite.
+- **Two-arm scenario suite (v2, the one that works):** `Workflow({ scriptPath: "v2/tests/run-scenarios.js" })`.
+  Runs every fixture with the skill loaded and withheld. A fixture both arms answer correctly proves
+  nothing and is reported INVALID; a `guard` fixture that skill-on gets wrong is the most serious result
+  it can return. Answers live in `v2/tests/expected.json`, deliberately outside the fixtures.
 - **Workflow-script syntax gate:** `bash three-loop-workflow/references/check-workflow-syntax.sh <file.js>`
-  — reliably parses a Workflow script (`node --check` mis-parses these `export`+top-level-`return` files).
-- **Behavioral scenarios:** run each `tests/scenarios/*.md` via a fresh subagent against the current skill
-  and assert the file's `expected` field (see the Development Workflow behavioral gate).
+  — reliably parses a Workflow script (`node --check` mis-parses these `export` + top-level-`return`
+  files). Works; use it on every `.js` change in either version.
+- **Consistency gate (v1 only, known-weak):** `bash three-loop-workflow/references/check-consistency.sh`.
+  Still catches a genuinely missing token or a drifted byte-identity pair. It cannot detect a rule whose
+  meaning was inverted — see the Development Workflow note. Do not describe it as authoritative.
 - **Zip rebuild** (from repo root): `rm -f three-loop-workflow.skill && zip -r three-loop-workflow.skill three-loop-workflow/`
-  (the `rm -f` first so a stale archive cannot retain files that were removed from `three-loop-workflow/`).
-- **Installed-copy sync** (if an installed copy exists): `rsync -a --delete three-loop-workflow/ "$HOME/.claude/skills/three-loop-workflow/"`
-  (`--delete` so removed files do not linger in the installed copy; a plain `cp -r` would leave them behind).
+  (`rm -f` first so a stale archive cannot retain deleted files).
+- **Installed-copy sync:** `rsync -a --delete three-loop-workflow/ "$HOME/.claude/skills/three-loop-workflow/"`
+  (`--delete` so removed files do not linger; `cp -r` would leave them behind).
 
 ## Engineering Norms
 
-- This repo distributes a Claude skill, not application code. Primary artifacts: Markdown files, two
-  JavaScript Workflow scripts (`references/l3-phase.js`, `references/review-panel.js`), shell gate/hook
-  helpers (`references/*.sh`), and the `tests/scenarios/` behavioral fixtures.
-- Follow the skill's own four core principles: Think Before Coding, Simplicity First, Surgical Changes,
-  Goal-Driven Execution. Anti-bloat is binding on the always-loaded `SKILL.md` surface — prefer
-  net-neutral or net-negative edits there and push detail into `references/`.
-- The Workflow scripts are plain JavaScript (no TypeScript, no `Date.now()`, no `Math.random()`); validate
-  with `check-workflow-syntax.sh`, not `node --check`. `l3-phase.js` carries load-bearing control flow —
-  the dev status signal (`blocked` / `concerns[]` with a **bounded single re-dispatch** then
-  `dev-escalation`), the retained `conflict` outcome, per-corner `models` routing, and the accumulated
-  review-prompt segments. Preserve all of these when editing it, and re-run the syntax gate.
-- Do not add new CLAUDE.md roles without updating the anchor map above and all downstream reference files
-  that read those roles.
+- This repo distributes a Claude skill, not application code. Primary artifacts: Markdown, JavaScript
+  Workflow scripts, shell hook/gate helpers, and behavioral fixtures.
+- **A check that cannot fail when the behavior is wrong is worse than no check** — it reads as coverage
+  that does not exist. Before adding a gate, write the failing case first and watch it fail. If you cannot
+  make it fail, write a two-arm scenario instead.
+- **Do not claim a script does something without testing that it does.** A v2 reference once shipped a
+  claim that a bundled script rejected AI attribution in commit messages; the script contained no such
+  check, and nobody had run it. State what you ran, not what you intended.
+- Anti-bloat binds the always-loaded `SKILL.md` surface in both versions — push detail into references.
+  v1 is capped by `SKILL_WORD_CEILING`; v2 has no gate-enforced cap and is held at ~1,200 words by review.
+- Workflow scripts are plain JavaScript — no TypeScript, no `Date.now()`, no `Math.random()`. Validate with
+  `check-workflow-syntax.sh`, not `node --check`.
+- `v2/three-loop-workflow/scripts/phase.js` carries load-bearing control flow: `round` increments **only**
+  on a fix; reviewer findings are **unioned, never intersected**; triage runs **before** the closure count;
+  a reviewer that fails to return is an `agent-error`, never a pass. Preserve all four and re-run the
+  syntax gate.
+- Commit messages: conventional prefixes, no mention of AI involvement, model names, or tooling.
+- Do not add new CLAUDE.md roles without updating the anchor map above and every downstream file that
+  reads those roles.

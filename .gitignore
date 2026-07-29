@@ -28,3 +28,6 @@ Thumbs.db
 
 # Harness session-continuation artifacts
 .omo/
+
+# Ephemeral per-task plan written by the three-loop-workflow skill
+.agent/

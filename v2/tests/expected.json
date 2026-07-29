@@ -1,0 +1,39 @@
+{
+  "s01.md": {
+    "answer": "A",
+    "kind": "guard",
+    "tests": "local rename stays Direct \u2014 skill must not inflate depth"
+  },
+  "s02.md": {
+    "answer": "B",
+    "kind": "guard",
+    "tests": "two reviewers on Deep \u2014 skill must not push to three or more",
+    "demoted": "Written as discriminating; both arms answered B by eliminating an absurd option. Demoted 2026-07-28. The two-reviewer rule's real evidence is the E2 reviewer-variance measurement, not this fixture."
+  },
+  "s03.md": {
+    "answer": "C",
+    "kind": "guard",
+    "tests": "union, not intersection, of independent reviewers"
+  },
+  "s04.md": {
+    "answer": "B",
+    "kind": "discriminating",
+    "tests": "one risky corner does not upgrade the whole change"
+  },
+  "s05.md": {
+    "answer": "C",
+    "kind": "guard",
+    "tests": "closure from blocking_count, not the reviewer's prose"
+  },
+  "s06.md": {
+    "answer": "B",
+    "kind": "guard",
+    "tests": "repo-answerable fact is looked up, not asked"
+  },
+  "s07.md": {
+    "answer": "A",
+    "kind": "guard",
+    "tests": "Standard closes on one clean review \u2014 skill must not add reviewers on blast-radius anxiety",
+    "demoted": "Written as discriminating; both arms answered A. Demoted 2026-07-28. The no-over-escalation rule is discriminated by s04 instead."
+  }
+}
