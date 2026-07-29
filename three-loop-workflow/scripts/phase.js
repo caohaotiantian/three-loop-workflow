@@ -144,7 +144,10 @@ const concerns = work.concerns || []
 let verifyRound = 1
 let fixes = 0
 
-while (true) {
+// Bounded by the verifications a full budget needs: maxRounds fixes plus one final check.
+// The cap returns from inside; falling out of this loop means something unexpected, so the
+// backstop return below is a real path, not dead code.
+while (verifyRound <= maxRounds + 1) {
   const round = verifyRound
   // Gates run before review, every round: an agent's opinion about code that does not compile
   // is worthless, and gate output is far cheaper than a review pass.
@@ -182,7 +185,8 @@ while (true) {
 
     // Reviewers run independently and in parallel, and their findings are UNIONed.
     // Measured on this repo's own design docs, validated by adversarial adjudication: one reviewer
-    // caught 56.5% of confirmed defects, two caught 85.5%, and only 19% were found by every reviewer. Low overlap is the
+    // caught 56.5% of confirmed defects and two caught 85.5%. Before adjudication only 19% were found by
+    // every reviewer. Low overlap is the
     // reason a second reviewer pays; it is also why the union must never be filtered down to
     // what they agree on — agreement would discard half the real findings.
     const verdicts = (await parallel(

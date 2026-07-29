@@ -216,8 +216,8 @@ clean third round*. In v2, `round` increments only when a fix runs.
 
 | | v1.14.0 | v2.0.0 |
 |---|---|---|
-| `SKILL.md` | 2,915 words | **1,336 words** |
-| Total prose (Markdown only) | 21,802 words | **6,047 words** |
+| `SKILL.md` | 2,915 words | **1,317 words** |
+| Total prose (Markdown only) | 21,802 words | **6,042 words** |
 | Files (incl. scripts) | 20 | **8** |
 | Committed docs per task | 2 | **0** |
 
@@ -301,7 +301,7 @@ written in the same diff that reworded the norm *"state what you ran, not what y
 
 **We reported a metric that flattered us.** Prohibition tokens (`never`, `do not`, `don't`,
 `forbidden`, `must not`) fell from **135 to 37** across the Markdown surface — a 73% drop that reads
-like a rewrite. But prohibition *density* did not move: **6.19 → 6.11 per 1,000 words.** The absolute
+like a rewrite. But prohibition *density* did not move: **6.19 → 6.12 per 1,000 words.** The absolute
 drop is almost entirely a side effect of a shorter document, not of rewriting prohibitions as positive
 instructions. Worse, the first published version of that comparison measured v1 across *all* files
 against v2 across *Markdown only* — two different denominators in one table.
@@ -336,7 +336,7 @@ number that a hardcoded check would have blessed.
   It does not test the rest.
 - **Reviewer precision is a floor, not an estimate.** E2 adjudicated *historical, closed* documents, so
   some FALSE verdicts were anachronisms — documents judged against gates that postdated them. Real-use
-  precision is probably better than 30–50%.
+  precision is probably better than the 50–70% (blocking) and 30–46% (rest) measured here.
 - **The E2 evidence is not in this repository.** The reviewer-variance and adjudication figures were
   measured in a working session whose artifacts were never committed, and the summary that carried
   them was deleted when v2 was promoted. They are reported here in good faith and cannot be checked
@@ -363,8 +363,8 @@ things from this transfer:
    apply to it.** Two readers who never saw each other's output cover 85.5% of the
    defects where one covers 56.5%. A third adds 14 points more.
 
-4. **Ask for everything, then triage.** High recall costs precision — between 30% and 50% of what you
-   get back will not be there. Confirm before you fix, and *before you count*. Otherwise a defect that
+4. **Ask for everything, then triage.** High recall costs precision — 30–50% of what a reviewer marks
+   blocking is not there, and 54–70% of what it marks lower-severity. Confirm before you fix, and *before you count*. Otherwise a defect that
    does not exist consumes a fix round and can exhaust a budget on code that was already correct.
 
 The last one is the general form of everything above: **measure it before you delete it, and then check

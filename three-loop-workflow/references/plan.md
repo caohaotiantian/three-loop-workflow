@@ -72,7 +72,7 @@ What they should look for:
 - Missing rollback on something irreversible.
 - An internal contradiction between two sections — the single highest-yield defect class in practice, and the one a lone reviewer most often misses.
 
-**Why two.** Measured on this repo's own design documents — four documents, three independent reviewers each, then all 116 findings blinded and re-judged by two adversarial adjudicators apiece, with coverage averaged over every reviewer ordering. A single reviewer found **56.5%** of the confirmed defects; a second independent reviewer raised that to **85.5%** and surfaced a severe, blocking defect in *every* document that the first had missed entirely. Only 19% of defects were seen by all three reviewers; 51% were seen by exactly one. A third reviewer added just 14% — so stop at two.
+**Why two.** Measured on this repo's own design documents — four documents, three independent reviewers each, then all 116 findings blinded and re-judged by two adversarial adjudicators apiece, with coverage averaged over every reviewer ordering. A single reviewer found **56.5%** of the confirmed defects; a second raised that to **85.5%**. Across the four documents, the reviewers beyond the first surfaced four severe defects the first had missed entirely — one per document. Before adjudication, only 19% of defects were seen by all three reviewers and 51% by exactly one, and a third reviewer added just 14% — so stop at two.
 
 The corollary matters as much: **a clean first review is weak evidence that the plan is clean.** At a ~55% per-reviewer detection rate, "reviewer 1 found nothing" and "there is nothing to find" are very different statements. Do not close a Deep plan on one clean review.
 

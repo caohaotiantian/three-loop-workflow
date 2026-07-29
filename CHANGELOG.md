@@ -8,8 +8,8 @@ Full version history for the three-loop-workflow skill. See [README.md](./README
 
 | | v1.14.0 | v2.0.0 |
 |---|---|---|
-| `SKILL.md` | 2,915 words | **1,336 words** |
-| Total prose (Markdown only) | 21,802 words | **6,047 words** |
+| `SKILL.md` | 2,915 words | **1,317 words** |
+| Total prose (Markdown only) | 21,802 words | **6,042 words** |
 | Files in the skill (incl. scripts) | 20 | **8** |
 | Committed documents per task | 2 | **0** (ephemeral `.agent/<task>/plan.md`) |
 
@@ -25,7 +25,7 @@ Full version history for the three-loop-workflow skill. See [README.md](./README
 
 **Deletions with stated grounds.** `check-consistency.sh` is gone: replacing `SKILL.md`'s central termination rule with its exact semantic opposite, leaving the token present in an HTML comment, still returned `three-loop-consistency: OK`, exit 0. The five-voter panel and its anti-inflation clause are gone (a reviewer told to be conservative reports less). The separate accept subagent is gone. Both hook scripts the v2 drafts carried — `require-plan.sh` and a copy of v1's `validate-commit-msg.sh` — were removed before release; neither ever shipped in a v2 release, and v2 enforces nothing mechanically and says so.
 
-**Tests that can fail.** v1's `tests/scenarios/` was measured at **0% discrimination** — 6 fixtures, both arms, skill-off 6/6 and skill-on 6/6, green for 16 releases while carrying no information. The replacement runs every fixture with the skill loaded *and* withheld, and reports a fixture both arms pass as INVALID rather than green. Current state: 6/6 guards held, 1/1 discriminating fixture valid. Two fixtures written as discriminating failed to discriminate and were demoted to guards in `expected.json` rather than quietly relabelled.
+**Tests that can fail.** v1's `tests/scenarios/` was measured at **0% discrimination** — 6 fixtures, both arms, skill-off 6/6 and skill-on 6/6, green for 16 releases while carrying no information. The replacement runs every fixture with the skill loaded *and* withheld, and reports a fixture both arms pass as INVALID rather than green. Run against the shipped tree for this release: `suite_pass: true`, 6/6 guards held, no GUARD-BROKEN, and the single discriminating fixture valid — the control arm upgraded a whole four-file change because one corner was risky, the skill arm did not. Read that narrowly. The scorer's own caveat is that this is a no-regressions result rather than validation of the discipline: only one of seven fixtures can discriminate at all, three guards had both arms report that the scenario text stated the rule, and the one fixture doing work rests partly on its option wording. Two fixtures written as discriminating failed to discriminate and were demoted to guards in `expected.json` rather than quietly relabelled.
 
 **Known-incomplete, stated rather than hidden:** the reviewer-variance evidence was measured in a working session whose raw artifacts are not in this repository, so those figures cannot be reproduced from it; `close.md` is carried on argument, not evidence; the two-reviewer result was measured on design documents, not diffs; the "clean first review is weak evidence" corollary is inferred from the detection rate, never directly observed; and 6 of 7 fixtures were answered correctly by an agent forbidden to read the skill, so most of this discipline is redundant with the model's own judgment. What survives is the specific and counter-intuitive.
 

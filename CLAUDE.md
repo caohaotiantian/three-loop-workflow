@@ -106,14 +106,16 @@ quotes different figures.
   that a bundled script rejected AI attribution in commit messages; the script contained no such check, and
   nobody had run it. State what you ran, not what you intended.
 - Anti-bloat binds the always-loaded `SKILL.md` surface — push detail into references. There is no
-  gate-enforced cap; it is held near 1,350 words by review. v1 reached 2,915 words under a numeric ceiling,
+  gate-enforced cap; it is held near 1,320 words by review. Rules live here; the measurements behind them live in the references, because a statistic on the always-loaded surface costs tokens on every activation, changes no behavior, and drifts. v1 reached 2,915 words under a numeric ceiling,
   which is why the ceiling is not the mechanism.
 - Workflow scripts are plain JavaScript — no TypeScript, no `Date.now()`, no `Math.random()`. Validate with
   `check-workflow-syntax.sh`, not `node --check`.
 - `three-loop-workflow/scripts/phase.js` carries load-bearing control flow: `round` increments **only** on
-  a fix; reviewer findings are **unioned, never intersected**; triage runs **before** the closure count; a
-  reviewer that fails to return is an `agent-error`, never a pass. Preserve all four and re-run the syntax
-  gate.
+  a fix; the round cap tests **fixes spent** (`fixes >= maxRounds`), never the round about to be verified;
+  reviewer findings are **unioned, never intersected**; triage runs **before** the closure count; a reviewer
+  that fails to return is an `agent-error`, never a pass. Preserve all five and re-run the syntax gate. The
+  cap invariant is the one that has now been broken twice — once in v1, once in v2 — so check it by
+  simulating the loop, not by reading it.
 - Commit messages: conventional prefixes, no mention of AI involvement, model names, or tooling.
 - Do not add new CLAUDE.md roles without updating the anchor map above and every downstream file that reads
   those roles.

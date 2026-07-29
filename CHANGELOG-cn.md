@@ -8,8 +8,8 @@ three-loop-workflow skill 的完整版本历史。skill 的介绍、适用范围
 
 | | v1.14.0 | v2.0.0 |
 |---|---|---|
-| `SKILL.md` | 2,915 词 | **1,336 词** |
-| 全部散文(仅 Markdown) | 21,802 词 | **6,047 词** |
+| `SKILL.md` | 2,915 词 | **1,317 词** |
+| 全部散文(仅 Markdown) | 21,802 词 | **6,042 词** |
 | skill 内文件数(含脚本) | 20 | **8** |
 | 每个任务提交的文档数 | 2 | **0**(临时的 `.agent/<task>/plan.md`) |
 
@@ -25,7 +25,7 @@ three-loop-workflow skill 的完整版本历史。skill 的介绍、适用范围
 
 **每一项删除都给出依据。** `check-consistency.sh` 被删:把 `SKILL.md` 的核心终止规则替换成语义完全相反的版本、只在 HTML 注释里保留那个 token,它依然返回 `three-loop-consistency: OK`,退出码 0。五投票者面板及其反通胀条款被删(被要求「保守一点」的评审者会少报问题)。独立的 accept subagent 被删。v2 草案阶段携带的两个 hook 脚本 —— `require-plan.sh` 以及从 v1 沿用的 `validate-commit-msg.sh` —— 在发布前被移除;它们从未出现在任何一个 v2 发布版里。v2 不再机械强制任何东西,并且明说了这一点。
 
-**能够失败的测试。** v1 的 `tests/scenarios/` 实测**区分度为 0%** —— 6 个 fixture、两条臂,skill-off 6/6、skill-on 6/6,连续 16 个版本亮着绿灯却不携带任何信息。替代方案会在「加载 skill」与「屏蔽 skill」两种条件下各跑一遍每个 fixture,两臂都答对的 fixture 判为 INVALID 而不是绿灯。当前状态:6/6 guard 守住,1/1 区分性 fixture 有效。有两个原本按「区分性」写的 fixture 没能区分,被在 `expected.json` 里明确降级为 guard,而不是悄悄改个标签。
+**能够失败的测试。** v1 的 `tests/scenarios/` 实测**区分度为 0%** —— 6 个 fixture、两条臂,skill-off 6/6、skill-on 6/6,连续 16 个版本亮着绿灯却不携带任何信息。替代方案会在「加载 skill」与「屏蔽 skill」两种条件下各跑一遍每个 fixture,两臂都答对的 fixture 判为 INVALID 而不是绿灯。本次发布针对已发布的代码树实跑:`suite_pass: true`,6/6 guard 守住,无 GUARD-BROKEN,唯一那个区分性 fixture 有效 —— 对照臂因为一个角落有风险就把整个四文件变更升档,skill 臂没有。但要窄着读。评分者自己的告诫是:这是「未发现回归」,而不是对这套纪律的验证 —— 七个 fixture 里只有一个具备区分能力,三个 guard 的两条臂都报告场景正文已把规则说出来了,而那个唯一起作用的 fixture,部分依赖于选项本身的措辞。有两个原本按「区分性」写的 fixture 没能区分,被在 `expected.json` 里明确降级为 guard,而不是悄悄改个标签。
 
 **已知不完备之处,如实列出而非隐藏:** 评审者方差的证据测自一次工作会话,其原始产物不在本仓库中,因此那些数字无法从仓库复现;`close.md` 靠论证而非证据支撑;两名评审者的结论是在设计文档上测得的,不是在 diff 上;「第一轮干净的评审只是弱证据」这一推论来自检出率的推算,从未被直接观测到;此外,7 个 fixture 里有 6 个被一个禁止阅读 skill 的 agent 正确回答,因此这套纪律的大部分与模型自身判断是重复的。真正留下来的,是那些**具体且反直觉**的规则。
 

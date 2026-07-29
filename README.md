@@ -81,6 +81,11 @@ rm -f three-loop-workflow.skill && zip -r three-loop-workflow.skill three-loop-w
 Tagged releases (`v*`) also ship a prebuilt `.skill`, attached to the GitHub release by
 `.github/workflows/release.yml` — so you can download it instead of building locally.
 
+### After installing, in each repo you use it on
+
+Add `.agent/` to that repository's `.gitignore`. The skill writes one directory per task there and
+assumes it is ignored; nothing else is required.
+
 ### Claude.ai
 
 Upload the packaged `.skill` file via the Skill management page.

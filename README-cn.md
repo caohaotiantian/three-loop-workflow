@@ -81,6 +81,10 @@ rm -f three-loop-workflow.skill && zip -r three-loop-workflow.skill three-loop-w
 带标签的发布(`v*`)也会通过 `.github/workflows/release.yml` 在 GitHub release 上附带一个预构建的
 `.skill`,因此你可以直接下载而不必本地打包。
 
+### 安装之后,在每个使用它的仓库里
+
+把 `.agent/` 加进该仓库的 `.gitignore`。skill 会在那里为每个任务写一个目录,并假定它已被忽略;除此之外无需其它配置。
+
 ### Claude.ai
 
 在 Skill 管理页上传打包好的 `.skill` 文件。

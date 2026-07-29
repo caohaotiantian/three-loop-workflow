@@ -55,17 +55,17 @@ A command that exits 0 with everything skipped is not a pass.
 
 ## 4. Review — fresh eyes on the diff
 
-Reviewers are fresh subagents receiving **only** the diff and the plan's Goal / Non-goals / Accept. The first tool call is `git diff <baseSha>..HEAD`, where `baseSha` was captured before editing began.
+Reviewers are fresh subagents receiving the diff and the plan — and **nothing else**: not your summary of the change, not your session, not the reasoning that produced it. The first tool call is `git diff <baseSha>..HEAD`, where `baseSha` was captured before editing began.
 
 **How many reviewers.** Standard: one. Deep: **two, in parallel, independently** — take the union of what they find.
 
-Two is measured, not arbitrary. On this repo's own design documents, with every finding re-checked by independent adversarial adjudicators and coverage averaged over every reviewer ordering, one reviewer caught **56.5%** of the confirmed defects and two caught **85.5%** — and the second surfaced a blocking defect in every document that the first missed. Only 19% of defects were found by all three reviewers, and 51% by exactly one — reviewers miss *different* things, which is why a second one pays and a third mostly repeats (+14%).
+Two is measured on this repo's own design documents, not chosen for symmetry. A second independent reviewer adds roughly thirty points of defect coverage and catches blockers the first missed entirely; a third mostly repeats the second. Reviewers miss *different* things — that is the whole reason a second one pays. The measurement, and what it does not establish, are in `references/plan.md`.
 
 - **The author never reviews their own work.** This binds to identity, not to invocation: an agent that wrote the change cannot review it, whether the second role arrives by assignment, self-claim, or lead approval.
 - Ask for **everything, and triage yourself**. Do not tell a reviewer to be conservative or to report only high-severity items — it will comply literally and report less.
-- **Triage before you fix, and before you count.** Measured on this repo: of findings a reviewer graded blocking, only **50–70%** survived blind adversarial checking; of lower-severity findings, **30–46%**. Check each finding against the actual code and reject the ones that misread it. Expect to reject a lot — that is the cost of asking for everything, and it is cheaper than the alternative.
+- **Triage before you fix, and before you count.** Check each finding against the actual code and reject the ones that misread it. Expect to reject a large share, including findings graded blocking — measured on this repo, and quantified in `references/build.md`. That is the cost of asking for everything, and it is cheaper than the alternative.
 - **Closure is computed, not asserted** — from the count of *confirmed* findings, never the reviewer's summary verdict and never the raw report. Counting unconfirmed findings makes a phantom defect burn a fix round and can exhaust the cap on work that was already correct.
-- Two *independent* reviewers is not the same as double-checking your own work. Re-reading your own reasoning adds nothing; a reader who never saw it recovers about two-thirds of what you missed.
+- Two *independent* reviewers is not the same as double-checking your own work. Re-reading your own reasoning adds nothing; a reader who never saw it finds much of what you missed.
 
 **Termination**: the change closes when the *confirmed* blocking count is zero and the gates are green. Fix rounds are capped at **3**; hitting the cap escalates with a deadlock report — it never lowers the bar.
 

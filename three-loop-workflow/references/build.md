@@ -28,9 +28,9 @@ Record the gate output as commit trailers.
 
 **Standard: one reviewer. Deep: two, in parallel, independent — union their findings.**
 
-Each gets the diff and the plan's Goal / Non-goals / Accept — not your summary of the change, and not the whole skill. Send both the same prompt and do not let them see each other's output; the value comes from their independence.
+Each gets the diff and the plan — not your summary of the change, and not the whole skill. Send both the same prompt and do not let them see each other's output; the value comes from their independence.
 
-Two is measured on design documents, where a second independent reviewer raised coverage by 29 percentage points — 56.5% to 85.5% — including one blocker per document (see `plan.md`, "Why two"). Diffs are a friendlier target — the gates have already removed a whole class of defect before a reviewer looks — so a second reviewer buys less here than on a plan. Standard changes take one; Deep phases take two, because that is where an escaped defect is expensive.
+Two is measured on design documents, where a second independent reviewer raised coverage by 29 percentage points — 56.5% to 85.5% — and where the reviewers beyond the first surfaced four severe defects the first missed, one per document (see `plan.md`, "Why two"). Diffs are a friendlier target — the gates have already removed a whole class of defect before a reviewer looks — so a second reviewer buys less here than on a plan. Standard changes take one; Deep phases take two, because that is where an escaped defect is expensive.
 
 ```
 Review the diff at `git diff <baseSha>..HEAD` against the plan at .agent/<task>/plan.md.
