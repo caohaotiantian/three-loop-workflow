@@ -8,8 +8,8 @@ Full version history for the three-loop-workflow skill. See [README.md](./README
 
 | | v1.14.0 | v2.0.0 |
 |---|---|---|
-| `SKILL.md` | 2,915 words | **1,317 words** |
-| Total prose (Markdown only) | 21,802 words | **6,042 words** |
+| `SKILL.md` | 2,915 words | **1,307 words** |
+| Total prose (Markdown only) | 21,802 words | **6,047 words** |
 | Files in the skill (incl. scripts) | 20 | **8** |
 | Committed documents per task | 2 | **0** (ephemeral `.agent/<task>/plan.md`) |
 

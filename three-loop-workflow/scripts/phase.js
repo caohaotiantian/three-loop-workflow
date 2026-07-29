@@ -37,9 +37,10 @@ if (!acceptCmds.length) return { status: 'usage-error', reason: 'acceptCmds is r
 const WRITE_SCHEMA = {
   type: 'object',
   additionalProperties: false,
-  required: ['branch', 'conflict', 'blocked', 'concerns'],
+  required: ['branch', 'headSha', 'conflict', 'blocked', 'concerns'],
   properties: {
     branch: { type: 'string', description: 'Branch the work landed on' },
+    headSha: { type: 'string', description: 'Output of `git rev-parse HEAD` AFTER committing. The review diffs ref-to-ref, so uncommitted work is invisible to it.' },
     conflict: { type: 'boolean', description: 'True if the plan contradicts the code — do not decide, report it' },
     blocked: { type: 'boolean', description: 'True if you could not complete the task' },
     concerns: { type: 'array', items: { type: 'string' }, description: 'Parts you are least confident in' },
@@ -95,6 +96,9 @@ let work = await tryAgent(
   `Tasks:\n${tasks}\n\n` +
   `Create a branch for this phase and implement the tasks. Where you add new behavior, write the test ` +
   `first and watch it fail before making it pass.\n` +
+  `**Commit your work before returning**, matching the convention in \`git log --oneline -20\`, then ` +
+  `report \`git rev-parse HEAD\` as headSha. Review diffs ref-to-ref: anything left uncommitted is ` +
+  `invisible to it and will be reviewed as though you had changed nothing.\n` +
   `Before returning, read your own diff and remove anything that does not trace to the plan's Goal or a ` +
   `recorded Decision, plus any comment that narrates process rather than explaining code.\n` +
   `If the plan contradicts what you find in the code, set conflict=true and stop — do not decide it yourself.\n` +
@@ -131,6 +135,16 @@ if (work.blocked) {
 }
 
 if (!work.branch) return { status: 'agent-error', phaseLabel, round: 0, stage: 'write', reason: 'no branch returned' }
+
+// The review diffs baseSha..branch. If the implementer never committed, that range is empty and the
+// phase would close green having reviewed nothing — gates pass, because they run against the working
+// tree, and an empty diff is indistinguishable from a clean one. Fail loudly instead.
+if (!work.headSha) {
+  return { status: 'agent-error', phaseLabel, round: 0, stage: 'write', reason: 'no headSha returned — cannot confirm the work was committed' }
+}
+if (work.headSha === baseSha) {
+  return { status: 'agent-error', phaseLabel, round: 0, stage: 'write', reason: `nothing committed on ${work.branch}: HEAD is still baseSha, so the review would see an empty diff` }
+}
 
 const branch = work.branch
 const concerns = work.concerns || []
@@ -184,11 +198,10 @@ while (verifyRound <= maxRounds + 1) {
       `\nDo not modify code.`
 
     // Reviewers run independently and in parallel, and their findings are UNIONed.
-    // Measured on this repo's own design docs, validated by adversarial adjudication: one reviewer
-    // caught 56.5% of confirmed defects and two caught 85.5%. Before adjudication only 19% were found by
-    // every reviewer. Low overlap is the
+    // Measured on this repo's own design docs, with every finding re-checked adversarially: a second
+    // reviewer finds much of what the first missed, and the three overlap little. Low overlap is the
     // reason a second reviewer pays; it is also why the union must never be filtered down to
-    // what they agree on — agreement would discard half the real findings.
+    // what they agree on — agreement would discard most of the real findings.
     const verdicts = (await parallel(
       Array.from({ length: Math.max(1, reviewers) }, (_, i) => () =>
         tryAgent(reviewPrompt, {
@@ -209,7 +222,7 @@ while (verifyRound <= maxRounds + 1) {
     const nonblocking = [...new Set(verdicts.flatMap(v => v.nonblocking || []))]
 
     // Triage before counting. Measured on this repo's own review output, blind adversarial
-    // checking rejected 30-50% of blocking-graded findings. Closing on the RAW count lets a
+    // checking rejected a large share of blocking-graded findings. Closing on the RAW count lets a
     // phantom defect consume a fix round and exhaust the cap on already-correct code, so the
     // arithmetic below runs on confirmed findings only.
     let blocking = reported
@@ -254,6 +267,12 @@ while (verifyRound <= maxRounds + 1) {
   const failures = gates.all_pass ? review.blocking : gates.failures
   const stage = gates.all_pass ? 'review' : 'gates'
 
+  // A gate run that fails without naming what failed cannot be fixed: the Fix agent would get an
+  // empty list, edit something arbitrary, and spend a round on a null instruction.
+  if (!failures.length) {
+    return { status: 'agent-error', phaseLabel, round, fixes, stage, branch, reason: `${stage} reported failure with nothing listed` }
+  }
+
   // Cap on fixes SPENT, not on the round about to start: the Nth fix is allowed to run, and its
   // result is verified on the next trip. Only then is the budget genuinely exhausted.
   if (fixes >= maxRounds) {
@@ -273,7 +292,8 @@ while (verifyRound <= maxRounds + 1) {
     `If an item passes on re-run with no code change it is a flake, not a regression in this diff: do not ` +
     `disable the test, loosen an assertion, add a retry, or raise a timeout to force green. Leave it and ` +
     `report it as a separate concern.\n` +
-    `Commit to the same branch as fix(${phaseLabel}): naming the item you fixed.`,
+    `Commit to the same branch, matching the convention in \`git log --oneline -20\`, and name both the ` +
+    `phase and the item you fixed.`,
     { label: `fix:${phaseLabel}:r${round}`, phase: 'Fix', model: models.fix }
   )
 

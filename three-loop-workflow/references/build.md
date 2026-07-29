@@ -30,7 +30,7 @@ Record the gate output as commit trailers.
 
 Each gets the diff and the plan — not your summary of the change, and not the whole skill. Send both the same prompt and do not let them see each other's output; the value comes from their independence.
 
-Two is measured on design documents, where a second independent reviewer raised coverage by 29 percentage points — 56.5% to 85.5% — and where the reviewers beyond the first surfaced four severe defects the first missed, one per document (see `plan.md`, "Why two"). Diffs are a friendlier target — the gates have already removed a whole class of defect before a reviewer looks — so a second reviewer buys less here than on a plan. Standard changes take one; Deep phases take two, because that is where an escaped defect is expensive.
+Two is measured on design documents, where a second independent reviewer cut the misses roughly in half and surfaced a severe defect the first had missed in every document (see `plan.md`, "Why two"). Diffs are a friendlier target — the gates have already removed a whole class of defect before a reviewer looks — so a second reviewer buys less here than on a plan. Standard changes take one; Deep phases take two, because that is where an escaped defect is expensive.
 
 ```
 Review the diff at `git diff <baseSha>..HEAD` against the plan at .agent/<task>/plan.md.
@@ -61,7 +61,7 @@ Ask for everything and triage yourself. A reviewer told to be conservative repor
 
 Reject a finding when it misreads the code, attacks something the code does not do, describes a real property that is not a problem, or dissolves once you read the surrounding lines. When you are torn, look again rather than fixing defensively — a fix applied to a non-defect is a change with no reason behind it, and the next reviewer will ask why it exists.
 
-This step is not optional bookkeeping. Measured on this repo's own review output, blind adversarial checking rejected **30–50% of findings graded blocking** and **54–70% of lower-severity findings**. A reviewer asked to report everything will report things that are not there; that is the trade you made to get its recall up, and triage is where you pay it back.
+This step is not optional bookkeeping. Measured on this repo's own review output, blind adversarial checking rejected a large share of what reviewers reported — including a substantial fraction of the findings they graded *blocking*, which are the ones you are most tempted to fix on sight. A reviewer asked to report everything will report things that are not there; that is the trade you made to get its recall up, and triage is where you pay it back.
 
 **The confirmed count is what closes the phase**, not the reported one. Skipping triage means a phantom finding consumes a fix round and can exhaust the round cap on code that was already correct.
 

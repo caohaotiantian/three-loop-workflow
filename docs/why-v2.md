@@ -216,8 +216,8 @@ clean third round*. In v2, `round` increments only when a fix runs.
 
 | | v1.14.0 | v2.0.0 |
 |---|---|---|
-| `SKILL.md` | 2,915 words | **1,317 words** |
-| Total prose (Markdown only) | 21,802 words | **6,042 words** |
+| `SKILL.md` | 2,915 words | **1,307 words** |
+| Total prose (Markdown only) | 21,802 words | **6,047 words** |
 | Files (incl. scripts) | 20 | **8** |
 | Committed docs per task | 2 | **0** |
 
