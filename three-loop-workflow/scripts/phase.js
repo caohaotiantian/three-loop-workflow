@@ -19,7 +19,7 @@ export const meta = {
 
 const {
   phaseLabel = 'phase',
-  planPath = '.agent/plan.md',
+  planPath,
   tasks = '',
   acceptCmds = [],
   baseSha,
@@ -28,6 +28,7 @@ const {
   models = {},
 } = args || {}
 
+if (!planPath) return { status: 'usage-error', reason: 'planPath is required — plans live at .agent/<task>/plan.md, one directory per task, so there is no default to fall back to' }
 if (!baseSha) return { status: 'usage-error', reason: 'baseSha is required and must be captured BEFORE editing' }
 if (!acceptCmds.length) return { status: 'usage-error', reason: 'acceptCmds is required — a phase with no runnable acceptance cannot close' }
 

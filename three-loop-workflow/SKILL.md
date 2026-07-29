@@ -27,9 +27,13 @@ Between Direct and Standard, choose **Standard**. Between Standard and Deep, the
 
 Terse phrasing is not a depth signal. "Just quickly add X" describes urgency, not blast radius — grade the change, not the sentence.
 
-## 2. Durable state — `.agent/plan.md`
+## 2. Durable state — `.agent/<task>/plan.md`
 
-Write the plan to `.agent/plan.md` (gitignored, ephemeral, one per task; overwrite freely). It is the **re-entry point after context compaction**: if you resume and cannot remember the task, read this file first.
+Every task gets **its own gitignored directory** under `.agent/`, named for the task: `.agent/rate-limit-headers/plan.md`. Anything else scoped to the task — an acceptance script, scratch notes — lives beside it in that directory.
+
+Never a shared path. Two tasks both writing `.agent/plan.md` overwrite each other, and a finished task leaves no record of what it decided. The directory is that record.
+
+It is the **re-entry point after context compaction**: if you resume and cannot remember the task, read its plan first — `ls -t .agent/*/plan.md | head -1` is the most recent.
 
 Standard needs four fields. Deep adds the fifth.
 
@@ -55,13 +59,13 @@ Reviewers are fresh subagents receiving **only** the diff and the plan's Goal / 
 
 **How many reviewers.** Standard: one. Deep: **two, in parallel, independently** — take the union of what they find.
 
-Two is measured, not arbitrary. On this repo's own design documents, a single reviewer caught 54% of the defects three reviewers found between them; a second independent reviewer took coverage to 86% and surfaced a blocking defect in every document that the first missed. Only 19% of defects were found by all three, and 51% by exactly one — reviewers miss *different* things, which is why a second one pays and a third mostly repeats (+14%).
+Two is measured, not arbitrary. On this repo's own design documents, with every finding re-checked by independent adversarial adjudicators and coverage averaged over every reviewer ordering, one reviewer caught **56.5%** of the confirmed defects and two caught **85.5%** — and the second surfaced a blocking defect in every document that the first missed. Only 19% of defects were found by all three reviewers, and 51% by exactly one — reviewers miss *different* things, which is why a second one pays and a third mostly repeats (+14%).
 
 - **The author never reviews their own work.** This binds to identity, not to invocation: an agent that wrote the change cannot review it, whether the second role arrives by assignment, self-claim, or lead approval.
 - Ask for **everything, and triage yourself**. Do not tell a reviewer to be conservative or to report only high-severity items — it will comply literally and report less.
 - **Triage before you fix, and before you count.** Measured on this repo: of findings a reviewer graded blocking, only **50–70%** survived blind adversarial checking; of lower-severity findings, **30–46%**. Check each finding against the actual code and reject the ones that misread it. Expect to reject a lot — that is the cost of asking for everything, and it is cheaper than the alternative.
 - **Closure is computed, not asserted** — from the count of *confirmed* findings, never the reviewer's summary verdict and never the raw report. Counting unconfirmed findings makes a phantom defect burn a fix round and can exhaust the cap on work that was already correct.
-- Two *independent* reviewers is not the same as double-checking your own work. Re-reading your own reasoning adds nothing; a reader who never saw it adds ~45%.
+- Two *independent* reviewers is not the same as double-checking your own work. Re-reading your own reasoning adds nothing; a reader who never saw it recovers about two-thirds of what you missed.
 
 **Termination**: the change closes when the reviewer reports zero blocking issues and the gates are green. Fix rounds are capped at **3**; hitting the cap escalates with a deadlock report — it never lowers the bar.
 
@@ -71,7 +75,7 @@ If the repository can answer it, look it up — asking the user to confirm what 
 
 Every escalation carries **options, a recommendation, and the rationale**. Never an open-ended "what should we do?".
 
-Never substitute a silent default for a real decision. Record what the user decides in `.agent/plan.md`.
+Never substitute a silent default for a real decision. Record what the user decides in the task's `plan.md`.
 
 ## Routing
 

@@ -5,14 +5,14 @@ A disciplined workflow for non-trivial software changes, packaged as a portable 
 中文版本 → [README-cn.md](./README-cn.md)
 
 > **v2.0.0 is a ground-up rewrite and a breaking change.** If you have v1 installed, read
-> [Upgrading from v1](#upgrading-from-v1) before copying anything — the two versions share a folder name
-> and nothing else. What changed and why: [docs/why-v2.md](./docs/why-v2.md).
+> [Upgrading from v1](#upgrading-from-v1) before copying anything — you must replace the folder, not
+> copy into it. What changed and why: [docs/why-v2.md](./docs/why-v2.md).
 
 ## What's in this repo
 
 - **`three-loop-workflow/`** — a Claude skill that operationalizes the workflow. Drop this folder into Claude Code or Claude.ai and Claude will follow it on any non-trivial code change.
 
-The skill files (`SKILL.md` + `references/`) are the single source of truth — they are what Claude Code loads and executes. A short entry point (`SKILL.md`) routes to per-stage reference files that load only when needed.
+The skill files (`SKILL.md`, `references/`, `scripts/`) are the single source of truth — they are what Claude Code loads and executes. A short entry point (`SKILL.md`) routes to per-stage reference files that load only when needed.
 
 ## What's new
 
@@ -26,7 +26,7 @@ Most agentic coding failures share a pattern: rushing into implementation, picki
 
 | Loop | What it produces |
 |---|---|
-| **Plan** | `.agent/plan.md` — Goal, Non-goals, Decisions, and an **Accept** command with an exit code |
+| **Plan** | `.agent/<task>/plan.md` — Goal, Non-goals, Decisions, and an **Accept** command with an exit code |
 | **Build** | write → gates → review → fix, repeated until the blocking count is zero |
 | **Close** | *(Deep changes only)* the coherence questions no single phase asked |
 
@@ -99,7 +99,7 @@ Copying the folder into `.claude/skills/` and `.agents/skills/` covers all three
 
 ## Upgrading from v1
 
-**Replace the folder; do not merge into it.** v1 and v2 share a directory name and no file names. Copying v2 over an existing v1 install leaves all 20 v1 files in place, and the skill then routes to references that contradict the ones it ships with.
+**Replace the folder; do not merge into it.** v1 and v2 share exactly two filenames — `SKILL.md` and `references/platforms.md`. Copying v2 over an existing v1 install overwrites those two and leaves the **other 18 v1 files** sitting in the directory (`loop-1-design.md`, `l3-phase.js`, `check-consistency.sh`, and the rest). Nothing routes to them, but an agent that greps the skill directory will still find them and read rules this version retired.
 
 ```bash
 # Claude Code, user-level
@@ -112,14 +112,15 @@ rsync -a --delete three-loop-workflow/ ~/.claude/skills/three-loop-workflow/
 
 What you need to know:
 
-- **Your `CLAUDE.md` anchor map still works, unchanged.** The five roles are the same. If you keep an
-  `AGENTS.md`, v2 reads that too — see below.
-- **`docs/design/` and `docs/implementation/` are no longer written.** v2's plan is a single ephemeral
-  `.agent/plan.md`, gitignored. Add `.agent/` to your `.gitignore`. Existing archives are yours to keep or
-  delete; nothing reads them.
-- **Hooks and gate scripts are gone.** If your `settings.json` invokes `require-plan.sh` or
-  `validate-commit-msg.sh` from this skill, remove those entries — the scripts no longer ship, and a hook
-  pointing at a missing command fails on every edit.
+- **Your `CLAUDE.md` anchor map still works, unchanged.** The role names are the same; v2 reads three of
+  the five (see below). If you keep an `AGENTS.md`, v2 reads that too.
+- **`docs/design/` and `docs/implementation/` are no longer written.** v2 writes one gitignored directory
+  per task — `.agent/<task>/plan.md`, plus whatever else that task needs. Add `.agent/` to your
+  `.gitignore`. Existing archives are yours to keep or delete; nothing reads them.
+- **The gate scripts are gone.** v1 shipped `check-consistency.sh`, `validate-commit-msg.sh` and
+  `check-workflow-syntax.sh`; v2 ships only the last of those, moved to `scripts/`. If your
+  `settings.json` wired up `validate-commit-msg.sh` as a commit hook, remove that entry — a hook
+  pointing at a missing command fails on every commit.
 - **Terminology changed.** L1/L2/L3/F → Plan/Build/Close. Full/Light/None → Deep/Standard/Direct.
   severe/general → blocking/non-blocking. Any project doc quoting the old terms needs updating.
 
@@ -128,15 +129,17 @@ Staying on v1 is supported in the sense that it still exists: `git checkout v1.1
 
 ## Project setup (one-time per repo)
 
-The skill references project-specific values via **roles**, not literal heading names. Each project pins those in its project guide — `AGENTS.md`, `CLAUDE.md`, or both. The five required roles:
+The skill references project-specific values via **roles**, not literal heading names. Each project pins those in its project guide — `AGENTS.md`, `CLAUDE.md`, or both. v2 reads three of them:
 
-| Role | Holds |
-|---|---|
-| `_repo-workflow_` | how tasks proceed in this repo |
-| `_load-bearing-docs_` | which contract files are protected by the full cycle |
-| `_language-policy_` | language and terminology rules |
-| `_common-commands_` | the concrete typecheck / lint / build / test commands |
-| `_engineering-norms_` | project-level coding standards |
+| Role | Holds | Read by v2 |
+|---|---|---|
+| `_load-bearing-docs_` | which contract files are protected by the full cycle | yes — it drives the Deep tier |
+| `_common-commands_` | the concrete typecheck / lint / build / test commands | yes — Gates run these |
+| `_engineering-norms_` | project-level coding standards | yes |
+| `_repo-workflow_` | how tasks proceed in this repo | not read directly; conventional |
+| `_language-policy_` | language and terminology rules | not read directly; conventional |
+
+The last two are part of the anchor-map convention and are worth keeping — other tooling and human readers use them — but the skill will work with the first three.
 
 Example anchor map at the top of a project's guide:
 

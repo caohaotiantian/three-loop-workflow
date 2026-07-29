@@ -36,7 +36,7 @@ Batch related questions into one round rather than interrogating one at a time �
 
 ## Record the answer
 
-- Changes the Goal, a Decision, or Accept → `.agent/plan.md`.
+- Changes the Goal, a Decision, or Accept → the task's `.agent/<task>/plan.md`.
 - Tactical, fits an existing decision → the commit message body.
 
 An answer that lives only in chat cannot anchor a future change. Write it down.

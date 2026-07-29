@@ -5,14 +5,14 @@
 English version → [README.md](./README.md)
 
 > **v2.0.0 是一次彻底重写,属于破坏性变更(breaking change)。** 如果你已经安装了 v1,请先阅读
-> [从 v1 升级](#从-v1-升级) 再复制任何文件 —— 两个版本除了文件夹名字之外没有任何共同之处。
+> [从 v1 升级](#从-v1-升级) 再复制任何文件 —— 你必须**替换**整个文件夹,而不是往里复制。
 > 变更内容与依据见 [docs/why-v2-cn.md](./docs/why-v2-cn.md)。
 
 ## 仓库内容
 
 - **`three-loop-workflow/`** —— 把工作流落实为可执行流程的 Claude skill。把这个文件夹放进 Claude Code 或 Claude.ai,Claude 在处理任何非平凡代码改动时都会按照它执行。
 
-skill 文件(`SKILL.md` + `references/`)是唯一事实标准 —— 它们是 Claude Code 实际加载并执行的内容。短小的入口(`SKILL.md`)按需路由到分阶段的引用文件。
+skill 文件(`SKILL.md`、`references/`、`scripts/`)是唯一事实标准 —— 它们是 Claude Code 实际加载并执行的内容。短小的入口(`SKILL.md`)按需路由到分阶段的引用文件。
 
 ## 更新内容
 
@@ -26,7 +26,7 @@ agent 类编码失败有共同模式:急于动手实现、悄悄选择默认值�
 
 | 循环 | 产出 |
 |---|---|
-| **Plan(计划)** | `.agent/plan.md` —— 目标、非目标、决策,以及一条带退出码的 **Accept(验收)** 命令 |
+| **Plan(计划)** | `.agent/<task>/plan.md` —— 目标、非目标、决策,以及一条带退出码的 **Accept(验收)** 命令 |
 | **Build(构建)** | 编写 → 门禁 → 评审 → 修复,循环到 blocking 计数归零 |
 | **Close(收尾)** | *(仅 Deep 档)* 回答任何单个阶段都没问过的整体一致性问题 |
 
@@ -99,7 +99,7 @@ rm -f three-loop-workflow.skill && zip -r three-loop-workflow.skill three-loop-w
 
 ## 从 v1 升级
 
-**替换整个文件夹,不要往里合并。** v1 与 v2 只有目录名相同,文件名没有一个相同。把 v2 覆盖到已有的 v1 安装上,会让 20 个 v1 文件原地残留,skill 随后会路由到与自身内容互相矛盾的引用文件。
+**替换整个文件夹,不要往里合并。** v1 与 v2 只有两个文件名相同 —— `SKILL.md` 和 `references/platforms.md`。把 v2 覆盖到已有的 v1 安装上,只会覆盖这两个,**另外 18 个 v1 文件**会原地残留(`loop-1-design.md`、`l3-phase.js`、`check-consistency.sh` 等等)。没有任何东西会路由到它们,但某个 agent 只要 grep 这个 skill 目录,就会找到并读到本版本已经废弃的规则。
 
 ```bash
 # Claude Code,用户级
@@ -114,10 +114,12 @@ rsync -a --delete three-loop-workflow/ ~/.claude/skills/three-loop-workflow/
 
 - **你的 `CLAUDE.md` anchor map 不用改,继续有效。** 五个角色完全一致。如果你还维护 `AGENTS.md`,
   v2 也会一并读取 —— 见下文。
-- **`docs/design/` 与 `docs/implementation/` 不再产出。** v2 的计划是单个临时文件 `.agent/plan.md`,
-  且被 gitignore。请把 `.agent/` 加进你的 `.gitignore`。已有归档留着或删掉都行,没有任何东西会读它们。
-- **hook 和门禁脚本已移除。** 如果你的 `settings.json` 调用了本 skill 的 `require-plan.sh` 或
-  `validate-commit-msg.sh`,请删掉那些配置 —— 脚本不再随包发布,而指向不存在命令的 hook 会在每次编辑时报错。
+- **`docs/design/` 与 `docs/implementation/` 不再产出。** v2 为每个任务写一个受 gitignore 的目录 ——
+  `.agent/<task>/plan.md`,以及该任务需要的其它文件。请把 `.agent/` 加进你的 `.gitignore`。
+  已有归档留着或删掉都行,没有任何东西会读它们。
+- **门禁脚本已移除。** v1 随包发布了 `check-consistency.sh`、`validate-commit-msg.sh` 与
+  `check-workflow-syntax.sh`;v2 只保留最后一个,并移到了 `scripts/`。如果你的 `settings.json` 把
+  `validate-commit-msg.sh` 配成了提交 hook,请删掉那个条目 —— 指向不存在命令的 hook 会在每次提交时报错。
 - **术语变了。** L1/L2/L3/F → Plan/Build/Close;Full/Light/None → Deep/Standard/Direct;
   severe/general → blocking/non-blocking。任何引用了旧术语的项目文档都需要同步更新。
 
@@ -126,15 +128,17 @@ rsync -a --delete three-loop-workflow/ ~/.claude/skills/three-loop-workflow/
 
 ## 项目接入(每个仓库一次)
 
-skill 通过**角色(role)** 引用项目特定的值,而不是字面 heading 名。每个项目在自己的项目指南里绑定这些角色 —— `AGENTS.md`、`CLAUDE.md`,或两者都有。五个必须角色:
+skill 通过**角色(role)** 引用项目特定的值,而不是字面 heading 名。每个项目在自己的项目指南里绑定这些角色 —— `AGENTS.md`、`CLAUDE.md`,或两者都有。v2 实际读取其中三个:
 
-| 角色 | 承载内容 |
-|---|---|
-| `_repo-workflow_` | 本仓库的任务流程 |
-| `_load-bearing-docs_` | 受完整循环保护的契约文件清单 |
-| `_language-policy_` | 语言和术语规则 |
-| `_common-commands_` | 具体的 typecheck / lint / build / test 命令 |
-| `_engineering-norms_` | 项目级编码规范 |
+| 角色 | 承载内容 | v2 是否读取 |
+|---|---|---|
+| `_load-bearing-docs_` | 受完整循环保护的契约文件清单 | 是 —— 它驱动 Deep 档判定 |
+| `_common-commands_` | 具体的 typecheck / lint / build / test 命令 | 是 —— 门禁执行这些命令 |
+| `_engineering-norms_` | 项目级编码规范 | 是 |
+| `_repo-workflow_` | 本仓库的任务流程 | 否;属于约定 |
+| `_language-policy_` | 语言和术语规则 | 否;属于约定 |
+
+后两个属于 anchor map 约定的一部分,值得保留 —— 其它工具和人类读者会用到 —— 但只要有前三个,skill 就能正常工作。
 
 项目指南顶部的 anchor map 示例:
 

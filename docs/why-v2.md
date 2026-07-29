@@ -42,8 +42,8 @@ there. The ceiling had already been raised once, 2,888 → 2,920, to make room.
 That is not a file you can trim. That is a ratchet, and it is why this became a rebuild instead of an
 edit.
 
-Around it sat the rest of the package: **21,802 words of prose across 20 files** (27,896 including the
-scripts). And beside the product, the exhaust — `docs/design/` and `docs/implementation/`, the
+Around it sat the rest of the package: **21,802 words of prose across 15 Markdown files** — 27,896 words
+and 20 files once the four scripts are counted. And beside the product, the exhaust — `docs/design/` and `docs/implementation/`, the
 committed per-task archive, at **43,822 words**. One and a half times the size of the thing it
 documented, and read by no human. Agents wrote it, agents read it, and it went into every repository
 that used the skill.
@@ -52,9 +52,9 @@ that used the skill.
 
 `CLAUDE.md` called `check-consistency.sh` "the authoritative acceptance check." It was 242 lines, 124 of
 them substantive, and it had exactly one checking primitive: a shell function `require()` whose entire
-body was `grep -qF -- "$token" "$f"`. It was invoked **24 times**. Against that sat **three** checks that
-actually inspected content — a byte-identity comparison of two duplicated code blocks, one grep for a
-specific forbidden string, and a word-count ceiling.
+body was `grep -qF -- "$token" "$f"`. It was invoked **24 times**. Against that sat **five** checks that
+inspected content at all: two byte-identity comparisons of duplicated blocks, one grep for a specific
+forbidden string, and two word-count ceilings.
 
 So we tested it. We took `SKILL.md`'s central termination rule and replaced it with its exact semantic
 opposite — *"Exit the loop immediately; a confirming round is optional"* — while leaving the required
@@ -83,7 +83,7 @@ agent with the skill loaded, once by an agent **hard-forbidden from reading it**
 
 All twelve runs, asked to self-report, volunteered that the scenario text had stated the governing rule
 before asking the question. Nine of nine files inspected had the same defect. Some filenames were
-answer keys on their own — a fixture named `...-is-standard.md` does not need to be opened.
+answer keys on their own — a fixture named `quickly-add-is-full.md` does not need to be opened.
 
 A suite that cannot fail when the behavior is wrong is worse than no suite, because it reads as
 coverage that does not exist. This one had been reporting coverage it never had, for sixteen releases,
@@ -103,7 +103,7 @@ Three independent sources said cut it:
 - **Anthropic's Opus 5 guidance** — "remove them"; "do not use subagents to verify or double-check your
   own work."
 - **The superpowers 5×5 A/B**, which found no benefit.
-- **Our own 15-agent research and audit sweep**, whose synthesis read: *delete the two-generation rule,
+- **Our own research and audit sweep**, whose synthesis read: *delete the two-generation rule,
   delete the panel, delete the accept corner; keep one reviewer on the diff.*
 
 The plan was written to delete it. Before executing, we measured it.
@@ -135,7 +135,7 @@ curve flattens.
 **The data said keep it.** The plan was wrong, and the three sources that recommended deleting it were
 answering a different question. The boundary that reconciles them: *self*-verification is dead — an
 agent re-reading its own reasoning adds nothing. *Independent* review by a reader who never saw that
-reasoning adds about 45%. Opus 5's guidance is about the first. This measurement is about the second.
+reasoning adds 29 percentage points of coverage — roughly two-thirds of what the first reviewer missed. Opus 5's guidance is about the first. This measurement is about the second.
 
 So v2 kept the confirming round, and re-mechanised it: **two reviewers in parallel on Deep work, one on
 Standard, never three.**
@@ -208,14 +208,14 @@ clean third round*. In v2, `round` increments only when a fix runs.
 
 | | v1.14.0 | v2.0.0 |
 |---|---|---|
-| `SKILL.md` | 2,915 words | **1,259 words** |
-| Total prose (Markdown only) | 21,802 words | **5,854 words** |
+| `SKILL.md` | 2,915 words | **1,336 words** |
+| Total prose (Markdown only) | 21,802 words | **6,028 words** |
 | Files (incl. scripts) | 20 | **8** |
 | Committed docs per task | 2 | **0** |
 
 **Plan → Build → Close.** L1 and L2 were one plan artificially cut in two. Merging them deleted the
 slug protocol, the rollback protocol, the Deprecated-section convention, and an entire review loop.
-The output is one gitignored `.agent/plan.md` instead of two committed documents.
+The output is a gitignored `.agent/<task>/plan.md` — one directory per task — instead of two committed documents.
 
 **Depth graded on blast radius and reversibility.** *If this is wrong, how much breaks? How hard is it
 to undo?* Direct / Standard / Deep, with a **checklist** for the deep tier. v1's gate was a disjunction
@@ -292,8 +292,8 @@ figure appears nowhere in the source it was condensing — it belonged to a diff
 written in the same diff that reworded the norm *"state what you ran, not what you intended."*
 
 **We reported a metric that flattered us.** Prohibition tokens (`never`, `do not`, `don't`,
-`forbidden`, `must not`) fell from **135 to 36** across the Markdown surface — a 73% drop that reads
-like a rewrite. But prohibition *density* did not move: **6.19 → 6.14 per 1,000 words.** The absolute
+`forbidden`, `must not`) fell from **135 to 37** across the Markdown surface — a 73% drop that reads
+like a rewrite. But prohibition *density* did not move: **6.19 → 6.13 per 1,000 words.** The absolute
 drop is almost entirely a side effect of a shorter document, not of rewriting prohibitions as positive
 instructions. Worse, the first published version of that comparison measured v1 across *all* files
 against v2 across *Markdown only* — two different denominators in one table.
@@ -348,8 +348,8 @@ things from this transfer:
    you have learned something about the rule, not just the fixture.
 
 3. **Independent review is not self-verification, and the guidance to delete the second one does not
-   apply to it.** Two readers who never saw each other's output find roughly 45% more than one. Three
-   find 14% more than two.
+   apply to it.** Two readers who never saw each other's output cover 85.5% of the
+   defects where one covers 56.5%. A third adds 14 points more.
 
 4. **Ask for everything, then triage.** High recall costs precision — between 30% and 50% of what you
    get back will not be there. Confirm before you fix, and *before you count*. Otherwise a defect that

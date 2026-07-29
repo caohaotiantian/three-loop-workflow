@@ -19,10 +19,11 @@ It is the canonical case where the load-bearing documents *are* the product.
 ## Development Workflow
 
 Changes to the skill follow that skill's own **Plan → Build → Close** cycle. Entry point:
-`three-loop-workflow/SKILL.md`. Choose a depth, write `.agent/plan.md`, run the gates before spawning a
+`three-loop-workflow/SKILL.md`. Choose a depth, write `.agent/<task>/plan.md`, run the gates before spawning a
 reviewer, review the diff with a fresh subagent, and **triage findings before counting them**.
 
-Any edit to a file under _load-bearing-docs_ is a **Deep** change by the skill's own depth gate.
+Any edit that changes a rule in a file under _load-bearing-docs_ is a **Deep** change by the skill's own
+depth gate. A typo or formatting fix in one of those files is still Direct.
 
 Escalation: open an issue or comment in the PR.
 
@@ -57,7 +58,7 @@ Protected by the full cycle:
 audit records), and the `docs/design/` + `docs/implementation/` archives.
 
 `docs/design/` and `docs/implementation/` are a **frozen v1 archive**, kept as the record of how v1 was
-built. v2 does not produce per-task documents; its plan lives in a gitignored `.agent/plan.md`. Do not add
+built. v2 does not produce per-task documents; its plan lives in a gitignored `.agent/<task>/plan.md`, one directory per task. Do not add
 to those directories and do not treat their contents as describing current behavior.
 
 ## Language Policy
@@ -69,8 +70,10 @@ v1's vocabulary (L1/L2/L3/F, Full/Light/None, severe/general) is **retired**. It
 `CHANGELOG*.md` version-history tables and the frozen `docs/design/` + `docs/implementation/` archive,
 which are historical records and must not be retro-edited into v2 terms. Do not use it in new writing.
 
-The exceptions to English are the `-cn.md` files — `README-cn.md`, `CHANGELOG-cn.md`, `docs/why-v2-cn.md`
-— each a Chinese translation of its English counterpart. When one changes, change its pair.
+The exceptions to English are the `-cn.md` files — `README-cn.md`, `CHANGELOG-cn.md`,
+`docs/why-v2-cn.md`, `docs/announcement-v2.0.0-cn.md` — each a Chinese translation of its English
+counterpart. When one changes, change its pair; `.agent/accept.sh` fails if a pair quotes different
+figures.
 
 ## Common Commands
 
@@ -79,8 +82,8 @@ The exceptions to English are the `-cn.md` files — `README-cn.md`, `CHANGELOG-
 - **Two-arm scenario suite:** `Workflow({ scriptPath: "tests/run-scenarios.js" })`. Runs every fixture with
   the skill loaded and withheld. A fixture both arms answer correctly proves nothing and is reported
   INVALID; a `guard` fixture that skill-on gets wrong is the most serious result it can return. Answers
-  live in `tests/expected.json`, deliberately outside the fixtures. Note the runner's `REPO` default is an
-  absolute path — pass `args: {repo: "<path>"}` anywhere else.
+  live in `tests/expected.json`, deliberately outside the fixtures. Paths resolve relative to the repo
+  root; pass `args: {repo: "<path>"}` to run it against a checkout elsewhere.
 - **Workflow-script syntax gate:** `bash three-loop-workflow/scripts/check-workflow-syntax.sh <file.js>` —
   reliably parses a Workflow script (`node --check` mis-parses these `export` + top-level-`return` files).
   Works; use it on every `.js` change.

@@ -1,6 +1,6 @@
 # three-loop-workflow v2.0.0
 
-**A ground-up rewrite. The skill is 78% smaller and every name in it changed.**
+**A ground-up rewrite. The prose is 72% smaller and every name in it changed.**
 
 中文版 → [announcement-v2.0.0-cn.md](./announcement-v2.0.0-cn.md)
 
@@ -10,8 +10,8 @@
 
 | | v1.14.0 | v2.0.0 |
 |---|---|---|
-| `SKILL.md` (loaded every time) | 2,915 words | **1,259 words** |
-| Total prose (Markdown only) | 21,802 words | **5,854 words** |
+| `SKILL.md` (loaded every time) | 2,915 words | **1,336 words** |
+| Total prose (Markdown only) | 21,802 words | **6,028 words** |
 | Files (incl. scripts) | 20 | **8** |
 | Documents committed per task | 2 | **0** |
 
@@ -19,10 +19,10 @@ The discipline survived. The delivery did not.
 
 **Plan → Build → Close** replaces L1 → L2 → L3 → F. L1 and L2 were one plan cut in two; merging them
 removed an entire review loop, the slug protocol, and the rollback protocol. The plan is now a single
-gitignored `.agent/plan.md` — not two committed documents. The old per-task archive had reached 43,822
+gitignored `.agent/<task>/plan.md`, one directory per task — not two committed documents. The old per-task archive had reached 43,822
 words against 27,896 words of actual product, and no human ever read it.
 
-**Direct / Standard / Deep** replaces Full / Light / None, graded on two questions: *if this is wrong,
+**Deep / Standard / Direct** replaces Full / Light / None, graded on two questions: *if this is wrong,
 how much breaks?* and *how hard is it to undo?* The deep tier is now a **checklist, not a vibe** — if no
 item fires, Standard is correct. One risky corner no longer upgrades an entire change.
 
@@ -48,9 +48,10 @@ both arms pass as **INVALID** rather than green.
 
 ## Upgrading
 
-**Replace the folder. Do not copy into it.** v1 and v2 share a directory name and no file names —
-copying v2 over v1 leaves all 20 v1 files in place, and the skill will route to references that
-contradict the ones it ships with.
+**Replace the folder. Do not copy into it.** v1 and v2 share exactly two filenames — `SKILL.md` and
+`references/platforms.md`. Copying v2 over v1 overwrites those and leaves the **other 18 v1 files**
+behind (`loop-1-design.md`, `l3-phase.js`, `check-consistency.sh`, …). Nothing routes to them, but they
+are still in the directory for an agent to find and read.
 
 ```bash
 rm -rf ~/.claude/skills/three-loop-workflow
@@ -63,9 +64,9 @@ rsync -a --delete three-loop-workflow/ ~/.claude/skills/three-loop-workflow/
 Then:
 
 - **Add `.agent/` to your `.gitignore`.** That is where the plan now lives.
-- **Remove any hook wiring.** If your `settings.json` invokes `require-plan.sh` or
-  `validate-commit-msg.sh` from this skill, delete those entries — the scripts no longer ship, and a
-  hook pointing at a missing command fails on every edit.
+- **Remove any hook wiring.** v1 shipped an optional commit-message lint, `validate-commit-msg.sh`.
+  v2 does not. If your `settings.json` invoked it, delete that entry — a hook pointing at a missing
+  command fails on every commit.
 - **Your `CLAUDE.md` anchor map still works, unchanged.** Same five roles. If you keep an `AGENTS.md`,
   v2 reads that too, and reads both when both exist.
 - **`docs/design/` and `docs/implementation/` are no longer written.** Existing archives are yours to
@@ -80,15 +81,18 @@ Staying on v1 is supported in the sense that it still exists — `git checkout v
 
 ## Two things you should know before adopting it
 
-**v2 enforces nothing mechanically.** v1 shipped hooks that could block an edit. v2 does not. Every rule
-in it is a request the agent can decline. This was a deliberate call, and it is stated here rather than
-buried, because "no contract edit without a plan" went from a guarantee to a convention.
+**v2 enforces nothing mechanically.** Every rule in it is a request the agent can decline. During
+development v2 carried `require-plan.sh`, a hook that blocked edits to contract files when no plan
+existed — which made "no contract edit without a plan" an actual guarantee. It was removed before
+release, deliberately, and that guarantee is now a convention. v1 never had that hook either; the only
+hook it ever shipped was an optional commit-message lint. This is stated here rather than buried
+because it is the one dimension on which v2 is weaker than it briefly was.
 
 **Most of this discipline is redundant with Opus 5's own judgment.** We measured that too. Of seven
 behavioral fixtures, six were answered correctly by an agent forbidden to read the skill. Only one
 discriminated — the counter-intuitive rule that one risky corner does not upgrade the whole change. The
 skill's value is concentrated in the specific and surprising rules, not in the ones that restate good
-engineering. We publish this because you will find it in `tests/expected.json` anyway, which ships.
+engineering. We publish it because it is sitting in `tests/expected.json` in this repo either way.
 
 ---
 

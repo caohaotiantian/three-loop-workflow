@@ -1,6 +1,8 @@
 # Plan
 
-Goal: `.agent/plan.md` should let a fresh agent finish the work using only that file plus the repo. No session context required.
+Goal: the task's `.agent/<task>/plan.md` should let a fresh agent finish the work using only that file plus the repo. No session context required.
+
+One directory per task — see `SKILL.md` §2. Everything this task needs that is not source code goes in that directory, so a second task running beside it cannot overwrite any of it.
 
 Write it, then start building. It is working state — keep it short and edit it as you learn.
 
@@ -70,7 +72,7 @@ What they should look for:
 - Missing rollback on something irreversible.
 - An internal contradiction between two sections — the single highest-yield defect class in practice, and the one a lone reviewer most often misses.
 
-**Why two.** Measured on this repo's own design documents: a single reviewer found 54% of the defects that three reviewers found between them. Adding a second independent reviewer raised coverage to 86% and surfaced a severe, blocking defect in *every* document that the first reviewer had missed entirely. Only 19% of defects were seen by all three reviewers; 51% were seen by exactly one. A third reviewer added just 14% — so stop at two.
+**Why two.** Measured on this repo's own design documents — four documents, three independent reviewers each, then all 116 findings blinded and re-judged by two adversarial adjudicators apiece, with coverage averaged over every reviewer ordering. A single reviewer found **56.5%** of the confirmed defects; a second independent reviewer raised that to **85.5%** and surfaced a severe, blocking defect in *every* document that the first had missed entirely. Only 19% of defects were seen by all three reviewers; 51% were seen by exactly one. A third reviewer added just 14% — so stop at two.
 
 The corollary matters as much: **a clean first review is weak evidence that the plan is clean.** At a ~55% per-reviewer detection rate, "reviewer 1 found nothing" and "there is nothing to find" are very different statements. Do not close a Deep plan on one clean review.
 

@@ -11,7 +11,9 @@ export const meta = {
 // Without the control arm a suite can be green for years while measuring nothing —
 // which is exactly what happened to the v1 suite (0/6 discrimination, 33 fixtures).
 
-const REPO = args?.repo || '/Users/deepsky/Documents/projects/three-loop-workflow'
+// Relative to the agent's working directory, which is the repo root. Pass args.repo to run this
+// against a checkout somewhere else. An absolute default would pin the suite to one machine.
+const REPO = args?.repo || '.'
 const SKILL = args?.skill || REPO + '/three-loop-workflow'
 const DIR = args?.dir || REPO + '/tests/scenarios'
 // Fixture names are deliberately opaque. A descriptive filename (…-is-standard.md,
