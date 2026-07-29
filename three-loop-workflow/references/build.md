@@ -28,12 +28,12 @@ Record the gate output as commit trailers.
 
 **Standard: one reviewer. Deep: two, in parallel, independent — union their findings.**
 
-Each gets the diff and the plan's Goal / Non-goals / Accept — not your summary of the change, and not the whole skill. Send both the same prompt and do not let them see each other's output; the value comes from their independence.
+Each gets the diff and the plan — not your summary of the change, and not the whole skill. Send both the same prompt and do not let them see each other's output; the value comes from their independence.
 
-Two is measured on design documents, where a second independent reviewer added ~45% more defects including one blocker per document (see `plan.md`, "Why two"). Diffs are a friendlier target — the gates have already removed a whole class of defect before a reviewer looks — so a second reviewer buys less here than on a plan. Standard changes take one; Deep phases take two, because that is where an escaped defect is expensive.
+Two is measured on design documents, where a second independent reviewer raised coverage by 29 percentage points — 56.5% to 85.5% — and where the reviewers beyond the first surfaced four severe defects the first missed, one per document (see `plan.md`, "Why two"). Diffs are a friendlier target — the gates have already removed a whole class of defect before a reviewer looks — so a second reviewer buys less here than on a plan. Standard changes take one; Deep phases take two, because that is where an escaped defect is expensive.
 
 ```
-Review the diff at `git diff <baseSha>..HEAD` against the plan at .agent/plan.md.
+Review the diff at `git diff <baseSha>..HEAD` against the plan at .agent/<task>/plan.md.
 
 Report everything you find, at any severity — I will triage. For each finding cite
 file:line from the diff. Mark each one blocking or non-blocking:
@@ -163,6 +163,6 @@ Skip this for internal refactors, test-only changes, and doc updates.
 
 ## Workflow mode (Claude Code)
 
-`scripts/phase.js` runs this loop as a deterministic script — round counting, closure arithmetic, and role isolation become code instead of instructions. Invoke it with the phase label, plan path, and accept commands. See the header comment in that file.
+`scripts/phase.js` runs this loop as a deterministic script — round counting, closure arithmetic, and role isolation become code instead of instructions. Invoke it with the phase label, plan path, accept commands, and the `baseSha` you captured before editing — plus `reviewers: 2` for a Deep phase, which otherwise defaults to 1. See the header comment in that file.
 
 Use it when a Deep change has several phases. For a single Standard change, running the loop by hand is cheaper than orchestrating it.

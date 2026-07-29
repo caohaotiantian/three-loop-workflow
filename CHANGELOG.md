@@ -2,6 +2,35 @@
 
 Full version history for the three-loop-workflow skill. See [README.md](./README.md) for what the skill is, when it applies, and how to install it.
 
+## v2.0.0 — a ground-up rewrite
+
+**Breaking.** v2 replaces v1 rather than extending it. Every loop name and tier name changed, and 18 of v1's 20 files are gone; only `SKILL.md` and `references/platforms.md` keep their paths, and both were rewritten. A v1 install is not forward-compatible. See [docs/announcement-v2.0.0.md](./docs/announcement-v2.0.0.md) for the upgrade path and [docs/why-v2.md](./docs/why-v2.md) for the evidence behind each decision.
+
+| | v1.14.0 | v2.0.0 |
+|---|---|---|
+| `SKILL.md` | 2,915 words | **1,317 words** |
+| Total prose (Markdown only) | 21,802 words | **6,042 words** |
+| Files in the skill (incl. scripts) | 20 | **8** |
+| Committed documents per task | 2 | **0** (ephemeral `.agent/<task>/plan.md`) |
+
+**Structure.** L1 → L2 → L3 → F becomes **Plan → Build → Close**. L1 and L2 were one plan artificially cut in two; merging them removed the slug protocol, the rollback protocol, the Deprecated-section convention, and an entire review loop. Full/Light/None becomes **Deep/Standard/Direct**, graded on blast radius and reversibility with a checklist for the deep tier rather than a disjunction of qualitative predicates. The per-task `docs/design/` + `docs/implementation/` archive — 43,822 words against 27,896 words of shipped product, read by no human — is replaced by a gitignored `.agent/<task>/plan.md`, one directory per task.
+
+**One plan directory per task.** The plan is `.agent/<task>/plan.md`, and anything else scoped to the task — an acceptance script, scratch notes — lives beside it in that directory. A single fixed `.agent/plan.md` had two problems: two tasks sharing a checkout overwrite each other, and a finished task leaves no record of what it decided. This re-introduces a per-task slug, which v2 had deleted along with v1's committed archive — the justification is different (local isolation and traceability, not a document to commit and never read), and `close.md` now says to *keep* the directory rather than delete it. `scripts/phase.js` drops its `planPath` default, since no default can know the task, and rejects a missing one with a `usage-error`.
+
+**Gates before agents.** The project's own typecheck/lint/build/test now run *before* any reviewer is spawned. v1 mentioned them once, in a parenthetical.
+
+**Two reviewers on Deep work, one on Standard — measured, not assumed.** Four design documents × three independent reviewers, then all 116 findings blinded, shuffled and re-judged by two adversarial adjudicators each: coverage **56.5%** with one reviewer, **85.5%** with two, averaged over every reviewer ordering. A third adds ~14%. This result *reversed* the plan, which had been to delete the confirming round.
+
+**Triage before counting.** The same validation exposed poor reviewer precision — only 50–70% of findings graded *blocking* survived adjudication, and 30–46% of the rest. Closure is now computed from *confirmed* findings. `phase.js` increments the round counter only when a fix actually runs, fixing the starvation in v1's runner where one general finding left zero accept-fix budget and two fix rounds reported cap-exhausted on a clean round 3.
+
+**Deletions with stated grounds.** `check-consistency.sh` is gone: replacing `SKILL.md`'s central termination rule with its exact semantic opposite, leaving the token present in an HTML comment, still returned `three-loop-consistency: OK`, exit 0. The five-voter panel and its anti-inflation clause are gone (a reviewer told to be conservative reports less). The separate accept subagent is gone. Both hook scripts the v2 drafts carried — `require-plan.sh` and a copy of v1's `validate-commit-msg.sh` — were removed before release; neither ever shipped in a v2 release, and v2 enforces nothing mechanically and says so.
+
+**Tests that can fail.** v1's `tests/scenarios/` was measured at **0% discrimination** — 6 fixtures, both arms, skill-off 6/6 and skill-on 6/6, green for 16 releases while carrying no information. The replacement runs every fixture with the skill loaded *and* withheld, and reports a fixture both arms pass as INVALID rather than green. Run against the shipped tree for this release: `suite_pass: true`, 6/6 guards held, no GUARD-BROKEN, and the single discriminating fixture valid — the control arm upgraded a whole four-file change because one corner was risky, the skill arm did not. Read that narrowly. The scorer's own caveat is that this is a no-regressions result rather than validation of the discipline: only one of seven fixtures can discriminate at all, three guards had both arms report that the scenario text stated the rule, and the one fixture doing work rests partly on its option wording. Two fixtures written as discriminating failed to discriminate and were demoted to guards in `expected.json` rather than quietly relabelled.
+
+**Known-incomplete, stated rather than hidden:** the reviewer-variance evidence was measured in a working session whose raw artifacts are not in this repository, so those figures cannot be reproduced from it; `close.md` is carried on argument, not evidence; the two-reviewer result was measured on design documents, not diffs; the "clean first review is weak evidence" corollary is inferred from the detection rate, never directly observed; and 6 of 7 fixtures were answered correctly by an agent forbidden to read the skill, so most of this discipline is redundant with the model's own judgment. What survives is the specific and counter-intuitive.
+
+## v1 history
+
 | Version | Key additions |
 |---|---|
 | **v1.3** | `agentType` recommendation column in routing table; `references/schemas.md` (ReviewVerdict schema); `## When this skill does NOT apply` table; Quick orientation box; Common failure modes table; Document naming convention; TaskCreate round-tracking guidance |

@@ -8,7 +8,7 @@ That is not a style preference. The v1 suite was measured: 6 fixtures, both arms
 
 ```bash
 # From the repo root, in Claude Code:
-Workflow({ scriptPath: "v2/tests/run-scenarios.js" })
+Workflow({ scriptPath: "tests/run-scenarios.js" })
 ```
 
 Every fixture runs twice — once with the skill loaded, once with an agent forbidden to read it. The runner reports per-fixture discrimination and fails on any fixture where both arms agree.
@@ -19,7 +19,7 @@ The scenario supplies **facts**. The skill supplies the **rule**. If the fixture
 
 **Do not:**
 
-- State the governing rule. *"But L1/L2 use the strict two-generation rule…"* — the fixture just answered itself.
+- State the governing rule. *"But Deep changes take two independent reviewers…"* — the fixture just answered itself.
 - Label the pressures. A `Combined pressures: sunk cost, authority, minimization` list tells the reader the trap is a trap.
 - Apply the rule to the facts for the reader. *"But this touches an authentication contract"* is the whole decision.
 - Write self-incriminating distractors. *"(A) Run a silent round 4 — the cap is 'just a guideline'"* is not a choice anyone picks.
@@ -36,7 +36,7 @@ The scenario supplies **facts**. The skill supplies the **rule**. If the fixture
 
 ## Two kinds of fixture
 
-Measuring the first v2 suite produced an uncomfortable result: 5 of 6 fixtures were answered correctly by the control arm. Not because they leaked — because a competent engineer reaches the right answer without any skill at all. "Run the gates before spending a reviewer", "don't mask a flake", "look up a value the repo already has" are baseline senior behavior in 2026, and writing them down changes nothing.
+Measuring this suite produced an uncomfortable result: 6 of its 7 fixtures are answered correctly by the control arm. Not because they leaked — because a competent engineer reaches the right answer without any skill at all. "Run the gates before spending a reviewer", "don't mask a flake", "look up a value the repo already has" are baseline senior behavior in 2026, and writing them down changes nothing.
 
 Rather than pretend otherwise, each fixture declares what it is for, in `expected.json`:
 

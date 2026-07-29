@@ -47,7 +47,9 @@ Scope this tightly. A closeout pass is not an invitation to rewrite the docs.
 
 ## 6. Clean up
 
-Delete `.agent/plan.md` — or leave it; it is gitignored and the next task overwrites it. Remove scratch worktrees, spike directories, and temporary artifacts the work created.
+**Leave the task's `.agent/<task>/` directory.** It is gitignored, it costs nothing, and it is the only local record of what this task planned and decided once the branch is merged. Delete it when you no longer want that record, not as routine cleanup.
+
+Remove scratch worktrees, spike directories, and temporary artifacts the work created — those are not the record.
 
 ## What Close does not do
 
