@@ -11,8 +11,8 @@
 | | v1.14.0 | v2.0.0 |
 |---|---|---|
 | `SKILL.md` (loaded every time) | 2,915 words | **1,259 words** |
-| Total prose | 21,802 words | **5,854 words** |
-| Files | 20 | **8** |
+| Total prose (Markdown only) | 21,802 words | **5,854 words** |
+| Files (incl. scripts) | 20 | **8** |
 | Documents committed per task | 2 | **0** |
 
 The discipline survived. The delivery did not.

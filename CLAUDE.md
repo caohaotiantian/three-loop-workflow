@@ -31,8 +31,9 @@ Escalation: open an issue or comment in the PR.
 
 - `check-consistency.sh` was **bypassable**. Replacing `SKILL.md`'s central termination rule with its
   semantic opposite, leaving the token present in an HTML comment, still returned
-  `three-loop-consistency: OK`, exit 0. Roughly 100 of its 242 lines were `grep -qF` presence checks, and
-  presence of a word is not presence of a rule.
+  `three-loop-consistency: OK`, exit 0. Its only checking primitive was `require()`, a bare
+  `grep -qF` for a literal token, invoked 24 times against 3 checks that inspected content at all —
+  and presence of a word is not presence of a rule.
 - v1's `tests/scenarios/` had **0% discrimination**. Six fixtures were run with the skill loaded and with
   it withheld: skill-off passed 6/6, skill-on passed 6/6. All 12 runs self-reported that the scenario text
   stated the answer; 9 of 9 files inspected had the same defect. It had been green for 16 releases while

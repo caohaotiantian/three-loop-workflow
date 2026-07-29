@@ -9,8 +9,8 @@ Full version history for the three-loop-workflow skill. See [README.md](./README
 | | v1.14.0 | v2.0.0 |
 |---|---|---|
 | `SKILL.md` | 2,915 words | **1,259 words** |
-| Total prose | 21,802 words | **5,854 words** |
-| Files in the skill | 20 | **8** |
+| Total prose (Markdown only) | 21,802 words | **5,854 words** |
+| Files in the skill (incl. scripts) | 20 | **8** |
 | Committed documents per task | 2 | **0** (ephemeral `.agent/plan.md`) |
 
 **Structure.** L1 → L2 → L3 → F becomes **Plan → Build → Close**. L1 and L2 were one plan artificially cut in two; merging them removed the slug protocol, the rollback protocol, the Deprecated-section convention, and an entire review loop. Full/Light/None becomes **Direct/Standard/Deep**, graded on blast radius and reversibility with a checklist for the deep tier rather than a disjunction of qualitative predicates. The per-task `docs/design/` + `docs/implementation/` archive — 43,822 words against 27,896 words of shipped product, read by no human — is replaced by a single gitignored `.agent/plan.md`.

@@ -50,8 +50,11 @@ that used the skill.
 
 ### The gate was theater
 
-`CLAUDE.md` called `check-consistency.sh` "the authoritative acceptance check." Roughly 100 of its 242
-lines were `grep -qF` presence checks.
+`CLAUDE.md` called `check-consistency.sh` "the authoritative acceptance check." It was 242 lines, 124 of
+them substantive, and it had exactly one checking primitive: a shell function `require()` whose entire
+body was `grep -qF -- "$token" "$f"`. It was invoked **24 times**. Against that sat **three** checks that
+actually inspected content — a byte-identity comparison of two duplicated code blocks, one grep for a
+specific forbidden string, and a word-count ceiling.
 
 So we tested it. We took `SKILL.md`'s central termination rule and replaced it with its exact semantic
 opposite — *"Exit the loop immediately; a confirming round is optional"* — while leaving the required
@@ -62,8 +65,8 @@ three-loop-consistency: OK
 EXIT=0
 ```
 
-The gate could not tell the rule from its inversion. **Presence of a word is not presence of a rule.**
-Against 199 prose directives, it had roughly 5 assertions that could fail on a semantic change.
+The gate could not tell the rule from its inversion. **Presence of a word is not presence of a rule** —
+and a gate built almost entirely out of `grep -qF` cannot be anything but a presence check.
 
 ### The tests measured nothing
 
@@ -206,8 +209,8 @@ clean third round*. In v2, `round` increments only when a fix runs.
 | | v1.14.0 | v2.0.0 |
 |---|---|---|
 | `SKILL.md` | 2,915 words | **1,259 words** |
-| Total prose | 21,802 words | **5,854 words** |
-| Files | 20 | **8** |
+| Total prose (Markdown only) | 21,802 words | **5,854 words** |
+| Files (incl. scripts) | 20 | **8** |
 | Committed docs per task | 2 | **0** |
 
 **Plan → Build → Close.** L1 and L2 were one plan artificially cut in two. Merging them deleted the
@@ -288,11 +291,18 @@ the session where we wrote the norm against it.
 figure appears nowhere in the source it was condensing — it belonged to a different artifact. It was
 written in the same diff that reworded the norm *"state what you ran, not what you intended."*
 
-**We reported a metric that flattered us.** Prohibition tokens dropped from 137 to 47. But prohibition
-*density* barely moved: 6.28 → 6.08 per 1,000 words. The absolute drop was a side effect of a shorter
-document, not of rewriting prohibitions as positive instructions. The first published version of that
-comparison also measured v1 across all files against v2 across markdown only — different scopes,
-understating v2 by 30%.
+**We reported a metric that flattered us.** Prohibition tokens (`never`, `do not`, `don't`,
+`forbidden`, `must not`) fell from **135 to 36** across the Markdown surface — a 73% drop that reads
+like a rewrite. But prohibition *density* did not move: **6.19 → 6.14 per 1,000 words.** The absolute
+drop is almost entirely a side effect of a shorter document, not of rewriting prohibitions as positive
+instructions. Worse, the first published version of that comparison measured v1 across *all* files
+against v2 across *Markdown only* — two different denominators in one table.
+
+That error outlived its own correction. Writing this article, the figures inherited from the rebuild
+notes (137 → 47) turned out to *still* mix bases: 137 is a Markdown-only count and 47 an all-files
+count. The numbers above were re-measured from tag `v1.14.0` and the shipped tree with one regex and
+one scope, stated here so the next person can reproduce or refute them. Three times now, on the same
+metric, in documents whose subject is measurement discipline.
 
 **We blamed working code twice.** A harness "proved" `phase.js` closed a phase when only one of two
 reviewers reported. The code was right; the harness was wrong — twice, in two different ways.

@@ -9,8 +9,8 @@ three-loop-workflow skill 的完整版本历史。skill 的介绍、适用范围
 | | v1.14.0 | v2.0.0 |
 |---|---|---|
 | `SKILL.md` | 2,915 词 | **1,259 词** |
-| 全部散文 | 21,802 词 | **5,854 词** |
-| skill 内文件数 | 20 | **8** |
+| 全部散文(仅 Markdown) | 21,802 词 | **5,854 词** |
+| skill 内文件数(含脚本) | 20 | **8** |
 | 每个任务提交的文档数 | 2 | **0**(临时的 `.agent/plan.md`) |
 
 **结构。** L1 → L2 → L3 → F 变为 **Plan → Build → Close**。L1 与 L2 本来就是一份计划被人为切成两半;合并之后,slug 协议、回滚协议、Deprecated 章节约定,以及一整个评审循环都随之消失。Full/Light/None 变为 **Direct/Standard/Deep**,依据「影响半径」与「可逆性」分档,深度档用一份清单来判定,而不再是一堆定性谓词的析取。每任务归档 `docs/design/` + `docs/implementation/` —— 43,822 词,而实际交付产品只有 27,896 词,且没有任何人类读过 —— 被单个受 gitignore 的 `.agent/plan.md` 取代。
