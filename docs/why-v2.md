@@ -43,7 +43,7 @@ That is not a file you can trim. That is a ratchet, and it is why this became a 
 edit.
 
 Around it sat the rest of the package: **21,802 words of prose across 15 Markdown files** — 27,896 words
-and 20 files once the four scripts are counted. And beside the product, the exhaust — `docs/design/` and `docs/implementation/`, the
+and 20 files once the five scripts are counted. And beside the product, the exhaust — `docs/design/` and `docs/implementation/`, the
 committed per-task archive, at **43,822 words**. One and a half times the size of the thing it
 documented, and read by no human. Agents wrote it, agents read it, and it went into every repository
 that used the skill.

@@ -67,7 +67,7 @@ Two is measured, not arbitrary. On this repo's own design documents, with every 
 - **Closure is computed, not asserted** — from the count of *confirmed* findings, never the reviewer's summary verdict and never the raw report. Counting unconfirmed findings makes a phantom defect burn a fix round and can exhaust the cap on work that was already correct.
 - Two *independent* reviewers is not the same as double-checking your own work. Re-reading your own reasoning adds nothing; a reader who never saw it recovers about two-thirds of what you missed.
 
-**Termination**: the change closes when the reviewer reports zero blocking issues and the gates are green. Fix rounds are capped at **3**; hitting the cap escalates with a deadlock report — it never lowers the bar.
+**Termination**: the change closes when the *confirmed* blocking count is zero and the gates are green. Fix rounds are capped at **3**; hitting the cap escalates with a deadlock report — it never lowers the bar.
 
 ## 5. Escalate decisions, look up facts
 

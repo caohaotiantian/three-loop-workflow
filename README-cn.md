@@ -128,17 +128,17 @@ rsync -a --delete three-loop-workflow/ ~/.claude/skills/three-loop-workflow/
 
 ## 项目接入(每个仓库一次)
 
-skill 通过**角色(role)** 引用项目特定的值,而不是字面 heading 名。每个项目在自己的项目指南里绑定这些角色 —— `AGENTS.md`、`CLAUDE.md`,或两者都有。v2 实际读取其中三个:
+skill 通过**角色(role)** 引用项目特定的值,而不是字面 heading 名。每个项目在自己的项目指南里绑定这些角色 —— `AGENTS.md`、`CLAUDE.md`,或两者都有。其中**两个**真正驱动规则:
 
-| 角色 | 承载内容 | v2 是否读取 |
+| 角色 | 承载内容 | v2 是否使用 |
 |---|---|---|
-| `_load-bearing-docs_` | 受完整循环保护的契约文件清单 | 是 —— 它驱动 Deep 档判定 |
-| `_common-commands_` | 具体的 typecheck / lint / build / test 命令 | 是 —— 门禁执行这些命令 |
-| `_engineering-norms_` | 项目级编码规范 | 是 |
-| `_repo-workflow_` | 本仓库的任务流程 | 否;属于约定 |
-| `_language-policy_` | 语言和术语规则 | 否;属于约定 |
+| `_load-bearing-docs_` | 受完整循环保护的契约文件清单 | **是** —— 它决定 Deep 档判定,并把删除其中文件设为需先询问 |
+| `_common-commands_` | 具体的 typecheck / lint / build / test 命令 | **是** —— 门禁在派出任何评审者之前执行这些命令 |
+| `_engineering-norms_` | 项目级编码规范 | 仅作为示例被提及;没有任何规则读取它 |
+| `_repo-workflow_` | 本仓库的任务流程 | 未被引用 |
+| `_language-policy_` | 语言和术语规则 | 未被引用 |
 
-后两个属于 anchor map 约定的一部分,值得保留 —— 其它工具和人类读者会用到 —— 但只要有前三个,skill 就能正常工作。
+五个都建议填 —— 它们是 anchor map 约定的一部分,其它工具和人类读者会用到,读你项目指南的 agent 也会把它们当作上下文。但真正改变这个 skill 行为的只有前两个,所以那两个要写准。
 
 项目指南顶部的 anchor map 示例:
 

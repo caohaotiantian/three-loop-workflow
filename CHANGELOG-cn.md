@@ -13,7 +13,7 @@ three-loop-workflow skill 的完整版本历史。skill 的介绍、适用范围
 | skill 内文件数(含脚本) | 20 | **8** |
 | 每个任务提交的文档数 | 2 | **0**(临时的 `.agent/<task>/plan.md`) |
 
-**结构。** L1 → L2 → L3 → F 变为 **Plan → Build → Close**。L1 与 L2 本来就是一份计划被人为切成两半;合并之后,slug 协议、回滚协议、Deprecated 章节约定,以及一整个评审循环都随之消失。Full/Light/None 变为 **Direct/Standard/Deep**,依据「影响半径」与「可逆性」分档,深度档用一份清单来判定,而不再是一堆定性谓词的析取。每任务归档 `docs/design/` + `docs/implementation/` —— 43,822 词,而实际交付产品只有 27,896 词,且没有任何人类读过 —— 被受 gitignore 的 `.agent/<task>/plan.md` 取代,每个任务一个目录。
+**结构。** L1 → L2 → L3 → F 变为 **Plan → Build → Close**。L1 与 L2 本来就是一份计划被人为切成两半;合并之后,slug 协议、回滚协议、Deprecated 章节约定,以及一整个评审循环都随之消失。Full/Light/None 变为 **Deep/Standard/Direct**,依据「影响半径」与「可逆性」分档,深度档用一份清单来判定,而不再是一堆定性谓词的析取。每任务归档 `docs/design/` + `docs/implementation/` —— 43,822 词,而实际交付产品只有 27,896 词,且没有任何人类读过 —— 被受 gitignore 的 `.agent/<task>/plan.md` 取代,每个任务一个目录。
 
 **每个任务一个计划目录。** 计划位于 `.agent/<task>/plan.md`,该任务范围内的其它东西 —— 验收脚本、临时笔记 —— 都放在同一个目录里。单个固定的 `.agent/plan.md` 有两个问题:共用一个 checkout 的两个任务会互相覆盖,而一个任务结束后不留下任何关于它决定了什么的记录。这等于重新引入了「每任务 slug」—— v2 本已把它连同 v1 的提交式归档一起删掉 —— 但理由不同:这是为了本地隔离与可追溯性,而不是为了提交一份没人会读的文档。相应地,`close.md` 现在要求**保留**这个目录,而不是删除它。`scripts/phase.js` 取消了 `planPath` 的默认值(没有任何默认值能知道任务名),缺失时以 `usage-error` 拒绝。
 

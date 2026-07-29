@@ -33,7 +33,7 @@ Escalation: open an issue or comment in the PR.
 - `check-consistency.sh` was **bypassable**. Replacing `SKILL.md`'s central termination rule with its
   semantic opposite, leaving the token present in an HTML comment, still returned
   `three-loop-consistency: OK`, exit 0. Its only checking primitive was `require()`, a bare
-  `grep -qF` for a literal token, invoked 24 times against 3 checks that inspected content at all —
+  `grep -qF` for a literal token, invoked 24 times against five checks that inspected content at all —
   and presence of a word is not presence of a rule.
 - v1's `tests/scenarios/` had **0% discrimination**. Six fixtures were run with the skill loaded and with
   it withheld: skill-off passed 6/6, skill-on passed 6/6. All 12 runs self-reported that the scenario text
@@ -72,8 +72,8 @@ which are historical records and must not be retro-edited into v2 terms. Do not 
 
 The exceptions to English are the `-cn.md` files — `README-cn.md`, `CHANGELOG-cn.md`,
 `docs/why-v2-cn.md`, `docs/announcement-v2.0.0-cn.md` — each a Chinese translation of its English
-counterpart. When one changes, change its pair; `.agent/accept.sh` fails if a pair quotes different
-figures.
+counterpart. When one changes, change its pair — a release's acceptance script should fail when a pair
+quotes different figures.
 
 ## Common Commands
 
@@ -90,8 +90,9 @@ figures.
 - **Zip rebuild** (from repo root): `rm -f three-loop-workflow.skill && zip -r three-loop-workflow.skill three-loop-workflow/`
   (`rm -f` first so a stale archive cannot retain deleted files).
 - **Installed-copy sync:** `rsync -a --delete three-loop-workflow/ "$HOME/.claude/skills/three-loop-workflow/"`
-  (`--delete` so removed files do not linger; upgrading from v1 with `cp -r` leaves all 20 v1 files behind
-  and the skill then contradicts itself).
+  (`--delete` so removed files do not linger; upgrading from v1 with `cp -r` overwrites only the two
+  colliding paths and leaves the other 18 v1 files behind, after which the directory holds both
+  versions at once).
 
 ## Engineering Norms
 
@@ -104,7 +105,7 @@ figures.
   that a bundled script rejected AI attribution in commit messages; the script contained no such check, and
   nobody had run it. State what you ran, not what you intended.
 - Anti-bloat binds the always-loaded `SKILL.md` surface — push detail into references. There is no
-  gate-enforced cap; it is held near 1,250 words by review. v1 reached 2,915 words under a numeric ceiling,
+  gate-enforced cap; it is held near 1,350 words by review. v1 reached 2,915 words under a numeric ceiling,
   which is why the ceiling is not the mechanism.
 - Workflow scripts are plain JavaScript — no TypeScript, no `Date.now()`, no `Math.random()`. Validate with
   `check-workflow-syntax.sh`, not `node --check`.

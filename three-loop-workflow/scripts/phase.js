@@ -174,8 +174,8 @@ while (round <= maxRounds) {
       `\nDo not modify code.`
 
     // Reviewers run independently and in parallel, and their findings are UNIONed.
-    // Measured on this repo's own design docs: a single reviewer caught 54% of known defects,
-    // two caught 86%, and only 19% of defects were found by every reviewer. Low overlap is the
+    // Measured on this repo's own design docs, validated by adversarial adjudication: one reviewer
+    // caught 56.5% of confirmed defects, two caught 85.5%, and only 19% were found by every reviewer. Low overlap is the
     // reason a second reviewer pays; it is also why the union must never be filtered down to
     // what they agree on — agreement would discard half the real findings.
     const verdicts = (await parallel(

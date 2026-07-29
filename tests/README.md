@@ -36,7 +36,7 @@ The scenario supplies **facts**. The skill supplies the **rule**. If the fixture
 
 ## Two kinds of fixture
 
-Measuring the first v2 suite produced an uncomfortable result: 5 of 6 fixtures were answered correctly by the control arm. Not because they leaked — because a competent engineer reaches the right answer without any skill at all. "Run the gates before spending a reviewer", "don't mask a flake", "look up a value the repo already has" are baseline senior behavior in 2026, and writing them down changes nothing.
+Measuring this suite produced an uncomfortable result: 6 of its 7 fixtures are answered correctly by the control arm. Not because they leaked — because a competent engineer reaches the right answer without any skill at all. "Run the gates before spending a reviewer", "don't mask a flake", "look up a value the repo already has" are baseline senior behavior in 2026, and writing them down changes nothing.
 
 Rather than pretend otherwise, each fixture declares what it is for, in `expected.json`:
 

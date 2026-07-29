@@ -129,17 +129,17 @@ Staying on v1 is supported in the sense that it still exists: `git checkout v1.1
 
 ## Project setup (one-time per repo)
 
-The skill references project-specific values via **roles**, not literal heading names. Each project pins those in its project guide — `AGENTS.md`, `CLAUDE.md`, or both. v2 reads three of them:
+The skill references project-specific values via **roles**, not literal heading names. Each project pins those in its project guide — `AGENTS.md`, `CLAUDE.md`, or both. Two of them drive rules:
 
-| Role | Holds | Read by v2 |
+| Role | Holds | Used by v2 |
 |---|---|---|
-| `_load-bearing-docs_` | which contract files are protected by the full cycle | yes — it drives the Deep tier |
-| `_common-commands_` | the concrete typecheck / lint / build / test commands | yes — Gates run these |
-| `_engineering-norms_` | project-level coding standards | yes |
-| `_repo-workflow_` | how tasks proceed in this repo | not read directly; conventional |
-| `_language-policy_` | language and terminology rules | not read directly; conventional |
+| `_load-bearing-docs_` | which contract files are protected by the full cycle | **yes** — it decides the Deep tier, and gates deleting one |
+| `_common-commands_` | the concrete typecheck / lint / build / test commands | **yes** — Gates run these before any reviewer |
+| `_engineering-norms_` | project-level coding standards | named as an example only; no rule reads it |
+| `_repo-workflow_` | how tasks proceed in this repo | not referenced |
+| `_language-policy_` | language and terminology rules | not referenced |
 
-The last two are part of the anchor-map convention and are worth keeping — other tooling and human readers use them — but the skill will work with the first three.
+Populate all five anyway — they are the anchor-map convention, other tooling and human readers use them, and an agent reading your guide will use them as context. But only the first two change what this skill does, so those are the ones to get right.
 
 Example anchor map at the top of a project's guide:
 
