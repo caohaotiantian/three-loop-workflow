@@ -106,7 +106,7 @@ quotes different figures.
   that a bundled script rejected AI attribution in commit messages; the script contained no such check, and
   nobody had run it. State what you ran, not what you intended.
 - Anti-bloat binds the always-loaded `SKILL.md` surface — push detail into references. There is no
-  gate-enforced cap; it is held near 1,320 words by review. Rules live here; the measurements behind them live in the references, because a statistic on the always-loaded surface costs tokens on every activation, changes no behavior, and drifts. v1 reached 2,915 words under a numeric ceiling,
+  gate-enforced cap; it is held near 1,300 words by review. Rules live here; the measurements behind them live in the references, because a statistic on the always-loaded surface costs tokens on every activation, changes no behavior, and drifts. v1 reached 2,915 words under a numeric ceiling,
   which is why the ceiling is not the mechanism.
 - Workflow scripts are plain JavaScript — no TypeScript, no `Date.now()`, no `Math.random()`. Validate with
   `check-workflow-syntax.sh`, not `node --check`.
