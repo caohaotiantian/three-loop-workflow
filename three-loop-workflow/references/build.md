@@ -163,6 +163,6 @@ Skip this for internal refactors, test-only changes, and doc updates.
 
 ## Workflow mode (Claude Code)
 
-`scripts/phase.js` runs this loop as a deterministic script — round counting, closure arithmetic, and role isolation become code instead of instructions. Invoke it with the phase label, plan path, and accept commands. See the header comment in that file.
+`scripts/phase.js` runs this loop as a deterministic script — round counting, closure arithmetic, and role isolation become code instead of instructions. Invoke it with the phase label, plan path, accept commands, and the `baseSha` you captured before editing — plus `reviewers: 2` for a Deep phase, which otherwise defaults to 1. See the header comment in that file.
 
 Use it when a Deep change has several phases. For a single Standard change, running the loop by hand is cheaper than orchestrating it.

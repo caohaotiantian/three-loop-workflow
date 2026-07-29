@@ -66,9 +66,10 @@ to those directories and do not treat their contents as describing current behav
 All skill files and process documents: English. Terminology must be consistent with `SKILL.md` —
 **Plan/Build/Close**, **Direct/Standard/Deep**, **blocking/non-blocking**.
 
-v1's vocabulary (L1/L2/L3/F, Full/Light/None, severe/general) is **retired**. It survives only in the
-`CHANGELOG*.md` version-history tables and the frozen `docs/design/` + `docs/implementation/` archive,
-which are historical records and must not be retro-edited into v2 terms. Do not use it in new writing.
+v1's vocabulary (L1/L2/L3/F, Full/Light/None, severe/general) is **retired for new writing**. It still
+appears throughout the historical record — the `CHANGELOG*.md` version tables, the frozen `docs/design/`
+and `docs/implementation/` archives, and the dated audit and analysis files under `docs/` — all of which
+are records of what was true when written and must not be retro-edited into v2 terms.
 
 The exceptions to English are the `-cn.md` files — `README-cn.md`, `CHANGELOG-cn.md`,
 `docs/why-v2-cn.md`, `docs/announcement-v2.0.0-cn.md` — each a Chinese translation of its English

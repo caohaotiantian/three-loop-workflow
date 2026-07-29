@@ -4,12 +4,12 @@ Full version history for the three-loop-workflow skill. See [README.md](./README
 
 ## v2.0.0 — a ground-up rewrite
 
-**Breaking.** v2 replaces v1 rather than extending it. Every loop name, tier name, reference path and script name changed; a v1 install is not forward-compatible. See [docs/announcement-v2.0.0.md](./docs/announcement-v2.0.0.md) for the upgrade path and [docs/why-v2.md](./docs/why-v2.md) for the evidence behind each decision.
+**Breaking.** v2 replaces v1 rather than extending it. Every loop name and tier name changed, and 18 of v1's 20 files are gone; only `SKILL.md` and `references/platforms.md` keep their paths, and both were rewritten. A v1 install is not forward-compatible. See [docs/announcement-v2.0.0.md](./docs/announcement-v2.0.0.md) for the upgrade path and [docs/why-v2.md](./docs/why-v2.md) for the evidence behind each decision.
 
 | | v1.14.0 | v2.0.0 |
 |---|---|---|
 | `SKILL.md` | 2,915 words | **1,336 words** |
-| Total prose (Markdown only) | 21,802 words | **6,028 words** |
+| Total prose (Markdown only) | 21,802 words | **6,047 words** |
 | Files in the skill (incl. scripts) | 20 | **8** |
 | Committed documents per task | 2 | **0** (ephemeral `.agent/<task>/plan.md`) |
 
@@ -27,7 +27,7 @@ Full version history for the three-loop-workflow skill. See [README.md](./README
 
 **Tests that can fail.** v1's `tests/scenarios/` was measured at **0% discrimination** — 6 fixtures, both arms, skill-off 6/6 and skill-on 6/6, green for 16 releases while carrying no information. The replacement runs every fixture with the skill loaded *and* withheld, and reports a fixture both arms pass as INVALID rather than green. Current state: 6/6 guards held, 1/1 discriminating fixture valid. Two fixtures written as discriminating failed to discriminate and were demoted to guards in `expected.json` rather than quietly relabelled.
 
-**Known-incomplete, stated rather than hidden:** `close.md` is carried on argument, not evidence; the two-reviewer result was measured on design documents, not diffs; the "clean first review is weak evidence" corollary is inferred from the detection rate, never directly observed; and 6 of 7 fixtures were answered correctly by an agent forbidden to read the skill, so most of this discipline is redundant with the model's own judgment. What survives is the specific and counter-intuitive.
+**Known-incomplete, stated rather than hidden:** the reviewer-variance evidence was measured in a working session whose raw artifacts are not in this repository, so those figures cannot be reproduced from it; `close.md` is carried on argument, not evidence; the two-reviewer result was measured on design documents, not diffs; the "clean first review is weak evidence" corollary is inferred from the detection rate, never directly observed; and 6 of 7 fixtures were answered correctly by an agent forbidden to read the skill, so most of this discipline is redundant with the model's own judgment. What survives is the specific and counter-intuitive.
 
 ## v1 history
 

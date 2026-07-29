@@ -110,6 +110,14 @@ The plan was written to delete it. Before executing, we measured it.
 
 ### E2 — reviewer variance
 
+> **On the evidence for this section.** The E2 and adjudication figures below were measured in a
+> working session, and the raw artifacts — the 116 findings, the 232 adjudicator verdicts, the Python
+> recomputation — were never committed to this repository. `v2/README.md`, which carried the summary,
+> was deleted when v2 was promoted. So **you cannot reproduce or refute these numbers from this repo**,
+> only the size and prohibition counts elsewhere in this article, which are recomputed on every
+> acceptance run. An article whose thesis is that unverifiable claims propagate should say which of its
+> own claims are unverifiable. These are the ones.
+
 Four real design documents from `docs/design/`. Three independent fresh reviewers on each, all
 receiving **byte-identical prompts**, all reading the **same unchanged document**. Twelve reviews.
 
@@ -209,7 +217,7 @@ clean third round*. In v2, `round` increments only when a fix runs.
 | | v1.14.0 | v2.0.0 |
 |---|---|---|
 | `SKILL.md` | 2,915 words | **1,336 words** |
-| Total prose (Markdown only) | 21,802 words | **6,028 words** |
+| Total prose (Markdown only) | 21,802 words | **6,047 words** |
 | Files (incl. scripts) | 20 | **8** |
 | Committed docs per task | 2 | **0** |
 
@@ -293,7 +301,7 @@ written in the same diff that reworded the norm *"state what you ran, not what y
 
 **We reported a metric that flattered us.** Prohibition tokens (`never`, `do not`, `don't`,
 `forbidden`, `must not`) fell from **135 to 37** across the Markdown surface — a 73% drop that reads
-like a rewrite. But prohibition *density* did not move: **6.19 → 6.13 per 1,000 words.** The absolute
+like a rewrite. But prohibition *density* did not move: **6.19 → 6.11 per 1,000 words.** The absolute
 drop is almost entirely a side effect of a shorter document, not of rewriting prohibitions as positive
 instructions. Worse, the first published version of that comparison measured v1 across *all* files
 against v2 across *Markdown only* — two different denominators in one table.
@@ -329,6 +337,10 @@ number that a hardcoded check would have blessed.
 - **Reviewer precision is a floor, not an estimate.** E2 adjudicated *historical, closed* documents, so
   some FALSE verdicts were anachronisms — documents judged against gates that postdated them. Real-use
   precision is probably better than 30–50%.
+- **The E2 evidence is not in this repository.** The reviewer-variance and adjudication figures were
+  measured in a working session whose artifacts were never committed, and the summary that carried
+  them was deleted when v2 was promoted. They are reported here in good faith and cannot be checked
+  from the repo. The size, file-count and prohibition figures can be, and are, on every acceptance run.
 - **The original complaint is still open.** Every token figure here is surface size. What v2 costs to
   run a real task has not been measured.
 

@@ -11,7 +11,9 @@ export const meta = {
 }
 
 // Invoke with args:
-//   { phaseLabel, planPath, tasks, acceptCmds: [...], baseSha, maxRounds?, models?: {write,gates,review,triage,fix} }
+//   { phaseLabel, planPath, tasks, acceptCmds: [...], baseSha, reviewers?, maxRounds?, models?: {write,gates,review,triage,fix} }
+// reviewers: 1 for Standard, 2 for Deep. It defaults to 1, so a Deep phase that omits it silently
+// runs the Standard review.
 //
 // Why this script exists: round counting, closure arithmetic, and role isolation become code
 // instead of instructions an agent can rationalize past. The main agent cannot accidentally
@@ -134,11 +136,16 @@ const branch = work.branch
 const concerns = work.concerns || []
 
 // ── Verify loop ───────────────────────────────────────────────
-// `round` counts FIX rounds and increments only when a fix actually runs. A clean pass never
-// consumes budget, so the caller gets the full `maxRounds` of recovery it was promised.
-let round = 1
+// Two counters, deliberately separate. `verifyRound` counts trips through gates+review; `fixes`
+// counts fix rounds actually run, and only a fix increments it. Conflating them is how a cap of
+// N silently delivers N-1 fixes: the budget check fires on the round about to be verified rather
+// than on the fixes already spent. `maxRounds` bounds FIXES, matching SKILL.md and build.md.
+// Verifying N+1 times to spend N fixes is correct — the last fix still has to be checked.
+let verifyRound = 1
+let fixes = 0
 
-while (round <= maxRounds) {
+while (true) {
+  const round = verifyRound
   // Gates run before review, every round: an agent's opinion about code that does not compile
   // is worthless, and gate output is far cheaper than a review pass.
   //
@@ -232,6 +239,7 @@ while (round <= maxRounds) {
         status: 'closed',
         phaseLabel,
         round,
+        fixes,
         branch,
         gates: gates.results,
         nonblocking: review.nonblocking,
@@ -242,12 +250,14 @@ while (round <= maxRounds) {
   const failures = gates.all_pass ? review.blocking : gates.failures
   const stage = gates.all_pass ? 'review' : 'gates'
 
-  if (round === maxRounds) {
-    return { status: 'cap-exhausted', phaseLabel, round, stage, branch, unresolved: failures }
+  // Cap on fixes SPENT, not on the round about to start: the Nth fix is allowed to run, and its
+  // result is verified on the next trip. Only then is the budget genuinely exhausted.
+  if (fixes >= maxRounds) {
+    return { status: 'cap-exhausted', phaseLabel, round, fixes, stage, branch, unresolved: failures }
   }
 
   phase('Fix')
-  log(`${phaseLabel}: ${stage} failures (${failures.length}), running fix round ${round}`)
+  log(`${phaseLabel}: ${stage} failures (${failures.length}), running fix round ${fixes + 1} of ${maxRounds}`)
   await tryAgent(
     `Fix these ${stage} failures on branch "${branch}". Inspect the diff with ` +
     `\`git diff ${baseSha}..${branch}\`.\n\n${failures.map(f => `- ${f}`).join('\n')}\n\n` +
@@ -263,7 +273,8 @@ while (round <= maxRounds) {
     { label: `fix:${phaseLabel}:r${round}`, phase: 'Fix', model: models.fix }
   )
 
-  round++
+  fixes++
+  verifyRound++
 }
 
 return { status: 'cap-exhausted', phaseLabel, round: maxRounds, stage: 'loop-exit', branch }

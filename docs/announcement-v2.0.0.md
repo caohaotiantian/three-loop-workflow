@@ -11,7 +11,7 @@
 | | v1.14.0 | v2.0.0 |
 |---|---|---|
 | `SKILL.md` (loaded every time) | 2,915 words | **1,336 words** |
-| Total prose (Markdown only) | 21,802 words | **6,028 words** |
+| Total prose (Markdown only) | 21,802 words | **6,047 words** |
 | Files (incl. scripts) | 20 | **8** |
 | Documents committed per task | 2 | **0** |
 

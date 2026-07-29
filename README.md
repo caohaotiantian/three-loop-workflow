@@ -112,8 +112,8 @@ rsync -a --delete three-loop-workflow/ ~/.claude/skills/three-loop-workflow/
 
 What you need to know:
 
-- **Your `CLAUDE.md` anchor map still works, unchanged.** The role names are the same; v2 reads three of
-  the five (see below). If you keep an `AGENTS.md`, v2 reads that too.
+- **Your `CLAUDE.md` anchor map still works, unchanged.** The role names are the same; only two of the five
+  change what the skill does (see below). If you keep an `AGENTS.md`, v2 reads that too.
 - **`docs/design/` and `docs/implementation/` are no longer written.** v2 writes one gitignored directory
   per task — `.agent/<task>/plan.md`, plus whatever else that task needs. Add `.agent/` to your
   `.gitignore`. Existing archives are yours to keep or delete; nothing reads them.

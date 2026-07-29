@@ -112,7 +112,7 @@ rsync -a --delete three-loop-workflow/ ~/.claude/skills/three-loop-workflow/
 
 需要知道的几件事:
 
-- **你的 `CLAUDE.md` anchor map 不用改,继续有效。** 五个角色完全一致。如果你还维护 `AGENTS.md`,
+- **你的 `CLAUDE.md` anchor map 不用改,继续有效。** 五个角色名完全一致,其中只有两个会改变 skill 的行为(见下文)。如果你还维护 `AGENTS.md`,
   v2 也会一并读取 —— 见下文。
 - **`docs/design/` 与 `docs/implementation/` 不再产出。** v2 为每个任务写一个受 gitignore 的目录 ——
   `.agent/<task>/plan.md`,以及该任务需要的其它文件。请把 `.agent/` 加进你的 `.gitignore`。
