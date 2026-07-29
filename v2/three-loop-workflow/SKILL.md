@@ -2,7 +2,7 @@
 name: three-loop-workflow
 description: Structured workflow for non-trivial code changes — features, behavior fixes, refactors, performance work, and edits to contract files (AGENTS.md, CLAUDE.md, this skill, OpenAPI specs, schemas, public APIs). Chooses a proportionate depth, records decisions and non-goals in a durable plan file, verifies with the project's own gates, and reviews the diff with a fresh reviewer. Use when a change needs more than a single obvious edit, or when it touches a published contract.
 license: MIT
-compatibility: Claude Code (subagents, hooks, Workflow). Codex/opencode run the manual path — see references/platforms.md
+compatibility: Claude Code (subagents, Workflow). Codex/opencode run the manual path — see references/platforms.md
 metadata:
   version: "2.0.0-draft"
 ---
@@ -82,7 +82,7 @@ Never substitute a silent default for a real decision. Record what the user deci
 | Debug a failing check, or a flaky test | `references/build.md` (Diagnosis) |
 | Close a Deep change | `references/close.md` |
 | Escalate, or handle a round-cap deadlock | `references/escalation.md` |
-| Run on Codex/opencode, or install the hooks | `references/platforms.md` |
+| Run on Codex or opencode | `references/platforms.md` |
 | Run the Build loop as a script (Claude Code) | `references/build.md` (Workflow mode) → `scripts/phase.js` |
 
 Read the reference for the loop you are in. You do not need the others.

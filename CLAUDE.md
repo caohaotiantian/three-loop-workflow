@@ -51,7 +51,7 @@ Protected by the full cycle:
 - `v2/three-loop-workflow/SKILL.md`
 - `v2/three-loop-workflow/references/*.md`
 - `v2/three-loop-workflow/scripts/*.js`
-- `v2/three-loop-workflow/hooks/*.sh`
+- `v2/three-loop-workflow/scripts/*.sh`
 - `CLAUDE.md`
 
 **Not** load-bearing — edited directly with one fresh-agent review: `tests/scenarios/*.md`,
@@ -93,8 +93,9 @@ The only exception to English is `README-cn.md`, a Chinese translation of `READM
 - **A check that cannot fail when the behavior is wrong is worse than no check** — it reads as coverage
   that does not exist. Before adding a gate, write the failing case first and watch it fail. If you cannot
   make it fail, write a two-arm scenario instead.
-- **Do not claim a script does something without testing that it does.** `platforms.md` shipped a claim
-  that the commit hook rejects AI attribution; the hook contains no such check. State what you ran.
+- **Do not claim a script does something without testing that it does.** A v2 reference once shipped a
+  claim that a bundled script rejected AI attribution in commit messages; the script contained no such
+  check, and nobody had run it. State what you ran, not what you intended.
 - Anti-bloat binds the always-loaded `SKILL.md` surface in both versions — push detail into references.
   v1 is capped by `SKILL_WORD_CEILING`; v2 has no gate-enforced cap and is held at ~1,200 words by review.
 - Workflow scripts are plain JavaScript — no TypeScript, no `Date.now()`, no `Math.random()`. Validate with

@@ -8,10 +8,10 @@ The v1 discipline was sound. Its delivery was not.
 
 | | v1.14.0 | v2 |
 |---|---|---|
-| Always-loaded `SKILL.md` | 2,915 words (~5,557 tok) | **1,107 words (~1,851 tok)** |
-| Total prose | 21,802 words | **5,092 words** |
-| Files | 20 | 10 |
-| Prohibition tokens | 137 | 31 |
+| Always-loaded `SKILL.md` | 2,915 words (~5,557 tok) | **1,259 words (~2,118 tok)** |
+| Total prose | 21,802 words | **5,854 words** |
+| Files | 20 | 8 |
+| Prohibition tokens | 137 | 47 |
 | Committed docs per task | 2 (design + impl) | 0 (ephemeral `.agent/plan.md`) |
 
 v1's `SKILL.md` sat 5 words under its own 2,920-word ceiling, while its consistency gate *required* ten tokens to be physically present in that same file. One mechanism pushed content in; the other punished it for being there. That ratchet is why fourteen releases of trimming never shrank it, and why this is a rebuild rather than an edit.
@@ -52,14 +52,14 @@ three-loop-workflow/
   references/build.md       write → gates → review → fix, diagnosis, flakes, round cap
   references/close.md       deep-tier closeout: orphans, blast radius, migrations
   references/escalation.md  when and how to ask; deadlock reports
-  references/platforms.md   runtimes, degradation, and the optional hooks
+  references/platforms.md   runtimes and how the skill degrades off Claude Code
   scripts/phase.js          the Build loop as deterministic code
-  hooks/require-plan.sh     no contract edit without a plan (enforcement, not request)
-  hooks/validate-commit-msg.sh
+  scripts/check-workflow-syntax.sh  parses a Workflow script (node --check cannot)
 tests/
   run-scenarios.js          two-arm runner: skill-on vs skill-off
-  scenarios/s01..s06.md     opaque fixtures
+  scenarios/s01..s07.md     opaque fixtures
   expected.json             answers, held outside the fixtures
+  README.md                 how to write a fixture that actually tests the skill
 ```
 
 ## What the test suite actually shows

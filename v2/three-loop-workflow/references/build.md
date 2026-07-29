@@ -22,6 +22,8 @@ Run the project's mechanical checks from the project guide's _common-commands_: 
 
 Record the gate output as commit trailers.
 
+**If you add a gate, write its failing case first and watch it fail.** A check that cannot fail when the behavior is wrong is worse than none. This skill's own v1 shipped one: a script that grepped for the words naming each rule, and passed cleanly after a rule had been replaced with its exact opposite. Presence of a word is not presence of a rule. If you cannot make a check fail, write a scenario instead.
+
 ## Review
 
 **Standard: one reviewer. Deep: two, in parallel, independent — union their findings.**
