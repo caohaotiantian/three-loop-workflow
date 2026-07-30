@@ -15,6 +15,28 @@
 set -uo pipefail
 cd "$(git rev-parse --show-toplevel)"
 
+# Word counts are locale-dependent, and the published figures are the UTF-8 ones: `wc -w` reports 6,047
+# for the v2.0.0 prose under a UTF-8 locale and 6,046 under LC_ALL=C. A gate that recomputes different
+# numbers than the documents state, depending on who invokes it, is worse than useless — it accuses
+# correct documents of being stale. Pin a UTF-8 locale, and refuse to run if none exists rather than
+# quietly measuring something else.
+# Captured rather than piped into `grep -q`: under `set -o pipefail`, grep -q exits on the first match,
+# `locale -a` dies of SIGPIPE, and the pipeline reports failure — so no locale ever matched and the
+# script refused to run in exactly the case it was meant to repair. Measured, not reasoned about.
+_avail=$(locale -a 2>/dev/null || true)
+for _loc in C.UTF-8 en_US.UTF-8 C.utf8 en_US.utf8; do
+  case "
+$_avail
+" in *"
+$_loc
+"*) export LC_ALL="$_loc"; break ;; esac
+done
+case "${LC_ALL:-}" in
+  *UTF-8|*utf8) ;;
+  *) echo "FAIL  no UTF-8 locale available — recomputed word counts would not match the published figures" >&2
+     exit 1 ;;
+esac
+
 fail=0
 # Thousands separators, computed rather than delegated to the locale. `printf "%'d"` emits no separator
 # under LC_ALL=C / C.UTF-8 — the default on CI runners — so every published-figure check would look for
@@ -93,6 +115,15 @@ grep -qE '^const suite_pass = ' tests/run-scenarios.js \
 grep -qE "suite_pass: \{ type: 'boolean'" tests/run-scenarios.js \
   && bad "suite_pass is back in an agent schema — the suite would assert its own verdict" \
   || ok "no agent schema declares suite_pass"
+
+# The runner's floor catches a reply that labels everything `guard`, but `kind` is agent-reported and a
+# Workflow script cannot read expected.json. This reads it here, deterministically.
+n_disc=$(python3 -c "import json;print(sum(1 for v in json.load(open('tests/expected.json')).values() if v.get('kind')=='discriminating'))")
+if [ "$n_disc" -ge 1 ]; then
+  ok "expected.json declares $n_disc discriminating fixture(s)"
+else
+  bad "expected.json declares no discriminating fixture — the suite could only measure regressions"
+fi
 
 echo "== and that harness can actually fail =="
 if bash scripts/negative-test.sh >/tmp/_neg.out 2>&1; then
@@ -239,12 +270,33 @@ h=$(grep -n '5 of 6\|5 of 7\|5 个 fixture\|7 个 fixture 里有 5' $ALLMD 2>/de
 echo "== the suite's headline claim is stated accurately =="
 # Six of seven fixtures are guards, for which both arms answering correctly is GUARD-HELD — a pass.
 # An unqualified "a fixture both arms pass is INVALID" describes the suite that is not running.
-h=$(grep -rn 'both arms' $ALLMD tests/README.md 2>/dev/null \
-      | grep -iE 'INVALID|not evidence|fails on any' \
-      | grep -viE 'discriminating|guard|6 of 7|six of seven')
-[ -z "$h" ] && ok "every both-arms claim carries the discriminating qualifier" \
-            || bad "unqualified both-arms-pass claim:
-$h"
+# Paragraph-scoped and bilingual. A line-scoped grep missed docs/why-v2.md, whose claim wraps across two
+# lines so that "both arms" and "INVALID" never share one, and it never inspected the four Chinese
+# documents at all. Demonstrated: reverting why-v2.md alone left the old check silent.
+if python3 - <<'PYCHK'
+import io, re, sys
+DOCS = ["README.md","README-cn.md","CLAUDE.md","tests/README.md",
+        "CHANGELOG.md","CHANGELOG-cn.md","docs/why-v2.md","docs/why-v2-cn.md",
+        "docs/announcement-v2.0.0.md","docs/announcement-v2.0.0-cn.md"]
+CLAIM = re.compile(r"both arms|两臂都答对|两条臂都答对")
+VERDICT = re.compile(r"INVALID|not evidence about the skill|fails on any fixture")
+QUALIFIER = re.compile(r"discriminating|区分性|guard|6 of 7|six of seven|七个 fixture 里有六个|六个是")
+bad = []
+for d in DOCS:
+    try: text = io.open(d, encoding="utf-8").read()
+    except FileNotFoundError: continue
+    for para in re.split(r"\n\s*\n", text):
+        flat = " ".join(para.split())
+        if CLAIM.search(flat) and VERDICT.search(flat) and not QUALIFIER.search(flat):
+            bad.append(f"{d}: {flat[:150]}")
+for b in bad: print(b)
+sys.exit(1 if bad else 0)
+PYCHK
+then
+  ok "every both-arms claim carries its qualifier, in both languages"
+else
+  bad "an unqualified both-arms-pass claim survives (listed above)"
+fi
 
 echo "== the install commands actually install =="
 for r in README.md README-cn.md; do
@@ -272,13 +324,18 @@ else
 fi
 rm -rf "$t"
 
-echo "== the skill handles a repo it was not written for =="
-grep -qiE 'no (project )?guide|neither exists|if none exists|absent' three-loop-workflow/SKILL.md \
-  && ok "SKILL.md says what to do when the project guide is missing" \
-  || bad "SKILL.md dereferences roles with no fallback for a repo that has no guide or anchor map"
-grep -qiE 'as a product|whole artifact|no diff' three-loop-workflow/references/close.md \
-  && ok "close.md carries the whole-artifact read" \
-  || bad "close.md is missing the whole-artifact read"
+# PROSE-PRESENCE ONLY, and deliberately labelled as such. These two rules live in prose and have no
+# executable consequence, so no check here can distinguish "the rule is stated" from "the rule is
+# stated correctly" — text saying the opposite would also match. That is the check-consistency.sh
+# failure mode, and the honest response is to name the limit rather than to dress presence up as
+# verification. Behavioural coverage for these two rules needs two-arm fixtures; see the Close notes.
+echo "== the skill mentions the two rules P5 added (presence only, not verification) =="
+grep -qiE 'if no guide exists, or a role is missing' three-loop-workflow/SKILL.md \
+  && ok "SKILL.md mentions the missing-guide fallback" \
+  || bad "SKILL.md no longer mentions what to do when the project guide or a role is missing"
+grep -qiE 'read the result as a product, not as a diff' three-loop-workflow/references/close.md \
+  && ok "close.md mentions the whole-artifact read" \
+  || bad "close.md no longer mentions the whole-artifact read"
 
 echo "== README paths exist =="
 for p in $(grep -oE '\(\./[A-Za-z0-9_./-]+\)' README.md | tr -d '()'); do

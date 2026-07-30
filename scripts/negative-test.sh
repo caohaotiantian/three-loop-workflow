@@ -20,6 +20,8 @@
 #   M14       a dead fix agent consuming a round, reporting infrastructure failure as deadlock
 #   M15       the triage rejection record dropped instead of returned
 #   M16       the second reviewer's findings discarded rather than unioned
+#   S1-S4     the two-arm runner's scoring: an agent-asserted pass, the row-set check, the
+#             discriminating floor, and a broken guard scored as held
 #
 # M5 also covers termination: without the loop's structural bound it does not return at all, so the
 # harness's runaway ceiling is what catches it.
@@ -34,6 +36,7 @@ set -uo pipefail
 cd "$(git rev-parse --show-toplevel)"
 
 SRC=three-loop-workflow/scripts/phase.js
+SCEN=tests/run-scenarios.js
 TMP=$(mktemp -d)
 trap 'rm -rf "$TMP"' EXIT
 fail=0
@@ -65,6 +68,32 @@ PY
     else
       printf '            NOTE the token "%s" is absent, so a grep would have caught this one too\n' "$token"
     fi
+  fi
+}
+
+
+# Same contract for the two-arm runner: sim-scenarios.js has to notice when its scoring is broken. Added
+# after a reviewer mutated the pass condition to honour an agent-supplied `suite_pass` and all twelve
+# cases stayed green, because no canned reply had ever set it.
+apply_scen() {
+  local name="$1" patch="$2"
+  cp "$SCEN" "$TMP/run-scenarios.js"
+  SCEN_PATCH="$patch" python3 - "$TMP/run-scenarios.js" <<'PATCHEOF'
+import os, sys
+p = sys.argv[1]
+s = open(p).read()
+exec(os.environ['SCEN_PATCH'])
+open(p, 'w').write(s)
+PATCHEOF
+  if cmp -s "$SCEN" "$TMP/run-scenarios.js"; then
+    printf '  ERROR %s: the mutation did not apply\n' "$name"
+    fail=$((fail+1)); return
+  fi
+  if SCENARIOS_JS="$TMP/run-scenarios.js" node scripts/sim-scenarios.js >"$TMP/sout" 2>&1; then
+    printf '  SURVIVED  %s\n' "$name"
+    fail=$((fail+1))
+  else
+    printf '  detected  %s (%s rule(s) broke)\n' "$name" "$(grep -c '^  FAIL' "$TMP/sout" | tr -d ' ')"
   fi
 }
 
@@ -124,6 +153,21 @@ apply "M7 closure computed on the raw count, before triage" \
 
 apply "M8 a dead reviewer treated as a pass" \
   's = s.replace("if (verdicts.length < reviewers) {", "if (false) {")'
+
+echo
+echo "== mutation test: the two-arm runner's scoring =="
+
+apply_scen "S1 the runner honours an agent-supplied suite_pass" \
+  's = s.replace("const suite_pass = malformed.length === 0 &&", "const suite_pass = reading.suite_pass === true ? true : malformed.length === 0 &&")'
+
+apply_scen "S2 the row-set completeness check dropped" \
+  's = s.replace("if (unscored.length || unknown.length || duplicated.length || malformed.length) {", "if (false) {")'
+
+apply_scen "S3 the discriminating floor removed" \
+  's = s.replace("  discriminating.length >= 1 &&", "")'
+
+apply_scen "S4 a broken guard scored as held" \
+  "s = s.replace(\"verdict = onRight ? 'GUARD-HELD' : 'GUARD-BROKEN'\", \"verdict = 'GUARD-HELD'\")"
 
 echo
 if [ "$fail" -eq 0 ]; then

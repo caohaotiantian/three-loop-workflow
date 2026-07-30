@@ -164,11 +164,23 @@ for (const r of reading.rows) {
   rows.push({ ...r, expected: exp, skill_off_answer: off, skill_on_answer: on, offRight, onRight, discriminates, verdict })
 }
 
-if (rows.length !== FIXTURES.length) {
+// Counting rows is not matching them. Two rows for one fixture and none for another satisfies a length
+// check while leaving a fixture — possibly the only discriminating one — never judged, which is exactly
+// the shape of failure this suite exists to refuse. Match the set, not the size.
+const scored = rows.map(r => r.fixture)
+const unscored = FIXTURES.filter(f => !scored.includes(f))
+const unknown = scored.filter(f => !FIXTURES.includes(f))
+const duplicated = scored.filter((f, i) => scored.indexOf(f) !== i)
+if (unscored.length || unknown.length || duplicated.length || malformed.length) {
   return {
     status: 'incomplete',
     suite_pass: false,
-    reason: `${rows.length} scorable rows for ${FIXTURES.length} fixtures — every fixture must be scored`,
+    reason: [
+      unscored.length ? `never scored: ${unscored.join(', ')}` : '',
+      unknown.length ? `scored but never run: ${unknown.join(', ')}` : '',
+      duplicated.length ? `scored more than once: ${[...new Set(duplicated)].join(', ')}` : '',
+      malformed.length ? `${malformed.length} unreadable row(s)` : '',
+    ].filter(Boolean).join('; '),
     malformed, rows,
   }
 }
@@ -178,8 +190,15 @@ const discriminating = rows.filter(r => r.kind === 'discriminating')
 const broken = rows.filter(r => r.verdict === 'GUARD-BROKEN')
 const invalid = rows.filter(r => r.verdict.startsWith('INVALID') || r.verdict === 'BROKEN-skill-fails')
 
-// The pass condition, in one place: every discriminating fixture VALID and every guard GUARD-HELD.
+// The pass condition, in one place: every discriminating fixture VALID and every guard GUARD-HELD —
+// and at least one fixture capable of discriminating at all. Without that floor, `every()` over an empty
+// array is true, so a reading agent that labelled every row `guard` would produce a green suite that
+// measured nothing: the failure this suite exists to refuse, reachable through the label channel.
+// `kind` is agent-reported and this script cannot read expected.json (a Workflow script has no fs), so
+// the floor here is what catches the vacuous case; accept-release.sh separately asserts, from the file
+// itself, that expected.json really does declare at least one.
 const suite_pass = malformed.length === 0 &&
+  discriminating.length >= 1 &&
   discriminating.every(r => r.verdict === 'VALID') &&
   guards.every(r => r.verdict === 'GUARD-HELD')
 

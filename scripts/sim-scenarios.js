@@ -115,6 +115,35 @@ const CASES = [
     expect: r => all(eq(r.res.suite_pass, true), eq(r.res.rows[1].skill_on_answer, 'B'),
       eq(r.res.rows[1].verdict, 'VALID')) },
 
+  // Found by a reviewer: counting rows is not matching them. Two rows for one fixture and none for the
+  // other satisfied `rows.length === FIXTURES.length` and scored green with the discriminating fixture
+  // never judged.
+  { name: 'duplicate rows for one fixture cannot stand in for a fixture never scored',
+    input: { fixtures: F, answers: { 's01.md': { off: 'A', on: 'A' }, 's04.md': { off: 'A', on: 'B' } },
+             rows: { rows: [row('s01.md', 'guard', 'A', 'A', 'A'), row('s01.md', 'guard', 'A', 'A', 'A')] } },
+    expect: r => all(eq(r.res.suite_pass, false), eq(r.res.status, 'incomplete'),
+      ok(/s04\.md/.test(JSON.stringify(r.res)), 'the unscored fixture must be named')) },
+
+  { name: 'a row for a fixture that was never run cannot be scored',
+    input: { fixtures: F, answers: { 's01.md': { off: 'A', on: 'A' }, 's04.md': { off: 'A', on: 'B' } },
+             rows: { rows: [row('s01.md', 'guard', 'A', 'A', 'A'), row('s99.md', 'discriminating', 'B', 'A', 'B')] } },
+    expect: r => all(eq(r.res.suite_pass, false), eq(r.res.status, 'incomplete')) },
+
+  // The P3 Accept criterion, and the one channel no case exercised: a reading agent that tries to assert
+  // the verdict. A reviewer mutated the script to honour `reading.suite_pass` when present and all twelve
+  // cases stayed green, because no canned reply ever set it.
+  { name: 'a reading agent cannot assert suite_pass alongside a broken guard',
+    input: { fixtures: F, answers: { 's01.md': { off: 'A', on: 'C' }, 's04.md': { off: 'A', on: 'B' } },
+             rows: { suite_pass: true, discrimination_rate: '2/2', verdict: 'VALID',
+                     rows: [row('s01.md', 'guard', 'A', 'A', 'C'), row('s04.md', 'discriminating', 'B', 'A', 'B')] } },
+    expect: r => all(eq(r.res.suite_pass, false, 'the script must override an asserted pass'),
+      deep(r.res.guard_broken, ['s01.md'])) },
+
+  { name: 'a reply that labels every fixture a guard cannot pass vacuously',
+    input: { fixtures: F, answers: { 's01.md': { off: 'A', on: 'A' }, 's04.md': { off: 'A', on: 'B' } },
+             rows: { rows: [row('s01.md', 'guard', 'A', 'A', 'A'), row('s04.md', 'guard', 'B', 'A', 'B')] } },
+    expect: r => eq(r.res.suite_pass, false, 'no fixture capable of discriminating means the suite measured nothing') },
+
   { name: 'a dropped arm is incomplete, not a scored result',
     input: { fixtures: F, answers: { 's01.md': { off: 'A', on: 'A' }, 's04.md': { off: 'A', on: 'B' } },
              rows: { rows: [] }, drop: ['on:s04'] },
