@@ -84,9 +84,16 @@ of any claim about external behaviour.
 contradicted it depending on the denominator, and the artifacts were never kept. Stopping at two is
 stated as the cost decision it is.
 
-**Two behavioural fixtures** cover the rules this release adds, and the suite's giveaway signal — which
-had gone quietly dead, requiring a boolean both arms leave false while filling in the quote beside it —
-counts an arm on either signal now.
+**Two behavioural fixtures** cover the rules this release adds, and both are guards. The whole-artifact
+read was written as discriminating and measured twice; both arms answered it correctly both times, the
+second time with no giveaway reported at all. So the rule is not counter-intuitive to a model asked the
+question directly — the evidence for it was never that, it was that four rounds of diff review did not
+think to ask. It is demoted with that reasoning dated in `expected.json`. The suite still has exactly one
+discriminating fixture; adding two rules added none.
+
+The suite's giveaway signal — which had gone quietly dead, requiring a boolean both arms leave false
+while filling in the quote beside it — counts an arm on either signal now, and immediately flagged five
+fixtures where the old one flagged none.
 
 Also: the syntax gate fails on `Date.now()`, `Math.random()`, argless `new Date()` and a missing
 `export const meta`, with committed fixtures in both directions; two factual errors in `build.md` about
