@@ -45,6 +45,15 @@ An answer that lives only in chat cannot anchor a future change. Write it down.
 
 Three rounds without clearing blocking issues is a structural signal, not permission to lower the bar.
 
+**On a document-shaped change, arriving here is the ordinary exit, not the failure path.** Where the
+artifact under review is prose — a reference, a contract file, a specification — a phase that never
+reaches zero is common, and it has usually been doing real work the whole way. Measured on this
+repository's own reference documents, with the cap deliberately lifted so that convergence above three
+could be seen at all; the figures and their limits are published outside the skill. Two things follow.
+Spend the report on *why* rather than on whether the cap should have been higher — the same measurement
+found the confirmed count was not falling, and more rounds of a count that is not falling buy nothing.
+And do not read reaching the cap as a verdict on the author.
+
 Report:
 
 - The unresolved items, verbatim from the last review.
@@ -58,6 +67,20 @@ one, not a plan that contradicts itself. `scripts/phase.js` reports `gateFixes`,
 reviewer ever ran, and the escalation is about the build.
 
 Then offer: **(a)** revise the plan to remove the conflict — the default when a *different* item failed each round, or when fix scope grew each round, because that pattern means the defect is in the plan, not the code; **(b)** accept a documented compromise with the risk written down; **(c)** drop it from scope and file a follow-up.
+
+**Before (a), check whether the fix step is what grew the change.** A fix round that adds a check, a
+harness or a guard has started a second change inside the first, and the next round reviews *that*: the
+confirmed count stops falling while the diff keeps growing, and every round is honest work on something
+the plan never scoped. Measured on this repository's own documents, that is the commonest way a
+document-shaped change reaches this section — and the runs that avoided it were the ones whose fix step
+added nothing. The remedy is not to remove a contradiction, because there may not be one. It is to
+**split**: keep the correction, and raise the new machinery as its own work with its own review. Adding
+the gate can be right; deciding to add it mid-fix is not.
+
+Look hardest at what the new check is trying to hold. A pattern can hold *prose* — the presence of a
+sentence is the property you want. It cannot hold a *claim*: no pattern separates "the script detects X"
+from "the script does not detect X" without also rejecting the true sentences a writer is entitled to
+make about X. A fix round that sets out to write one will not finish, and the cap will fire on it.
 
 Never a silent round four.
 
