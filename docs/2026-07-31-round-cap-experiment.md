@@ -1,8 +1,16 @@
 # Does a Deep change to a document-shaped artifact converge within three fix rounds?
 
 *Pre-registered 2026-07-30 before any data existed; run 2026-07-30 to 2026-07-31. The raw artifacts and
-the analysis script are committed beside this document, and `scripts/exp-analyse.mjs` recomputes every
-figure here and exits non-zero if this document disagrees with it.*
+the analysis script are committed beside this document.*
+
+*`scripts/exp-analyse.mjs` recomputes the figures below from those artifacts and exits non-zero if a
+document disagrees. Read what that does and does not buy you: it holds the **multi-digit** figures —
+each must appear in both languages, the same number of times — and it asserts the per-round series
+against what `phase.js` returned. For the **single-digit** counts it can only check that the digit
+appears somewhere, which almost no prose can fail. Those are the counts in "Results", and they are the
+ones you should verify against `raw/verdicts.json` yourself rather than trust a green gate for. This
+paragraph exists because an earlier draft claimed the script checked "every figure", and a Close
+reviewer showed that five published figures could be corrupted at once with the gate still green.*
 
 > **This experiment ran with the fix-round cap set to 6, not the shipped 3.** `scripts/phase.js` halts
 > at `fixes >= maxRounds`, so under the shipped setting every run is right-censored at three and a
@@ -25,11 +33,12 @@ the change.
 
 The correspondence is exact across all three runs:
 
-| Replicate | Confirmed findings on the document being fixed | On machinery the change itself added | Outcome |
-|---|---|---|---|
-| 1 | 9 | **17** | never reached zero |
-| 2 | 10 | **0** | **reached zero, 1 review fix round** |
-| 3 | 10 | **18** | never reached zero |
+| Replicate | Confirmed findings on the document being fixed | On machinery the change itself added | Elsewhere | Outcome |
+|---|---|---|---|---|
+| 1 | 9 | **17** | 2 | never reached zero |
+| 2 | 10 | **0** | 0 | **reached zero, 1 review fix round** |
+| 3 | 10 | **18** | 1 | never reached zero |
+| **All three** | **29** | **35** | 3 | 67 confirmed |
 
 The one replicate whose fix step added nothing converged immediately. The two that built machinery never
 converged. Raising the cap would have bought more rounds of the same thing.
@@ -47,6 +56,22 @@ evaluated by script rather than by argument:
 - **R1 (change nothing) does not fire.**
 
 So the change this experiment mandates is to `references/escalation.md`, and **the cap is not touched**.
+
+**R5 fired on its pre-registered terms and was deliberately not extended.** The pre-registration
+assigned R5 — qualitative depth guidance about self-modifying changes — to the single recorded v2.2.0
+observation, and said this experiment could not test it, because the seeded material adds no checks.
+That turned out to be true of the material and false of what happened: the *fix step* added checks, and
+35 of the 67 confirmed findings landed on them. Acting on that would mean treating an unplanned
+analysis as a pre-registered one. It is reported as exploratory, `SKILL.md` is untouched, and the
+follow-up that would settle it is named at the end.
+
+**One pre-registered method detail was not followed, and the substitute is stated here rather than by
+editing a dated document.** §5.2 says the per-round series is keyed off round-stamped agent labels. The
+Workflow journal carries no labels at all — it records `{agentId, type, result}`. `scripts/exp-extract.mjs`
+therefore classifies each agent by the opening text of the prompt `phase.js` built for it, and segments
+rounds on the gates agent, which runs exactly once per verify trip. Same quantity, different mechanism,
+and the reconstruction is asserted against what `phase.js` returned — fix counts, the gate/review split,
+and the final confirmed count must all agree, or the analysis exits non-zero.
 
 `build.md`'s Fix section is the obvious next place for the same lesson, and it was **not** edited,
 because no pre-registered row authorised it. That restraint is the point of pre-registering: the
@@ -232,6 +257,15 @@ directory.** With the key gone, the replicate reached round 1's gate failure and
 no-op-fix guard: `the last fix round committed nothing — HEAD is unchanged`. The guard fired correctly;
 the cause is upstream, and it is reported as a finding below.
 
+**Void 3 — an adjudication key no agent could copy.** The first adjudication pass returned verdicts for
+16 of the 67 confirmed findings. `exp-analyse.mjs` refused to compute a survival rate from it, which is
+the guard doing its job. The cause was that the group builder handed each adjudicator the *canonical*
+finding id — replicate, round, and the entire finding text — as the key to echo back, and findings here
+run past a thousand characters. A handle an agent has to copy must be short enough to copy. Repaired
+with short handles and an explicit id map, and re-run; the partial attempt is kept as
+`adjudication-firstattempt-void.json` rather than deleted, because a partial result quietly discarded is
+how a denominator gets chosen after the fact.
+
 **Experimenter error — I re-imported the answer key mid-run.** While replicate 2 was running I ran
 `git bundle unbundle` on replicate 1's bundle to read its commit list. `unbundle` writes objects into the
 repository, and replicate 1's fix-commit subjects name the seeds. They were unreachable and invisible to
@@ -239,8 +273,9 @@ repository, and replicate 1's fix-commit subjects name the seeds. They were unre
 commits — the exposure was made **detectable**: replicate 2's transcripts were audited for `fsck`,
 `lost-found` and `unbundle` before its data was used. None appeared, so the replicate stands. The
 objects were pruned once it returned. The generalisable form: reading a bundle is not a read-only
-operation, and this experiment's blinding was broken twice by the experimenter and zero times by the
-agents under measurement.
+operation. And every breach of blinding here traced to something the experimenter left reachable
+rather than to an agent circumventing a control — but an agent did read the key, so the design's
+protection was never the agents' restraint, and saying it that way round is the only honest form.
 
 ## Incidental findings
 

@@ -48,8 +48,9 @@ Three rounds without clearing blocking issues is a structural signal, not permis
 **On a document-shaped change, arriving here is the ordinary exit, not the failure path.** Where the
 artifact under review is prose — a reference, a contract file, a specification — a phase that never
 reaches zero is common, and it has usually been doing real work the whole way. Measured on this
-repository's own reference documents, with the cap deliberately lifted so that convergence above three
-could be seen at all; the figures and their limits are published outside the skill. Two things follow.
+repository's own reference material — one document, a handful of runs — with the cap deliberately
+lifted so that convergence above three could be seen at all; the figures and their limits are published
+outside the skill. Two things follow.
 Spend the report on *why* rather than on whether the cap should have been higher — the same measurement
 found the confirmed count was not falling, and more rounds of a count that is not falling buy nothing.
 And do not read reaching the cap as a verdict on the author.
@@ -71,9 +72,8 @@ Then offer: **(a)** revise the plan to remove the conflict — the default when 
 **Before (a), check whether the fix step is what grew the change.** A fix round that adds a check, a
 harness or a guard has started a second change inside the first, and the next round reviews *that*: the
 confirmed count stops falling while the diff keeps growing, and every round is honest work on something
-the plan never scoped. Measured on this repository's own documents, that is the commonest way a
-document-shaped change reaches this section — and the runs that avoided it were the ones whose fix step
-added nothing. The remedy is not to remove a contradiction, because there may not be one. It is to
+the plan never scoped. On the runs measured here it was the commonest way a document-shaped change
+reached this section, and the runs that avoided it were the ones whose fix step added nothing. The remedy is not to remove a contradiction, because there may not be one. It is to
 **split**: keep the correction, and raise the new machinery as its own work with its own review. Adding
 the gate can be right; deciding to add it mid-fix is not.
 

@@ -252,13 +252,31 @@ const figures = {
 // be one this script recomputed. Checked for the integers that carry the argument.
 if (docs.length) {
   const texts = docs.map(d => (existsSync(d) ? readFileSync(d, 'utf8') : (bad(`missing doc: ${d}`), '')))
+  // WHAT THIS CAN AND CANNOT DO, stated because the first version of this block claimed more than it
+  // checked and the results documents repeated the claim.
+  //
+  // Every figure that carries the argument is listed, and each must appear in every document. But a
+  // one-digit value's "presence" is satisfied by any prose containing that digit, so for those the
+  // check is close to vacuous — it catches a figure deleted entirely and nothing else. The load is
+  // carried by the multi-digit figures, where presence is meaningful and the equal-count rule across
+  // the two languages applies. That asymmetry is why the totals below were added to the documents:
+  // a claim resting only on single digits was not checkable, and the honest fix was to publish
+  // numbers a check can hold rather than to describe the check as stronger than it is.
+  const upheldCount = upheld.length
+  const refutedCount = adjudicated.length - upheld.length
   const mustAppear = [
     ['replicates observed', n],
     ['reached zero within 3', within3],
     ['reached zero within 6', within6],
     ['never reached zero', never],
-    ['total confirmed findings', allConfirmed.length],
     ['maxRounds deviation', MAX_ROUNDS],
+    // Multi-digit: these are the ones the cross-check actually holds.
+    ['total confirmed findings', allConfirmed.length],
+    ['total reported (union)', totalReported],
+    ['upheld by adjudication', upheldCount],
+    ['refuted by adjudication', refutedCount],
+    ['confirmed on the planned target', scope.plannedTarget],
+    ['confirmed on machinery the change added', scope.machineryTheChangeAdded],
   ]
   const count = (t, v) => (t.match(new RegExp(`(^|[^0-9.,])${v}([^0-9.,%]|$)`, 'g')) || []).length
   for (const [label, val] of mustAppear) {
@@ -288,4 +306,6 @@ if (problems.length) {
   for (const p of problems) console.error(`  ${p}`)
   process.exit(1)
 }
-console.error('\nANALYSIS: raw data is internally consistent and every published figure is recomputed')
+console.error('\nANALYSIS: raw data is internally consistent; every listed figure is present, and the ' +
+  'multi-digit ones match across both languages. Single-digit figures are presence-only — that part ' +
+  'of the check is close to vacuous and is not evidence the counts are right.')

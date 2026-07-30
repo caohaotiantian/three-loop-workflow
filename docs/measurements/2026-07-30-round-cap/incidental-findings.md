@@ -67,10 +67,13 @@ exposure was made **detectable** — replicate 2's agent transcripts are audited
 appear. Pruned after the replicate returned.
 
 The finding-shaped version of this: reading a bundle is not a read-only operation, and the experiment's
-own blinding discipline has now been broken twice by *me* rather than by the agents under measurement.
+own blinding was breached because *I* left something reachable, not because an agent circumvented a
+control — though an agent did read it, which is the whole reason the exposure mattered.
 Both times the remedy was a mechanical assertion rather than an intention.
 
 ## 2. `phase.js` cannot run a fix round against a repository outside the agents' working directory
 
-Full account in `.agent/measure-round-cap/plan.md` under "Harness incidents", void 2. Reported as a
-finding in the results document, not merely as a reason the first design was abandoned.
+Full account in `docs/2026-07-31-round-cap-experiment.md` under "The measurement's own failures",
+void 2. Reported as a finding in its own right, not merely as a reason the first design was abandoned.
+(The task's own `.agent/measure-round-cap/plan.md` has more, but `.agent/` is gitignored, so it is not
+a citation a reader can follow.)

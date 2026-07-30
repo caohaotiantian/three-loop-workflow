@@ -23,7 +23,7 @@ export const meta = {
 // embedded instead: a Workflow script has no filesystem, and the payload — 67 findings, about 80,000
 // characters of quoted review text — is larger than a practical argument. `scripts/exp-embed.py`
 // substitutes the JSON for the `null` below and changes nothing else, so the committed script and the
-// one that ran differ by exactly this line, and `scripts/exp-adjudication-groups.json` regenerates it.
+// one that ran differ by exactly this line, and `docs/measurements/2026-07-30-round-cap/raw/adjudication-groups.json` is the payload it embeds.
 const EMBEDDED_GROUPS = null
 
 const cfg = EMBEDDED_GROUPS || ((typeof args === 'string') ? JSON.parse(args) : (args || {}))

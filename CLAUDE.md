@@ -95,11 +95,13 @@ recomputed figure a different number of times.
   push and pull request (`.github/workflows/check.yml`), and again on a tag before the archive is built.
 - **Round-cap experiment (2026-07-31):** `node scripts/exp-analyse.mjs --raw
   docs/measurements/2026-07-30-round-cap/raw --docs docs/2026-07-31-round-cap-experiment.md
-  docs/2026-07-31-round-cap-experiment-cn.md` recomputes every figure the results documents publish,
-  checks the two languages quote each distinctive one the same number of times, and asserts the
-  per-round series against what `phase.js` returned. `accept-release.sh` runs it. The `scripts/exp-*`
-  harness re-runs the whole thing; `preregistration.md` beside the raw data is what it was committed to
-  do, before any of it existed.
+  docs/2026-07-31-round-cap-experiment-cn.md` recomputes the listed figures, requires each to appear in
+  both languages, requires the **multi-digit** ones to appear the same number of times, and asserts the
+  per-round series against what `phase.js` returned. Single-digit figures are presence-only, which
+  almost no prose can fail — say so rather than calling it coverage. `accept-release.sh` runs it. The `scripts/exp-*` harness is the
+  code the runs were driven by, kept so the method is inspectable — it is **not** a turnkey re-run:
+  `exp-next.sh` and `exp-assemble.sh` still name the private working directory the runs used.
+  `preregistration.md` beside the raw data is what it was committed to do, before any of it existed.
 - **Invariant harnesses (fast, deterministic, no agents):**
   `node scripts/sim-phase.js` asserts `phase.js`'s control flow by driving the real script with stub
   agents; `node scripts/sim-scenarios.js` asserts the two-arm suite's scoring arithmetic;

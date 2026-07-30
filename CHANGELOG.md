@@ -129,8 +129,9 @@ four minutes; in the second, `phase.js` could not complete a fix round at all, b
 and Triage prompts from a branch name and a sha and **never a path**, so an agent whose working
 directory is not the repository under test has nothing to locate it with. That is a real limitation of
 the shipped script, found by running it. A third attempt, at adjudication, was voided for asking agents
-to echo a thousand-character key. All three defects were the experimenter's, and the experiment's
-blinding was broken twice by him and never by the agents under measurement.
+to echo a thousand-character key. Two of the three were the experimenter's; the second is a defect in
+the shipped script, and is reported as one. Every breach of blinding traced to something left
+reachable rather than to an agent circumventing a control — but an agent did read the key.
 
 Raw artifacts are committed — git bundles of every replicate, the per-round series, the adjudicator
 verdicts, the analysis script — because three earlier measurements in this project cannot be reproduced

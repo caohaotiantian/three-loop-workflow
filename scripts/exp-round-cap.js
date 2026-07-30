@@ -1,6 +1,6 @@
 export const meta = {
   name: 'exp-round-cap',
-  description: 'Drives scripts/phase.js over pre-seeded scratch clones to measure rounds-to-zero',
+  description: 'Drives scripts/phase.js over a pre-seeded branch to measure rounds-to-zero',
   phases: [
     { title: 'Replicates' },
   ],
@@ -10,24 +10,28 @@ export const meta = {
 // docs/measurements/2026-07-30-round-cap/preregistration.md
 //
 // This script is a DRIVER, not an instrument. It does no counting, no scoring and no judging: it
-// dispatches the real `three-loop-workflow/scripts/phase.js` against clones that `scripts/exp-clone.sh`
-// has already built, seeded and asserted, and it returns whatever phase.js returned, untouched. Every
-// number in the results document is computed later, by `scripts/exp-analyse.mjs`, from committed raw
-// data — never from this script's summary and never from an agent's.
+// dispatches the real `three-loop-workflow/scripts/phase.js` against a branch that
+// `scripts/exp-setup.sh` has already created, seeded and asserted, and it returns whatever phase.js
+// returned, untouched. Every number in the results document is computed later, by
+// `scripts/exp-analyse.mjs`, from committed raw data — never from this script's summary and never from
+// an agent's.
 //
 // THE ONE DEVIATION FROM THE SHIPPED SETTING IS `maxRounds`. The caller passes 6 where the shipped
 // default is 3, because phase.js halts at `fixes >= maxRounds` and a convergence point above 3 is
 // otherwise unobservable by construction. Nothing this script produces is evidence about how the
 // shipped harness behaves.
 //
-// `phase.js` is dispatched from the PARENT repository's copy rather than from each clone's, so all
-// replicates run a byte-identical instrument even if an agent inside a clone edits its own copy.
+// Each replicate is a branch of the repository the agents are standing in, run one at a time. An
+// earlier design put each replicate in a scratch clone outside the repository and it does not work:
+// phase.js builds its Fix and Triage prompts from a branch name and a sha and never a path, so an
+// agent whose working directory is not the repository under test has nothing to locate it with. That
+// clone builder is preserved in `preregistration.bundle` and deliberately not shipped here.
 
 const cfg = (typeof args === 'string') ? JSON.parse(args) : (args || {})
 
 if (!cfg.phaseScript) return { status: 'usage-error', reason: 'phaseScript (absolute path to phase.js) is required' }
 if (!Array.isArray(cfg.replicates) || !cfg.replicates.length) {
-  return { status: 'usage-error', reason: 'replicates must be a non-empty array of clone descriptors from exp-clone.sh' }
+  return { status: 'usage-error', reason: 'replicates must be a non-empty array of branch descriptors from exp-setup.sh' }
 }
 const maxRounds = cfg.maxRounds
 if (!Number.isInteger(maxRounds)) return { status: 'usage-error', reason: 'maxRounds must be an integer, stated explicitly — the deviation under which this data was collected is not something to default' }
