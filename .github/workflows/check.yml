@@ -1,0 +1,22 @@
+name: check
+on:
+  push:
+    branches: ['**']
+  pull_request:
+jobs:
+  accept:
+    runs-on: ubuntu-latest
+    steps:
+      # The acceptance script recomputes published figures from tags v1.14.0 and v2.0.0, so it needs
+      # full history and tags, not the default shallow single-branch checkout.
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Workflow-script syntax gate
+        run: bash three-loop-workflow/scripts/check-workflow-syntax.sh three-loop-workflow/scripts/phase.js tests/run-scenarios.js
+      - name: phase.js invariants, asserted by execution
+        run: node scripts/sim-phase.js
+      - name: Prove the invariant harness can fail
+        run: bash scripts/negative-test.sh
+      - name: Repository acceptance
+        run: bash scripts/accept-release.sh

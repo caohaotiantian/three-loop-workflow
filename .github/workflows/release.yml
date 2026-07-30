@@ -10,8 +10,30 @@ jobs:
       contents: write
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      # A tag that disagrees with the frontmatter ships an archive claiming the wrong version, and
+      # nothing downstream can tell. Check it before anything is built.
+      - name: Tag agrees with the skill's declared version
+        run: |
+          declared=$(sed -n 's/^  version: "\(.*\)"/\1/p' three-loop-workflow/SKILL.md)
+          tagged=${GITHUB_REF_NAME#v}
+          if [ "$declared" != "$tagged" ]; then
+            echo "tag $GITHUB_REF_NAME does not match SKILL.md version $declared" >&2
+            exit 1
+          fi
+          echo "version $declared matches tag $GITHUB_REF_NAME"
+      - name: Repository acceptance
+        run: bash scripts/accept-release.sh
       - name: Build the .skill archive
         run: zip -r three-loop-workflow.skill three-loop-workflow/
+      # The archive is what users install: assert it holds the skill, at the right depth, and nothing else.
+      - name: Verify the archive contents
+        run: |
+          entries=$(unzip -Z1 three-loop-workflow.skill | grep -vc '/$')
+          test "$entries" = "8" || { echo "expected 8 files in the archive, found $entries" >&2; exit 1; }
+          unzip -Z1 three-loop-workflow.skill | grep -qx 'three-loop-workflow/SKILL.md' \
+            || { echo "SKILL.md is not at three-loop-workflow/SKILL.md in the archive" >&2; exit 1; }
       - name: Attach to the GitHub release
         uses: softprops/action-gh-release@v2
         with:
