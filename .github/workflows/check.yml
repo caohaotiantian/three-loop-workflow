@@ -9,7 +9,7 @@ jobs:
     steps:
       # The acceptance script recomputes published figures from tags v1.14.0 and v2.0.0, so it needs
       # full history and tags, not the default shallow single-branch checkout.
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           fetch-depth: 0
       - name: Workflow-script syntax gate

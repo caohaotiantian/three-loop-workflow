@@ -43,7 +43,8 @@
   },
   "s09.md": {
     "answer": "B",
-    "kind": "discriminating",
-    "tests": "a document-shaped Deep change gets one whole-artifact read before it closes, even after a clean diff review"
+    "kind": "guard",
+    "tests": "a document-shaped Deep change gets one whole-artifact read before it closes, even after a clean diff review",
+    "demoted": "Written as discriminating. Demoted 2026-07-30 after two runs. The first was a fixture defect — the text named the deciding fact ('the kind whose output people read rather than execute') and both arms quoted it. Rewritten without it, both arms still answered B with no giveaway reported, the control reaching it from general reasoning that diff review only validates increments. The rule is not counter-intuitive to a model asked the question directly; the evidence for it is that four rounds of diff review did not think to ask. It stays as a guard."
   }
 }

@@ -61,6 +61,33 @@ Gates step both dereference roles from an anchor map that no external standard r
 written anywhere — so on a repo that had not adopted the convention, a third of the Deep checklist was
 silently inert.
 
+**The script had never run, because it could not.** Every claim about `scripts/phase.js` rested on
+harnesses that fed it a well-formed object. The first invocation through the actual Workflow tool
+returned `usage-error: planPath is required` with a complete argument list — the tool delivers `args` to
+a script as a JSON *string*, and destructuring a string yields all-undefined. Settled with a probe
+script, not by inference. `tests/run-scenarios.js` had the same defect silently: the documented
+`args: {repo: "<path>"}` ran against the default tree without a word. Both normalise `args` now, and
+report an unusable shape as itself rather than blaming the first field that looks missing.
+
+It was then run end to end for the first time: one Standard phase, driven from an absolute path outside
+the repository so an installed skill resolves too, returning `closed` at round one with no fix spent, a
+real chainable head, the gates step's own output and tally, three substantive non-blocking findings, and
+the implementer's concerns returned to the caller instead of sent to the reviewer.
+
+**The runtime claims are checked and sourced.** Codex's `.agents/skills` discovery, opencode reading
+both its own and Claude's locations, this skill's frontmatter conforming to the Agent Skills spec, and
+AGENTS.md's contribution to the Linux Foundation's Agentic AI Foundation had all been asserted and never
+verified. All four hold; `references/platforms.md` carries the sources now, which is what this skill asks
+of any claim about external behaviour.
+
+**"A third mostly repeated the second" is retired as a coverage claim.** Re-analysis of the same data
+contradicted it depending on the denominator, and the artifacts were never kept. Stopping at two is
+stated as the cost decision it is.
+
+**Two behavioural fixtures** cover the rules this release adds, and the suite's giveaway signal — which
+had gone quietly dead, requiring a boolean both arms leave false while filling in the quote beside it —
+counts an arm on either signal now.
+
 Also: the syntax gate fails on `Date.now()`, `Math.random()`, argless `new Date()` and a missing
 `export const meta`, with committed fixtures in both directions; two factual errors in `build.md` about
 worktree cleanup and the chaining example are corrected.

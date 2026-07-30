@@ -9,7 +9,7 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           fetch-depth: 0
       # A tag that disagrees with the frontmatter ships an archive claiming the wrong version, and
@@ -35,6 +35,6 @@ jobs:
           unzip -Z1 three-loop-workflow.skill | grep -qx 'three-loop-workflow/SKILL.md' \
             || { echo "SKILL.md is not at three-loop-workflow/SKILL.md in the archive" >&2; exit 1; }
       - name: Attach to the GitHub release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65 # v2
         with:
           files: three-loop-workflow.skill
