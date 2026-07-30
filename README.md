@@ -4,7 +4,7 @@ A disciplined workflow for non-trivial software changes, packaged as a portable 
 
 中文版本 → [README-cn.md](./README-cn.md)
 
-> **v2.0.0 is a ground-up rewrite and a breaking change.** If you have v1 installed, read
+> **v2 is a ground-up rewrite and a breaking change from v1.** If you have v1 installed, read
 > [Upgrading from v1](#upgrading-from-v1) before copying anything — you must replace the folder, not
 > copy into it. What changed and why: [docs/why-v2.md](./docs/why-v2.md).
 

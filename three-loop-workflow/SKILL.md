@@ -4,7 +4,7 @@ description: Structured workflow for non-trivial code changes — features, beha
 license: MIT
 compatibility: Claude Code (subagents, Workflow). Codex/opencode run the manual path — see references/platforms.md
 metadata:
-  version: "2.0.0"
+  version: "2.1.0"
 ---
 
 # Three-Loop Workflow
@@ -26,6 +26,8 @@ Two questions: **if this is wrong, how much breaks?** and **how hard is it to un
 Between Direct and Standard, choose **Standard**. Between Standard and Deep, the Deep list is a **checklist, not a vibe** — if no item fires, Standard is correct. Do not upgrade the whole change because one corner of it is risky; run Standard and escalate that corner.
 
 Terse phrasing is not a depth signal. "Just quickly add X" describes urgency, not blast radius — grade the change, not the sentence.
+
+**Depth is a cost decision, and Deep scales with the change.** Counting only the reviewers this skill mandates: Direct none, Standard one, Deep two on the plan plus two per phase, plus a Close pass. Anything you delegate on top — Explore sweeps, a behavior check, `scripts/phase.js`'s own write/gates/triage/fix agents — is additional. A one-line rule edit that trips the Deep list still records its alternatives and still takes two reviewers: those are the parts that catch the risk. Its "phased build" is one phase and its Close is a few questions, not a program. Run the parts that catch the risk, not the ceremony.
 
 ## 2. Durable state — `.agent/<task>/plan.md`
 
@@ -55,7 +57,7 @@ A command that exits 0 with everything skipped is not a pass.
 
 ## 4. Review — fresh eyes on the diff
 
-Reviewers are fresh subagents receiving the diff and the plan — and **nothing else**: not your summary of the change, not your session, not the reasoning that produced it. The first tool call is `git diff <baseSha>..HEAD`, where `baseSha` was captured before editing began.
+Reviewers are fresh subagents receiving the diff and the plan — and **nothing else**: not your summary of the change, not your session, not the reasoning that produced it. The first tool call is `git diff <baseSha>..HEAD`, where `baseSha` was captured before editing began — or, on a Deep phase, before *that phase* began (`references/build.md`).
 
 **How many reviewers.** Standard: one. Deep: **two, in parallel, independently** — take the union of what they find.
 
