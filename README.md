@@ -18,6 +18,8 @@ The skill files (`SKILL.md`, `references/`, `scripts/`) are the single source of
 
 [**Announcing v2.0.0**](./docs/announcement-v2.0.0.md) — the short version, and how to upgrade.
 [**Why we rebuilt it**](./docs/why-v2.md) — the long version, with the measurements.
+[**Is three fix rounds the right cap?**](./docs/2026-07-31-round-cap-experiment.md) — pre-registered,
+raw data committed, and the answer is that the cap was not the problem.
 Release notes and full version history live in [CHANGELOG.md](./CHANGELOG.md).
 
 ## What is the three-loop workflow?
@@ -190,6 +192,9 @@ The skill never hard-codes a filename. It reads `AGENTS.md`, `CLAUDE.md`, or bot
 ├── docs/
 │   ├── announcement-v2.0.0.md        Release announcement
 │   ├── why-v2.md                     The long-form account of the rebuild
+│   ├── 2026-07-31-round-cap-*.md     Does a document-shaped Deep change converge in three rounds?
+│   ├── measurements/                 Pre-registration and raw artifacts, committed so the figures
+│   │                                 can be recomputed rather than taken on trust
 │   └── design/, implementation/      Frozen v1 per-task archive — historical, not current behavior
 ├── README.md                         this file
 ├── README-cn.md                      Chinese version

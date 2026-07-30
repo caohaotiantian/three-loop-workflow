@@ -14,7 +14,7 @@ anything would have noticed otherwise — and both regressions this project has 
 `ok an uncommitted phase is rejected, not reviewed` and `ACCEPT: all checks passed`, exit 0. Deleting one
 guard outright also passed, because the rule's wording survived in the comment above it. Both were
 reproduced in a fresh clone. Control flow is now asserted by execution: `scripts/sim-phase.js` drives the
-real script with stub agents, and `scripts/negative-test.sh` breaks the two scripts twenty-one ways and
+real script with stub agents, and `scripts/negative-test.sh` breaks the two scripts twenty-three ways and
 fails if the harness misses one. The generalisation is worth stating plainly — to check a *rule*, run it;
 grep only for *prose*, where presence is the property you want.
 
@@ -104,6 +104,49 @@ findings, ten were defects in the gates and harnesses this release adds — the 
 twice — and two were found only by the whole-artifact read it introduces. Two claims in this release's own
 commit messages were themselves overstated and are corrected in the task record rather than by rewriting
 history. Whether three rounds is the right cap for a change shaped like this one is not settled here.
+
+**It was measured afterwards, and the cap is not what was wrong.** The question that paragraph leaves
+open was pre-registered and run: one document-shaped Deep change, seeded with six defects drawn from
+classes this repository has actually shipped, reviewed by the real script with the cap deliberately
+lifted to six so that a convergence point above three could be observed at all. Two of three replicates
+never reached zero. But every replicate found and repaired the seeded defects in its **first** review
+round — what consumed the rest was the change *growing*: the fix step invented new checks for the rules
+it had just repaired, and each following round reviewed the new checks instead of the change. The one
+replicate whose fix step added nothing converged in a single review round. Raising the cap would have
+bought more rounds of the same thing, so the cap stays at three and `references/escalation.md` gains
+what to look for instead: reaching the cap on a document-shaped change is the ordinary exit, the
+commonest cause is the fix step opening a second change inside the first, and the remedy is to split
+rather than to re-plan.
+
+Worth naming what the fix step reached for: a **grep that tries to tell a true claim from a false one**
+— `check-consistency.sh`, deleted in v2.0.0 for being bypassable, re-invented from scratch and then
+iterated against one counter-example at a time until the budget ran out. `escalation.md` now says that a
+pattern can hold prose but not a claim.
+
+**The measurement's own failures are published with it.** Two attempts were voided before any data was
+collected — in the first, a fix agent ran `git log --all` and read the pre-registration commit within
+four minutes; in the second, `phase.js` could not complete a fix round at all, because it builds its Fix
+and Triage prompts from a branch name and a sha and **never a path**, so an agent whose working
+directory is not the repository under test has nothing to locate it with. That is a real limitation of
+the shipped script, found by running it. A third attempt, at adjudication, was voided for asking agents
+to echo a thousand-character key. All three defects were the experimenter's, and the experiment's
+blinding was broken twice by him and never by the agents under measurement.
+
+Raw artifacts are committed — git bundles of every replicate, the per-round series, the adjudicator
+verdicts, the analysis script — because three earlier measurements in this project cannot be reproduced
+and one was deleted before anyone thought to keep it. `scripts/accept-release.sh` now recomputes every
+figure the results documents publish and fails if either language drifts; the hole was demonstrated
+before the check was wired in, and `scripts/negative-test.sh` keeps that demonstration.
+
+**The per-round records that did exist are now tracked.** `.agent/` is gitignored, so the only
+round-by-round review data this project ever produced sat on one disk.
+`docs/measurements/2026-07-30-round-data/` holds it verbatim, unedited, including the claims its authors
+later corrected.
+
+**The mutation count was wrong in three places.** `scripts/negative-test.sh` breaks `phase.js` eighteen
+ways and `run-scenarios.js` five. `CLAUDE.md` said "fifteen" twice and this entry said "twenty-one".
+Both corrected; the count in the rescued task record stays as written, because retro-editing a dated
+record is what the Non-goals forbid.
 
 ## v2.1.0 — multi-phase Deep work actually runs
 
