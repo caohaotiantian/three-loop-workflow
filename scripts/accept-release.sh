@@ -159,6 +159,16 @@ grep -qi 'stopping at two is a \*\*cost\*\* decision' three-loop-workflow/refere
   && ok "stop-at-two rationale survives as prose" || bad "stop-at-two rationale lost with the numbers"
 grep -qi 'clean first review is weak evidence' three-loop-workflow/references/plan.md \
   && ok "clean-first-review corollary survives" || bad "clean-first-review corollary lost"
+# The coverage claim about a third reviewer is retired: re-analysis of the same data contradicted it
+# depending on the denominator, and the artifacts were never kept. plan.md carries the cost framing.
+# This check exists because the claim was corrected in plan.md and left standing in SKILL.md — the
+# fix-at-the-cited-line failure this repo has already paid for once, committed again while retiring it.
+if grep -rq 'third mostly repeat' three-loop-workflow/; then
+  bad "the retired third-reviewer coverage claim is back in the shipped skill:"
+  grep -rn 'third mostly repeat' three-loop-workflow/
+else
+  ok "the third-reviewer coverage claim stays retired across the whole shipped skill"
+fi
 
 # Scope note: the sweeps below run over the SHIPPED surface — the skill, the tests, the release
 # workflow — where a stale reference misroutes a reader or a script. Deliberately out of scope:

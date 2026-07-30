@@ -63,7 +63,7 @@ Reviewers are fresh subagents receiving the diff and the plan — and **nothing 
 
 **How many reviewers.** Standard: one. Deep: **two, in parallel, independently** — take the union of what they find.
 
-Two is measured on this repo's own design documents, not chosen for symmetry. A second independent reviewer catches much of what the first missed, including blockers; a third mostly repeats the second. Reviewers miss *different* things — that is the whole reason a second one pays. `references/plan.md` says what was measured and `references/build.md` why a diff is a friendlier target; the figures themselves are published outside this skill, with their limits.
+Two is measured on this repo's own design documents, not chosen for symmetry. A second independent reviewer catches much of what the first missed, including blockers. Reviewers miss *different* things — that is the whole reason a second one pays. Stopping at two is a cost decision, not a finding that a third adds nothing. `references/plan.md` says what was measured and what it does not settle; the figures are published outside this skill, with their limits.
 
 - **The author never reviews their own work.** This binds to identity, not to invocation: an agent that wrote the change cannot review it, whether the second role arrives by assignment, self-claim, or lead approval.
 - Ask for **everything, and triage yourself**. Do not tell a reviewer to be conservative or to report only high-severity items — it will comply literally and report less.
