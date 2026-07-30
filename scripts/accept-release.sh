@@ -16,6 +16,14 @@ set -uo pipefail
 cd "$(git rev-parse --show-toplevel)"
 
 fail=0
+# Thousands separators, computed rather than delegated to the locale. `printf "%'d"` emits no separator
+# under LC_ALL=C / C.UTF-8 — the default on CI runners — so every published-figure check would look for
+# "1307" in documents that correctly say "1,307". Measured: six spurious failures under C.UTF-8, which
+# would have made this gate unreachable in the CI that runs it.
+# python3 rather than sed: BSD sed reads `:a;s/…;ta` as one long label name, so the loop never runs and
+# the function silently returns its input ungrouped. python3 is already required further down.
+group() { python3 -c "import sys; print(f'{int(sys.argv[1]):,}')" "$1"; }
+
 ok()  { printf '  ok    %s\n' "$1"; }
 bad() { printf '  FAIL  %s\n' "$1"; fail=$((fail+1)); }
 chk() { if [ "$2" = "$3" ]; then ok "$1 ($2)"; else bad "$1: expected '$3', got '$2'"; fi; }
@@ -42,6 +50,25 @@ for f in three-loop-workflow/scripts/phase.js tests/run-scenarios.js; do
     ok "workflow-syntax $f"
   else
     bad "workflow-syntax $f"
+  fi
+done
+
+echo "== the syntax gate fails on what it claims to catch ==" 
+# Committed fixtures, so the two new behaviours have a reproducible failing case. Without this the gate
+# was only ever exercised in the passing direction, and a regression to a no-op would go unnoticed —
+# the same asymmetry the execution harnesses exist to remove.
+for f in tests/gate-fixtures/reject-*.js; do
+  if bash three-loop-workflow/scripts/check-workflow-syntax.sh "$f" >/dev/null 2>&1; then
+    bad "the syntax gate ACCEPTED $f, which it must reject"
+  else
+    ok "syntax gate rejects $(basename "$f")"
+  fi
+done
+for f in tests/gate-fixtures/accept-*.js; do
+  if bash three-loop-workflow/scripts/check-workflow-syntax.sh "$f" >/dev/null 2>&1; then
+    ok "syntax gate accepts $(basename "$f")"
+  else
+    bad "the syntax gate REJECTED $f, which is legal"
   fi
 done
 
@@ -170,7 +197,7 @@ s_now=$(wc -w < three-loop-workflow/SKILL.md | tr -d ' ')
 echo "== published numbers match the recomputation =="
 DOCS="README.md README-cn.md CHANGELOG.md CHANGELOG-cn.md docs/announcement-v2.0.0.md docs/announcement-v2.0.0-cn.md docs/why-v2.md docs/why-v2-cn.md"
 want() {
-  n=$(printf "%'d" "$1")
+  n=$(group "$1")
   if grep -qF "$n" $DOCS 2>/dev/null || grep -qF "$1" $DOCS 2>/dev/null; then
     ok "$2 = $n appears in published docs"
   else
@@ -225,11 +252,24 @@ for r in README.md README-cn.md; do
   if grep -qE 'mkdir -p .*\.claude/skills' "$r"; then ok "$r creates the target directory first"
   else bad "$r:$line copies into a possibly-absent directory — cp lands the contents one level too high"; fi
 done
-t=$(mktemp -d); mkdir -p "$t/repo/.claude"
-(cd "$t/repo" && mkdir -p .claude/skills && cp -r "$(git -C "$OLDPWD" rev-parse --show-toplevel)/three-loop-workflow" .claude/skills/ 2>/dev/null)
-[ -f "$t/repo/.claude/skills/three-loop-workflow/SKILL.md" ] \
-  && ok "the documented install lands SKILL.md at .claude/skills/three-loop-workflow/SKILL.md" \
-  || bad "the documented install misplaces SKILL.md"
+# Run the README's OWN commands, extracted from it. The previous version of this check hand-wrote its
+# own `mkdir -p` and so passed whatever the README said — demonstrably: it printed ok on a tree where
+# the two checks above correctly reported the mkdir missing.
+root=$(pwd)
+t=$(mktemp -d)
+mkdir -p "$t/repo/.claude"   # Claude Code has run here; no skill was ever installed
+sed -n '/^# Project-level/,/^$/p' README.md | grep -E '^(mkdir|cp) ' \
+  | sed "s|<your-repo>|$t/repo|g" > "$t/install.sh"
+if [ -s "$t/install.sh" ]; then
+  ( cd "$root" && bash "$t/install.sh" ) >/dev/null
+  if [ -f "$t/repo/.claude/skills/three-loop-workflow/SKILL.md" ]; then
+    ok "the README's own install commands land SKILL.md at .claude/skills/three-loop-workflow/"
+  else
+    bad "the README's own install commands misplace SKILL.md (landed at: $(find "$t/repo/.claude" -name SKILL.md | head -1))"
+  fi
+else
+  bad "no install command could be extracted from README.md"
+fi
 rm -rf "$t"
 
 echo "== the skill handles a repo it was not written for =="
@@ -252,7 +292,7 @@ for pair in "README.md:README-cn.md" "CHANGELOG.md:CHANGELOG-cn.md" \
   a=${pair%%:*}; b=${pair##*:}
   { [ -f "$a" ] && [ -f "$b" ]; } || { bad "missing half of pair $pair"; continue; }
   for val in "$s_v1" "$s_v2" "$p_v1" "$p_v2" "$pkg_v1" "$arch_v1"; do
-    fv=$(printf "%'d" "$val")
+    fv=$(group "$val")
     ca=$(grep -oF "$fv" "$a" 2>/dev/null | wc -l | tr -d ' ')
     cb=$(grep -oF "$fv" "$b" 2>/dev/null | wc -l | tr -d ' ')
     # 0 in both is agreement, not coverage — only report the disagreement.

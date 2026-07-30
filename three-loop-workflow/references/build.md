@@ -172,20 +172,22 @@ Skip this for internal refactors, test-only changes, and doc updates.
 
 `scripts/phase.js` runs this loop as a deterministic script — round counting, closure arithmetic, and role isolation become code instead of instructions.
 
-Every argument is required except two, and there are no defaults that quietly change what runs:
+Four arguments are required, and no default changes how much review runs:
 
 | Arg | What it is |
 |---|---|
-| `phaseLabel` | label for this phase, used in agent labels and logs |
-| `planPath` | `.agent/<task>/plan.md` — no default; a shared path lets two tasks overwrite each other |
-| `tasks` | the phase's task list, verbatim from the plan |
-| `acceptCmds` | the commands whose exit codes decide the phase |
-| `baseSha` | `git rev-parse HEAD` from before editing — *this phase's* base at Deep depth |
-| `depth` | `'standard'` (one reviewer) or `'deep'` (two, parallel, unioned) |
-| `branch` | *optional, authoritative when given* — the branch the phase commits on |
-| `maxRounds` | *optional, default 3* — bounds fixes **spent**, not verifications |
+| `planPath` | **required** — `.agent/<task>/plan.md`; a shared path lets two tasks overwrite each other |
+| `tasks` | **required** — the phase's task list, verbatim from the plan |
+| `acceptCmds` | **required** — the commands whose exit codes decide the phase |
+| `baseSha` | **required** — `git rev-parse HEAD` from before editing; *this phase's* base at Deep depth |
+| `depth` | `'standard'` (one reviewer) or `'deep'` (two, parallel, unioned). **One of `depth` or `reviewers` must be present** |
+| `reviewers` | `1` or `2`, accepted for callers written before `depth` existed. Passing both is an error if they disagree |
+| `branch` | optional, authoritative when given — the branch the phase commits on |
+| `maxRounds` | optional, default 3 — bounds fixes **spent**, not verifications |
+| `phaseLabel` | optional, default `'phase'` — labels agents and logs, nothing else |
+| `models` | optional per-stage model overrides: `{write, gates, review, triage, fix}` |
 
-`depth` rather than a reviewer count is deliberate: a numeric argument that defaults to 1 lets a Deep phase run the Standard review by being forgotten, and the returned object now states the `depth` and `reviewers` it actually used so that a forgotten flag is visible afterwards.
+`depth` rather than a bare count is deliberate, and the reason is the one default that was dangerous: `reviewers` used to default to 1, so a Deep phase ran the Standard review by having the argument forgotten, with nothing in the result to show it. Now omitting both is a `usage-error`, and the returned object states the `depth` and `reviewers` it actually used.
 
 **Chain multi-phase runs on the returned `headSha`.** Put yourself on one task branch before the first call; every phase commits to it in sequence, and passing `branch` makes that explicit rather than trusting the implementer's self-report. A closed phase returns the commit its review actually saw, and that becomes the next phase's `baseSha`:
 
@@ -205,7 +207,9 @@ for (const p of plan.phases) {
 
 Pass the same `baseSha` to every phase and phase 3's reviewer sees phases 1 and 2 as well — it will correctly report them as changes outside this phase's Goal, and you will spend a fix round arguing with it. One branch, an advancing base, one phase per review.
 
-**What the script does that the manual path cannot.** It fails closed on anything an agent merely reports: a `headSha` that is well-formed but was never committed is caught by comparing the gates step's own `git rev-parse HEAD` against the base, and a gates step that cannot report a usable head stops the phase rather than silently disabling the guards that depend on it.
+**What the script does that the manual path cannot.** It fails closed on an empty review. The gates step reports its own `git rev-parse HEAD`, and a head equal to the base — on any round, including a fix round that reset or dropped the phase's commits — stops the phase instead of handing a reviewer an empty range. A gates step that cannot report a usable head also stops the phase, rather than silently disabling the guards downstream of it.
+
+Note what that does **not** do: it does not detect a fabricated sha. If the implementer reports a well-formed sha it never created, the reported value is discarded in favour of the real head and the phase reviews the real diff — the fabrication is made harmless, not visible. Resolving a sha in the repository needs a shell, which a Workflow script does not have.
 
 **What it does not do.** The implementer commits before the gates run, so gate output cannot land in that commit's trailers — record them yourself, or on the fix commits. Non-blocking findings are accumulated and returned, not triaged; that step is still yours.
 

@@ -19,6 +19,7 @@
 #   M13       non-blocking findings recomputed per round, dropping anything not repeated at closure
 #   M14       a dead fix agent consuming a round, reporting infrastructure failure as deadlock
 #   M15       the triage rejection record dropped instead of returned
+#   M16       the second reviewer's findings discarded rather than unioned
 #
 # M5 also covers termination: without the loop's structural bound it does not return at all, so the
 # harness's runaway ceiling is what catches it.
@@ -83,7 +84,7 @@ apply "M3 no-op-fix guard disabled (tokens intact)" \
   "committed nothing"
 
 apply "M9 the shell-sourced half of the empty-diff guard disabled" \
-  's = s.replace("if (fixes === 0 && gateHead === base) {", "if (false && fixes === 0 && gateHead === base) {")' \
+  's = s.replace("if (gateHead === base) {", "if (false && gateHead === base) {")' \
   "gateHead === base"
 
 apply "M10 an unparseable gates head fails open again" \
@@ -93,7 +94,12 @@ apply "M11 the implementer's self-assessment re-injected into the review prompt"
   's = s.replace("      `\\nDo not modify code.`", "      (concerns.length ? `\\nThe implementer flagged low confidence in: ${concerns.join(\x27; \x27)} — look there first.\\n` : \x27\x27) +\n      `\\nDo not modify code.`")'
 
 apply "M12 depth no longer decides the reviewer count" \
-  's = s.replace("const reviewers = depth === \x27deep\x27 ? 2 : 1", "const reviewers = 1")'
+  's = s.replace("const reviewers = depth !== undefined ? (depth === \x27deep\x27 ? 2 : 1) : legacyReviewers", "const reviewers = 1")'
+
+# Found by a reviewer, who demonstrated that the union invariant passed under this mutation because the
+# assertion looked for the single letter "y", which occurs in the static triage prompt prose.
+apply "M16 the second reviewer's findings dropped entirely (not intersected — discarded)" \
+  's = s.replace("const reported = [...new Set(verdicts.flatMap(v => v.blocking || []))]", "const reported = [...new Set(verdicts[0].blocking || [])]")'
 
 apply "M13 non-blocking findings recomputed per round instead of accumulated" \
   's = s.replace("    verdicts.flatMap(v => v.nonblocking || []).forEach(n => nonblockingSeen.add(n))", "    nonblockingSeen.clear(); verdicts.flatMap(v => v.nonblocking || []).forEach(n => nonblockingSeen.add(n))")'

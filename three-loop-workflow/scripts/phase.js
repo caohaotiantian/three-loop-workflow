@@ -11,8 +11,8 @@ export const meta = {
 }
 
 // Invoke with args:
-//   { phaseLabel, planPath, tasks, acceptCmds: [...], baseSha, depth,
-//     branch?, maxRounds?, models?: {write,gates,review,triage,fix} }
+//   { phaseLabel?, planPath, tasks, acceptCmds: [...], baseSha, depth,
+//     branch?, reviewers?, maxRounds?, models?: {write,gates,review,triage,fix} }
 //
 //   phaseLabel  label for this phase, used in agent labels and logs.
 //   planPath    path to the task's plan — `.agent/<task>/plan.md`. No default: a shared path would
@@ -22,9 +22,12 @@ export const meta = {
 //   acceptCmds  the commands whose exit codes decide the phase.
 //   baseSha     `git rev-parse HEAD` captured BEFORE editing. At Deep depth this is *this phase's*
 //               base, not the base of the whole change.
-//   depth       'standard' (one reviewer) or 'deep' (two, in parallel, unioned). Required, and named
-//               in the skill's own vocabulary rather than as a raw count: a numeric `reviewers` arg
-//               let a Deep phase silently run the Standard review by omitting it.
+//   depth       'standard' (one reviewer) or 'deep' (two, in parallel, unioned). Named in the skill's
+//               own vocabulary rather than as a raw count. `reviewers: 1 | 2` is still accepted for
+//               callers written against the earlier contract; what is rejected is passing NEITHER,
+//               because a count that defaulted to 1 let a Deep phase silently run the Standard review.
+//   phaseLabel  optional, defaults to 'phase' — it only labels agents and logs.
+//   models      optional per-stage model overrides.
 //   branch      optional, and authoritative when given. The review diffs baseSha..branch, so whoever
 //               owns the branch should say which one rather than trusting the implementer's report.
 //   maxRounds   fix rounds allowed. Bounds FIXES SPENT, not verifications.
@@ -43,6 +46,7 @@ const {
   acceptCmds = [],
   baseSha,
   depth,
+  reviewers: legacyReviewers,
   branch: callerBranch,
   maxRounds = 3,
   models = {},
@@ -67,11 +71,28 @@ if (!planPath) return { status: 'usage-error', reason: 'planPath is required —
 if (!baseSha) return { status: 'usage-error', reason: 'baseSha is required and must be captured BEFORE editing' }
 if (!tasks || !String(tasks).trim()) return { status: 'usage-error', reason: 'tasks is required — a phase dispatched with an empty task list produces a run that looks complete and implemented nothing' }
 if (!acceptCmds.length) return { status: 'usage-error', reason: 'acceptCmds is required — a phase with no runnable acceptance cannot close' }
-if (depth !== 'standard' && depth !== 'deep') return { status: 'usage-error', reason: `depth must be 'standard' or 'deep' (got ${JSON.stringify(depth)}) — it is required so that a Deep phase cannot quietly run the Standard review` }
 if (!Number.isInteger(maxRounds) || maxRounds < 0) return { status: 'usage-error', reason: `maxRounds must be a non-negative integer (got ${JSON.stringify(maxRounds)})` }
 
-// Two on Deep, one on Standard. Derived, never passed in.
-const reviewers = depth === 'deep' ? 2 : 1
+// `depth` is the preferred spelling because it is the skill's own vocabulary; a numeric `reviewers`
+// is still accepted for callers written against the earlier contract. What is NOT accepted is omitting
+// both, which is the actual defect: a count that defaulted to 1 let a Deep phase run the Standard
+// review by being forgotten, silently and with nothing in the result to show it.
+if (depth === undefined && legacyReviewers === undefined) {
+  return { status: 'usage-error', reason: "one of depth ('standard' | 'deep') or reviewers (1 | 2) is required — with neither, a Deep phase would quietly run the Standard review" }
+}
+if (depth !== undefined && depth !== 'standard' && depth !== 'deep') {
+  return { status: 'usage-error', reason: `depth must be 'standard' or 'deep' (got ${JSON.stringify(depth)})` }
+}
+if (legacyReviewers !== undefined && !Number.isInteger(legacyReviewers)) {
+  return { status: 'usage-error', reason: `reviewers must be an integer (got ${JSON.stringify(legacyReviewers)})` }
+}
+const reviewers = depth !== undefined ? (depth === 'deep' ? 2 : 1) : legacyReviewers
+if (reviewers < 1) return { status: 'usage-error', reason: `reviewers must be at least 1 (got ${JSON.stringify(reviewers)})` }
+// Both spellings given and disagreeing is a caller bug, not something to resolve by precedence.
+if (depth !== undefined && legacyReviewers !== undefined && legacyReviewers !== reviewers) {
+  return { status: 'usage-error', reason: `depth '${depth}' implies ${reviewers} reviewer(s) but reviewers=${legacyReviewers} was also passed — pass one or the other` }
+}
+const resolvedDepth = depth !== undefined ? depth : (reviewers >= 2 ? 'deep' : 'standard')
 
 const base = sha(baseSha)
 if (!base) return { status: 'usage-error', reason: `baseSha is not a full 40-hex sha (${JSON.stringify(baseSha)}); pass the output of \`git rev-parse HEAD\`` }
@@ -190,9 +211,12 @@ if (work.blocked) {
 // phase would close green having reviewed nothing — gates pass, because they run against the working
 // tree, and an empty diff is indistinguishable from a clean one. Fail loudly instead.
 //
-// Shape is not existence. A well-formed sha the implementer never created passes every test that can
-// be made against the string itself, so this check is completed below by comparing the *gates* agent's
-// `git rev-parse HEAD` — a second, shell-sourced measurement of the same fact — against the base.
+// Shape is not existence, and this check does not establish existence. What the gates step's own
+// `git rev-parse HEAD` adds below is that the range is not EMPTY — the reported sha is then discarded
+// in favour of that real head. So a fabricated sha does not survive into the returned `headSha`, but it
+// is not itself detected: if the branch has commits, a phase whose implementer reported a sha it never
+// created still reviews the real diff and closes on it. Detecting the fabrication would need the sha
+// resolved in the repository, which this script cannot do — it has no shell.
 const writeHead = sha(work.headSha)
 if (!writeHead) {
   return { status: 'agent-error', phaseLabel, round: 0, stage: 'write', reason: `headSha is not a full 40-hex sha (${JSON.stringify(work.headSha)}) — cannot confirm the work was committed` }
@@ -260,10 +284,13 @@ while (verifyRound <= maxRounds + 1) {
   if (!gateHead) {
     return { status: 'agent-error', phaseLabel, round, fixes, stage: 'gates', branch, reason: `the gates step did not report a usable HEAD (${JSON.stringify(gates.headSha)}), so neither the empty-diff nor the no-op-fix guard can be evaluated` }
   }
-  // The other half of the empty-diff guard: this is the real HEAD, not a self-report. If it is still
-  // the base, nothing was committed however well-formed the implementer's claim looked.
-  if (fixes === 0 && gateHead === base) {
-    return { status: 'agent-error', phaseLabel, round, stage: 'write', branch, reason: `HEAD is still baseSha on ${branch}: the implementer reported ${writeHead} but nothing is committed, so the review would see an empty diff` }
+  // The other half of the empty-diff guard: this is the real HEAD, not a self-report. If it is the
+  // base, nothing from this phase is committed, however well-formed the implementer's claim looked.
+  // Checked every round, not only before the first fix: a fix round that resets or drops the phase's
+  // commits also lands HEAD back on the base, and `gateHead === lastHead` does not catch that because
+  // lastHead is the previous round's non-base head. HEAD equal to the base is never legitimate here.
+  if (gateHead === base) {
+    return { status: 'agent-error', phaseLabel, round, fixes, stage: fixes === 0 ? 'write' : 'fix', branch, reason: `HEAD is baseSha on ${branch}: nothing from this phase is committed, so the review would see an empty diff` }
   }
   // A fix round that committed nothing leaves the tree identical: the reviewer will report the same
   // findings, and the phase grinds to cap-exhausted without anyone noticing the fix never landed.
@@ -362,7 +389,7 @@ while (verifyRound <= maxRounds + 1) {
         gateFixes,
         reviewFixes,
         branch,
-        depth,
+        depth: resolvedDepth,
         reviewers,
         // Pass this back in as the NEXT phase's baseSha. Without it a multi-phase run reviews every
         // earlier phase again, and phase N's reviewer flags phases 1..N-1 as work outside the Goal.
@@ -392,7 +419,7 @@ while (verifyRound <= maxRounds + 1) {
   if (fixes >= maxRounds) {
     return {
       status: 'cap-exhausted',
-      phaseLabel, round, fixes, gateFixes, reviewFixes, stage, branch, depth, reviewers,
+      phaseLabel, round, fixes, gateFixes, reviewFixes, stage, branch, depth: resolvedDepth, reviewers,
       unresolved: failures,
       nonblocking: [...nonblockingSeen],
       rejected: rejectedSeen,
@@ -437,7 +464,7 @@ while (verifyRound <= maxRounds + 1) {
 // agent-error rather than a cap-exhaustion the caller might try to absorb.
 return {
   status: 'agent-error',
-  phaseLabel, round: verifyRound, fixes, gateFixes, reviewFixes, branch, depth, reviewers,
+  phaseLabel, round: verifyRound, fixes, gateFixes, reviewFixes, branch, depth: resolvedDepth, reviewers,
   stage: 'loop-exit',
   reason: 'the verify loop hit its structural bound without returning a verdict — the fix counter did not advance',
 }

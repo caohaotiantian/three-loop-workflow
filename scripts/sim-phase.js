@@ -93,8 +93,19 @@ const INVARIANTS = [
     reply: () => write(),
     expect: r => eq(r.res && r.res.status, 'usage-error') },
 
-  { name: 'usage: depth is required — it must not default to the cheaper review',
+  { name: 'usage: passing neither depth nor reviewers is an error, not a Standard review',
     args: { ...base, depth: undefined },
+    reply: () => write(),
+    expect: r => eq(r.res && r.res.status, 'usage-error') },
+
+  { name: 'a caller written against the old contract still works: reviewers: 2 runs two',
+    args: { ...base, depth: undefined, reviewers: 2 },
+    reply: l => l.startsWith('write') ? write() : l.startsWith('gates') ? gates() : review(0),
+    expect: r => all(eq(r.n('review'), 2), eq(r.res.reviewers, 2),
+      eq(r.res.depth, 'deep', 'the resolved depth is reported back')) },
+
+  { name: 'depth and reviewers disagreeing is a caller bug, not resolved by precedence',
+    args: { ...base, depth: 'standard', reviewers: 2 },
     reply: () => write(),
     expect: r => eq(r.res && r.res.status, 'usage-error') },
 
@@ -142,17 +153,25 @@ const INVARIANTS = [
     expect: r => all(eq(r.res.status, 'closed'), eq(r.res.fixes, 1), eq(r.n('fix:'), 1)) },
 
   // Reviewers miss different things; agreement would discard most of the real findings.
+  // Finding names are deliberately distinctive. Single letters do not work: 'y' occurs in the static
+  // triage prompt ("you", "really", "defensively"), so an assertion that the prompt contains 'y' passes
+  // whether or not reviewer 2's finding survived — the assertion carried no information. The triage stub
+  // also echoes only what it was actually handed, so a discarded finding cannot be masked by a
+  // hardcoded confirmation.
   { name: 'two reviewers are unioned, never intersected',
     args: { ...base, depth: 'deep' },
     reply: (l, calls) => l.startsWith('write') ? write()
       : l.startsWith('gates') ? advancingGates(calls)
-      : l.endsWith(':v1') ? { blocking: ['x'], nonblocking: ['n1'], blocking_count: 1, nonblocking_count: 1 }
-      : l.endsWith(':v2') ? { blocking: ['y'], nonblocking: ['n1', 'n2'], blocking_count: 1, nonblocking_count: 2 }
-      : l.startsWith('triage') ? { confirmed: ['x', 'y'], rejected: [] }
+      : l.endsWith(':v1') ? { blocking: ['FINDING-ALPHA'], nonblocking: ['nit-1'], blocking_count: 1, nonblocking_count: 1 }
+      : l.endsWith(':v2') ? { blocking: ['FINDING-BETA'], nonblocking: ['nit-1', 'nit-2'], blocking_count: 1, nonblocking_count: 2 }
+      : l.startsWith('triage') ? {
+          confirmed: ['FINDING-ALPHA', 'FINDING-BETA'].filter(f => calls[calls.length - 1].prompt.includes(f)),
+          rejected: [],
+        }
       : {},
     expect: r => all(
-      has(r.promptsFor('triage')[0], 'x', 'the disjoint finding from reviewer 1 reaches triage'),
-      has(r.promptsFor('triage')[0], 'y', 'the disjoint finding from reviewer 2 reaches triage'),
+      has(r.promptsFor('triage')[0], 'FINDING-ALPHA', 'reviewer 1\'s finding must reach triage'),
+      has(r.promptsFor('triage')[0], 'FINDING-BETA', 'reviewer 2\'s finding must reach triage'),
       eq(r.res.status, 'cap-exhausted', 'two confirmed findings cannot close the phase')) },
 
   { name: 'triage runs before the closure count: rejecting every finding closes the phase',
@@ -267,6 +286,22 @@ const INVARIANTS = [
     expect: r => all(
       eq(r.res.status, 'agent-error'), eq(r.res.stage, 'gates'),
       eq(r.n('fix:'), 0, 'no fix round may be spent while the head is unknown')) },
+
+  { name: 'a fix round that resets HEAD back to the base is caught, not reviewed as empty',
+    args: base,
+    reply: (l, calls) => {
+      const round = calls.filter(c => c.label.startsWith('gates')).length
+      if (l.startsWith('write')) return write()
+      // round 1 commits normally; the fix round then drops the phase's work, landing HEAD on the base
+      if (l.startsWith('gates')) return gates({ headSha: round === 1 ? B : A })
+      if (l.startsWith('review')) return review(1)
+      if (l.startsWith('triage')) return { confirmed: ['bug0'], rejected: [] }
+      return {}
+    },
+    expect: r => all(
+      eq(r.res.status, 'agent-error'),
+      ok(r.res.status !== 'closed', 'an empty range must never close, on any round'),
+      eq(r.n('review'), 1, 'the second review must not be dispatched against an empty diff')) },
 
   { name: 'a branch name that is not a plausible git ref is rejected',
     args: base,
