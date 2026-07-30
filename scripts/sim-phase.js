@@ -36,9 +36,15 @@ function load() {
 async function drive(args, script) {
   const calls = []
   const logs = []
+  // A ceiling, so a control-flow defect that fails to terminate is reported as a runaway rather than
+  // hanging the harness. No legitimate configuration here dispatches anywhere near this many agents.
+  const CEILING = 60
   const agent = async (prompt, opts) => {
     const label = (opts && opts.label) || '?'
     calls.push({ label, prompt, opts })
+    if (calls.length > CEILING) {
+      throw new Error(`runaway: more than ${CEILING} agents dispatched — the verify loop is not terminating`)
+    }
     const reply = script(label, calls)
     return reply === undefined ? {} : reply
   }
@@ -62,7 +68,7 @@ const A = 'a'.repeat(40)   // baseSha
 const B = 'b'.repeat(40)   // the write commit
 const hex = n => String(n).repeat(40).slice(0, 40).replace(/[^0-9a-f]/g, '1')
 
-const base = { phaseLabel: 'P1', planPath: '.agent/t/plan.md', tasks: 'do the thing', acceptCmds: ['npm test'], baseSha: A }
+const base = { phaseLabel: 'P1', planPath: '.agent/t/plan.md', tasks: 'do the thing', acceptCmds: ['npm test'], baseSha: A, depth: 'standard' }
 const write = (o = {}) => ({ branch: 'task', headSha: B, conflict: false, blocked: false, concerns: [], ...o })
 const gates = (o = {}) => ({ all_pass: true, headSha: B, results: ['npm test: exit 0, 12 passed'], failures: [], ...o })
 const review = (n, o = {}) => ({
@@ -84,6 +90,11 @@ const INVARIANTS = [
 
   { name: 'usage: baseSha is required',
     args: { ...base, baseSha: undefined },
+    reply: () => write(),
+    expect: r => eq(r.res && r.res.status, 'usage-error') },
+
+  { name: 'usage: depth is required — it must not default to the cheaper review',
+    args: { ...base, depth: undefined },
     reply: () => write(),
     expect: r => eq(r.res && r.res.status, 'usage-error') },
 
@@ -132,7 +143,7 @@ const INVARIANTS = [
 
   // Reviewers miss different things; agreement would discard most of the real findings.
   { name: 'two reviewers are unioned, never intersected',
-    args: { ...base, reviewers: 2 },
+    args: { ...base, depth: 'deep' },
     reply: (l, calls) => l.startsWith('write') ? write()
       : l.startsWith('gates') ? advancingGates(calls)
       : l.endsWith(':v1') ? { blocking: ['x'], nonblocking: ['n1'], blocking_count: 1, nonblocking_count: 1 }
@@ -177,7 +188,7 @@ const INVARIANTS = [
     expect: r => all(eq(r.res.status, 'closed'), eq(r.n('review'), 2)) },
 
   { name: 'one of two reviewers dying is an agent-error, not a single-reviewer pass',
-    args: { ...base, reviewers: 2 },
+    args: { ...base, depth: 'deep' },
     reply: l => l.startsWith('write') ? write() : l.startsWith('gates') ? gates()
       : l === 'review:P1:r1:v2' ? null : l.startsWith('review') ? review(0) : {},
     expect: r => all(eq(r.res.status, 'agent-error'), eq(r.res.stage, 'review')) },
@@ -231,6 +242,165 @@ const INVARIANTS = [
       const v = r.calls.findIndex(c => c.label.startsWith('review'))
       return all(ok(g >= 0 && v > g, 'a gates call must precede the first review call'))
     } },
+
+  // ── fail closed on unvalidated agent input ──────────────────
+  // The write agent's headSha is a string it typed. The gates agent independently runs
+  // `git rev-parse HEAD`, so the script holds a second, shell-sourced measurement of the same fact
+  // and must reconcile them. Validating only the SHAPE of the self-report leaves the guard walkable
+  // by any well-formed sha — stale, cross-branch, or invented.
+  { name: 'a fabricated but well-formed headSha cannot close a phase on an empty diff',
+    args: base,
+    reply: l => l.startsWith('write') ? write({ headSha: 'd'.repeat(40) })
+      : l.startsWith('gates') ? gates({ headSha: A })   // the real HEAD is still baseSha
+      : review(0),
+    expect: r => all(
+      eq(r.res.status, 'agent-error'),
+      ok(r.res.status !== 'closed', 'a phase that committed nothing must never return closed')) },
+
+  { name: 'an unparseable gates headSha fails closed instead of disabling the no-op-fix guard',
+    args: base,
+    reply: l => l.startsWith('write') ? write()
+      : l.startsWith('gates') ? gates({ headSha: 'HEAD' })
+      : l.startsWith('review') ? review(1)
+      : l.startsWith('triage') ? { confirmed: ['bug0'], rejected: [] }
+      : {},
+    expect: r => all(
+      eq(r.res.status, 'agent-error'), eq(r.res.stage, 'gates'),
+      eq(r.n('fix:'), 0, 'no fix round may be spent while the head is unknown')) },
+
+  { name: 'a branch name that is not a plausible git ref is rejected',
+    args: base,
+    reply: l => l.startsWith('write') ? write({ branch: 'task; rm -rf /' }) : gates(),
+    expect: r => all(eq(r.res.status, 'agent-error'), eq(r.n('review'), 0)) },
+
+  { name: 'a caller-supplied branch is authoritative over the write agent\'s self-report',
+    args: { ...base, branch: 'task' },
+    reply: l => l.startsWith('write') ? write({ branch: 'phase-1-side' }) : gates(),
+    expect: r => all(eq(r.res.status, 'agent-error'), eq(r.n('review'), 0)) },
+
+  { name: 'the validated baseSha, not the raw argument, is interpolated into the diff commands',
+    args: { ...base, baseSha: '  ' + 'C'.repeat(40) + '\n' },
+    reply: l => l.startsWith('write') ? write({ headSha: B })
+      : l.startsWith('gates') ? gates() : review(0),
+    expect: r => all(
+      eq(r.res.status, 'closed'),
+      has(r.promptsFor('review')[0], 'c'.repeat(40), 'the review prompt must carry the normalised sha'),
+      ok(!r.promptsFor('review')[0].includes('C'.repeat(40)), 'the raw unnormalised sha must not reach the prompt'),
+      ok(!/\n\.\./.test(r.promptsFor('review')[0]), 'a padded sha must not produce a broken git command')) },
+
+  { name: 'a negative maxRounds is a usage-error, not a silent zero-fix run',
+    args: { ...base, maxRounds: -1 },
+    reply: () => write(),
+    expect: r => eq(r.res.status, 'usage-error') },
+
+  { name: 'tasks is required: an empty task list cannot be dispatched',
+    args: { ...base, tasks: undefined },
+    reply: () => write(),
+    expect: r => eq(r.res.status, 'usage-error') },
+
+  // ── reviewer independence ───────────────────────────────────
+  // SKILL.md: reviewers receive the diff and the plan "and nothing else: not your summary of the
+  // change, not your session, not the reasoning that produced it". The implementer's own
+  // low-confidence list is that summary, and sending it to both reviewers correlates exactly the
+  // independence the two-reviewer rule depends on.
+  { name: 'no reviewer receives the implementer\'s self-assessment',
+    args: { ...base, depth: 'deep' },
+    reply: l => l.startsWith('write') ? write({ concerns: ['the refill maths in bucket.js'] })
+      : l.startsWith('gates') ? gates() : review(0),
+    expect: r => all(
+      eq(r.res.status, 'closed'),
+      ...r.promptsFor('review').map(p => ok(!p.includes('refill maths'), 'a reviewer prompt leaks the implementer\'s concerns')),
+      ...r.promptsFor('review').map(p => ok(!/look there first/i.test(p), 'a reviewer prompt carries an attention directive')),
+      deep(r.res.concerns, ['the refill maths in bucket.js'], 'the concerns are returned to the caller instead')) },
+
+  { name: 'depth deep runs two reviewers without the caller restating the count',
+    args: { ...base, depth: 'deep' },
+    reply: l => l.startsWith('write') ? write() : l.startsWith('gates') ? gates() : review(0),
+    expect: r => all(
+      eq(r.n('review'), 2, 'two reviewers'),
+      eq(r.res.reviewers, 2, 'the return states how many reviewed, so a forgotten flag is visible')) },
+
+  { name: 'depth standard runs one reviewer and says so',
+    args: { ...base, depth: 'standard' },
+    reply: l => l.startsWith('write') ? write() : l.startsWith('gates') ? gates() : review(0),
+    expect: r => all(eq(r.n('review'), 1), eq(r.res.reviewers, 1)) },
+
+  { name: 'an unknown depth is a usage-error rather than a silent Standard review',
+    args: { ...base, depth: 'thorough' },
+    reply: () => write(),
+    expect: r => eq(r.res.status, 'usage-error') },
+
+  // ── the triage record ───────────────────────────────────────
+  { name: 'triage rejections are returned, not just logged',
+    args: base,
+    reply: l => l.startsWith('write') ? write()
+      : l.startsWith('gates') ? gates()
+      : l.startsWith('review') ? review(2)
+      : l.startsWith('triage') ? { confirmed: [], rejected: ['bug0: cites a line that does not exist', 'bug1: describes a real property that is not a problem'] }
+      : {},
+    expect: r => all(
+      eq(r.res.status, 'closed'),
+      ok(Array.isArray(r.res.rejected) && r.res.rejected.length === 2,
+        'the closed phase must carry the rejection record build.md requires')) },
+
+  { name: 'a later round\'s triage is told what was already rejected',
+    args: base,
+    reply: (l, calls) => {
+      const round = calls.filter(c => c.label.startsWith('gates')).length
+      if (l.startsWith('write')) return write()
+      if (l.startsWith('gates')) return advancingGates(calls)
+      if (l.startsWith('review')) return review(1)
+      if (l.startsWith('triage')) return round === 1
+        ? { confirmed: ['bug0'], rejected: ['ghost0: misreads the guard'] }
+        : { confirmed: ['bug0'], rejected: [] }
+      return {}
+    },
+    expect: r => {
+      const later = r.promptsFor('triage')[1]
+      return all(ok(!!later, 'a second triage must happen'),
+        has(later || '', 'ghost0', 'the prior rejection must be carried into the next round\'s triage')) } },
+
+  // ── accumulation and attribution ────────────────────────────
+  { name: 'non-blocking findings accumulate across rounds instead of being overwritten',
+    args: base,
+    reply: (l, calls) => {
+      const round = calls.filter(c => c.label.startsWith('gates')).length
+      if (l.startsWith('write')) return write()
+      if (l.startsWith('gates')) return advancingGates(calls)
+      if (l.startsWith('review')) return round === 1
+        ? { blocking: ['bug0'], nonblocking: ['nit-from-round-1'], blocking_count: 1, nonblocking_count: 1 }
+        : { blocking: [], nonblocking: ['nit-from-round-2'], blocking_count: 0, nonblocking_count: 1 }
+      if (l.startsWith('triage')) return { confirmed: ['bug0'], rejected: [] }
+      return {}
+    },
+    expect: r => all(
+      eq(r.res.status, 'closed'),
+      ok((r.res.nonblocking || []).includes('nit-from-round-1'),
+        'a round-1 nit not repeated at closure must not vanish'),
+      ok((r.res.nonblocking || []).includes('nit-from-round-2'), 'the closing round\'s nits are kept too')) },
+
+  { name: 'gate-driven and review-driven fix rounds are attributed separately',
+    args: base,
+    reply: (l, calls) => l.startsWith('write') ? write()
+      : l.startsWith('gates') ? advancingGates(calls, { all_pass: false, failures: ['npm test: 1 failed'] })
+      : {},
+    expect: r => all(
+      eq(r.res.status, 'cap-exhausted'),
+      eq(r.res.gateFixes, 3, 'three rounds were spent on gate failures'),
+      eq(r.res.reviewFixes, 0, 'and none on review findings'),
+      eq(r.n('review'), 0, 'no reviewer ever ran, which the escalation must be able to say')) },
+
+  { name: 'a fix agent that never returns is an agent-error, not a consumed round',
+    args: base,
+    reply: (l, calls) => l.startsWith('write') ? write()
+      : l.startsWith('gates') ? advancingGates(calls)
+      : l.startsWith('review') ? review(1)
+      : l.startsWith('triage') ? { confirmed: ['bug0'], rejected: [] }
+      : l.startsWith('fix') ? null : {},
+    expect: r => all(
+      eq(r.res.status, 'agent-error'), eq(r.res.stage, 'fix'),
+      ok(r.res.status !== 'cap-exhausted',
+        'an infrastructure failure must not be reported as a deadlock the plan should absorb')) },
 ]
 
 // ── assertion helpers ─────────────────────────────────────────

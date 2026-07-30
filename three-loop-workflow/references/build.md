@@ -170,20 +170,43 @@ Skip this for internal refactors, test-only changes, and doc updates.
 
 ## Workflow mode (Claude Code)
 
-`scripts/phase.js` runs this loop as a deterministic script — round counting, closure arithmetic, and role isolation become code instead of instructions. Invoke it with the phase label, plan path, accept commands, and the `baseSha` you captured before editing — plus `reviewers: 2` for a Deep phase, which otherwise defaults to 1. See the header comment in that file.
+`scripts/phase.js` runs this loop as a deterministic script — round counting, closure arithmetic, and role isolation become code instead of instructions.
 
-**Chain multi-phase runs on the returned `headSha`.** Put yourself on one task branch before the first call; every phase commits to it in sequence. A closed phase returns the commit its review actually saw, and that becomes the next phase's `baseSha`:
+Every argument is required except two, and there are no defaults that quietly change what runs:
+
+| Arg | What it is |
+|---|---|
+| `phaseLabel` | label for this phase, used in agent labels and logs |
+| `planPath` | `.agent/<task>/plan.md` — no default; a shared path lets two tasks overwrite each other |
+| `tasks` | the phase's task list, verbatim from the plan |
+| `acceptCmds` | the commands whose exit codes decide the phase |
+| `baseSha` | `git rev-parse HEAD` from before editing — *this phase's* base at Deep depth |
+| `depth` | `'standard'` (one reviewer) or `'deep'` (two, parallel, unioned) |
+| `branch` | *optional, authoritative when given* — the branch the phase commits on |
+| `maxRounds` | *optional, default 3* — bounds fixes **spent**, not verifications |
+
+`depth` rather than a reviewer count is deliberate: a numeric argument that defaults to 1 lets a Deep phase run the Standard review by being forgotten, and the returned object now states the `depth` and `reviewers` it actually used so that a forgotten flag is visible afterwards.
+
+**Chain multi-phase runs on the returned `headSha`.** Put yourself on one task branch before the first call; every phase commits to it in sequence, and passing `branch` makes that explicit rather than trusting the implementer's self-report. A closed phase returns the commit its review actually saw, and that becomes the next phase's `baseSha`:
 
 ```js
+// A driver script — `workflow()` is callable from inside a Workflow script; `Workflow` is the tool
+// the main agent calls, and the main agent does not execute JavaScript. Use the path where the skill
+// is actually installed, which for a user-level install is
+// ~/.claude/skills/three-loop-workflow/scripts/phase.js
 let base = baseSha
 for (const p of plan.phases) {
-  const r = await Workflow({ scriptPath: 'three-loop-workflow/scripts/phase.js',
-                             args: { ...p, planPath, baseSha: base, reviewers: 2 } })
+  const r = await workflow({ scriptPath: SKILL + '/scripts/phase.js' },
+                           { ...p, planPath, baseSha: base, branch: 'my-task', depth: 'deep' })
   if (r.status !== 'closed') break        // escalate; do not start the next phase on a broken one
   base = r.headSha
 }
 ```
 
 Pass the same `baseSha` to every phase and phase 3's reviewer sees phases 1 and 2 as well — it will correctly report them as changes outside this phase's Goal, and you will spend a fix round arguing with it. One branch, an advancing base, one phase per review.
+
+**What the script does that the manual path cannot.** It fails closed on anything an agent merely reports: a `headSha` that is well-formed but was never committed is caught by comparing the gates step's own `git rev-parse HEAD` against the base, and a gates step that cannot report a usable head stops the phase rather than silently disabling the guards that depend on it.
+
+**What it does not do.** The implementer commits before the gates run, so gate output cannot land in that commit's trailers — record them yourself, or on the fix commits. Non-blocking findings are accumulated and returned, not triaged; that step is still yours.
 
 Use it when a Deep change has several phases. For a single Standard change, running the loop by hand is cheaper than orchestrating it.

@@ -12,10 +12,23 @@
 #   M6        findings intersected instead of unioned
 #   M7        closure computed on the raw reported count, before triage
 #   M8        a reviewer that died treated as a reviewer that passed
+#   M9        the shell-sourced half of the empty-diff guard, which let a fabricated sha close a phase
+#   M10       an unparseable gates head failing open, which disabled the no-op-fix guard downstream
+#   M11       the implementer's self-assessment reaching the reviewers
+#   M12       depth no longer deciding the reviewer count, so Deep runs the Standard review
+#   M13       non-blocking findings recomputed per round, dropping anything not repeated at closure
+#   M14       a dead fix agent consuming a round, reporting infrastructure failure as deadlock
+#   M15       the triage rejection record dropped instead of returned
 #
-# M1-M3 additionally assert the point of the whole exercise: the grep the previous gate used still
-# passes on the mutated file. Deleting a guard is nearly the only mutation a grep can detect, and where
-# the rule's wording also appears in a nearby comment it cannot detect even that.
+# M5 also covers termination: without the loop's structural bound it does not return at all, so the
+# harness's runaway ceiling is what catches it.
+#
+# M1-M3 and M9 additionally assert the point of the whole exercise: the grep the previous gate used
+# still passes on the mutated file. Deleting a guard is nearly the only mutation a grep can detect, and
+# where the rule's wording also appears in a nearby comment it cannot detect even that.
+#
+# A patch that no longer matches the source is counted as a FAILURE, not skipped: a mutation test whose
+# mutations silently stop applying is the same kind of false coverage it exists to prevent.
 set -uo pipefail
 cd "$(git rev-parse --show-toplevel)"
 
@@ -62,12 +75,34 @@ apply "M1 empty-diff guard disabled (tokens intact)" \
 
 apply "M2 no-op-fix guard deleted outright" \
   'import re
-s = re.sub(r"\n  if \(fixes > 0 && gateHead && gateHead === lastHead\) \{\n.*?\n  \}\n", "\n", s, flags=re.S)' \
+s = re.sub(r"\n  if \(fixes > 0 && gateHead === lastHead\) \{\n.*?\n  \}\n", "\n", s, flags=re.S)' \
   "committed nothing"
 
 apply "M3 no-op-fix guard disabled (tokens intact)" \
-  's = s.replace("if (fixes > 0 && gateHead && gateHead === lastHead) {", "if (false && fixes > 0 && gateHead && gateHead === lastHead) {")' \
+  's = s.replace("if (fixes > 0 && gateHead === lastHead) {", "if (false && fixes > 0 && gateHead === lastHead) {")' \
   "committed nothing"
+
+apply "M9 the shell-sourced half of the empty-diff guard disabled" \
+  's = s.replace("if (fixes === 0 && gateHead === base) {", "if (false && fixes === 0 && gateHead === base) {")' \
+  "gateHead === base"
+
+apply "M10 an unparseable gates head fails open again" \
+  's = s.replace("  if (!gateHead) {", "  if (false) {")'
+
+apply "M11 the implementer's self-assessment re-injected into the review prompt" \
+  's = s.replace("      `\\nDo not modify code.`", "      (concerns.length ? `\\nThe implementer flagged low confidence in: ${concerns.join(\x27; \x27)} — look there first.\\n` : \x27\x27) +\n      `\\nDo not modify code.`")'
+
+apply "M12 depth no longer decides the reviewer count" \
+  's = s.replace("const reviewers = depth === \x27deep\x27 ? 2 : 1", "const reviewers = 1")'
+
+apply "M13 non-blocking findings recomputed per round instead of accumulated" \
+  's = s.replace("    verdicts.flatMap(v => v.nonblocking || []).forEach(n => nonblockingSeen.add(n))", "    nonblockingSeen.clear(); verdicts.flatMap(v => v.nonblocking || []).forEach(n => nonblockingSeen.add(n))")'
+
+apply "M14 a dead fix agent silently consumes a round" \
+  's = s.replace("  if (!fixed) {", "  if (false) {")'
+
+apply "M15 the triage record is dropped instead of returned" \
+  's = s.replace("        rejected: rejectedSeen,\n        concerns,", "        rejected: [],\n        concerns,")'
 
 apply "M4 cap fires on the round about to run, not on fixes spent" \
   's = s.replace("if (fixes >= maxRounds) {", "if (round === maxRounds) {")'
@@ -82,7 +117,7 @@ apply "M7 closure computed on the raw count, before triage" \
   's = s.replace("      blocking = triage.confirmed || []", "      blocking = reported")'
 
 apply "M8 a dead reviewer treated as a pass" \
-  's = s.replace("if (verdicts.length < Math.max(1, reviewers)) {", "if (false) {")'
+  's = s.replace("if (verdicts.length < reviewers) {", "if (false) {")'
 
 echo
 if [ "$fail" -eq 0 ]; then
