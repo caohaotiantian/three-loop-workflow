@@ -186,6 +186,54 @@ apply_scen "S5 the args normaliser removed (a JSON string silently falls back to
 apply_scen "S4 a broken guard scored as held" \
   "s = s.replace(\"verdict = onRight ? 'GUARD-HELD' : 'GUARD-BROKEN'\", \"verdict = 'GUARD-HELD'\")"
 
+# The round-cap experiment's analysis has the same contract as everything above: it must fail when the
+# thing it checks is wrong. It is what entitles a number to appear in the results documents, so a
+# version that could not reject a drifted figure would be the false coverage this file exists to
+# prevent. Demonstrated on 2026-07-31 that the gate was blind to E1 before `exp-analyse.mjs` was wired
+# into accept-release.sh; these keep it from going blind again.
+#
+# Everything happens on copies under $TMP — a mutation test that edited the real documents would leave
+# the tree wrong if it were interrupted.
+apply_exp() {
+  local name="$1" script="$2"
+  rm -rf "$TMP/exp"; mkdir -p "$TMP/exp"
+  cp -r docs/measurements/2026-07-30-round-cap/raw "$TMP/exp/raw"
+  cp docs/2026-07-31-round-cap-experiment.md    "$TMP/exp/en.md"
+  cp docs/2026-07-31-round-cap-experiment-cn.md "$TMP/exp/cn.md"
+  if ! EXP_DIR="$TMP/exp" python3 -c "$script"; then
+    printf '  ERROR %s: the mutation did not apply\n' "$name"; fail=$((fail+1)); return
+  fi
+  if node scripts/exp-analyse.mjs --raw "$TMP/exp/raw" --docs "$TMP/exp/en.md" "$TMP/exp/cn.md" >/dev/null 2>&1; then
+    printf '  SURVIVED  %s — exp-analyse.mjs exited 0 on data it must reject\n' "$name"
+    fail=$((fail+1))
+  else
+    printf '  detected  %s\n' "$name"
+  fi
+}
+
+echo
+echo "== mutation test: the round-cap experiment's published figures =="
+
+apply_exp "E1 a published figure in the English results document drifts from the raw data" \
+'import os,re,sys
+p=os.environ["EXP_DIR"]+"/en.md"; s=open(p).read()
+n,k=re.subn(r"(?<![0-9])67(?![0-9])","68",s,count=1)
+if k==0: sys.exit(1)
+open(p,"w").write(n)'
+
+apply_exp "E2 the raw verdict disagrees with the per-round series reconstructed from the journal" \
+'import os,json
+p=os.environ["EXP_DIR"]+"/raw/verdicts.json"; v=json.load(open(p))
+k=sorted(v)[0]; v[k]["fixes"]=v[k]["fixes"]+1
+json.dump(v,open(p,"w"),indent=1)'
+
+apply_exp "E3 the Chinese translation drops a figure the English one quotes" \
+'import os,re,sys
+p=os.environ["EXP_DIR"]+"/cn.md"; s=open(p).read()
+n,k=re.subn(r"(?<![0-9])67(?![0-9])","若干",s,count=1)
+if k==0: sys.exit(1)
+open(p,"w").write(n)'
+
 echo
 if [ "$fail" -eq 0 ]; then
   echo "negative-test: every mutation was detected"

@@ -1,0 +1,412 @@
+{
+ "matches": [
+  {
+   "finding_id": "q2::t1::v1::0",
+   "matched": "S2",
+   "tally": {
+    "S2": 3
+   },
+   "handle": "Q001"
+  },
+  {
+   "finding_id": "q2::t1::v1::1",
+   "matched": "S3",
+   "tally": {
+    "S3": 3
+   },
+   "handle": "Q002"
+  },
+  {
+   "finding_id": "q2::t1::v1::2",
+   "matched": "S5",
+   "tally": {
+    "S5": 3
+   },
+   "handle": "Q003"
+  },
+  {
+   "finding_id": "q2::t1::v1::3",
+   "matched": "S1",
+   "tally": {
+    "S1": 3
+   },
+   "handle": "Q004"
+  },
+  {
+   "finding_id": "q2::t1::v1::4",
+   "matched": "S4",
+   "tally": {
+    "S4": 3
+   },
+   "handle": "Q005"
+  },
+  {
+   "finding_id": "q2::t1::v1::5",
+   "matched": "S6",
+   "tally": {
+    "S6": 3
+   },
+   "handle": "Q006"
+  },
+  {
+   "finding_id": "q2::t1::v2::0",
+   "matched": "S2",
+   "tally": {
+    "S2": 3
+   },
+   "handle": "Q007"
+  },
+  {
+   "finding_id": "q2::t1::v2::1",
+   "matched": "S3",
+   "tally": {
+    "S3": 3
+   },
+   "handle": "Q008"
+  },
+  {
+   "finding_id": "q2::t1::v2::2",
+   "matched": "S5",
+   "tally": {
+    "S5": 3
+   },
+   "handle": "Q009"
+  },
+  {
+   "finding_id": "q2::t1::v2::3",
+   "matched": "S1",
+   "tally": {
+    "S1": 3
+   },
+   "handle": "Q010"
+  },
+  {
+   "finding_id": "q2::t1::v2::4",
+   "matched": "S4",
+   "tally": {
+    "S4": 3
+   },
+   "handle": "Q011"
+  },
+  {
+   "finding_id": "q2::t1::v2::5",
+   "matched": "S6",
+   "tally": {
+    "S6": 3
+   },
+   "handle": "Q012"
+  },
+  {
+   "finding_id": "q2::t2::v1::0",
+   "matched": "S2",
+   "tally": {
+    "S2": 3
+   },
+   "handle": "Q013"
+  },
+  {
+   "finding_id": "q2::t2::v1::1",
+   "matched": "S3",
+   "tally": {
+    "S3": 3
+   },
+   "handle": "Q014"
+  },
+  {
+   "finding_id": "q2::t2::v1::2",
+   "matched": "S5",
+   "tally": {
+    "S5": 3
+   },
+   "handle": "Q015"
+  },
+  {
+   "finding_id": "q2::t2::v1::3",
+   "matched": "S4",
+   "tally": {
+    "S4": 3
+   },
+   "handle": "Q016"
+  },
+  {
+   "finding_id": "q2::t2::v1::4",
+   "matched": "S1",
+   "tally": {
+    "S1": 3
+   },
+   "handle": "Q017"
+  },
+  {
+   "finding_id": "q2::t2::v1::5",
+   "matched": "S1",
+   "tally": {
+    "S1": 3
+   },
+   "handle": "Q018"
+  },
+  {
+   "finding_id": "q2::t2::v1::6",
+   "matched": "S6",
+   "tally": {
+    "S6": 3
+   },
+   "handle": "Q019"
+  },
+  {
+   "finding_id": "q2::t2::v2::0",
+   "matched": "S3",
+   "tally": {
+    "S3": 3
+   },
+   "handle": "Q020"
+  },
+  {
+   "finding_id": "q2::t2::v2::1",
+   "matched": "S2",
+   "tally": {
+    "S2": 3
+   },
+   "handle": "Q021"
+  },
+  {
+   "finding_id": "q2::t2::v2::2",
+   "matched": "S5",
+   "tally": {
+    "S5": 3
+   },
+   "handle": "Q022"
+  },
+  {
+   "finding_id": "q2::t2::v2::3",
+   "matched": "S4",
+   "tally": {
+    "S4": 3
+   },
+   "handle": "Q023"
+  },
+  {
+   "finding_id": "q2::t2::v2::4",
+   "matched": "S1",
+   "tally": {
+    "S1": 3
+   },
+   "handle": "Q024"
+  },
+  {
+   "finding_id": "q2::t2::v2::5",
+   "matched": "S1",
+   "tally": {
+    "S1": 3
+   },
+   "handle": "Q025"
+  },
+  {
+   "finding_id": "q2::t2::v2::6",
+   "matched": "S6",
+   "tally": {
+    "S6": 3
+   },
+   "handle": "Q026"
+  },
+  {
+   "finding_id": "q2::t2::v3::0",
+   "matched": "S2",
+   "tally": {
+    "S2": 3
+   },
+   "handle": "Q027"
+  },
+  {
+   "finding_id": "q2::t2::v3::1",
+   "matched": "S3",
+   "tally": {
+    "S3": 3
+   },
+   "handle": "Q028"
+  },
+  {
+   "finding_id": "q2::t2::v3::2",
+   "matched": "S5",
+   "tally": {
+    "S5": 3
+   },
+   "handle": "Q029"
+  },
+  {
+   "finding_id": "q2::t2::v3::3",
+   "matched": "S4",
+   "tally": {
+    "S4": 3
+   },
+   "handle": "Q030"
+  },
+  {
+   "finding_id": "q2::t2::v3::4",
+   "matched": "S1",
+   "tally": {
+    "S1": 3
+   },
+   "handle": "Q031"
+  },
+  {
+   "finding_id": "q2::t2::v3::5",
+   "matched": "S6",
+   "tally": {
+    "S6": 3
+   },
+   "handle": "Q032"
+  },
+  {
+   "finding_id": "q2::t3::v1::0",
+   "matched": "S3",
+   "tally": {
+    "S3": 3
+   },
+   "handle": "Q033"
+  },
+  {
+   "finding_id": "q2::t3::v1::1",
+   "matched": "S5",
+   "tally": {
+    "S5": 3
+   },
+   "handle": "Q034"
+  },
+  {
+   "finding_id": "q2::t3::v1::2",
+   "matched": "S2",
+   "tally": {
+    "S2": 3
+   },
+   "handle": "Q035"
+  },
+  {
+   "finding_id": "q2::t3::v1::3",
+   "matched": "S1",
+   "tally": {
+    "S1": 3
+   },
+   "handle": "Q036"
+  },
+  {
+   "finding_id": "q2::t3::v1::4",
+   "matched": "S4",
+   "tally": {
+    "S4": 3
+   },
+   "handle": "Q037"
+  },
+  {
+   "finding_id": "q2::t3::v1::5",
+   "matched": "S6",
+   "tally": {
+    "S6": 3
+   },
+   "handle": "Q038"
+  },
+  {
+   "finding_id": "q2::t3::v1::6",
+   "matched": null,
+   "tally": {
+    "NONE": 3
+   },
+   "handle": "Q039"
+  },
+  {
+   "finding_id": "q2::t3::v2::0",
+   "matched": "S2",
+   "tally": {
+    "S2": 3
+   },
+   "handle": "Q040"
+  },
+  {
+   "finding_id": "q2::t3::v2::1",
+   "matched": "S3",
+   "tally": {
+    "S3": 3
+   },
+   "handle": "Q041"
+  },
+  {
+   "finding_id": "q2::t3::v2::2",
+   "matched": "S5",
+   "tally": {
+    "S5": 3
+   },
+   "handle": "Q042"
+  },
+  {
+   "finding_id": "q2::t3::v2::3",
+   "matched": "S1",
+   "tally": {
+    "S1": 3
+   },
+   "handle": "Q043"
+  },
+  {
+   "finding_id": "q2::t3::v2::4",
+   "matched": "S4",
+   "tally": {
+    "S4": 3
+   },
+   "handle": "Q044"
+  },
+  {
+   "finding_id": "q2::t3::v2::5",
+   "matched": "S6",
+   "tally": {
+    "S6": 3
+   },
+   "handle": "Q045"
+  },
+  {
+   "finding_id": "q2::t3::v3::0",
+   "matched": "S2",
+   "tally": {
+    "S2": 3
+   },
+   "handle": "Q046"
+  },
+  {
+   "finding_id": "q2::t3::v3::1",
+   "matched": "S3",
+   "tally": {
+    "S3": 3
+   },
+   "handle": "Q047"
+  },
+  {
+   "finding_id": "q2::t3::v3::2",
+   "matched": "S5",
+   "tally": {
+    "S5": 3
+   },
+   "handle": "Q048"
+  },
+  {
+   "finding_id": "q2::t3::v3::3",
+   "matched": "S1",
+   "tally": {
+    "S1": 3
+   },
+   "handle": "Q049"
+  },
+  {
+   "finding_id": "q2::t3::v3::4",
+   "matched": "S4",
+   "tally": {
+    "S4": 3
+   },
+   "handle": "Q050"
+  },
+  {
+   "finding_id": "q2::t3::v3::5",
+   "matched": "S6",
+   "tally": {
+    "S6": 3
+   },
+   "handle": "Q051"
+  }
+ ]
+}

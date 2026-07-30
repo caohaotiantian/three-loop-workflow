@@ -46,8 +46,8 @@ guards with `grep -q`: disabling both empty-diff guards with `false &&` left eve
 still printed `ok an uncommitted phase is rejected, not reviewed` and `ACCEPT: all checks passed`, exit 0.
 Deleting one guard outright also passed, because the rule's wording survived in the comment above it. Both
 were demonstrated in a fresh clone. Control flow is now asserted by **execution** — `scripts/sim-phase.js`
-drives the real script with stub agents — and `scripts/negative-test.sh` breaks `phase.js` fifteen ways and
-requires the harness to notice each one. The lesson generalises: to check a *rule*, run it; grep only for
+drives the real script with stub agents — and `scripts/negative-test.sh` breaks the two scripts
+twenty-three ways and requires the harness to notice each one. The lesson generalises: to check a *rule*, run it; grep only for
 *prose*, which is the one thing whose presence is the property you want.
 
 Nothing replaced the consistency gate as such. The scenario suite was replaced by the two-arm runner below;
@@ -93,10 +93,18 @@ recomputed figure a different number of times.
 - `<TEST-CMD>`: `bash scripts/accept-release.sh` — the repository gate. Recomputes every published
   figure, runs both execution harnesses, and exits non-zero with each failure named. CI runs it on every
   push and pull request (`.github/workflows/check.yml`), and again on a tag before the archive is built.
+- **Round-cap experiment (2026-07-31):** `node scripts/exp-analyse.mjs --raw
+  docs/measurements/2026-07-30-round-cap/raw --docs docs/2026-07-31-round-cap-experiment.md
+  docs/2026-07-31-round-cap-experiment-cn.md` recomputes every figure the results documents publish,
+  checks the two languages quote each distinctive one the same number of times, and asserts the
+  per-round series against what `phase.js` returned. `accept-release.sh` runs it. The `scripts/exp-*`
+  harness re-runs the whole thing; `preregistration.md` beside the raw data is what it was committed to
+  do, before any of it existed.
 - **Invariant harnesses (fast, deterministic, no agents):**
   `node scripts/sim-phase.js` asserts `phase.js`'s control flow by driving the real script with stub
   agents; `node scripts/sim-scenarios.js` asserts the two-arm suite's scoring arithmetic;
-  `bash scripts/negative-test.sh` breaks `phase.js` fifteen ways and fails if the harness misses one.
+  `bash scripts/negative-test.sh` breaks `phase.js` eighteen ways, `run-scenarios.js` five, and the
+  round-cap experiment's published figures three, and fails if the harness misses one.
   Run all three after touching either script — and add the failing case to the harness *before* the fix.
 - **Two-arm scenario suite (slow, spawns agents):** `Workflow({ scriptPath: "tests/run-scenarios.js" })`.
   Runs every fixture with the skill loaded and withheld. A **discriminating** fixture both arms answer

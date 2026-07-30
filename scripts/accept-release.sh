@@ -370,6 +370,30 @@ for pair in "README.md:README-cn.md" "CHANGELOG.md:CHANGELOG-cn.md" \
   ok "pair $a / $b quotes every recomputed figure the same number of times"
 done
 
+echo "== the round-cap experiment's published figures are recomputed from its raw data =="
+# Same discipline as the release figures above, applied to the experiment: a number in either results
+# document must be one `exp-analyse.mjs` recomputes from the committed raw artifacts, and the two
+# language versions must quote each distinctive figure the same number of times.
+#
+# Watched to fail before being trusted, on 2026-07-31: with `67 confirmed findings` altered to `68` in
+# the English document, this script exited 0 — the hole — while `exp-analyse.mjs` exited 1. It is the
+# wiring that was missing, not the check. `scripts/negative-test.sh` now keeps that demonstration.
+#
+# The analysis also asserts the raw data against itself: the per-round series reconstructed from the
+# journal has to agree with what phase.js returned, or neither is usable.
+EXP_RAW=docs/measurements/2026-07-30-round-cap/raw
+EXP_DOCS="docs/2026-07-31-round-cap-experiment.md docs/2026-07-31-round-cap-experiment-cn.md"
+if [ -d "$EXP_RAW" ]; then
+  if node scripts/exp-analyse.mjs --raw "$EXP_RAW" --docs $EXP_DOCS >/dev/null 2>/tmp/_exp.out; then
+    ok "every experiment figure is recomputed and the two languages agree"
+  else
+    bad "an experiment figure disagrees with the raw data:"; sed -n '1,12p' /tmp/_exp.out
+  fi
+  rm -f /tmp/_exp.out
+else
+  bad "the round-cap experiment's raw artifacts are missing — the results documents cannot be checked"
+fi
+
 echo "== packaged .skill carries the skill and nothing else =="
 pkg=$(mktemp -d)/x.skill
 zip -qr "$pkg" three-loop-workflow/

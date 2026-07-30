@@ -1,0 +1,12 @@
+{
+ "agentCount": 12,
+ "totalTokens": 508560,
+ "totalToolCalls": 178,
+ "logs": [
+  "\u25b8 running dynamic workflow three-loop-phase",
+  "[three-loop-phase] exp-rep2: gates failures (1), running fix round 1 of 6",
+  "[three-loop-phase] exp-rep2: review failures (10), running fix round 2 of 6",
+  "[three-loop-phase] exp-rep2: triage rejected 2/2 blocking findings",
+  "\u25b8 three-loop-phase done"
+ ]
+}

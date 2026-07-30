@@ -1,0 +1,67 @@
+diff --git a/three-loop-workflow/references/build.md b/three-loop-workflow/references/build.md
+index e195f7d..d15cf3f 100644
+--- a/three-loop-workflow/references/build.md
++++ b/three-loop-workflow/references/build.md
+@@ -16,6 +16,8 @@ Follow the plan's phase task list. Tests first where the project practises TDD 
+ 
+ Before you hand off to review, read your own diff once and remove: anything not traceable to the Goal or a recorded Decision, abstractions used once, and comments that narrate the process rather than explain the code. This self-pass is free and does not replace the review.
+ 
++A phase that ends with uncommitted work has not ended: the review diffs ref-to-ref, so anything left in the working tree is reviewed as though you had changed nothing.
++
+ If the plan conflicts with what you find in the code, stop and say so. Do not decide unilaterally and do not paper over it — go fix the plan.
+ 
+ ## Gates
+@@ -24,6 +26,7 @@ Run the project's mechanical checks from the project guide's _common-commands_:
+ 
+ - Do this **before** spawning a reviewer. Reviewing code that does not compile wastes a subagent on defects the compiler already found.
+ - A recalled result is not a result. Re-run and paste this run's output.
++- Record which commands you actually ran, not the ones the project guide lists. A gate you skipped is a gate the reviewer will assume ran.
+ - Exit 0 with every test skipped is not a pass. Check the tally, not just the code.
+ 
+ Record the gate output as commit trailers.
+@@ -34,7 +37,7 @@ Record the gate output as commit trailers.
+ 
+ **Standard: one reviewer. Deep: two, in parallel, independent — union their findings.**
+ 
+-Each gets the diff and the plan — not your summary of the change, and not the whole skill. Send both the same prompt and do not let them see each other's output; the value comes from their independence.
++Each gets the diff and the plan — and nothing else: not your summary of the change, not your list of low-confidence areas, not an instruction about where to look. Send both the same prompt and do not let them see each other's output. A shared attention directive correlates the two readings the second reviewer is there to keep independent; keep your own low-confidence list for yourself, and use it when you triage.
+ 
+ Two is measured on design documents, where a second independent reviewer cut the misses roughly in half and surfaced a severe defect the first had missed in every document (see `plan.md`, "Why two"). Diffs are a friendlier target — the gates have already removed a whole class of defect before a reviewer looks — so a second reviewer buys less here than on a plan. Standard changes take one; Deep phases take two, because that is where an escaped defect is expensive.
+ 
+@@ -76,7 +79,7 @@ Record rejections briefly — one line each, saying what the finding claimed and
+ 
+ ## Fix
+ 
+-Fix confirmed blocking findings. Triage non-blocking ones the same way: fix the cheap and correct ones, and for the rest say plainly what you are not doing and why.
++Fix confirmed blocking findings — the ones that survived Triage, above. Triage comes first and is not a fix round: it is one pass over what was reported, and it is what keeps a phantom from spending one. Triage non-blocking ones the same way: fix the cheap and correct ones, and for the rest say plainly what you are not doing and why.
+ 
+ Name the root cause before you edit — `item X is caused by Y` — and change that cause. One at a time.
+ 
+@@ -141,6 +144,7 @@ Do not declare the cause obvious to save a round. That shortcut, under budget pr
+ 
+ 1. Generate **3–5 ranked, falsifiable hypotheses**. Each states a concrete prediction. If you cannot state what you would observe, it is a hunch, not a hypothesis.
+ 2. Look for the **discriminating** evidence — the one observation that differs between your top two hypotheses. Let that pick the cause instead of confirming the first plausible one.
++3. Record the surviving hypothesis and the observation that picked it — one line, before you edit anything. Written down, it is what stops the next round re-testing a hypothesis this one already ruled out.
+ 
+ Anchoring on the first theory that fits is the most common debugging failure. If no hypothesis survives its discriminating test, escalate rather than shipping a guess.
+ 
+@@ -156,7 +160,9 @@ A failure that reproduces every time stays a fix target.
+ 
+ ## Round cap
+ 
+-Three fix rounds per phase, counted independently per phase. Hitting the cap escalates with a deadlock report (`references/escalation.md`). It never lowers the bar and never becomes a quiet round four.
++Three fix rounds per phase, counted independently per phase. Hitting the cap escalates with a deadlock report (`references/escalation.md`). It never lowers the bar and never becomes a quiet round four. A change that edits its own checks should expect to spend the cap: a large share of what reviewers find in such a change are defects in the checks it is adding, and a check that cannot fail reads as coverage that is not there.
++
++Count the rounds in which you actually spent a fix, not the number of times you re-ran the gates — verifying once more than you fixed is correct, because the last fix still has to be checked.
+ 
+ If a *different* item failed each round, or the fix kept growing, the cap is firing on a planning defect rather than a local bug. Say so in the escalation and point at the plan.
+ 
+@@ -209,7 +215,7 @@ Pass the same `baseSha` to every phase and phase 3's reviewer sees phases 1 and
+ 
+ **What the script does that the manual path cannot.** It fails closed on an empty review. The gates step reports its own `git rev-parse HEAD`, and a head equal to the base — on any round, including a fix round that reset or dropped the phase's commits — stops the phase instead of handing a reviewer an empty range. A gates step that cannot report a usable head also stops the phase, rather than silently disabling the guards downstream of it.
+ 
+-Note what that does **not** do: it does not detect a fabricated sha. If the implementer reports a well-formed sha it never created, the reported value is discarded in favour of the real head and the phase reviews the real diff — the fabrication is made harmless, not visible. Resolving a sha in the repository needs a shell, which a Workflow script does not have.
++Note what that does **not** do: it does not detect a fabricated sha. The reported value is checked for shape and for equality with the base, and then discarded in favour of the head the gates step measured — so a fabrication cannot survive into the returned `headSha`, but it is not visible either. If the branch has commits, a phase whose implementer reported a sha it never created still reviews the real diff and closes on it. The fabrication is made harmless, not detected. Detecting it would mean resolving the sha in the repository, which needs a shell a Workflow script does not have; if you need that check, run it outside the script.
+ 
+ **What it does not do, by decision rather than by omission.** The implementer commits before the gates run, so gate output cannot land in *that* commit's trailers — record them yourself, or on the fix commits; moving the commit after the gates would mean amending, which changes the sha every guard here is tracking. Non-blocking findings are accumulated and returned, not triaged: "fix the cheap and correct ones" is a scope judgment, and handing it to an agent is how scope creep gets automated. Gate-driven and review-driven fix rounds share one budget, because the cap is per phase and splitting it would change a documented rule — they are reported separately (`gateFixes`, `reviewFixes`, `exhaustedBy`) so an escalation can say which one spent it.
+ 

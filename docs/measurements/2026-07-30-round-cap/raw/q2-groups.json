@@ -1,0 +1,285 @@
+{
+ "groups": [
+  {
+   "key": "q2-t1",
+   "dir": "/Users/deepsky/Documents/projects/three-loop-workflow",
+   "base": "244c20a57c000b0451824d434636ab873892be1d",
+   "head": "4dfc918da59a8bb84545226603d6b24523d7aacf",
+   "findings": [
+    {
+     "id": "Q001",
+     "text": "three-loop-workflow/references/build.md:218 \u2014 \"It also detects a fabricated sha\u2026 the script resolves the reported value in the repository, finds no object of that name, and stops the phase with an `agent-error`.\" This is false. `three-loop-workflow/scripts/phase.js:238-242` states the opposite in its own comment (\"a fabricated sha does not survive into the returned `headSha`, but it is not itself detected\u2026 Detecting the fabrication would need the sha resolved in the repository\"), the script has no shell, and `scripts/sim-phase.js:290` pins only the narrower property (\"a fabricated but well-formed headSha cannot close a phase on an EMPTY DIFF\"). `CLAUDE.md:145` records the same limit. This inverts the exact passage Decision D2 required be restated from the script rather than from memory, and tells an operator a guard exists that does not."
+    },
+    {
+     "id": "Q002",
+     "text": "three-loop-workflow/references/build.md:40 \u2014 \"Each gets the diff, the plan, and the implementer's own list of low-confidence areas, so both reviewers know which corners to look at hardest.\" Contradicts `SKILL.md:62` (\"receiving the diff and the plan \u2014 and **nothing else**: not your summary of the change\u2026\"), `phase.js:328-331` (\"The diff and the plan, and nothing else. Not the implementer's summary, not its list of low-confidence areas, not an instruction about where to look\"), and `CLAUDE.md:146`. `scripts/sim-phase.js:357-368` asserts by execution that no reviewer prompt leaks the implementer's concerns or carries an attention directive. Lands in the plan's Non-goal \"No change to\u2026 any rule stated elsewhere in the skill,\" and if followed manually it correlates the two readings the Deep review depends on being independent."
+    },
+    {
+     "id": "Q003",
+     "text": "three-loop-workflow/references/build.md:82 \u2014 \"Fix every reported blocking finding, then triage: while the diff is still moving, confirming each claim first costs a round you will spend anyway.\" This inverts the documented order. The Triage section eleven lines above still reads \"**Do not fix a finding you have not confirmed**\" and \"**The confirmed count is what closes the phase**, not the reported one\" (build.md:70-78); `SKILL.md:71` computes closure from confirmed findings; `phase.js:371-375` comments \"Triage before counting\u2026 Closing on the RAW count lets a phantom defect consume a fix round and exhaust the cap on already-correct code\"; `CLAUDE.md` requires triage before counting. The Goal asked to make the ordering explicit, not to reverse it \u2014 the file now states both orders in adjacent sections."
+    },
+    {
+     "id": "Q004",
+     "text": "three-loop-workflow/references/build.md:42 \u2014 \"but the second reviewer still adds 47% more confirmed findings than the first working alone.\" `bash scripts/accept-release.sh` FAILS on exactly this line (`FAIL a statistic is back in the shipped skill`, check at scripts/accept-release.sh:147-153; run on exp-q2 gives `ACCEPT: 1 check(s) FAILED`). The plan's Accept criterion is that this script exits 0, so P1's acceptance is not met. The 47% figure also appears nowhere else in the repo \u2014 unsourced, and the gate recomputes every published figure. Separately the sentence reverses the original claim (\"a second reviewer buys less here than on a plan\" \u2192 \"still adds more\") with no evidence, which is outside the Goal's \"say what a second reviewer buys on a diff.\""
+    },
+    {
+     "id": "Q005",
+     "text": "three-loop-workflow/references/build.md:147 \u2014 \"Record the surviving hypothesis and check it with `scripts/verify-plan.sh` before you edit anything.\" No such file exists: neither `scripts/verify-plan.sh` nor `three-loop-workflow/scripts/verify-plan.sh` is present, and nothing else in the repo references that name. The Goal asked for a concrete recording step; no Decision authorises inventing a tool, and a portable skill reference should not point at a repo-local script path in any case."
+    },
+    {
+     "id": "Q006",
+     "text": "three-loop-workflow/references/build.md:163 \u2014 \"Ten of the twenty-one confirmed findings in the last release were defects in the gates that release itself added.\" The source (`docs/measurements/2026-07-30-round-data/harden-audit-findings-plan.md:293`) says \"Of the **19** confirmed findings, **10** were defects in the gates and harnesses added by the change itself.\" \"Twenty-one\" is an unrelated quantity from `CHANGELOG.md:17` (\"breaks the two scripts twenty-one ways\" \u2014 the negative-test mutation count). And it was not a release: the newest tag is `v2.1.0` and that work sits on the unmerged branch `fix/audit-hardening`."
+    },
+    {
+     "id": "Q007",
+     "text": "three-loop-workflow/references/build.md:218 \u2014 The Workflow-mode note is inverted: \"It also detects a fabricated sha... the script resolves the reported value in the repository, finds no object of that name, and stops the phase with an `agent-error`\". `phase.js` does the opposite and says so in the code it was supposed to be restated from \u2014 three-loop-workflow/scripts/phase.js:238-242: \"a fabricated sha does not survive into the returned `headSha`, but ... still reviews the real diff and closes on it. Detecting the fabrication would need the sha resolved in the repository, which this script cannot do \u2014 it has no shell.\" The script has no shell primitive, so no resolution and no such `agent-error` path exists. This is the passage D2 named as most likely to have drifted and required to be restated *against the script*; it now documents a guard that is not there, and contradicts CLAUDE.md's own statement of the limit. A reader trusts an unforgeable head that is in fact forgeable."
+    },
+    {
+     "id": "Q008",
+     "text": "three-loop-workflow/references/build.md:40 \u2014 \"Each gets the diff, the plan, and the implementer's own list of low-confidence areas, so both reviewers know which corners to look at hardest\" documents behavior the shipped script forbids and a harness actively asserts against. phase.js:328-332: \"The diff and the plan, and nothing else. Not the implementer's summary, not its list of low-confidence areas, not an instruction about where to look ... a shared attention directive correlates the two readings it is there to keep independent.\" scripts/sim-phase.js:360-368 is the executing assertion (`no reviewer receives the implementer's self-assessment`, plus a check that no prompt carries an attention directive). SKILL.md:62 states the same rule (\"receiving the diff and the plan \u2014 and **nothing else**\"). It also contradicts the unchanged reviewer prompt printed directly below it at build.md:44-58, which passes no such list. Lands in the plan's Non-goal \"No change to ... any rule stated elsewhere in the skill\" (plan.md:24)."
+    },
+    {
+     "id": "Q009",
+     "text": "three-loop-workflow/references/build.md:82 \u2014 \"Fix every reported blocking finding, then triage: while the diff is still moving, confirming each claim first costs a round you will spend anyway\" reverses the skill's central review rule. It contradicts the Triage section immediately above it in the same file (build.md:70 \"**Do not fix a finding you have not confirmed.**\"; build.md:76 \"**The confirmed count is what closes the phase**, not the reported one. Skipping triage means a phantom finding consumes a fix round and can exhaust the round cap on code that was already correct.\"), SKILL.md:70-71 (\"**Triage before you fix, and before you count.**\" / \"Closure is computed ... from the count of *confirmed* findings\"), and the implemented order in phase.js:370-393 (\"Triage before counting\", `blocking = triage.confirmed`). The plan's Goal asks only to \"make the ordering of the Fix and Triage steps explicit\" (plan.md:14); making it explicit in the wrong direction changes a rule the Non-goals protect (plan.md:24) and reintroduces the exact failure the round-cap paragraph three sections later warns about."
+    },
+    {
+     "id": "Q010",
+     "text": "three-loop-workflow/references/build.md:42 \u2014 \"the second reviewer still adds 47% more confirmed findings than the first working alone\" fails the plan's own Accept. I ran `bash scripts/accept-release.sh` on exp-q2: `FAIL  a statistic is back in the shipped skill:` naming this exact line, `ACCEPT: 1 check(s) FAILED` (the check at scripts/accept-release.sh:147-153 greps `[0-9]+(\\.[0-9]+)?%` across `three-loop-workflow/`). The plan's Accept is `bash scripts/accept-release.sh` exits 0 (plan.md:43,49), so P1 is not acceptable as committed. The figure is also unsourced \u2014 no 47% reviewer figure exists anywhere in `docs/measurements/` or the rest of the repo \u2014 and SKILL.md:66 states the opposing rule: \"the figures are published outside this skill, with their limits.\""
+    },
+    {
+     "id": "Q011",
+     "text": "three-loop-workflow/references/build.md:147 \u2014 \"Record the surviving hypothesis and check it with `scripts/verify-plan.sh` before you edit anything\" points at a script that does not exist. `ls scripts/ three-loop-workflow/scripts/` shows only accept-release.sh, negative-test.sh, sim-phase.js, sim-scenarios.js and check-workflow-syntax.sh, phase.js; a repo-wide grep for `verify-plan` returns this new line and nothing else. The instruction cannot be followed by anyone who installs the skill, and it is precisely the failure CLAUDE.md's Engineering Norms record (\"Do not claim a script does something without testing that it does\"). Nothing in the Goal's \"give Diagnosis a concrete recording step\" (plan.md:15) calls for a tool invocation."
+    },
+    {
+     "id": "Q012",
+     "text": "three-loop-workflow/references/build.md:163 \u2014 \"Ten of the twenty-one confirmed findings in the last release were defects in the gates that release itself added\" misstates the measurement it draws on. The source record, docs/measurements/2026-07-30-round-data/harden-audit-findings-plan.md:293, says: \"Of the 19 confirmed findings, **10 were defects in the gates and harnesses added by the change itself**\" \u2014 denominator 19, not 21. \"Twenty-one\" is a different quantity from a different document: CHANGELOG.md:17, the number of ways `negative-test.sh` mutates the two scripts. The work described is v2.2.0, which has no tag (`git tag` ends at v2.1.0) and per CHANGELOG.md:5 is unreleased, so \"the last release\" is wrong as well \u2014 the last release is v2.1.0. A published figure with a swapped denominator is the specific defect this repo has already paid for three times (docs/why-v2.md:311)."
+    }
+   ]
+  },
+  {
+   "key": "q2-t2",
+   "dir": "/Users/deepsky/Documents/projects/three-loop-workflow",
+   "base": "244c20a57c000b0451824d434636ab873892be1d",
+   "head": "4dfc918da59a8bb84545226603d6b24523d7aacf",
+   "findings": [
+    {
+     "id": "Q013",
+     "text": "build.md:218 \u2014 the fabricated-sha 'correction' inverts a true statement into a false one. phase.js:237-242 states the opposite explicitly ('a fabricated sha does not survive into the returned headSha, but it is not itself detected\u2026 Detecting the fabrication would need the sha resolved in the repository'); the script has no shell and never resolves the reported sha \u2014 its only guards are sha() shape-parsing (phase.js:243-248) and the gateHead === base equality test (phase.js:306-316). D2 required this passage be restated FROM phase.js; it was restated from memory, and it deletes the only place that limit was written down. CLAUDE.md and CHANGELOG.md both state the guard as 'made harmless, not visible'."
+    },
+    {
+     "id": "Q014",
+     "text": "build.md:40 \u2014 'Each gets the diff, the plan, and the implementer's own list of low-confidence areas' contradicts SKILL.md:62 ('receiving the diff and the plan \u2014 and **nothing else**') and phase.js:327-331, whose comment excludes this exact item by name: 'Not the implementer's summary, not its list of low-confidence areas, not an instruction about where to look\u2026 a shared attention directive correlates the two readings it is there to keep independent.' It also defeats its own next clause ('the value comes from their independence'). Lands in the plan's Non-goal 'No change to \u2026 any rule stated elsewhere in the skill.'"
+    },
+    {
+     "id": "Q015",
+     "text": "build.md:82 \u2014 'Fix every reported blocking finding, then triage' reverses SKILL.md:70 ('**Triage before you fix, and before you count.**') and phase.js:370-374 ('Triage before counting\u2026 Closing on the RAW count lets a phantom defect consume a fix round and exhaust the cap on already-correct code'). The stated rationale is backwards: triage exists because a large share of blocking-graded findings are rejected. Non-goal violation, same clause."
+    },
+    {
+     "id": "Q016",
+     "text": "build.md:147 \u2014 `scripts/verify-plan.sh` does not exist. `grep -rn verify-plan` over the whole repo returns only this line; scripts/ holds accept-release.sh, negative-test.sh, sim-phase.js, sim-scenarios.js and the skill's scripts/ holds check-workflow-syntax.sh and phase.js. Violates the repo norm 'Do not claim a script does something without testing that it does'."
+    },
+    {
+     "id": "Q017",
+     "text": "build.md:42 \u2014 the 47% figure fails the plan's own Accept. scripts/accept-release.sh:147-152 greps the entire shipped skill for [0-9]+(\\.[0-9]+)?% ; the run prints 'FAIL  a statistic is back in the shipped skill' and 'ACCEPT: 1 check(s) FAILED'. P1's accept criterion (`bash scripts/accept-release.sh` exits 0) is unmet, so the gate cannot have been run before hand-off."
+    },
+    {
+     "id": "Q018",
+     "text": "build.md:42 \u2014 the 47% claim has no source anywhere in the repo and contradicts what the repo does record: docs/why-v2.md:331-333 lists the diff case under 'What we still don't know' \u2014 'Applying it to diffs is an inference\u2026 the marginal value of the second reviewer there is probably *lower*.' It also breaks the paragraph's internal logic: if a second reviewer adds 47% more confirmed findings on diffs, the retained conclusion 'Standard changes take one' no longer follows."
+    },
+    {
+     "id": "Q019",
+     "text": "build.md:163 \u2014 'Ten of the twenty-one confirmed findings in the last release' misstates its source. docs/measurements/2026-07-30-round-data/harden-audit-findings-plan.md:293 reads 'Of the 19 confirmed findings, **10 were defects in the gates and harnesses added by the change itself**' \u2014 19, not 21. 'Twenty-one' is the negative-test mutation count (CHANGELOG.md:17, 'breaks the two scripts twenty-one ways'), a different quantity. 'The last release' is also loose: that audit is the unmerged fix/audit-hardening work."
+    },
+    {
+     "id": "Q020",
+     "text": "three-loop-workflow/references/build.md:40 \u2014 reviewer inputs are stated backwards. The line now says each reviewer gets \"the diff, the plan, and the implementer's own list of low-confidence areas, so both reviewers know which corners to look at hardest.\" The shipped script does the opposite and says so: phase.js:329-332 (\"The diff and the plan, and nothing else. Not the implementer's summary, not its list of low-confidence areas, not an instruction about where to look\"), and the concerns are returned to the caller (phase.js:426). SKILL.md:62 states the same rule for the whole skill. It is asserted by execution \u2014 sim-phase.js:361-368 fails if any reviewer prompt contains the concerns or an attention directive \u2014 and negative-test.sh M11 injects exactly this sentence's behavior as a mutation the harness must catch. The Goal asked to \"state exactly what each reviewer receives\"; this states it wrongly, and contradicting a rule stated elsewhere in the skill is a Non-goal (plan.md:24)."
+    },
+    {
+     "id": "Q021",
+     "text": "three-loop-workflow/references/build.md:218 \u2014 the fabricated-sha correction is a reversal of the truth, not a correction. The line claims \"the script resolves the reported value in the repository, finds no object of that name, and stops the phase with an agent-error.\" phase.js has no shell and resolves nothing; its own comment at phase.js:238-242 says the fabricated sha \"is not itself detected: if the branch has commits, a phase whose implementer reported a sha it never created still reviews the real diff and closes on it. Detecting the fabrication would need the sha resolved in the repository.\" CLAUDE.md:145 records the same limit. sim-phase.js:290 only asserts the weaker property (a fabricated sha cannot close a phase on an *empty* diff). This exact false claim was already found and fixed once \u2014 docs/measurements/2026-07-30-round-data/harden-audit-findings-plan.md:180: \"phase.js and build.md both claimed the fabricated-sha hole was closed. It is not\" \u2014 so this reintroduces a known regression, and it violates the change's own Decision D2 (restate from the script, not from memory)."
+    },
+    {
+     "id": "Q022",
+     "text": "three-loop-workflow/references/build.md:82 \u2014 the Fix/Triage ordering is inverted. \"Fix every reported blocking finding, then triage\" is the defect the triage rule exists to prevent. build.md:76, two sections earlier and unchanged, says \"The confirmed count is what closes the phase, not the reported one. Skipping triage means a phantom finding consumes a fix round and can exhaust the round cap on code that was already correct.\" SKILL.md:71 says closure is computed from confirmed findings, \"never the raw report.\" phase.js:370-395 triages before counting, and negative-test.sh M7 mutates the script to \"closure computed on the raw reported count, before triage\" as a defect the harness must detect. The document now contradicts itself, the skill, and the script; changing a rule stated elsewhere in the skill is a Non-goal (plan.md:24)."
+    },
+    {
+     "id": "Q023",
+     "text": "three-loop-workflow/references/build.md:147 \u2014 the new Diagnosis step points at a script that does not exist: \"check it with `scripts/verify-plan.sh` before you edit anything.\" `grep -rn verify-plan` over the repo returns only this line; neither `scripts/` nor `three-loop-workflow/scripts/` contains it (contents: accept-release.sh, negative-test.sh, sim-phase.js, sim-scenarios.js; check-workflow-syntax.sh, phase.js). This is the failure mode CLAUDE.md's Engineering Norms name explicitly (\"Do not claim a script does something without testing that it does\"). The Goal item was \"give Diagnosis a concrete recording step\" \u2014 the recording half traces; the tool invocation is invented."
+    },
+    {
+     "id": "Q024",
+     "text": "Plan Accept is not met: `bash scripts/accept-release.sh` exits 1 on exp-q2 (P1's accept condition is exit 0, plan.md:49). The failing check is \"the shipped skill states rules, not statistics\", triggered by the \"47%\" added at three-loop-workflow/references/build.md:42 \u2014 accept-release.sh:147 greps `three-loop-workflow/` for `[0-9]+(\\.[0-9]+)?%`. Ran on a clean tree at exp-q2; output ends `ACCEPT: 1 check(s) FAILED`. The commit 4dfc918 therefore also carries no passing gate run."
+    },
+    {
+     "id": "Q025",
+     "text": "three-loop-workflow/references/build.md:42 \u2014 \"the second reviewer still adds 47% more confirmed findings than the first working alone\" is unsourced and reverses a recorded rationale without a Decision. The removed clause said a second reviewer \"buys less here than on a plan\"; no measurement of a second reviewer on diffs exists anywhere in the repo (searched docs/measurements/, docs/*.md, references/plan.md \u2014 plan.md:75 \"Why two\" is design documents only, which the same sentence still cites). The new clause also undercuts the conclusion it introduces one clause later: if a second reviewer adds 47% more confirmed findings on diffs, \"Standard changes take one\" no longer follows from the paragraph."
+    },
+    {
+     "id": "Q026",
+     "text": "three-loop-workflow/references/build.md:163 \u2014 the round-cap figure is wrong. \"Ten of the twenty-one confirmed findings in the last release\" \u2014 the source record says 19, not 21: docs/measurements/2026-07-30-round-data/harden-audit-findings-plan.md:293, \"Of the 19 confirmed findings, 10 were defects in the gates and harnesses added by the change itself.\" 21 is the mutation count from negative-test.sh (\"negative-test.sh 21/21 mutations detected\", same file line ~281), a different quantity. \"In the last release\" is also wrong: that change sits on the unmerged fix/audit-hardening branch, so it has not shipped in any release."
+    },
+    {
+     "id": "Q027",
+     "text": "three-loop-workflow/references/build.md:218 \u2014 states the script detects a fabricated sha; phase.js:238-242 says the opposite in terms (\"a fabricated sha does not survive into the returned headSha, but it is not itself detected... Detecting the fabrication would need the sha resolved in the repository, which this script cannot do \u2014 it has no shell\"). The diff deleted the accurate limitation and invented a mechanism (\"resolves the reported value in the repository, finds no object of that name\"). Violates Decision D2, which required this exact passage be restated against phase.js rather than from memory."
+    },
+    {
+     "id": "Q028",
+     "text": "three-loop-workflow/references/build.md:40 \u2014 says each reviewer receives \"the implementer's own list of low-confidence areas\". phase.js:326-331 sends the diff and plan only, with the reason inline; sim-phase.js:367-368 asserts by execution that a reviewer prompt must not leak concerns or carry an attention directive; negative-test.sh:125 mutates in exactly this text and requires the harness to catch it; CHANGELOG.md:37 records it as a defect already removed. The line also drops \"not your summary of the change, and not the whole skill\", contradicting SKILL.md:62. Lands in the Non-goal \"No change to ... any rule stated elsewhere in the skill.\""
+    },
+    {
+     "id": "Q029",
+     "text": "three-loop-workflow/references/build.md:82 \u2014 \"Fix every reported blocking finding, then triage\" inverts the rule. SKILL.md:70 is \"Triage before you fix, and before you count\"; SKILL.md:71 computes closure from confirmed findings; phase.js:371-375 triages before the count precisely so a phantom does not burn a fix round. The diff also deleted the word \"confirmed\", and its stated rationale (\"costs a round you will spend anyway\") is the argument the script exists to refute. Non-goal violation, same clause."
+    },
+    {
+     "id": "Q030",
+     "text": "three-loop-workflow/references/build.md:147 \u2014 instructs the reader to run `scripts/verify-plan.sh`, which does not exist; `grep -rn verify-plan` over the repo returns only this line. scripts/ holds accept-release.sh, negative-test.sh, sim-phase.js, sim-scenarios.js. The path convention is also wrong for a skill consumer, whose skill scripts live at three-loop-workflow/scripts/."
+    },
+    {
+     "id": "Q031",
+     "text": "three-loop-workflow/references/build.md:42 \u2014 the \"47% more confirmed findings\" figure fails the repository gate: accept-release.sh:147-152 (\"the shipped skill states rules, not statistics\") flags this line by name and the run ends `ACCEPT: 1 check(s) FAILED`. Plan P1's Accept is \"bash scripts/accept-release.sh exits 0\", so the phase's own acceptance criterion is unmet. The figure has no source anywhere in the repo, and references/plan.md:75 \u2014 the \"Why two\" it cites \u2014 measures design documents, not diffs."
+    },
+    {
+     "id": "Q032",
+     "text": "three-loop-workflow/references/build.md:163 \u2014 \"Ten of the twenty-one confirmed findings in the last release were defects in the gates that release itself added\" has no source in CHANGELOG.md, docs/, or the rescued per-round records. The only \"twenty-one\" in the repo is CHANGELOG.md:17, the count of negative-test.sh mutations, suggesting a garbled restatement. It is an unverifiable statistic on the shipped surface that escapes the statistics gate only because that check's regex targets `%`."
+    }
+   ]
+  },
+  {
+   "key": "q2-t3",
+   "dir": "/Users/deepsky/Documents/projects/three-loop-workflow",
+   "base": "244c20a57c000b0451824d434636ab873892be1d",
+   "head": "4dfc918da59a8bb84545226603d6b24523d7aacf",
+   "findings": [
+    {
+     "id": "Q033",
+     "text": "three-loop-workflow/references/build.md:40 \u2014 \"Each gets the diff, the plan, and the implementer's own list of low-confidence areas, so both reviewers know which corners to look at hardest\" describes behaviour the shipped script deliberately does NOT have, and states as a rule the exact thing the harnesses exist to prevent. phase.js:328-332: \"The diff and the plan, and nothing else. Not the implementer's summary, not its list of low-confidence areas, not an instruction about where to look... The concerns are returned to the caller instead\"; the built reviewPrompt (phase.js:333-344) contains no concerns. scripts/sim-phase.js:356-369 asserts by execution that no reviewer prompt contains the concerns or an attention directive, and scripts/negative-test.sh:124-125 mutation M11 (\"the implementer's self-assessment re-injected into the review prompt\") is literally this sentence, required to be caught. SKILL.md:62 states the rule as \"receiving the diff and the plan \u2014 and **nothing else**\". This also lands in the plan's Non-goal \"No change to ... any rule stated elsewhere in the skill\", and contradicts its own next clause (\"the value comes from their independence\")."
+    },
+    {
+     "id": "Q034",
+     "text": "three-loop-workflow/references/build.md:82 \u2014 \"Fix every reported blocking finding, then triage: while the diff is still moving, confirming each claim first costs a round you will spend anyway\" inverts the skill's central rule and replaces \"Fix confirmed blocking findings\". SKILL.md:70 (\"**Triage before you fix, and before you count.**\") and SKILL.md:71 (closure computed from confirmed findings) say the opposite; phase.js:370-395 triages before the count and before any fix round; and the immediately preceding paragraphs of this same file (build.md:74-78) say \"blind adversarial checking rejected a large share of what reviewers reported \u2014 including a substantial fraction of the findings they graded *blocking*\" and \"Skipping triage means a phantom finding consumes a fix round and can exhaust the round cap on code that was already correct\". The new stated rationale is self-refuting: fixing phantom findings is precisely how the round is wasted. The plan's Goal asked only to \"make the ordering of the Fix and Triage steps explicit\", not to reverse it; Non-goal \"No change to ... any rule stated elsewhere in the skill\" is violated."
+    },
+    {
+     "id": "Q035",
+     "text": "three-loop-workflow/references/build.md:218 \u2014 \"It also detects a fabricated sha. If the implementer reports a well-formed sha it never created, the script resolves the reported value in the repository, finds no object of that name, and stops the phase with an `agent-error`\" is false, and it deletes the one place the real limit was written down. phase.js:237-242 says the opposite in the code being described: \"Shape is not existence, and this check does not establish existence... a fabricated sha does not survive into the returned `headSha`, but it is not itself detected: if the branch has commits, a phase whose implementer reported a sha it never created still reviews the real diff and closes on it. Detecting the fabrication would need the sha [resolved in the repository]\". The only validation is `sha(work.headSha)` (phase.js:80, 243-245), a 40-hex shape test; a Workflow script has no shell and cannot resolve an object. CLAUDE.md states the same limit. Decision D2 required this passage be \"restated against three-loop-workflow/scripts/phase.js\" \u2014 it was restated from memory, in the wrong direction, and no gate catches it (scripts/accept-release.sh:272-280 does not cover this claim)."
+    },
+    {
+     "id": "Q036",
+     "text": "three-loop-workflow/references/build.md:42 \u2014 \"the second reviewer still adds 47% more confirmed findings than the first working alone\" fails the plan's own Accept command. `bash scripts/accept-release.sh` on exp-q2 prints \"FAIL a statistic is back in the shipped skill: three-loop-workflow/references/build.md:42\" and exits with \"ACCEPT: 1 check(s) FAILED\" \u2014 scripts/accept-release.sh:146-152 rejects any `[0-9]+(\\.[0-9]+)?%` anywhere under three-loop-workflow/. The figure is also unsourced: nothing in docs/, CHANGELOG*.md, or references/plan.md:75-81 (\"Why two\") records 47%, and the only measurement that exists was taken on design documents, not diffs \u2014 so the sentence asserts a diff-arm result that was never measured, in the same breath as conceding diffs are a friendlier target. SKILL.md:66 states the governing convention: \"the figures are published outside this skill, with their limits.\""
+    },
+    {
+     "id": "Q037",
+     "text": "three-loop-workflow/references/build.md:147 \u2014 \"check it with `scripts/verify-plan.sh` before you edit anything\" points at a script that does not exist. `grep -rn verify-plan` over the whole repo returns exactly one hit: this new line. three-loop-workflow/scripts/ contains only phase.js and check-workflow-syntax.sh; scripts/ contains accept-release.sh, negative-test.sh, sim-phase.js, sim-scenarios.js. This is the failure mode CLAUDE.md names verbatim (\"A v2 draft once shipped a claim that a bundled script rejected AI attribution in commit messages; the script contained no such check\") \u2014 a reader following the Diagnosis steps hits a command that cannot run. Only the \"record the surviving hypothesis\" half of this line traces to the Goal bullet \"give Diagnosis a concrete recording step\"; the tool invocation traces to nothing."
+    },
+    {
+     "id": "Q038",
+     "text": "three-loop-workflow/references/build.md:163 \u2014 \"Ten of the twenty-one confirmed findings in the last release\" states the wrong denominator. The record of that release (.agent/harden-audit-findings/plan.md:292-294) says \"Of the 19 confirmed findings, **10 were defects in the gates and harnesses added by the change itself**\" \u2014 10 of 19, not 10 of 21. \"Twenty-one\" is a different quantity, the negative-test mutation count published at CHANGELOG.md:17 (\"breaks the two scripts twenty-one ways\"). It escapes scripts/accept-release.sh:146-152 only because it is spelled out in words rather than digits, so the shipped skill would carry an unrecomputable and incorrect statistic on a load-bearing surface."
+    },
+    {
+     "id": "Q039",
+     "text": "three-loop-workflow/references/build.md (whole diff) \u2014 the branch does not satisfy its own Accept criterion. The plan's P1 says \"Accept: `bash scripts/accept-release.sh` exits 0\"; run on exp-q2 it fails (statistics check, see build.md:42). `git log 244c20a..exp-q2` shows a single commit, 4dfc918, with gate results neither pasted nor recorded as trailers, so there is no evidence the gate was run before committing \u2014 build.md:26-31, which this same diff edits (\"Record which commands you actually ran... A recalled result is not a result\"), is the rule that was skipped."
+    },
+    {
+     "id": "Q040",
+     "text": "three-loop-workflow/references/build.md:218 \u2014 Claims the Workflow script detects a fabricated sha by resolving it in the repository and returning agent-error. phase.js:238-242 states the opposite explicitly (\"it is not itself detected: if the branch has commits, a phase whose implementer reported a sha it never created still reviews the real diff and closes on it\"), and resolving a sha needs a shell a Workflow script does not have. sim-phase.js:290 asserts only the weaker property (cannot close on an EMPTY diff). The change also deletes the only written record of that limit, which Decision D2 chose option (b) specifically to preserve. False safety claim about a load-bearing guard."
+    },
+    {
+     "id": "Q041",
+     "text": "three-loop-workflow/references/build.md:40 \u2014 States reviewers receive \"the implementer's own list of low-confidence areas\". Contradicts SKILL.md:62 (\"the diff and the plan \u2014 and **nothing else**\"), the rationale at phase.js:329-333, and the executed invariant scripts/sim-phase.js:357, whose test is named \"no reviewer receives the implementer's self-assessment\" and fails any run whose reviewer prompt leaks concerns or an attention directive. The same sentence still ends \"the value comes from their independence\", which the added clause destroys. Lands in the plan's Non-goal: \"No change to ... any rule stated elsewhere in the skill.\""
+    },
+    {
+     "id": "Q042",
+     "text": "three-loop-workflow/references/build.md:82 \u2014 \"Fix every reported blocking finding, then triage\" inverts the skill's central ordering. Contradicts SKILL.md:70 (\"Triage before you fix, and before you count\"), SKILL.md:71 (closure computed from confirmed findings), and phase.js:369-374 (\"Triage before counting... Closing on the RAW count lets a phantom defect consume a fix round and exhaust the cap on already-correct code\"). The stated rationale is backwards \u2014 triage costs no fix round. Non-goal violation plus wrong behavior."
+    },
+    {
+     "id": "Q043",
+     "text": "three-loop-workflow/references/build.md:42 \u2014 The \"47% more confirmed findings\" figure fails the plan's own Accept criterion: `bash scripts/accept-release.sh` exits non-zero with `FAIL  a statistic is back in the shipped skill` on this line (`ACCEPT: 1 check(s) FAILED`), verified by running it. The figure is also unsourced \u2014 it appears nowhere else in the repo and has no artifact under docs/measurements/. It further reverses the sentence it replaced (\"a second reviewer buys less here than on a plan\") while the following clause still concludes \"Standard changes take one\", leaving the paragraph self-contradictory."
+    },
+    {
+     "id": "Q044",
+     "text": "three-loop-workflow/references/build.md:147 \u2014 Instructs the reader to check the surviving hypothesis with `scripts/verify-plan.sh`, which does not exist. scripts/ contains only accept-release.sh, negative-test.sh, sim-phase.js, sim-scenarios.js; three-loop-workflow/scripts/ contains only check-workflow-syntax.sh and phase.js; a repo-wide find for verify-plan.sh returns nothing. The step is unexecutable, and it is a repo-root-relative path inside the shipped skill that would not resolve in a consumer's project even if the script existed."
+    },
+    {
+     "id": "Q045",
+     "text": "three-loop-workflow/references/build.md:163 \u2014 \"Ten of the twenty-one confirmed findings in the last release\" is unsourced; no such count exists in the repo. The only \"twenty-one\" is CHANGELOG.md:17, which counts negative-test.sh mutations, a different quantity. It is also a statistic on the shipped skill surface written out in words, so it evades accept-release.sh's `[0-9]+(\\.[0-9]+)?%` statistics grep rather than satisfying that check's intent, and \"the last release\" is an undated referent that will be wrong at the next tag."
+    },
+    {
+     "id": "Q046",
+     "text": "three-loop-workflow/references/build.md:218 \u2014 the fabricated-sha claim is inverted, and it is false. New text: \"It also detects a fabricated sha. If the implementer reports a well-formed sha it never created, the script resolves the reported value in the repository, finds no object of that name, and stops the phase with an `agent-error`.\" `phase.js` does no such resolution \u2014 three-loop-workflow/scripts/phase.js:238-242 says the reported sha \"is not itself detected: if the branch has commits, a phase whose implementer reported a sha it never created still reviews the real diff and closes on it. Detecting the fabrication would need the sha resolved in the repository\", which a Workflow script has no shell for. The only execution assertion (scripts/sim-phase.js:290) is deliberately narrower: 'a fabricated but well-formed headSha cannot close a phase ON AN EMPTY DIFF'. Plan Decision D2 required this passage to be \"restated from the script, not from memory\"; it was restated as its opposite, and the shipped skill now contradicts its own script. It also deletes the only place that limit was written down \u2014 the exact loss D2 rejected option (a) to avoid."
+    },
+    {
+     "id": "Q047",
+     "text": "three-loop-workflow/references/build.md:40 \u2014 \"Each gets the diff, the plan, and the implementer's own list of low-confidence areas, so both reviewers know which corners to look at hardest\" contradicts a rule stated elsewhere in the skill and enforced by execution. SKILL.md:62: reviewers receive the diff and the plan \"and **nothing else**: not your summary of the change\". phase.js's review dispatch comment says \"The diff and the plan, and nothing else. Not the implementer's summary, not its list of low-confidence areas, not an instruction about where to look ... a shared attention directive correlates the two readings it is there to keep independent.\" scripts/sim-phase.js:357-369 asserts by execution that no reviewer prompt leaks `concerns`, and scripts/negative-test.sh M11 mutates phase.js to inject exactly this text and requires the harness to catch it. So the diff documents behaviour the harness treats as a defect. Lands in the plan's Non-goal \"No change to ... any rule stated elsewhere in the skill\", and contradicts the prompt block directly below it (build.md:44-59), which still sends diff + plan only."
+    },
+    {
+     "id": "Q048",
+     "text": "three-loop-workflow/references/build.md:82 \u2014 \"Fix every reported blocking finding, then triage: while the diff is still moving, confirming each claim first costs a round you will spend anyway\" reverses the repo's central ordering rule. SKILL.md:70: \"**Triage before you fix, and before you count.**\" SKILL.md:71: closure is computed \"from the count of *confirmed* findings ... never the raw report\". build.md's own Triage section, two paragraphs above, says \"**Do not fix a finding you have not confirmed**\" (:41) and \"**The confirmed count is what closes the phase**, not the reported one. Skipping triage means a phantom finding consumes a fix round and can exhaust the round cap on code that was already correct\" (:47). phase.js implements triage before the closure count. The Goal item was \"make the ordering of the Fix and Triage steps explicit\" \u2014 the ordering made explicit is the wrong one, and it also breaks the sentence that follows (\"Triage non-blocking ones the same way\" now refers to a reversed order)."
+    },
+    {
+     "id": "Q049",
+     "text": "three-loop-workflow/references/build.md:42 \u2014 the added figure \"the second reviewer still adds 47% more confirmed findings than the first working alone\" fails the repository gate, which is the plan's own Accept criterion. I ran `bash scripts/accept-release.sh` on exp-q2: `FAIL  a statistic is back in the shipped skill:` naming this line, then `ACCEPT: 1 check(s) FAILED`, rc=1. The check is scripts/accept-release.sh:146-153 (`grep -rqE '[0-9]+(\\.[0-9]+)?%|percentage points|116 findings' three-loop-workflow/`). Plan P1's Accept says `bash scripts/accept-release.sh` exits 0; it does not. Separately, 47% has no source anywhere in the repo \u2014 no measurement file, no docs/ figure, nothing recomputable \u2014 so it violates \"Do not claim ... without testing that it does\" and the recompute-every-published-figure regime."
+    },
+    {
+     "id": "Q050",
+     "text": "three-loop-workflow/references/build.md:147 \u2014 \"Record the surviving hypothesis and check it with `scripts/verify-plan.sh` before you edit anything\" instructs the reader to run a script that does not exist. `scripts/` contains only accept-release.sh, negative-test.sh, sim-phase.js, sim-scenarios.js; a repo-wide grep for \"verify-plan\" returns this line and nothing else. The path is also repo-root-relative in a shipped skill file whose own scripts live at three-loop-workflow/scripts/, so it would not resolve in a consuming project either. The Goal asked for \"a concrete recording step\"; a step nobody can execute is not one."
+    },
+    {
+     "id": "Q051",
+     "text": "three-loop-workflow/references/build.md:163 \u2014 \"Ten of the twenty-one confirmed findings in the last release\" misstates the figure and the event. The source is docs/measurements/2026-07-30-round-data/harden-audit-findings-plan.md:293: \"Of the 19 confirmed findings, **10 were defects in the gates and harnesses added by the change itself**\" (round tallies 9 + 6 + 4 = 19 at :171, :213, :248). \"Twenty-one\" is the negative-test mutation count from CHANGELOG.md:17 (\"breaks the two scripts twenty-one ways\") \u2014 a different quantity, apparently conflated. \"In the last release\" is also wrong: that change is the fix/audit-hardening work, not a released version. A spelled-out statistic like this evades accept-release.sh's numeric-statistic regex, so the gate cannot catch it \u2014 which is why the figure has to be right."
+    }
+   ]
+  }
+ ],
+ "idmap": {
+  "Q001": "q2::t1::v1::0",
+  "Q002": "q2::t1::v1::1",
+  "Q003": "q2::t1::v1::2",
+  "Q004": "q2::t1::v1::3",
+  "Q005": "q2::t1::v1::4",
+  "Q006": "q2::t1::v1::5",
+  "Q007": "q2::t1::v2::0",
+  "Q008": "q2::t1::v2::1",
+  "Q009": "q2::t1::v2::2",
+  "Q010": "q2::t1::v2::3",
+  "Q011": "q2::t1::v2::4",
+  "Q012": "q2::t1::v2::5",
+  "Q013": "q2::t2::v1::0",
+  "Q014": "q2::t2::v1::1",
+  "Q015": "q2::t2::v1::2",
+  "Q016": "q2::t2::v1::3",
+  "Q017": "q2::t2::v1::4",
+  "Q018": "q2::t2::v1::5",
+  "Q019": "q2::t2::v1::6",
+  "Q020": "q2::t2::v2::0",
+  "Q021": "q2::t2::v2::1",
+  "Q022": "q2::t2::v2::2",
+  "Q023": "q2::t2::v2::3",
+  "Q024": "q2::t2::v2::4",
+  "Q025": "q2::t2::v2::5",
+  "Q026": "q2::t2::v2::6",
+  "Q027": "q2::t2::v3::0",
+  "Q028": "q2::t2::v3::1",
+  "Q029": "q2::t2::v3::2",
+  "Q030": "q2::t2::v3::3",
+  "Q031": "q2::t2::v3::4",
+  "Q032": "q2::t2::v3::5",
+  "Q033": "q2::t3::v1::0",
+  "Q034": "q2::t3::v1::1",
+  "Q035": "q2::t3::v1::2",
+  "Q036": "q2::t3::v1::3",
+  "Q037": "q2::t3::v1::4",
+  "Q038": "q2::t3::v1::5",
+  "Q039": "q2::t3::v1::6",
+  "Q040": "q2::t3::v2::0",
+  "Q041": "q2::t3::v2::1",
+  "Q042": "q2::t3::v2::2",
+  "Q043": "q2::t3::v2::3",
+  "Q044": "q2::t3::v2::4",
+  "Q045": "q2::t3::v2::5",
+  "Q046": "q2::t3::v3::0",
+  "Q047": "q2::t3::v3::1",
+  "Q048": "q2::t3::v3::2",
+  "Q049": "q2::t3::v3::3",
+  "Q050": "q2::t3::v3::4",
+  "Q051": "q2::t3::v3::5"
+ }
+}

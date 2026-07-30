@@ -1,0 +1,7 @@
+5f30921dd681ade30540e1b8e7baebebff6b58a4	2026-07-31T00:45:16+08:00	fix(build): restore the fabricated-sha limit; the script cannot detect one
+168fc505254debb0171f695a154a8df38e168fd1	2026-07-31T00:44:40+08:00	fix(build): the round-cap rule carried an invented finding count
+0ab89f95cea2a82a20e74e01f771756a83e66e0e	2026-07-31T00:44:04+08:00	fix(build): the Diagnosis step pointed at a script that does not exist
+468b9539f44bec3563a66ed881e9821f99698184	2026-07-31T00:43:14+08:00	fix(build): triage comes before the fix, not after it
+4f022435079b1ae1bd086d4cbd927e75870cfcef	2026-07-31T00:42:47+08:00	fix(build): reviewers do not receive the implementer's low-confidence list
+e811d5010caeb45b3071aefb747594189a8a0984	2026-07-31T00:32:57+08:00	fix(build): the diff-review rationale came back as an invented statistic
+a4cd75596298528aa8d96d31999ce652377390c2	2026-07-31T00:28:47+08:00	docs(build): bring build.md into line with the shipped script

@@ -1,0 +1,7 @@
+{
+ "agentCount": 78,
+ "totalTokens": 3720703,
+ "totalToolCalls": 1202,
+ "note": "refuted=true means NOT a real defect; upheld requires >=2 of 3 adjudicators declining to refute",
+ "groups": 13
+}
