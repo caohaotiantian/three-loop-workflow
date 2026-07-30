@@ -39,6 +39,28 @@ export const meta = {
 // Every invariant below is asserted by execution in this repository's scripts/sim-phase.js, and that
 // harness is itself mutation-tested. Change the control flow here and re-run both.
 
+// The Workflow tool delivers `args` to a script as a JSON **string**, not an object. Measured with a
+// probe script, not assumed: `typeof args === 'string'`, `Object.keys` unavailable, and the string
+// parses cleanly back to the object the caller passed. Destructuring a string yields all-undefined, so
+// before this every invocation through the tool returned `usage-error: planPath is required` however
+// complete the arguments were — which is why this script had never once run end to end. The nested
+// `workflow(ref, args)` form may differ; both shapes are accepted so it does not matter which you use.
+function inputs(v) {
+  if (v == null) return {}
+  if (typeof v === 'object') return v
+  if (typeof v === 'string') {
+    try {
+      const parsed = JSON.parse(v)
+      if (parsed && typeof parsed === 'object') return parsed
+      return { __argsError: `args parsed to a ${typeof parsed}, not an object` }
+    } catch (e) {
+      return { __argsError: `args is a string that is not JSON: ${v.slice(0, 60)}` }
+    }
+  }
+  return { __argsError: `args is a ${typeof v}, which cannot carry named arguments` }
+}
+const input = inputs(args)
+
 const {
   phaseLabel = 'phase',
   planPath,
@@ -50,7 +72,7 @@ const {
   branch: callerBranch,
   maxRounds = 3,
   models = {},
-} = args || {}
+} = input
 
 // A sha reported by an agent is a string it typed, not a fact. Normalise before comparing: the
 // empty-diff guard is an equality test, so an abbreviated sha or stray whitespace would slip past it
@@ -67,6 +89,7 @@ function ref(v) {
   return /^[A-Za-z0-9][A-Za-z0-9._\/-]*$/.test(t) && !t.includes('..') ? t : null
 }
 
+if (input.__argsError) return { status: 'usage-error', reason: input.__argsError }
 if (!planPath) return { status: 'usage-error', reason: 'planPath is required — plans live at .agent/<task>/plan.md, one directory per task, so there is no default to fall back to' }
 if (!baseSha) return { status: 'usage-error', reason: 'baseSha is required and must be captured BEFORE editing' }
 if (!tasks || !String(tasks).trim()) return { status: 'usage-error', reason: 'tasks is required — a phase dispatched with an empty task list produces a run that looks complete and implemented nothing' }

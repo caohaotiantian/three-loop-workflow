@@ -25,7 +25,7 @@ function load() {
 
 // `answers` maps fixture -> {off, on}; `rows` is what the reading agent reports back.
 // `drop` names arms that return null, modelling a dead agent.
-async function drive({ fixtures, answers, rows, drop = [] }) {
+async function drive({ fixtures, answers, rows, drop = [], stringifyArgs = false, repo }) {
   const logs = []
   const agent = async (prompt, opts) => {
     const label = (opts && opts.label) || '?'
@@ -42,8 +42,9 @@ async function drive({ fixtures, answers, rows, drop = [] }) {
     }
   }
   const parallel = async (thunks) => Promise.all(thunks.map(t => t().catch(() => null)))
+  const a = { fixtures, repo: repo || '.' }
   return load()(agent, parallel, null, m => logs.push(m), () => {},
-    { fixtures, repo: '.' }, null, null).then(res => ({ res, logs }))
+    stringifyArgs ? JSON.stringify(a) : a, null, null).then(res => ({ res, logs }))
 }
 
 // Two fixtures is enough to exercise every branch: one guard, one discriminating.
@@ -154,6 +155,23 @@ const CASES = [
              rows: { rows: [row('s01.md', 'discriminating', 'B', 'A', 'B')] } },
     expect: r => all(eq(r.res.status, 'scored'), eq(r.res.suite_pass, true),
       ok(r.res.rows.length === 1, 'exactly the requested fixture is scored')) },
+
+  // The Workflow tool passes args as a JSON string, so `args?.repo` on it was silently undefined and the
+  // documented `args: {repo: "<path>"}` ran against the default tree without saying so — a wrong answer
+  // rather than an error, which is worse.
+  { name: 'args as a JSON string is honoured, not silently ignored',
+    input: { fixtures: F, stringifyArgs: true,
+             answers: { 's01.md': { off: 'A', on: 'A' }, 's04.md': { off: 'A', on: 'B' } },
+             rows: { rows: [row('s01.md', 'guard', 'A', 'A', 'A'), row('s04.md', 'discriminating', 'B', 'A', 'B')] } },
+    expect: r => all(eq(r.res.status, 'scored'), eq(r.res.suite_pass, true),
+      ok(r.res.rows.length === 2, 'the fixtures from the string args must be the ones scored')) },
+
+  { name: 'a subset passed as a JSON string is honoured',
+    input: { fixtures: ['s01.md'], stringifyArgs: true,
+             answers: { 's01.md': { off: 'A', on: 'B' } },
+             rows: { rows: [row('s01.md', 'discriminating', 'B', 'A', 'B')] } },
+    expect: r => all(eq(r.res.status, 'scored'),
+      ok(r.res.rows.length === 1, 'exactly the one requested fixture is scored')) },
 
   { name: 'a dropped arm is incomplete, not a scored result',
     input: { fixtures: F, answers: { 's01.md': { off: 'A', on: 'A' }, 's04.md': { off: 'A', on: 'B' } },

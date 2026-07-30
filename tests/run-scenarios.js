@@ -27,13 +27,36 @@ export const meta = {
 
 // Relative to the agent's working directory, which is the repo root. Pass args.repo to run this
 // against a checkout somewhere else. An absolute default would pin the suite to one machine.
-const REPO = args?.repo || '.'
-const SKILL = args?.skill || REPO + '/three-loop-workflow'
-const DIR = args?.dir || REPO + '/tests/scenarios'
+// The Workflow tool delivers `args` to a script as a JSON **string**, not an object. Measured with a
+// probe script, not assumed: `typeof args === 'string'`, `Object.keys` unavailable, and the string
+// parses cleanly back to the object the caller passed. Destructuring a string yields all-undefined, so
+// before this every invocation through the tool returned `usage-error: planPath is required` however
+// complete the arguments were — which is why this script had never once run end to end. The nested
+// `workflow(ref, args)` form may differ; both shapes are accepted so it does not matter which you use.
+function inputs(v) {
+  if (v == null) return {}
+  if (typeof v === 'object') return v
+  if (typeof v === 'string') {
+    try {
+      const parsed = JSON.parse(v)
+      if (parsed && typeof parsed === 'object') return parsed
+      return { __argsError: `args parsed to a ${typeof parsed}, not an object` }
+    } catch (e) {
+      return { __argsError: `args is a string that is not JSON: ${v.slice(0, 60)}` }
+    }
+  }
+  return { __argsError: `args is a ${typeof v}, which cannot carry named arguments` }
+}
+const input = inputs(args)
+if (input.__argsError) return { status: 'usage-error', suite_pass: false, reason: input.__argsError }
+
+const REPO = input.repo || '.'
+const SKILL = input.skill || REPO + '/three-loop-workflow'
+const DIR = input.dir || REPO + '/tests/scenarios'
 // Fixture names are deliberately opaque. A descriptive filename (…-is-standard.md,
 // flake-NOT-masked.md) is an answer key handed to the control arm — measured: the control
 // reported it could have answered from the filename alone.
-const FIXTURES = args?.fixtures || ['s01.md', 's02.md', 's03.md', 's04.md', 's05.md', 's06.md', 's07.md']
+const FIXTURES = input.fixtures || ['s01.md', 's02.md', 's03.md', 's04.md', 's05.md', 's06.md', 's07.md']
 
 const ANSWER_SCHEMA = {
   type: 'object',

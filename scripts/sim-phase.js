@@ -83,6 +83,26 @@ const advancingGates = (calls, o = {}) => gates({ headSha: hex(calls.filter(c =>
 // Each: a name, the args, the scripted agent replies, and what must be true of the outcome.
 const INVARIANTS = [
 
+  // The Workflow tool passes args as a JSON string. Every scenario above uses the object form, so this
+  // asserts the string form reaches the same place — otherwise the script works only under the harness.
+  { name: 'args arriving as a JSON string behaves exactly like the object form',
+    args: JSON.stringify(base),
+    reply: l => l.startsWith('write') ? write() : l.startsWith('gates') ? gates() : review(0),
+    expect: r => all(eq(r.res.status, 'closed'), eq(r.res.round, 1), eq(r.res.reviewers, 1)) },
+
+  { name: 'a JSON string missing planPath still names planPath, not the args shape',
+    args: JSON.stringify({ ...base, planPath: undefined }),
+    reply: () => write(),
+    expect: r => all(eq(r.res.status, 'usage-error'),
+      ok(/planPath/.test(r.res.reason || ''), 'the reason must name the missing field')) },
+
+  { name: 'args that is a string but not JSON says so, instead of blaming planPath',
+    args: 'phaseLabel=P1 planPath=x',
+    reply: () => write(),
+    expect: r => all(eq(r.res.status, 'usage-error'),
+      ok(/not JSON/.test(r.res.reason || ''), 'the reason must name the args shape'),
+      ok(!/planPath is required/.test(r.res.reason || ''), 'it must not send the caller after planPath')) },
+
   { name: 'usage: planPath is required',
     args: { ...base, planPath: undefined },
     reply: () => write(),

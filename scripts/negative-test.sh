@@ -22,7 +22,7 @@
 #   M16       the second reviewer's findings discarded rather than unioned
 #   M17       the loop's structural bound, asserted in combination with a broken counter — alone it
 #             changes nothing observable, so it is only load-bearing when the counter also fails
-#   S1-S4     the two-arm runner's scoring: an agent-asserted pass, the row-set check, the
+#   M18/S5    the args normaliser — the Workflow tool passes args as a JSON string, so without it\n#             every invocation through the tool fails (phase.js) or silently ignores args (runner)\n#   S1-S4     the two-arm runner's scoring: an agent-asserted pass, the row-set check, the
 #             discriminating floor, and a broken guard scored as held
 #
 # M5 also covers termination: without the loop's structural bound it does not return at all, so the
@@ -151,6 +151,11 @@ apply "M5 the fix counter never increments" \
 # returns first. Its role only appears when the counter is broken too — and then its absence turns a wrong
 # return into a run that never terminates. Asserted here in combination, because a reviewer showed that
 # CLAUDE.md claimed individual coverage the harness did not have.
+# The Workflow tool passes args as a JSON string. Without the normaliser every invocation through the
+# tool returns "planPath is required" no matter what was passed — which is why phase.js had never run.
+apply "M18 the args normaliser removed (a JSON string destructures to all-undefined)" \
+  's = s.replace("} = input", "} = (typeof args === \x27object\x27 && args) || {}")'
+
 apply "M17 the structural bound removed AND the fix counter broken (must not run forever)" \
   's = s.replace("while (verifyRound <= maxRounds + 1) {", "while (true) {").replace("\n  fixes++\n", "\n")'
 
@@ -174,6 +179,9 @@ apply_scen "S2 the row-set completeness check dropped" \
 
 apply_scen "S3 the discriminating floor removed" \
   's = s.replace("  discriminating.length >= 1 &&", "")'
+
+apply_scen "S5 the args normaliser removed (a JSON string silently falls back to the defaults)" \
+  's = s.replace("const FIXTURES = input.fixtures", "const FIXTURES = (typeof args === \x27object\x27 && args && args.fixtures)")'
 
 apply_scen "S4 a broken guard scored as held" \
   "s = s.replace(\"verdict = onRight ? 'GUARD-HELD' : 'GUARD-BROKEN'\", \"verdict = 'GUARD-HELD'\")"
