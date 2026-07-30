@@ -133,7 +133,7 @@ Outside the repository is the property that matters: a worktree inside one lands
 - Use `--detach` for throwaway work so you do not strand disposable branches.
 - **Dependencies are not shared.** `node_modules`, virtualenvs and build caches are per-worktree and need reinstalling. On a large project that setup can exceed what parallelism saves — measure before assuming it is a win.
 
-On Claude Code, the Workflow tool takes `isolation: 'worktree'` per agent and handles creation and teardown, including the cleanup you would otherwise forget. It costs a few hundred milliseconds and disk per agent, so reach for it when writers actually overlap — not by default.
+On Claude Code, the Workflow tool takes `isolation: 'worktree'` per agent and creates the worktree for you. It removes it again only if the agent left it **unchanged** — which is never true of the writers this option exists for, so a worktree holding real work is still yours to remove with `git worktree remove`. It costs a few hundred milliseconds and disk per agent, so reach for it when writers actually overlap — not by default.
 
 ## Diagnosis — when the cause is not obvious
 

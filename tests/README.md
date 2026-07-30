@@ -11,7 +11,7 @@ That is not a style preference. The v1 suite was measured: 6 fixtures, both arms
 Workflow({ scriptPath: "tests/run-scenarios.js" })
 ```
 
-Every fixture runs twice — once with the skill loaded, once with an agent forbidden to read it. The runner reports per-fixture discrimination and fails on any fixture where both arms agree.
+Every fixture runs twice — once with the skill loaded, once with an agent forbidden to read it. The runner reports per-fixture discrimination and fails a *discriminating* fixture whose arms agree. Guards are judged differently — see "Two kinds of fixture" below. The verdicts and the pass condition are computed in the runner, not asserted by the scoring agent.
 
 ## Writing one that works
 
@@ -59,4 +59,4 @@ Each fixture: the situation, then lettered options. Distribute correct answers a
 
 ## When a fixture fails its control arm
 
-Fix the fixture or delete it. A scenario both arms answer correctly is not evidence about the skill, and keeping it green is worse than having no suite — it reads as coverage that does not exist.
+Fix the fixture, or redeclare it as a `guard` with a dated `demoted` note saying why. A scenario written to discriminate that both arms answer correctly is not evidence that the rule carries weight, and keeping it green *as a discriminating fixture* is worse than having no suite — it reads as coverage that does not exist. Demoting it honestly is not the same as deleting the result.

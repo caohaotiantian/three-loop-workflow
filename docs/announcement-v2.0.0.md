@@ -41,8 +41,9 @@ round cap.
 **Two things were deleted for failing their own test.** The consistency gate returned `OK`, exit 0,
 after its central termination rule had been replaced with the exact opposite. The behavioral suite was
 run with the skill withheld and passed 6/6 — identical to the skill-on arm, 0% discrimination, green for
-sixteen releases while measuring nothing. The replacement suite runs both arms and reports a fixture
-both arms pass as **INVALID** rather than green.
+sixteen releases while measuring nothing. The replacement suite runs both arms and reports a
+*discriminating* fixture both arms pass as **INVALID** rather than green. Six of its seven fixtures are
+regression guards, which it says out loud rather than counting as coverage.
 
 ---
 
