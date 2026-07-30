@@ -15,8 +15,15 @@ export const meta = {
 // version had the scoring agent type `suite_pass` as a schema field, which inverted the rule the rest
 // of this project enforces — closure is computed, never asserted — inside the suite that gates changes
 // to the discipline. An agent returning zero rows and `suite_pass: true` produced a green run and a
-// green log line. The reading agent now reports only what it read: each arm's letter, the expected
-// letter, the kind. Every comparison, every verdict, and the pass condition are arithmetic, below.
+// green log line.
+//
+// Be precise about how far that goes. Every *comparison*, *verdict* and the pass condition are
+// arithmetic below, and no reply can assert a pass. But the inputs to that arithmetic — each arm's
+// letter, the expected letter, and the `kind` — are still read out of `expected.json` by an agent,
+// because a Workflow script has no filesystem. So a *mislabelled* row is not detectable here: what is
+// detectable is a missing row, a duplicated row, a stray row, an unreadable letter, and a set of rows
+// with nothing capable of discriminating. `scripts/accept-release.sh` reads `expected.json` directly and
+// asserts it declares at least one discriminating fixture, which is the half that can be checked.
 
 // Relative to the agent's working directory, which is the repo root. Pass args.repo to run this
 // against a checkout somewhere else. An absolute default would pin the suite to one machine.
@@ -34,9 +41,9 @@ const ANSWER_SCHEMA = {
   required: ['fixture', 'answer', 'reasoning', 'rule_was_stated_in_prompt', 'giveaway'],
   properties: {
     fixture: { type: 'string' },
-    // One letter. The previous description asked for a JSON object here while the type was string, and
-    // arms really did return the string "{\"answer\":\"C\"}" — which a strict comparison would have
-    // scored as a wrong answer. Letters are normalised again below, because a schema description is a
+    // One letter. The previous description asked for a JSON object here while typing the field a string,
+    // so a reply of "{\"answer\":\"C\"}" was a shape this schema invited and a strict comparison would
+    // have scored as a wrong answer. Letters are normalised below, because a schema description is a
     // request, not a guarantee.
     answer: { type: 'string', description: 'The letter of the option you chose, on its own: A, B, C or D' },
     reasoning: { type: 'string', description: 'One or two sentences on why' },
@@ -115,7 +122,9 @@ const READING_SCHEMA = {
 const reading = await agent(
   `Read ${REPO}/tests/expected.json. It holds the correct answer and the "kind" for each fixture, keyed ` +
   `by filename, deliberately outside the scenario files so neither arm could see them.\n\n` +
-  `Below are both arms' answers for each fixture. For every fixture in expected.json, report one row: ` +
+  `Report one row for each of exactly these fixtures, and no others: ${FIXTURES.join(', ')}. ` +
+  `Ignore any other entry in expected.json — a run may cover a subset.\n\n` +
+  `Below are both arms' answers. For each fixture above, report one row: ` +
   `the kind and expected letter copied from expected.json, and each arm's answer as a single letter (an ` +
   `arm may have returned something like "{\\"answer\\":\\"C\\"}" — that is the letter C).\n` +
   `Set both_arms_flagged_giveaway when BOTH arms set rule_was_stated_in_prompt.\n\n` +
@@ -128,8 +137,15 @@ const reading = await agent(
 if (!reading || !reading.rows) return { status: 'error', suite_pass: false, reason: 'the reading agent returned nothing' }
 
 // ── the verdict, computed ─────────────────────────────────────
+// Strict, then one tolerated shape, then malformed. Scanning for the first standalone letter anywhere in
+// the string misreads a hedge — "not A, but B" scored as A — and a misread arm answer is worse than a
+// flagged one, because it is silently counted as a real answer.
 function letter(v) {
-  const m = String(v == null ? '' : v).toUpperCase().match(/\b([A-D])\b/)
+  const t = String(v == null ? '' : v).trim().toUpperCase()
+  if (/^[A-D]$/.test(t)) return t
+  // Tolerated because the schema's own description once asked for an object while typing the field a
+  // string, so a reply of {"answer":"C"} is a shape this suite has to survive rather than mis-score.
+  const m = t.match(/"ANSWER"\s*:\s*"([A-D])"/)
   return m ? m[1] : null
 }
 

@@ -106,8 +106,7 @@ const CASES = [
     expect: r => all(eq(r.res.suite_pass, false), eq(r.res.status, 'incomplete'),
       ok((r.res.malformed || []).length === 1, 'the unreadable row must be named')) },
 
-  // Really observed: an arm returned the string {"answer":"C"} because the old schema description
-  // asked for an object while the type was string.
+  // A shape the old schema invited: its description asked for an object while typing the field a string.
   { name: 'a double-encoded answer is normalised to its letter',
     input: { fixtures: F, answers: { 's01.md': { off: 'A', on: 'A' }, 's04.md': { off: 'A', on: 'B' } },
              rows: { rows: [row('s01.md', 'guard', 'A', '{"answer":"A"}', 'A'),
@@ -143,6 +142,18 @@ const CASES = [
     input: { fixtures: F, answers: { 's01.md': { off: 'A', on: 'A' }, 's04.md': { off: 'A', on: 'B' } },
              rows: { rows: [row('s01.md', 'guard', 'A', 'A', 'A'), row('s04.md', 'guard', 'B', 'A', 'B')] } },
     expect: r => eq(r.res.suite_pass, false, 'no fixture capable of discriminating means the suite measured nothing') },
+
+  { name: 'a hedged answer is flagged, not read as its first letter',
+    input: { fixtures: F, answers: { 's01.md': { off: 'A', on: 'A' }, 's04.md': { off: 'A', on: 'B' } },
+             rows: { rows: [row('s01.md', 'guard', 'A', 'A', 'not A, but B'), row('s04.md', 'discriminating', 'B', 'A', 'B')] } },
+    expect: r => all(eq(r.res.suite_pass, false), eq(r.res.status, 'incomplete'),
+      ok((r.res.malformed || []).length === 1, 'the hedged row must be flagged as unreadable')) },
+
+  { name: 'a subset run scores only the fixtures it was given',
+    input: { fixtures: ['s01.md'], answers: { 's01.md': { off: 'A', on: 'A' } },
+             rows: { rows: [row('s01.md', 'discriminating', 'B', 'A', 'B')] } },
+    expect: r => all(eq(r.res.status, 'scored'), eq(r.res.suite_pass, true),
+      ok(r.res.rows.length === 1, 'exactly the requested fixture is scored')) },
 
   { name: 'a dropped arm is incomplete, not a scored result',
     input: { fixtures: F, answers: { 's01.md': { off: 'A', on: 'A' }, 's04.md': { off: 'A', on: 'B' } },

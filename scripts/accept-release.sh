@@ -109,12 +109,11 @@ else
   bad "a scenario-scoring rule is broken:"; grep -A1 '^  FAIL' /tmp/_scen.out
 fi
 rm -f /tmp/_scen.out
-# The pass condition must not be something an agent can type.
-grep -qE '^const suite_pass = ' tests/run-scenarios.js \
-  && ok "suite_pass is computed in the script" || bad "suite_pass is not computed in the script"
-grep -qE "suite_pass: \{ type: 'boolean'" tests/run-scenarios.js \
-  && bad "suite_pass is back in an agent schema — the suite would assert its own verdict" \
-  || ok "no agent schema declares suite_pass"
+# Two token greps used to sit here, asserting that `suite_pass` is computed and absent from any agent
+# schema. Both were bypassable — `const suite_pass = reading.suite_pass && false &&` satisfies the first,
+# and a double-quoted schema entry evades the second — so they claimed more than they checked, against
+# this file's own rule at the top. Deleted rather than patched: sim-scenarios.js above catches the
+# semantic version of both, by execution, and negative-test.sh proves it can.
 
 # The runner's floor catches a reply that labels everything `guard`, but `kind` is agent-reported and a
 # Workflow script cannot read expected.json. This reads it here, deterministically.
