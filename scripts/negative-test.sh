@@ -20,6 +20,8 @@
 #   M14       a dead fix agent consuming a round, reporting infrastructure failure as deadlock
 #   M15       the triage rejection record dropped instead of returned
 #   M16       the second reviewer's findings discarded rather than unioned
+#   M17       the loop's structural bound, asserted in combination with a broken counter — alone it
+#             changes nothing observable, so it is only load-bearing when the counter also fails
 #   S1-S4     the two-arm runner's scoring: an agent-asserted pass, the row-set check, the
 #             discriminating floor, and a broken guard scored as held
 #
@@ -144,6 +146,13 @@ apply "M4 cap fires on the round about to run, not on fixes spent" \
 
 apply "M5 the fix counter never increments" \
   's = s.replace("\n  fixes++\n", "\n")'
+
+# The structural bound is defence in depth: removing it alone changes nothing observable, because the cap
+# returns first. Its role only appears when the counter is broken too — and then its absence turns a wrong
+# return into a run that never terminates. Asserted here in combination, because a reviewer showed that
+# CLAUDE.md claimed individual coverage the harness did not have.
+apply "M17 the structural bound removed AND the fix counter broken (must not run forever)" \
+  's = s.replace("while (verifyRound <= maxRounds + 1) {", "while (true) {").replace("\n  fixes++\n", "\n")'
 
 apply "M6 reviewer findings intersected instead of unioned" \
   's = s.replace("const reported = [...new Set(verdicts.flatMap(v => v.blocking || []))]", "const reported = (verdicts[0].blocking || []).filter(b => verdicts.every(v => (v.blocking || []).includes(b)))")'

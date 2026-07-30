@@ -52,9 +52,9 @@ help, a config schema, a public API surface — one reviewer reads the **finishe
 and no change context, the way a new user meets them.
 
 This catches a different class of defect from diff review, and it is not a nice-to-have: on this
-skill's own v2.0.0 release, four rounds of diff review left the most serious defect in the release
-standing, and three readers given the finished files with no change context found it immediately. A
-diff reviewer checks whether each line is justified. Only a reader of the whole thing notices that two
+skill's own release, round after round of diff review left the most serious defect in the release
+standing, and readers handed the finished files with no change context found it at once. A diff
+reviewer checks whether each line is justified. Only a reader of the whole thing notices that two
 sections now contradict each other, that a documented step cannot actually be performed, or that a
 claim survives in one file after being corrected in another.
 

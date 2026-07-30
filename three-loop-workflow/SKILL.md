@@ -4,7 +4,7 @@ description: Structured workflow for non-trivial code changes — features, beha
 license: MIT
 compatibility: Claude Code (subagents, Workflow). Codex/opencode run the manual path — see references/platforms.md
 metadata:
-  version: "2.1.0"
+  version: "2.2.0"
 ---
 
 # Three-Loop Workflow

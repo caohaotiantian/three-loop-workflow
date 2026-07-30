@@ -140,16 +140,21 @@ recomputed figure a different number of times.
   increments **only** on a fix; the round cap tests **fixes spent** (`fixes >= maxRounds`), never the round
   about to be verified; reviewer findings are **unioned, never intersected**; triage runs **before** the
   closure count; a reviewer that fails to return is an `agent-error`, never a pass. Added 2026-07-30, each
-  after a demonstrated bypass: nothing an agent merely *reports* is trusted, so the gates step's own
-  `git rev-parse HEAD` is what confirms a commit exists; an unparseable sha **fails closed** rather than
-  disabling the guards downstream of it; reviewers receive the diff and the plan and nothing else; `depth`
+  after a demonstrated bypass: two independent agent reports of HEAD are **cross-checked** rather than one
+  being trusted, which is what makes an empty review detectable — note that it does not detect a
+  fabricated sha, only render it harmless, because resolving a sha needs a shell the script does not
+  have; an unparseable sha **fails closed** rather than disabling the guards downstream of it; reviewers receive the diff and the plan and nothing else; `depth`
   decides the reviewer count so a Deep phase cannot run the Standard review by omission; and the verify
   loop keeps a **structural bound** independent of the fix counter, without which a broken counter spins
   forever instead of returning.
-  Do not verify any of these by reading. `node scripts/sim-phase.js` asserts all of them by execution and
-  `scripts/negative-test.sh` proves that harness fails when each is broken — the cap invariant alone has
-  been broken twice, and every regression this repo has shipped passed a gate that read the code instead of
-  running it. Add the failing invariant to the harness before the fix, and watch it fail.
+  Do not verify any of these by reading. `node scripts/sim-phase.js` asserts them by execution and
+  `scripts/negative-test.sh` breaks each one in turn and requires the harness to notice. One is different
+  and worth knowing: the verify loop's structural bound is **defence in depth**, so removing it alone
+  changes no observable behaviour — the cap still returns first. It is asserted in *combination* with a
+  broken fix counter, where its absence turns a wrong return into a run that never terminates. The cap
+  invariant alone has been broken twice, and every regression this repo has shipped passed a gate that
+  read the code instead of running it. Add the failing invariant to the harness before the fix, and watch
+  it fail.
 - Commit messages: conventional prefixes, no mention of AI involvement, model names, or tooling.
 - Do not add new CLAUDE.md roles without updating the anchor map above and every downstream file that reads
   those roles.

@@ -2,6 +2,75 @@
 
 Full version history for the three-loop-workflow skill. See [README.md](./README.md) for what the skill is, when it applies, and how to install it.
 
+## v2.2.0 — the gates can fail now
+
+An adversarial audit of the whole repository found that every mechanism checking this project was one of
+four things: a token grep, a boolean an agent typed, a parser that says nothing about logic, or nothing at
+all. The invariants were correct, but they were correct because the author was attentive, not because
+anything would have noticed otherwise — and both regressions this project has shipped passed a green gate.
+
+**The acceptance script was v1's `check-consistency.sh` again.** It pinned `phase.js`'s guards with
+`grep -q`. Disabling both empty-diff guards with `false &&`, leaving every token in place, still printed
+`ok an uncommitted phase is rejected, not reviewed` and `ACCEPT: all checks passed`, exit 0. Deleting one
+guard outright also passed, because the rule's wording survived in the comment above it. Both were
+reproduced in a fresh clone. Control flow is now asserted by execution: `scripts/sim-phase.js` drives the
+real script with stub agents, and `scripts/negative-test.sh` breaks the two scripts twenty-one ways and
+fails if the harness misses one. The generalisation is worth stating plainly — to check a *rule*, run it;
+grep only for *prose*, where presence is the property you want.
+
+**The acceptance script is also tracked now.** It lived in a gitignored task directory, was cited as the
+`Gates:` evidence of six release commits, and the one before it is already unrecoverable. `SKILL.md` §2 no
+longer tells you to keep one there.
+
+**CI runs on every push and pull request.** Until now nothing ran automatically at all; the release
+workflow was checkout, zip, upload. It now refuses a tag that disagrees with the frontmatter version and
+verifies what is inside the archive.
+
+**`phase.js` fails closed on anything an agent only reports.** A well-formed sha the implementer never
+created used to close a phase on an empty diff; the gates step's own `git rev-parse HEAD` is cross-checked
+against the base now, on every round, including a fix round that reset the phase's commits. An unparseable
+sha stops the phase instead of silently disabling the guards downstream of it. A dead fix agent is an
+error rather than a spent round. Reviewers receive the diff and the plan and nothing else — the
+implementer's own low-confidence list used to go to both of them, correlating the independence the
+two-reviewer rule depends on. Non-blocking findings and triage rejections accumulate and come back to the
+caller, and prior rejections are carried into the next round's triage so the same phantom is not
+re-derived. `depth: 'standard' | 'deep'` is the preferred way to say how much review runs; `reviewers` still
+works, but passing neither is now an error, because a count that defaulted to 1 let a Deep phase run the
+Standard review by being forgotten.
+
+**The two-arm suite computes its verdict instead of asserting it.** `suite_pass` was a boolean the scoring
+agent typed; an agent returning zero rows and `suite_pass: true` produced a green run, inside the suite
+that exists because its predecessor was green for sixteen releases while measuring nothing. The reading
+agent now reports only what it read and every comparison is arithmetic in the script.
+
+**"A fixture both arms pass is INVALID" was false for six of the seven fixtures**, and it was the property
+advertised as distinguishing this suite from the one deleted for being theatre. Six are regression guards,
+for which both arms answering correctly is a pass. Every statement of the claim now carries its qualifier.
+
+**The install command did not install.** `cp -r three-loop-workflow <repo>/.claude/skills/` copies the
+folder's *contents* when `skills/` does not exist yet — the normal state of a repo where Claude Code has
+run but no skill was ever installed. `SKILL.md` landed one level too high, exit 0, no warning, and the
+skill never activated. Both READMEs `mkdir -p` first, and the gate now runs the README's own commands.
+
+**`close.md` gains a whole-artifact read at Deep depth.** Round after round of diff review on the v2.0.0
+release left the most serious defect in that release standing, and readers handed the finished files with
+no change context found it at once. The modality that caught it appeared nowhere in the skill.
+
+**`SKILL.md` says what to do when there is no project guide.** One of the three Deep triggers and the
+Gates step both dereference roles from an anchor map that no external standard requires, with no fallback
+written anywhere — so on a repo that had not adopted the convention, a third of the Deep checklist was
+silently inert.
+
+Also: the syntax gate fails on `Date.now()`, `Math.random()`, argless `new Date()` and a missing
+`export const meta`, with committed fixtures in both directions; two factual errors in `build.md` about
+worktree cleanup and the chaining example are corrected.
+
+Read the result narrowly. Three fix rounds were spent and the cap was reached. Of the nineteen confirmed
+findings, ten were defects in the gates and harnesses this release adds — the checks needed checking,
+twice — and two were found only by the whole-artifact read it introduces. Two claims in this release's own
+commit messages were themselves overstated and are corrected in the task record rather than by rewriting
+history. Whether three rounds is the right cap for a change shaped like this one is not settled here.
+
 ## v2.1.0 — multi-phase Deep work actually runs
 
 Three criticisms were published with v2.0.0 as "recorded, not fixed". They had reached that list
