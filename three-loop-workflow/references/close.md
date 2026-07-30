@@ -45,7 +45,23 @@ Reconcile only what this change actually made stale: the README if behavior it d
 
 Scope this tightly. A closeout pass is not an invitation to rewrite the docs.
 
-## 6. Clean up
+## 6. Read the result as a product, not as a diff
+
+If the change's output is something a person will read or run as a whole — a document set, a CLI's
+help, a config schema, a public API surface — one reviewer reads the **finished files**, with no diff
+and no change context, the way a new user meets them.
+
+This catches a different class of defect from diff review, and it is not a nice-to-have: on this
+skill's own v2.0.0 release, four rounds of diff review left the most serious defect in the release
+standing, and three readers given the finished files with no change context found it immediately. A
+diff reviewer checks whether each line is justified. Only a reader of the whole thing notices that two
+sections now contradict each other, that a documented step cannot actually be performed, or that a
+claim survives in one file after being corrected in another.
+
+Ask: does this read as one coherent thing? Is anything stated here that the code does not do? Could
+someone follow these instructions and fail?
+
+## 7. Clean up
 
 **Leave the task's `.agent/<task>/` directory.** It is gitignored, it costs nothing, and it is the only local record of what this task planned and decided once the branch is merged. Delete it when you no longer want that record, not as routine cleanup.
 

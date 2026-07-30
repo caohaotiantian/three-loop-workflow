@@ -40,8 +40,18 @@ Escalation: open an issue or comment in the PR.
   stated the answer; 9 of 9 files inspected had the same defect. It had been green for 16 releases while
   carrying no information.
 
-Nothing replaced the consistency gate. The scenario suite was replaced by the two-arm runner below, which
-fails a fixture that both arms pass.
+A third followed on 2026-07-30, and this one was **repaired rather than deleted**, because it was the only
+thing standing between the release and a regression. The v2.0.0-era acceptance script pinned `phase.js`'s
+guards with `grep -q`: disabling both empty-diff guards with `false &&` left every token intact and it
+still printed `ok an uncommitted phase is rejected, not reviewed` and `ACCEPT: all checks passed`, exit 0.
+Deleting one guard outright also passed, because the rule's wording survived in the comment above it. Both
+were demonstrated in a fresh clone. Control flow is now asserted by **execution** — `scripts/sim-phase.js`
+drives the real script with stub agents — and `scripts/negative-test.sh` breaks `phase.js` fifteen ways and
+requires the harness to notice each one. The lesson generalises: to check a *rule*, run it; grep only for
+*prose*, which is the one thing whose presence is the property you want.
+
+Nothing replaced the consistency gate as such. The scenario suite was replaced by the two-arm runner below;
+a *discriminating* fixture that both arms pass is INVALID, while a guard both arms pass is a pass.
 
 ## Load-Bearing Documents
 
@@ -51,6 +61,8 @@ Protected by the full cycle:
 - `three-loop-workflow/references/*.md`
 - `three-loop-workflow/scripts/*.js`
 - `three-loop-workflow/scripts/*.sh`
+- `scripts/**` — the acceptance gate and its harnesses. A weakened gate reads as coverage that is not
+  there, which is the defect this repo has now shipped twice, so relaxing one is never a Direct edit.
 - `CLAUDE.md`
 
 **Not** load-bearing — edited directly with one fresh-agent review: `tests/**`, `README.md` /
@@ -73,18 +85,26 @@ are records of what was true when written and must not be retro-edited into v2 t
 
 The exceptions to English are the `-cn.md` files — `README-cn.md`, `CHANGELOG-cn.md`,
 `docs/why-v2-cn.md`, `docs/announcement-v2.0.0-cn.md` — each a Chinese translation of its English
-counterpart. When one changes, change its pair — a release's acceptance script should fail when a pair
-quotes different figures.
+counterpart. When one changes, change its pair — `scripts/accept-release.sh` fails when a pair quotes a
+recomputed figure a different number of times.
 
 ## Common Commands
 
-- `<TEST-CMD>`: N/A — no unit-test suite. Acceptance is the gates below plus, for any change to the
-  discipline itself, the two-arm scenario suite.
-- **Two-arm scenario suite:** `Workflow({ scriptPath: "tests/run-scenarios.js" })`. Runs every fixture with
-  the skill loaded and withheld. A fixture both arms answer correctly proves nothing and is reported
-  INVALID; a `guard` fixture that skill-on gets wrong is the most serious result it can return. Answers
-  live in `tests/expected.json`, deliberately outside the fixtures. Paths resolve relative to the repo
-  root; pass `args: {repo: "<path>"}` to run it against a checkout elsewhere.
+- `<TEST-CMD>`: `bash scripts/accept-release.sh` — the repository gate. Recomputes every published
+  figure, runs both execution harnesses, and exits non-zero with each failure named. CI runs it on every
+  push and pull request (`.github/workflows/check.yml`), and again on a tag before the archive is built.
+- **Invariant harnesses (fast, deterministic, no agents):**
+  `node scripts/sim-phase.js` asserts `phase.js`'s control flow by driving the real script with stub
+  agents; `node scripts/sim-scenarios.js` asserts the two-arm suite's scoring arithmetic;
+  `bash scripts/negative-test.sh` breaks `phase.js` fifteen ways and fails if the harness misses one.
+  Run all three after touching either script — and add the failing case to the harness *before* the fix.
+- **Two-arm scenario suite (slow, spawns agents):** `Workflow({ scriptPath: "tests/run-scenarios.js" })`.
+  Runs every fixture with the skill loaded and withheld. A **discriminating** fixture both arms answer
+  correctly proves nothing and is reported INVALID; a **guard** both arms answer correctly is GUARD-HELD, a
+  pass — six of the seven current fixtures are guards. `GUARD-BROKEN` is the most serious result it can
+  return. The verdict and the pass condition are computed in the runner, never asserted by the scoring
+  agent. Answers live in `tests/expected.json`, deliberately outside the fixtures. Paths resolve relative
+  to the repo root; pass `args: {repo: "<path>"}` to run it against a checkout elsewhere.
 - **Workflow-script syntax gate:** `bash three-loop-workflow/scripts/check-workflow-syntax.sh <file.js>` —
   reliably parses a Workflow script (`node --check` mis-parses these `export` + top-level-`return` files).
   Works; use it on every `.js` change.
@@ -105,17 +125,31 @@ quotes different figures.
 - **Do not claim a script does something without testing that it does.** A v2 draft once shipped a claim
   that a bundled script rejected AI attribution in commit messages; the script contained no such check, and
   nobody had run it. State what you ran, not what you intended.
-- Anti-bloat binds the always-loaded `SKILL.md` surface — push detail into references. There is no
-  gate-enforced cap; it is held near 1,400 words by review. Rules live here; the measurements behind them live in the references, because a statistic on the always-loaded surface costs tokens on every activation, changes no behavior, and drifts. v1 reached 2,915 words under a numeric ceiling,
-  which is why the ceiling is not the mechanism.
-- Workflow scripts are plain JavaScript — no TypeScript, no `Date.now()`, no `Math.random()`. Validate with
-  `check-workflow-syntax.sh`, not `node --check`.
-- `three-loop-workflow/scripts/phase.js` carries load-bearing control flow: `round` increments **only** on
-  a fix; the round cap tests **fixes spent** (`fixes >= maxRounds`), never the round about to be verified;
-  reviewer findings are **unioned, never intersected**; triage runs **before** the closure count; a reviewer
-  that fails to return is an `agent-error`, never a pass. Preserve all five and re-run the syntax gate. The
-  cap invariant is the one that has now been broken twice — once in v1, once in v2 — so check it by
-  simulating the loop, not by reading it.
+- Anti-bloat binds the always-loaded `SKILL.md` surface — push detail into references. Review is the
+  mechanism, not a ceiling: v1 reached 2,915 words under a numeric cap, which is why the cap is not the
+  mechanism. `accept-release.sh` fails above **1,500** words, and that is a backstop against silent drift
+  set above the reviewed size, not a budget to spend — the file is 1,493 words and every addition to it
+  now has to displace something. Rules live here; the measurements behind them live in the references,
+  because a statistic on the always-loaded surface costs tokens on every activation, changes no behavior,
+  and drifts.
+- Workflow scripts are plain JavaScript — no TypeScript, no `Date.now()`, no `Math.random()`, no argless
+  `new Date()`. `check-workflow-syntax.sh` now fails on all four and on a missing `export const meta`;
+  `node --check` cannot gate these files at all. It checks nothing about the logic — that is what the
+  execution harnesses are for.
+- `three-loop-workflow/scripts/phase.js` carries load-bearing control flow. The originals: `round`
+  increments **only** on a fix; the round cap tests **fixes spent** (`fixes >= maxRounds`), never the round
+  about to be verified; reviewer findings are **unioned, never intersected**; triage runs **before** the
+  closure count; a reviewer that fails to return is an `agent-error`, never a pass. Added 2026-07-30, each
+  after a demonstrated bypass: nothing an agent merely *reports* is trusted, so the gates step's own
+  `git rev-parse HEAD` is what confirms a commit exists; an unparseable sha **fails closed** rather than
+  disabling the guards downstream of it; reviewers receive the diff and the plan and nothing else; `depth`
+  decides the reviewer count so a Deep phase cannot run the Standard review by omission; and the verify
+  loop keeps a **structural bound** independent of the fix counter, without which a broken counter spins
+  forever instead of returning.
+  Do not verify any of these by reading. `node scripts/sim-phase.js` asserts all of them by execution and
+  `scripts/negative-test.sh` proves that harness fails when each is broken — the cap invariant alone has
+  been broken twice, and every regression this repo has shipped passed a gate that read the code instead of
+  running it. Add the failing invariant to the harness before the fix, and watch it fail.
 - Commit messages: conventional prefixes, no mention of AI involvement, model names, or tooling.
 - Do not add new CLAUDE.md roles without updating the anchor map above and every downstream file that reads
   those roles.

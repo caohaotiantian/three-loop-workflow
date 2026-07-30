@@ -13,6 +13,8 @@ metadata:
 
 **The project guide** is this repo's agent instruction file — `AGENTS.md`, `CLAUDE.md`, or both. Read whichever exist; projects keeping both usually put shared rules in `AGENTS.md` and runtime-specific ones in `CLAUDE.md`. It names sections by *role* (`_load-bearing-docs_`, `_common-commands_`, `_engineering-norms_`, …) via an anchor map at its top, so this skill can reference a role without knowing your headings.
 
+**If no guide exists, or a role is missing from it**, derive what you need from the repo — the gate commands from its build config, the contract files from what depends on them — say which you inferred, and offer to write the anchor map. A missing role never means the rule it feeds is skipped.
+
 ## 1. Choose depth — first, before reading anything else
 
 Two questions: **if this is wrong, how much breaks?** and **how hard is it to undo?**
@@ -61,7 +63,7 @@ Reviewers are fresh subagents receiving the diff and the plan — and **nothing 
 
 **How many reviewers.** Standard: one. Deep: **two, in parallel, independently** — take the union of what they find.
 
-Two is measured on this repo's own design documents, not chosen for symmetry. A second independent reviewer catches much of what the first missed, including blockers; a third mostly repeats the second. Reviewers miss *different* things — that is the whole reason a second one pays. `references/plan.md` says what was measured; `references/build.md` says why a diff is a friendlier target than a plan, so the second reviewer buys less here. The underlying figures are not in this skill and cannot be reproduced from an installed copy — that limitation is stated where the measurement is published, not asserted away here.
+Two is measured on this repo's own design documents, not chosen for symmetry. A second independent reviewer catches much of what the first missed, including blockers; a third mostly repeats the second. Reviewers miss *different* things — that is the whole reason a second one pays. `references/plan.md` says what was measured and `references/build.md` why a diff is a friendlier target; the figures themselves are published outside this skill, with their limits.
 
 - **The author never reviews their own work.** This binds to identity, not to invocation: an agent that wrote the change cannot review it, whether the second role arrives by assignment, self-claim, or lead approval.
 - Ask for **everything, and triage yourself**. Do not tell a reviewer to be conservative or to report only high-severity items — it will comply literally and report less.
