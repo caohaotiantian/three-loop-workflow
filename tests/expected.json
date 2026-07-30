@@ -18,7 +18,8 @@
   "s04.md": {
     "answer": "B",
     "kind": "discriminating",
-    "tests": "one risky corner does not upgrade the whole change"
+    "tests": "one risky corner does not upgrade the whole change",
+    "caveat": "Measured 2026-07-30: the control quoted option (A)'s own wording — 'since one part of it carries real risk' — as its giveaway. That is a self-justifying distractor, not a leaked rule, but it argues FOR the wrong answer, so this fixture's discrimination rests partly on option phrasing rather than on the rule alone. It is the suite's only discriminating fixture, so rewriting it is an experiment that could leave the suite with none: re-measure before and after, do not edit it casually."
   },
   "s05.md": {
     "answer": "C",
@@ -39,7 +40,8 @@
   "s08.md": {
     "answer": "B",
     "kind": "guard",
-    "tests": "a missing project guide does not disable the gates — infer the commands and say so"
+    "tests": "a missing project guide does not disable the gates — infer the commands and say so",
+    "caveat": "Measured 2026-07-30: both arms set rule_was_stated_in_prompt and quoted the line that ci.yml runs both commands on every pull request. Tolerable for a guard — a guard only has to catch degradation — but it means this one would detect only gross degradation. Do not promote it to discriminating without rewriting the fact list first."
   },
   "s09.md": {
     "answer": "B",
