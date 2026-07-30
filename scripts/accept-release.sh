@@ -53,6 +53,20 @@ else
 fi
 rm -f /tmp/_sim.out
 
+echo "== the two-arm suite computes its own verdict =="
+if node scripts/sim-scenarios.js >/tmp/_scen.out 2>&1; then
+  ok "the scoring arithmetic is correct ($(grep -c '^  ok' /tmp/_scen.out | tr -d ' ') rules asserted)"
+else
+  bad "a scenario-scoring rule is broken:"; grep -A1 '^  FAIL' /tmp/_scen.out
+fi
+rm -f /tmp/_scen.out
+# The pass condition must not be something an agent can type.
+grep -qE '^const suite_pass = ' tests/run-scenarios.js \
+  && ok "suite_pass is computed in the script" || bad "suite_pass is not computed in the script"
+grep -qE "suite_pass: \{ type: 'boolean'" tests/run-scenarios.js \
+  && bad "suite_pass is back in an agent schema — the suite would assert its own verdict" \
+  || ok "no agent schema declares suite_pass"
+
 echo "== and that harness can actually fail =="
 if bash scripts/negative-test.sh >/tmp/_neg.out 2>&1; then
   ok "every mutation detected ($(grep -c '^  detected' /tmp/_neg.out | tr -d ' ') of them)"

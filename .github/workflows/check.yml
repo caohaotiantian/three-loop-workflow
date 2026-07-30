@@ -18,5 +18,7 @@ jobs:
         run: node scripts/sim-phase.js
       - name: Prove the invariant harness can fail
         run: bash scripts/negative-test.sh
+      - name: Two-arm suite scoring arithmetic
+        run: node scripts/sim-scenarios.js
       - name: Repository acceptance
         run: bash scripts/accept-release.sh
