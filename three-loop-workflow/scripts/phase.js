@@ -39,7 +39,7 @@ const WRITE_SCHEMA = {
   additionalProperties: false,
   required: ['branch', 'headSha', 'conflict', 'blocked', 'concerns'],
   properties: {
-    branch: { type: 'string', description: 'Branch the work landed on' },
+    branch: { type: 'string', description: 'The branch you committed on — report it, do not create one' },
     headSha: { type: 'string', description: 'Output of `git rev-parse HEAD` AFTER committing. The review diffs ref-to-ref, so uncommitted work is invisible to it.' },
     conflict: { type: 'boolean', description: 'True if the plan contradicts the code — do not decide, report it' },
     blocked: { type: 'boolean', description: 'True if you could not complete the task' },
@@ -50,9 +50,10 @@ const WRITE_SCHEMA = {
 const GATE_SCHEMA = {
   type: 'object',
   additionalProperties: false,
-  required: ['all_pass', 'results', 'failures'],
+  required: ['all_pass', 'results', 'failures', 'headSha'],
   properties: {
     all_pass: { type: 'boolean' },
+    headSha: { type: 'string', description: 'Output of `git rev-parse HEAD`. Captured here because gates run immediately before review, so this is the commit the reviewer will actually see.' },
     results: { type: 'array', items: { type: 'string' }, description: 'One line per command: the command, its exit code, and the pass/fail/skip tally' },
     failures: { type: 'array', items: { type: 'string' } },
   },
@@ -80,6 +81,14 @@ const REVIEW_SCHEMA = {
   },
 }
 
+// A sha reported by an agent is a string it typed, not a fact. Normalise before comparing: the
+// empty-diff guard is an equality test, so an abbreviated sha or stray whitespace would slip past it
+// and the phase would review nothing. Reject anything that is not a full 40-hex object id.
+function sha(v) {
+  const t = String(v == null ? '' : v).trim().toLowerCase()
+  return /^[0-9a-f]{40}$/.test(t) ? t : null
+}
+
 // One retry on a dead agent, so an infrastructure failure is not counted as a review round.
 async function tryAgent(prompt, opts) {
   const r = await agent(prompt, opts)
@@ -94,8 +103,10 @@ phase('Write')
 let work = await tryAgent(
   `You are implementing ${phaseLabel}. Read the plan at ${planPath}.\n\n` +
   `Tasks:\n${tasks}\n\n` +
-  `Create a branch for this phase and implement the tasks. Where you add new behavior, write the test ` +
-  `first and watch it fail before making it pass.\n` +
+  `Implement the tasks on the branch you are already on. Do NOT create a per-phase branch: phases are ` +
+  `sequential commits on one branch, and branching per phase makes the next phase's review show this ` +
+  `phase's work again. Where you add new behavior, write the test first and watch it fail before ` +
+  `making it pass.\n` +
   `**Commit your work before returning**, matching the convention in \`git log --oneline -20\`, then ` +
   `report \`git rev-parse HEAD\` as headSha. Review diffs ref-to-ref: anything left uncommitted is ` +
   `invisible to it and will be reviewed as though you had changed nothing.\n` +
@@ -139,10 +150,15 @@ if (!work.branch) return { status: 'agent-error', phaseLabel, round: 0, stage: '
 // The review diffs baseSha..branch. If the implementer never committed, that range is empty and the
 // phase would close green having reviewed nothing — gates pass, because they run against the working
 // tree, and an empty diff is indistinguishable from a clean one. Fail loudly instead.
-if (!work.headSha) {
-  return { status: 'agent-error', phaseLabel, round: 0, stage: 'write', reason: 'no headSha returned — cannot confirm the work was committed' }
+const writeHead = sha(work.headSha)
+const base = sha(baseSha)
+if (!writeHead) {
+  return { status: 'agent-error', phaseLabel, round: 0, stage: 'write', reason: `headSha is not a full 40-hex sha (${JSON.stringify(work.headSha)}) — cannot confirm the work was committed` }
 }
-if (work.headSha === baseSha) {
+if (!base) {
+  return { status: 'usage-error', reason: `baseSha is not a full 40-hex sha (${JSON.stringify(baseSha)}); pass the output of \`git rev-parse HEAD\`` }
+}
+if (writeHead === base) {
   return { status: 'agent-error', phaseLabel, round: 0, stage: 'write', reason: `nothing committed on ${work.branch}: HEAD is still baseSha, so the review would see an empty diff` }
 }
 
@@ -157,6 +173,7 @@ const concerns = work.concerns || []
 // Verifying N+1 times to spend N fixes is correct — the last fix still has to be checked.
 let verifyRound = 1
 let fixes = 0
+let lastHead = writeHead
 
 // Bounded by the verifications a full budget needs: maxRounds fixes plus one final check.
 // The cap returns from inside; falling out of this loop means something unexpected, so the
@@ -175,10 +192,19 @@ while (verifyRound <= maxRounds + 1) {
     `evaluate the code and do not fix anything.\n\n${acceptCmds.map(c => `- ${c}`).join('\n')}\n\n` +
     `For each: the command, its exit code, and the pass/fail/skip counts if it is a test command. ` +
     `A command that exits 0 with every test skipped is NOT a pass — report the tally so that is visible. ` +
-    `Set all_pass only if every command exited 0 and none of them skipped everything.`,
+    `Set all_pass only if every command exited 0 and none of them skipped everything.\n` +
+    `Also run \`git rev-parse HEAD\` and report it as headSha.`,
     { label: `gates:${phaseLabel}:r${round}`, phase: 'Gates', schema: GATE_SCHEMA, model: models.gates }
   )
   if (!gates) return { status: 'agent-error', phaseLabel, round, stage: 'gates' }
+
+  // A fix round that committed nothing leaves the tree identical: the reviewer will report the same
+  // findings, and the phase grinds to cap-exhausted without anyone noticing the fix never landed.
+  const gateHead = sha(gates.headSha)
+  if (fixes > 0 && gateHead && gateHead === lastHead) {
+    return { status: 'agent-error', phaseLabel, round, fixes, stage: 'fix', branch, reason: 'the last fix round committed nothing — HEAD is unchanged, so the next review would be identical' }
+  }
+  lastHead = gateHead || lastHead
 
   let review = null
   if (gates.all_pass) {
@@ -258,6 +284,9 @@ while (verifyRound <= maxRounds + 1) {
         round,
         fixes,
         branch,
+        // Pass this back in as the NEXT phase's baseSha. Without it a multi-phase run reviews every
+        // earlier phase again, and phase N's reviewer flags phases 1..N-1 as work outside the Goal.
+        headSha: sha(gates.headSha) || writeHead,
         gates: gates.results,
         nonblocking: review.nonblocking,
       }

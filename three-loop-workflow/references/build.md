@@ -4,6 +4,12 @@ One cycle: **write → gates → review → fix**. At Deep depth, one cycle per 
 
 Capture `baseSha = git rev-parse HEAD` **before editing anything**. The reviewer needs it and you cannot reconstruct it later.
 
+**At Deep depth, `baseSha` advances with each phase.** Capture it once before phase 1, then before each
+later phase re-capture it from the previous phase's last commit. One fixed base for the whole change
+means phase 3's reviewer also sees phases 1 and 2, correctly reports them as work outside this phase's
+Goal, and you spend a fix round arguing with a correct review. This holds whether you run the loop by
+hand or through `scripts/phase.js` (see Workflow mode).
+
 ## Write
 
 Follow the plan's phase task list. Tests first where the project practises TDD — and where you write a test for new behavior, watch it fail before you make it pass. A test that never failed has not been shown to test anything.
@@ -34,6 +40,7 @@ Two is measured on design documents, where a second independent reviewer cut the
 
 ```
 Review the diff at `git diff <baseSha>..HEAD` against the plan at .agent/<task>/plan.md.
+(At Deep depth <baseSha> is *this phase's* base, not the base of the whole change.)
 
 Report everything you find, at any severity — I will triage. For each finding cite
 file:line from the diff. Mark each one blocking or non-blocking:
@@ -164,5 +171,19 @@ Skip this for internal refactors, test-only changes, and doc updates.
 ## Workflow mode (Claude Code)
 
 `scripts/phase.js` runs this loop as a deterministic script — round counting, closure arithmetic, and role isolation become code instead of instructions. Invoke it with the phase label, plan path, accept commands, and the `baseSha` you captured before editing — plus `reviewers: 2` for a Deep phase, which otherwise defaults to 1. See the header comment in that file.
+
+**Chain multi-phase runs on the returned `headSha`.** Put yourself on one task branch before the first call; every phase commits to it in sequence. A closed phase returns the commit its review actually saw, and that becomes the next phase's `baseSha`:
+
+```js
+let base = baseSha
+for (const p of plan.phases) {
+  const r = await Workflow({ scriptPath: 'three-loop-workflow/scripts/phase.js',
+                             args: { ...p, planPath, baseSha: base, reviewers: 2 } })
+  if (r.status !== 'closed') break        // escalate; do not start the next phase on a broken one
+  base = r.headSha
+}
+```
+
+Pass the same `baseSha` to every phase and phase 3's reviewer sees phases 1 and 2 as well — it will correctly report them as changes outside this phase's Goal, and you will spend a fix round arguing with it. One branch, an advancing base, one phase per review.
 
 Use it when a Deep change has several phases. For a single Standard change, running the loop by hand is cheaper than orchestrating it.

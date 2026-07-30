@@ -4,7 +4,7 @@
 
 English version → [README.md](./README.md)
 
-> **v2.0.0 是一次彻底重写,属于破坏性变更(breaking change)。** 如果你已经安装了 v1,请先阅读
+> **v2 相对 v1 是一次彻底重写,属于破坏性变更(breaking change)。** 如果你已经安装了 v1,请先阅读
 > [从 v1 升级](#从-v1-升级) 再复制任何文件 —— 你必须**替换**整个文件夹,而不是往里复制。
 > 变更内容与依据见 [docs/why-v2-cn.md](./docs/why-v2-cn.md)。
 

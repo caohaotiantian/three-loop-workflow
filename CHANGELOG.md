@@ -2,6 +2,42 @@
 
 Full version history for the three-loop-workflow skill. See [README.md](./README.md) for what the skill is, when it applies, and how to install it.
 
+## v2.1.0 — multi-phase Deep work actually runs
+
+Three criticisms were published with v2.0.0 as "recorded, not fixed". They had reached that list
+without being triaged, which is the same mistake as counting an unconfirmed finding, in the reporting
+direction. Triaged properly: one was a misreading, two were real.
+
+**Multi-phase Deep work could not be run correctly.** `scripts/phase.js` told each phase's implementer
+to create its own branch; `references/build.md` said phases share one working tree and that "a branch
+name is not isolation"; nothing anywhere merged a phase branch; and a closed phase returned no head
+commit, so a caller could not advance the base even if it wanted to. Pass the same `baseSha` to every
+phase and phase 3's reviewer sees phases 1 and 2 as well, correctly reports them as work outside the
+phase's Goal, and burns a fix round. Phases are now sequential commits on one branch, a closed phase
+returns the commit its review actually saw, and `build.md` shows the loop that chains them.
+
+**Deep prescribed a fixed bundle regardless of size.** A one-line rule edit to a contract file trips
+the Deep list and got a phased build and a full Close. It still records alternatives and still takes
+two reviewers — those are why it is Deep — but the bundle now scales: one phase, a Close of a few
+questions. `SKILL.md` also states what each depth costs in agents, since depth is the moment that
+choice is made and the skill had never said.
+
+**The manual path was fixed too.** The first cut of this change repaired only `scripts/phase.js`;
+`build.md` still told a hand-run Deep change to capture one `baseSha` before editing and review every
+phase against it. That is the portable path other runtimes use, so half the fix would have shipped.
+
+**Shas reported by an agent are now validated.** The empty-diff guard is an equality test, so an
+abbreviated or whitespace-padded sha would have compared unequal and let an uncommitted phase through.
+`sha()` requires a full 40-hex object id; a fix round that commits nothing is also caught now, instead
+of grinding to cap-exhausted against an unchanged tree.
+
+**Rejected:** that the Deep trigger fires on *any* contract-file edit. It reads "an edit that changes a
+rule", and the Direct row covers typos, comments and formatting. The criticism misread the table.
+
+The third — that much of the prose restates what a capable model already does — stands, is not
+fixed here, and is measured: 6 of 7 behavioral fixtures are answered correctly by an agent forbidden
+to read the skill.
+
 ## v2.0.0 — a ground-up rewrite
 
 **Breaking.** v2 replaces v1 rather than extending it. Every loop name and tier name changed, and 18 of v1's 20 files are gone; only `SKILL.md` and `references/platforms.md` keep their paths, and both were rewritten. A v1 install is not forward-compatible. See [docs/announcement-v2.0.0.md](./docs/announcement-v2.0.0.md) for the upgrade path and [docs/why-v2.md](./docs/why-v2.md) for the evidence behind each decision.
