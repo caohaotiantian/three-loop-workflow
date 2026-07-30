@@ -51,6 +51,12 @@ Report:
 - What you tried each round, and why each attempt did not close it.
 - **Where it breaks** — the failing command with its real output, and the point where expected and actual diverge. "It keeps failing" is a story, not evidence.
 
+**Say which kind of failure spent the budget.** Rounds lost to a red build are not the deadlock this
+section is about, and the remedies below do not fit them — a failing gate is a broken build or a flaky
+one, not a plan that contradicts itself. `scripts/phase.js` reports `gateFixes`, `reviewFixes` and
+`exhaustedBy` for exactly this; running by hand, count them yourself. If the gates never went green, no
+reviewer ever ran, and the escalation is about the build.
+
 Then offer: **(a)** revise the plan to remove the conflict — the default when a *different* item failed each round, or when fix scope grew each round, because that pattern means the defect is in the plan, not the code; **(b)** accept a documented compromise with the risk written down; **(c)** drop it from scope and file a follow-up.
 
 Never a silent round four.

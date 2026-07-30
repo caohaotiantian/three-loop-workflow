@@ -72,7 +72,9 @@ What they should look for:
 - Missing rollback on something irreversible.
 - An internal contradiction between two sections — the single highest-yield defect class in practice, and the one a lone reviewer most often misses.
 
-**Why two.** Measured on this repo's own design documents, with every reported defect re-checked by independent adversarial adjudicators before it counted. A second independent reviewer cut what a single reviewer missed by roughly half, and surfaced a severe defect the first had missed entirely in *every* document. A third mostly repeated the second — so stop at two.
+**Why two.** Measured on this repo's own design documents, with every reported defect re-checked by independent adversarial adjudicators before it counted. A second independent reviewer cut what a single reviewer missed by roughly half, and surfaced a severe defect the first had missed entirely in *every* document.
+
+Stopping at two is a **cost** decision, not a claim that a third finds nothing. Re-analysis of the same data disagreed with itself on that point, depending on the denominator used, and the underlying artifacts were never kept — so treat "two is enough" as where this project chose to stop paying, and raise it if your defects are expensive enough to justify the third.
 
 The reason is not thoroughness. Reviewers miss **different** things: most defects were seen by only one of the three, and few by all of them. That is what a second reader buys, and why their findings are unioned rather than reconciled.
 

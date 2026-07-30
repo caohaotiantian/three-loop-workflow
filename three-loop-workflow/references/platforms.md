@@ -10,11 +10,13 @@
 
 One canonical folder; copy or symlink it. The layout conforms to the open Agent Skills structure, so nothing runtime-specific lives in `SKILL.md`.
 
+Sources, checked 2026-07-30: Codex scans `.agents/skills` from the working directory up to the repository root, plus `$HOME/.agents/skills` (OpenAI Codex "Build skills"). opencode reads six locations including `.claude/skills/` and `.agents/skills/` at both project and home scope (opencode.ai/docs/skills). The spec requires `name` and `description` and allows `license`, `compatibility` and `metadata` (agentskills.io/specification) — `name` must equal the directory name, which is why the folder cannot be renamed on its own.
+
 ## The project guide
 
 This skill never names a fixed instruction file. It reads **`AGENTS.md`, `CLAUDE.md`, or both** — whichever your repo has — and resolves sections through the role anchor map inside them, so it works unchanged on a repo that has only one.
 
-`AGENTS.md` is the cross-tool standard (originated at OpenAI, now under the Linux Foundation's Agentic AI Foundation); `CLAUDE.md` is Claude Code's. If you keep both, the common pattern is shared rules in `AGENTS.md` and runtime-specific ones in `CLAUDE.md`, wired together with an `@AGENTS.md` import or a symlink. Read both rather than picking one.
+`AGENTS.md` is the cross-tool standard — released by OpenAI in August 2025 and contributed to the Linux Foundation's Agentic AI Foundation at its formation, alongside MCP and goose; `CLAUDE.md` is Claude Code's. If you keep both, the common pattern is shared rules in `AGENTS.md` and runtime-specific ones in `CLAUDE.md`, wired together with an `@AGENTS.md` import or a symlink. Read both rather than picking one.
 
 ## What degrades off Claude Code
 

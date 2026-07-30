@@ -51,7 +51,7 @@ async function drive({ fixtures, answers, rows, drop = [], stringifyArgs = false
 const F = ['s01.md', 's04.md']
 const row = (fixture, kind, expected, off, on, o = {}) => ({
   fixture, kind, expected, skill_off_answer: off, skill_on_answer: on,
-  both_arms_flagged_giveaway: false, note: '', ...o,
+  giveaway_signal: 'none', note: '', ...o,
 })
 
 const CASES = [

@@ -56,7 +56,7 @@ const DIR = input.dir || REPO + '/tests/scenarios'
 // Fixture names are deliberately opaque. A descriptive filename (…-is-standard.md,
 // flake-NOT-masked.md) is an answer key handed to the control arm — measured: the control
 // reported it could have answered from the filename alone.
-const FIXTURES = input.fixtures || ['s01.md', 's02.md', 's03.md', 's04.md', 's05.md', 's06.md', 's07.md']
+const FIXTURES = input.fixtures || ['s01.md', 's02.md', 's03.md', 's04.md', 's05.md', 's06.md', 's07.md', 's08.md', 's09.md']
 
 const ANSWER_SCHEMA = {
   type: 'object',
@@ -127,14 +127,14 @@ const READING_SCHEMA = {
         type: 'object',
         additionalProperties: false,
         required: ['fixture', 'kind', 'expected', 'skill_off_answer', 'skill_on_answer',
-                   'both_arms_flagged_giveaway', 'note'],
+                   'giveaway_signal', 'note'],
         properties: {
           fixture: { type: 'string', description: 'the fixture filename, exactly as given' },
           kind: { type: 'string', enum: ['discriminating', 'guard'], description: 'copied from expected.json — required, never inferred' },
           expected: { type: 'string', description: 'the expected answer letter from expected.json' },
           skill_off_answer: { type: 'string', description: 'the control arm letter' },
           skill_on_answer: { type: 'string', description: 'the skill arm letter' },
-          both_arms_flagged_giveaway: { type: 'boolean', description: 'true if BOTH arms self-reported that the scenario text stated the rule' },
+          giveaway_signal: { type: 'string', enum: ['none', 'one-arm', 'both-arms'], description: "How many arms indicated the fixture gave the rule away — counting an arm when it set rule_was_stated_in_prompt OR quoted a non-empty giveaway. Arms routinely fill the quote while leaving the boolean false, so read both." },
           note: { type: 'string', description: 'anything a maintainer should know about this fixture; empty string if nothing' },
         },
       },
@@ -150,7 +150,9 @@ const reading = await agent(
   `Below are both arms' answers. For each fixture above, report one row: ` +
   `the kind and expected letter copied from expected.json, and each arm's answer as a single letter (an ` +
   `arm may have returned something like "{\\"answer\\":\\"C\\"}" — that is the letter C).\n` +
-  `Set both_arms_flagged_giveaway when BOTH arms set rule_was_stated_in_prompt.\n\n` +
+  `Set giveaway_signal by counting how many arms indicated the fixture gave the rule away — an arm ` +
+  `counts when it set rule_was_stated_in_prompt OR quoted a non-empty giveaway. Arms routinely fill the ` +
+  `quote while leaving the boolean false, so read both fields.\n\n` +
   `Report what you read. Do NOT decide whether a fixture passed, whether the suite passed, or whether ` +
   `anything discriminates — the caller computes all of that from these rows.\n\n` +
   `Runs:\n${JSON.stringify(live)}`,
@@ -254,6 +256,7 @@ return {
   invalid_fixtures: invalid.map(r => `${r.fixture} (${r.verdict})`),
   discrimination: `${rows.filter(r => r.discriminates).length}/${rows.length} fixtures discriminate; ` +
     `${discriminating.length} of ${rows.length} are capable of it at all`,
-  giveaway_flagged: rows.filter(r => r.both_arms_flagged_giveaway).map(r => r.fixture),
+  giveaway_flagged: rows.filter(r => r.giveaway_signal && r.giveaway_signal !== 'none')
+    .map(r => `${r.fixture} (${r.giveaway_signal})`),
   notes: rows.filter(r => r.note).map(r => `${r.fixture}: ${r.note}`),
 }

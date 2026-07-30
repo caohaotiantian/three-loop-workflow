@@ -55,7 +55,7 @@ echo "== layout =="
 chk "shipped skill file count" "$(find three-loop-workflow -type f | wc -l | tr -d ' ')" "8"
 chk "reference count"          "$(find three-loop-workflow/references -name '*.md' | wc -l | tr -d ' ')" "5"
 chk "shipped script count"     "$(find three-loop-workflow/scripts -type f | wc -l | tr -d ' ')" "2"
-chk "fixture count"            "$(find tests/scenarios -name 's*.md' | wc -l | tr -d ' ')" "7"
+chk "fixture count"            "$(find tests/scenarios -name 's*.md' | wc -l | tr -d ' ')" "9"
 
 echo "== version agrees with the changelog, in both languages =="
 # Derived, not hardcoded: the old script carried a literal that had to be hand-edited every release,
@@ -152,7 +152,10 @@ else
 fi
 grep -qF '56.5%' docs/why-v2.md && grep -qF '56.5%' docs/why-v2-cn.md \
   && ok "the measurement is preserved in both articles" || bad "the measurement was lost, not relocated"
-grep -qi 'a third mostly repeat' three-loop-workflow/references/plan.md \
+# Repointed 2026-07-30. The old wording ("a third mostly repeated the second") was a coverage claim that
+# re-analysis of the same data contradicted depending on the denominator, and the artifacts were never
+# kept. The rationale it protected still has to survive — as the cost decision it actually is.
+grep -qi 'stopping at two is a \*\*cost\*\* decision' three-loop-workflow/references/plan.md \
   && ok "stop-at-two rationale survives as prose" || bad "stop-at-two rationale lost with the numbers"
 grep -qi 'clean first review is weak evidence' three-loop-workflow/references/plan.md \
   && ok "clean-first-review corollary survives" || bad "clean-first-review corollary lost"
