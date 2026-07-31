@@ -48,5 +48,18 @@
     "kind": "guard",
     "tests": "a document-shaped Deep change gets one whole-artifact read before it closes, even after a clean diff review",
     "demoted": "Written as discriminating. Demoted 2026-07-30 after two runs. The first was a fixture defect — the text named the deciding fact ('the kind whose output people read rather than execute') and both arms quoted it. Rewritten without it, both arms still answered B with no giveaway reported, the control reaching it from general reasoning that diff review only validates increments. The rule is not counter-intuitive to a model asked the question directly; the evidence for it is that four rounds of diff review did not think to ask. It stays as a guard."
+  },
+  "s10.md": {
+    "answer": "B",
+    "kind": "guard",
+    "tests": "a fix round repairs what the review found; new machinery is raised as its own work",
+    "demoted": "Written as discriminating on 2026-07-31 and demoted the same day, on the condition recorded before the run. Both arms answered B; the control reached it without citing any skill text. The hypothesis was strong and it was wrong in an interesting way: in the round-cap experiment two of three fix agents, with build.md open and without this rule, built machinery mid-fix and never converged. So a model ASKED the question directly gets it right, while a model DOING the work does not — which is the same gap s09 records, and it means a four-option question cannot measure this rule. Measuring it needs the agent to be mid-fix under budget pressure, not answering a quiz."
+  },
+  "s11.md": {
+    "answer": "B",
+    "kind": "guard",
+    "tests": "a pattern can hold prose (a sentence is present) but not a claim (that it is the true one)",
+    "demoted": "Written as discriminating on 2026-07-31 and demoted the same day. Both arms answered B; the control reached it by eliminating the deny-list option without citing skill text. Same gap as s10: replicate 1 of the round-cap experiment spent thirteen commits writing exactly the pattern option (A) describes, so agents do the wrong thing in practice while answering correctly when asked.",
+    "correction": "The 'hypothesis' field on this fixture was a verbatim copy of s10's and described the fix-round rule rather than this one. Caught by the scoring agent on the run that demoted it, and removed rather than rewritten."
   }
 }

@@ -56,7 +56,12 @@ const DIR = input.dir || REPO + '/tests/scenarios'
 // Fixture names are deliberately opaque. A descriptive filename (…-is-standard.md,
 // flake-NOT-masked.md) is an answer key handed to the control arm — measured: the control
 // reported it could have answered from the filename alone.
-const FIXTURES = input.fixtures || ['s01.md', 's02.md', 's03.md', 's04.md', 's05.md', 's06.md', 's07.md', 's08.md', 's09.md']
+// A literal, because a Workflow script has no filesystem and cannot list the directory. That makes it
+// possible to add a scenario file and have it silently not run — which happened on 2026-07-31, with the
+// suite still reporting green over the subset this list named. `scripts/accept-release.sh` compares this
+// list against the directory and against expected.json, because the gate is the only place that can see
+// both sides.
+const FIXTURES = input.fixtures || ['s01.md', 's02.md', 's03.md', 's04.md', 's05.md', 's06.md', 's07.md', 's08.md', 's09.md', 's10.md', 's11.md']
 
 const ANSWER_SCHEMA = {
   type: 'object',

@@ -73,7 +73,9 @@ Then offer: **(a)** revise the plan to remove the conflict — the default when 
 harness or a guard has started a second change inside the first, and the next round reviews *that*: the
 confirmed count stops falling while the diff keeps growing, and every round is honest work on something
 the plan never scoped. On the runs measured here it was the commonest way a document-shaped change
-reached this section, and the runs that avoided it were the ones whose fix step added nothing. The remedy is not to remove a contradiction, because there may not be one — it is **(d)**.
+reached this section, and the runs that avoided it were the ones whose fix step added nothing. Expect it
+wherever your project asks for a failing case before a new check — that norm is what turns a repair into
+a second change. Where it does not, this pattern is rarer and (a) is the better first guess. The remedy is not to remove a contradiction, because there may not be one — it is **(d)**.
 Adding the gate can be right; deciding to add it mid-fix is not.
 
 Look hardest at what the new check is trying to hold. A pattern can hold *prose* — the presence of a

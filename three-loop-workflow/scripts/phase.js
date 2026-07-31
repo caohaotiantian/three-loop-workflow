@@ -152,6 +152,11 @@ if (repoPath !== undefined && !repoRoot) {
   return { status: 'usage-error', reason: `repoPath must be an absolute path with no shell metacharacters (got ${JSON.stringify(repoPath)})` }
 }
 const where = repoRoot ? `Work in the repository at ${repoRoot}. \`cd\` there first; every path and every git command below resolves there.\n\n` : ''
+// Said once, at dispatch, so the choice is visible before anything fails rather than only after.
+// Without repoPath every agent works wherever it happens to start, which is right when that is the
+// repository and silently wrong when it is not — and the way it fails is three steps downstream.
+const noRepoHint = repoRoot ? '' : ' No repoPath was given, so the agents worked in whatever directory they started in; if that is not this repository, that is the cause and not the symptom.'
+if (!repoRoot) log(`${phaseLabel}: no repoPath — agents will work in their own starting directory, which is only correct if that is the repository under test`)
 
 const WRITE_SCHEMA = {
   type: 'object',
@@ -277,7 +282,7 @@ if (!writeHead) {
   return { status: 'agent-error', phaseLabel, round: 0, stage: 'write', reason: `headSha is not a full 40-hex sha (${JSON.stringify(work.headSha)}) — cannot confirm the work was committed` }
 }
 if (writeHead === base) {
-  return { status: 'agent-error', phaseLabel, round: 0, stage: 'write', reason: `nothing committed on ${work.branch}: HEAD is still baseSha, so the review would see an empty diff` }
+  return { status: 'agent-error', phaseLabel, round: 0, stage: 'write', reason: `nothing committed on ${work.branch}: HEAD is still baseSha, so the review would see an empty diff.${noRepoHint}` }
 }
 
 const reportedBranch = ref(work.branch)
@@ -351,7 +356,7 @@ while (verifyRound <= maxRounds + 1) {
   // A fix round that committed nothing leaves the tree identical: the reviewer will report the same
   // findings, and the phase grinds to cap-exhausted without anyone noticing the fix never landed.
   if (fixes > 0 && gateHead === lastHead) {
-    return { status: 'agent-error', phaseLabel, round, fixes, stage: 'fix', branch, reason: 'the last fix round committed nothing — HEAD is unchanged, so the next review would be identical' }
+    return { status: 'agent-error', phaseLabel, round, fixes, stage: 'fix', branch, reason: `the last fix round committed nothing — HEAD is unchanged, so the next review would be identical.${noRepoHint}` }
   }
   lastHead = gateHead
 

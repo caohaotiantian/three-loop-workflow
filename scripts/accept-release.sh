@@ -64,7 +64,24 @@ echo "== layout =="
 chk "shipped skill file count" "$(find three-loop-workflow -type f | wc -l | tr -d ' ')" "8"
 chk "reference count"          "$(find three-loop-workflow/references -name '*.md' | wc -l | tr -d ' ')" "5"
 chk "shipped script count"     "$(find three-loop-workflow/scripts -type f | wc -l | tr -d ' ')" "2"
-chk "fixture count"            "$(find tests/scenarios -name 's*.md' | wc -l | tr -d ' ')" "9"
+chk "fixture count"            "$(find tests/scenarios -name 's*.md' | wc -l | tr -d ' ')" "11"
+# Every fixture must be declared in expected.json, and every declaration must have a fixture. The
+# answers live outside the scenario text on purpose; a fixture with no expected answer is never scored
+# and a declaration with no fixture is never run, and neither shows up as a failure on its own.
+_fx=$(find tests/scenarios -name 's*.md' -exec basename {} \; | sort | tr '\n' ' ')
+_ex=$(python3 -c "import json;print(' '.join(sorted(json.load(open('tests/expected.json')))) + ' ')")
+chk "every fixture is declared in expected.json" "$_fx" "$_ex"
+# ...and that the RUNNER will actually run them. tests/run-scenarios.js is a Workflow script and has no
+# filesystem, so its fixture list is a literal. Adding a scenario file therefore does not add it to the
+# run, and the suite reports green over whatever subset the literal happens to name — which is how two
+# fixtures added on 2026-07-31 were silently not run while the suite still passed. Only the gate can see
+# both sides, so the gate is where they are compared.
+_rf=$(python3 -c "
+import re
+s = open('tests/run-scenarios.js').read()
+m = re.search(r\"input\.fixtures \|\| \[(.*?)\]\", s, re.S)
+print(' '.join(sorted(re.findall(r\"'([^']+)'\", m.group(1)))) + ' ' if m else 'UNPARSEABLE')")
+chk "the runner's fixture list matches the fixtures on disk" "$_rf" "$_ex"
 
 echo "== version agrees with the changelog, in both languages =="
 # Derived, not hardcoded: the old script carried a literal that had to be hand-edited every release,
