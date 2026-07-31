@@ -221,6 +221,14 @@ clean third round*. In v2, `round` increments only when a fix runs.
 | Files (incl. scripts) | 20 | **8** |
 | Committed docs per task | 2 | **0** |
 
+> **Two of these figures are one word-splitting quirk out.** *Added 2026-07-31, not a revision.* The
+> `6,047` above and the `43,822` earlier in this article were counted with macOS's `wc -w`, which splits
+> on `≠` — `author-≠-reviewer` in `references/platforms.md` counts as two words there and one
+> everywhere else, and three lines in the v1 archive do the same. Counted portably the figures are
+> **6,046** and **43,819**. Nothing in the argument moves; the acceptance gate now recomputes with a
+> counter that gives the same answer on every machine, because the old one could not pass on Linux and
+> never once did.
+
 **Plan → Build → Close.** L1 and L2 were one plan artificially cut in two. Merging them deleted the
 slug protocol, the rollback protocol, the Deprecated-section convention, and an entire review loop.
 The output is a gitignored `.agent/<task>/plan.md` — one directory per task — instead of two committed documents.
