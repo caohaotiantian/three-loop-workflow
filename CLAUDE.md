@@ -98,10 +98,12 @@ recomputed figure a different number of times.
   docs/2026-07-31-round-cap-experiment-cn.md` recomputes the listed figures, requires each to appear in
   both languages, requires the **multi-digit** ones to appear the same number of times, and asserts the
   per-round series against what `phase.js` returned. Single-digit figures are presence-only, which
-  almost no prose can fail — say so rather than calling it coverage. `accept-release.sh` runs it. The `scripts/exp-*` harness is the
-  code the runs were driven by, kept so the method is inspectable — it is **not** a turnkey re-run:
-  `exp-next.sh` and `exp-assemble.sh` still name the private working directory the runs used.
-  `preregistration.md` beside the raw data is what it was committed to do, before any of it existed.
+  almost no prose can fail — say so rather than calling it coverage. `accept-release.sh` runs it, and it is the only
+  experiment script under `scripts/`. The fourteen that drove the runs once are archived beside the
+  data in `docs/measurements/2026-07-30-round-cap/harness/` — kept so the method is inspectable, not
+  kept as a gate. They are **not** a turnkey re-run: two of them still name the private working
+  directory the runs used. `preregistration.md` beside the raw data is what the experiment was
+  committed to do, before any of it existed.
 - **Invariant harnesses (fast, deterministic, no agents):**
   `node scripts/sim-phase.js` asserts `phase.js`'s control flow by driving the real script with stub
   agents; `node scripts/sim-scenarios.js` asserts the two-arm suite's scoring arithmetic;

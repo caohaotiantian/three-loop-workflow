@@ -54,7 +54,7 @@ v2.2.0 那一条记录观测上，并说本实验测不了它，因为植入材�
 
 **有一处预注册的方法细节没有照做，替代方案写在这里，而不是靠改写一份带日期的文档。** §5.2 说逐轮序列以带轮次
 标记的 agent label 为键。而 Workflow journal 根本不携带 label —— 它记录的是 `{agentId, type, result}`。因此
-`scripts/exp-extract.mjs` 改为按 `phase.js` 为每个 agent 构造的提示词开头来分类，并以 gates agent 切分轮次，
+`docs/measurements/2026-07-30-round-cap/harness/exp-extract.mjs` 改为按 `phase.js` 为每个 agent 构造的提示词开头来分类，并以 gates agent 切分轮次，
 后者每个验证回合恰好运行一次。同一个量，不同的机制；而且这份重建会与 `phase.js` 的返回值互相断言 —— 修复轮
 计数、gate/复审拆分、以及最终确认数必须全部一致，否则分析以非零码退出。
 

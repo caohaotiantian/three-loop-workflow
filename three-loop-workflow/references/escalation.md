@@ -67,15 +67,14 @@ one, not a plan that contradicts itself. `scripts/phase.js` reports `gateFixes`,
 `exhaustedBy` for exactly this; running by hand, count them yourself. If the gates never went green, no
 reviewer ever ran, and the escalation is about the build.
 
-Then offer: **(a)** revise the plan to remove the conflict — the default when a *different* item failed each round, or when fix scope grew each round, because that pattern means the defect is in the plan, not the code; **(b)** accept a documented compromise with the risk written down; **(c)** drop it from scope and file a follow-up.
+Then offer: **(a)** revise the plan to remove the conflict — the default when a *different* item failed each round, or when scope grew for a reason the fix step did not create, because that pattern means the defect is in the plan, not the code; **(b)** accept a documented compromise with the risk written down; **(c)** drop it from scope and file a follow-up; **(d)** split — keep the correction, and raise the machinery the fix rounds added as its own work with its own review.
 
-**Before (a), check whether the fix step is what grew the change.** A fix round that adds a check, a
+**Before you recommend (a), check whether the fix step is what grew the change.** A fix round that adds a check, a
 harness or a guard has started a second change inside the first, and the next round reviews *that*: the
 confirmed count stops falling while the diff keeps growing, and every round is honest work on something
 the plan never scoped. On the runs measured here it was the commonest way a document-shaped change
-reached this section, and the runs that avoided it were the ones whose fix step added nothing. The remedy is not to remove a contradiction, because there may not be one. It is to
-**split**: keep the correction, and raise the new machinery as its own work with its own review. Adding
-the gate can be right; deciding to add it mid-fix is not.
+reached this section, and the runs that avoided it were the ones whose fix step added nothing. The remedy is not to remove a contradiction, because there may not be one — it is **(d)**.
+Adding the gate can be right; deciding to add it mid-fix is not.
 
 Look hardest at what the new check is trying to hold. A pattern can hold *prose* — the presence of a
 sentence is the property you want. It cannot hold a *claim*: no pattern separates "the script detects X"

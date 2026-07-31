@@ -44,7 +44,7 @@ dictionary key, and most reasonably did not. **A handle an agent has to copy mus
 copy.**
 
 Repaired by issuing short opaque handles (`F001`…) with an explicit `idmap` back to the canonical id,
-and a new `scripts/exp-join.mjs` that fails if any handle is unknown or any finding is unaccounted for.
+and a new `docs/measurements/2026-07-30-round-cap/harness/exp-join.mjs` that fails if any handle is unknown or any finding is unaccounted for.
 The first attempt is kept as `adjudication-firstattempt-void.json` rather than deleted; a partial
 result quietly discarded is how a denominator gets chosen after the fact.
 

@@ -67,7 +67,7 @@ follow-up that would settle it is named at the end.
 
 **One pre-registered method detail was not followed, and the substitute is stated here rather than by
 editing a dated document.** §5.2 says the per-round series is keyed off round-stamped agent labels. The
-Workflow journal carries no labels at all — it records `{agentId, type, result}`. `scripts/exp-extract.mjs`
+Workflow journal carries no labels at all — it records `{agentId, type, result}`. `docs/measurements/2026-07-30-round-cap/harness/exp-extract.mjs`
 therefore classifies each agent by the opening text of the prompt `phase.js` built for it, and segments
 rounds on the gates agent, which runs exactly once per verify trip. Same quantity, different mechanism,
 and the reconstruction is asserted against what `phase.js` returned — fix counts, the gate/review split,
