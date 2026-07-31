@@ -12,7 +12,7 @@ export const meta = {
 
 // Invoke with args:
 //   { phaseLabel?, planPath, tasks, acceptCmds: [...], baseSha, depth,
-//     branch?, reviewers?, maxRounds?, models?: {write,gates,review,triage,fix} }
+//     branch?, reviewers?, repoPath?, maxRounds?, models?: {write,gates,review,triage,fix} }
 //
 //   phaseLabel  label for this phase, used in agent labels and logs.
 //   planPath    path to the task's plan — `.agent/<task>/plan.md`. No default: a shared path would
@@ -30,6 +30,10 @@ export const meta = {
 //   models      optional per-stage model overrides.
 //   branch      optional, and authoritative when given. The review diffs baseSha..branch, so whoever
 //               owns the branch should say which one rather than trusting the implementer's report.
+//   repoPath    absolute path to the repository under test. Optional, and only omittable when the
+//               agents already start there. Every prompt carries it: without it the Triage and Fix
+//               prompts are a branch name and a sha and nothing else, so an agent standing anywhere
+//               else cannot find the tree — measured, and it makes a fix round impossible to complete.
 //   maxRounds   fix rounds allowed. Bounds FIXES SPENT, not verifications.
 //
 // Why this script exists: round counting, closure arithmetic, and role isolation become code
@@ -70,6 +74,7 @@ const {
   depth,
   reviewers: legacyReviewers,
   branch: callerBranch,
+  repoPath,
   maxRounds = 3,
   models = {},
 } = input
@@ -87,6 +92,14 @@ function sha(v) {
 function ref(v) {
   const t = String(v == null ? '' : v).trim()
   return /^[A-Za-z0-9][A-Za-z0-9._\/-]*$/.test(t) && !t.includes('..') ? t : null
+}
+
+// Where the repository is. Absolute only, and no character an agent could paste into a shell and get
+// substitution from. Optional: without it every agent works wherever it starts, which is right when
+// that IS the repository and is how the script is normally driven.
+function dir(v) {
+  const t = String(v == null ? '' : v).trim()
+  return /^\/[^\n\r`$"';|&<>]*$/.test(t) ? t.replace(/\/+$/, '') || '/' : null
 }
 
 if (input.__argsError) return { status: 'usage-error', reason: input.__argsError }
@@ -122,6 +135,23 @@ if (!base) return { status: 'usage-error', reason: `baseSha is not a full 40-hex
 if (callerBranch !== undefined && !ref(callerBranch)) {
   return { status: 'usage-error', reason: `branch is not a usable git ref (${JSON.stringify(callerBranch)})` }
 }
+
+// WHERE THE WORK IS. Every prompt below carries this when the caller gives it, and the reason is a
+// failure that was measured rather than imagined: driven against a repository that was not the
+// agents' working directory, a phase could not complete a fix round at all. The Write and Review
+// prompts happen to name `planPath`, so an absolute plan gave those two agents something to find the
+// tree with — but Triage and Fix are built from a branch name and a sha and nothing else. The fix
+// agent searched the filesystem, committed nothing, and the phase died on the no-op-fix guard below,
+// which fired correctly on a cause three steps upstream of it.
+//
+// `build.md` documents driving this script from an installed skill against your own repository, which
+// is exactly that case. Omitting it is still supported and still correct when the agents already
+// start in the repository; passing it is what makes the documented usage work.
+const repoRoot = repoPath === undefined ? null : dir(repoPath)
+if (repoPath !== undefined && !repoRoot) {
+  return { status: 'usage-error', reason: `repoPath must be an absolute path with no shell metacharacters (got ${JSON.stringify(repoPath)})` }
+}
+const where = repoRoot ? `Work in the repository at ${repoRoot}. \`cd\` there first; every path and every git command below resolves there.\n\n` : ''
 
 const WRITE_SCHEMA = {
   type: 'object',
@@ -186,6 +216,7 @@ const branchInstruction = callerBranch
   : `Implement the tasks on the branch you are already on. Do NOT create a per-phase branch: `
 
 let work = await tryAgent(
+  where +
   `You are implementing ${phaseLabel}. Read the plan at ${planPath}.\n\n` +
   `Tasks:\n${tasks}\n\n` +
   branchInstruction +
@@ -210,6 +241,7 @@ if (work.conflict) return { status: 'plan-conflict', phaseLabel, round: 0 }
 if (work.blocked) {
   log(`${phaseLabel}: implementer blocked — one re-dispatch with its concerns surfaced`)
   const retry = await tryAgent(
+    where +
     `You are implementing ${phaseLabel}. A previous attempt stopped, reporting:\n` +
     `${(work.concerns || []).join('; ') || 'no detail given'}\n\n` +
     `Read the plan at ${planPath} and the tasks below, resolve what blocked the previous attempt if you can, ` +
@@ -290,6 +322,7 @@ while (verifyRound <= maxRounds + 1) {
   // reviewer: it runs commands and reports exit codes, and it judges nothing.
   phase('Gates')
   const gates = await tryAgent(
+    where +
     `Run each of these commands in order and report its exit code and result tally. Run them; do not ` +
     `evaluate the code and do not fix anything.\n\n${acceptCmds.map(c => `- ${c}`).join('\n')}\n\n` +
     `For each: the command, its exit code, and the pass/fail/skip counts if it is a test command. ` +
@@ -331,6 +364,7 @@ while (verifyRound <= maxRounds + 1) {
     // correlates the two readings it is there to keep independent. The concerns are returned to the
     // caller instead, where they inform the human without steering the review.
     const reviewPrompt =
+      where +
       `Review the diff at \`git diff ${base}..${branch}\` against the plan at ${planPath}. ` +
       `Your FIRST tool call must be that git diff — review the diff itself, not any summary of it.\n\n` +
       `Report everything you find, at any severity; the caller triages. Cite file:line from the diff for ` +
@@ -375,6 +409,7 @@ while (verifyRound <= maxRounds + 1) {
     if (reported.length) {
       phase('Triage')
       const triage = await tryAgent(
+        where +
         `Check each claimed defect below against the actual code in \`git diff ${base}..${branch}\`. ` +
         `Decide which are real.\n\n${reported.map((f, i) => `${i + 1}. ${f}`).join('\n')}\n\n` +
         (rejectedSeen.length
@@ -455,6 +490,7 @@ while (verifyRound <= maxRounds + 1) {
   phase('Fix')
   log(`${phaseLabel}: ${stage} failures (${failures.length}), running fix round ${fixes + 1} of ${maxRounds}`)
   const fixed = await tryAgent(
+    where +
     `Fix these ${stage} failures on branch "${branch}". Inspect the diff with ` +
     `\`git diff ${base}..${branch}\`.\n\n${failures.map(f => `- ${f}`).join('\n')}\n\n` +
     `State the root cause of each item ("X is caused by Y") before editing, and change that cause — ` +

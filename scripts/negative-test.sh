@@ -22,6 +22,8 @@
 #   M16       the second reviewer's findings discarded rather than unioned
 #   M17       the loop's structural bound, asserted in combination with a broken counter — alone it
 #             changes nothing observable, so it is only load-bearing when the counter also fails
+#   M19       repoPath dropped from the Fix and Triage prompts, which is how a phase driven against a
+#             repository elsewhere loses the only thing telling its agents where the tree is
 #   M18/S5    the args normaliser — the Workflow tool passes args as a JSON string, so without it\n#             every invocation through the tool fails (phase.js) or silently ignores args (runner)\n#   S1-S4     the two-arm runner's scoring: an agent-asserted pass, the row-set check, the
 #             discriminating floor, and a broken guard scored as held
 #
@@ -100,6 +102,11 @@ PATCHEOF
 }
 
 echo "== mutation test: each broken invariant must be detected by execution =="
+
+apply "M19 repoPath dropped from the Fix and Triage prompts" \
+  's = s.replace("await tryAgent(\n        where +\n        `Check each claimed", "await tryAgent(\n        `Check each claimed")
+s = s.replace("await tryAgent(\n    where +\n    `Fix these", "await tryAgent(\n    `Fix these")' \
+  "repoPath"
 
 apply "M1 empty-diff guard disabled (tokens intact)" \
   's = s.replace("if (writeHead === base) {", "if (false && writeHead === base) {")' \

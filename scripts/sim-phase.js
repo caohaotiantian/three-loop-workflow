@@ -456,6 +456,47 @@ const INVARIANTS = [
       eq(r.res.status, 'agent-error'), eq(r.res.stage, 'fix'),
       ok(r.res.status !== 'cap-exhausted',
         'an infrastructure failure must not be reported as a deadlock the plan should absorb')) },
+
+  // ── locating the repository ─────────────────────────────────
+  // Measured, not supposed. Driven against a repository that was not the agents' working directory,
+  // a phase could not complete a fix round: the Fix and Triage prompts were built from a branch name
+  // and a sha and never a path, so the fix agent had nothing to locate the tree with. It searched the
+  // filesystem, committed nothing, and the phase died on this script's own no-op-fix guard — which
+  // fired correctly. build.md documents driving the script from an installed skill, which is exactly
+  // that case, so this is the documented usage failing.
+  //
+  // EVERY stage is asserted, not just the two that were broken. The defect was that one prompt knew
+  // where the repository was and another did not; pinning only the two that failed would leave the
+  // next prompt free to be added without one.
+  { name: 'repoPath reaches every agent, so a phase can run against a repository elsewhere',
+    args: { ...base, repoPath: '/srv/checkouts/myrepo', depth: 'deep' },
+    reply: (l, calls) => l.startsWith('write') ? write()
+      : l.startsWith('gates') ? advancingGates(calls)
+      : l.startsWith('review') ? review(1)
+      : l.startsWith('triage') ? { confirmed: ['bug0'], rejected: [] }
+      : {},
+    expect: r => all(
+      ...['write', 'gates', 'review', 'triage', 'fix'].flatMap(stage =>
+        (r.promptsFor(stage).length ? r.promptsFor(stage) : ['']).map(p =>
+          has(p, '/srv/checkouts/myrepo',
+            `the ${stage} prompt must say where the repository is, or the agent cannot find it`))),
+      ok(r.promptsFor('fix').length > 0, 'this scenario must actually reach a fix round')) },
+
+  { name: 'a repoPath that is not an absolute path is a usage-error, not a prompt to interpolate',
+    args: { ...base, repoPath: 'relative/path' },
+    reply: () => write(),
+    expect: r => all(
+      eq(r.res.status, 'usage-error'),
+      eq(r.n('write'), 0, 'nothing may be dispatched on an unusable repoPath')) },
+
+  { name: 'omitting repoPath leaves every prompt as it was',
+    args: base,
+    reply: (l, calls) => l.startsWith('write') ? write()
+      : l.startsWith('gates') ? advancingGates(calls) : review(0),
+    expect: r => all(
+      eq(r.res.status, 'closed'),
+      ...r.promptsFor('review').map(p => ok(!/^Work in the repository/m.test(p),
+        'with no repoPath the prompts must not gain a location line')))},
 ]
 
 // ── assertion helpers ─────────────────────────────────────────

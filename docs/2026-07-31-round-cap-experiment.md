@@ -73,10 +73,12 @@ rounds on the gates agent, which runs exactly once per verify trip. Same quantit
 and the reconstruction is asserted against what `phase.js` returned — fix counts, the gate/review split,
 and the final confirmed count must all agree, or the analysis exits non-zero.
 
-`build.md`'s Fix section is the obvious next place for the same lesson, and it was **not** edited,
-because no pre-registered row authorised it. That restraint is the point of pre-registering: the
-finding is compelling, which is exactly when the temptation to widen the action is strongest. It is
-recorded as a follow-up instead.
+**`build.md` was also edited, and not because the experiment mandated it.** No pre-registered row
+authorises it, and the distinction is worth keeping sharp: the table above says what the *data forced*.
+Putting the same rule into `build.md`'s Fix and Gates steps is an ordinary product judgment, made
+because `escalation.md` is read once you are already deadlocked while `build.md` is read by the person
+about to spawn the gate — a rule placed after the damage is worth much less than the same rule placed
+before it. Recorded here as a decision rather than smuggled in as a result.
 
 ## What was already settled, and is not re-opened
 
@@ -281,11 +283,13 @@ protection was never the agents' restraint, and saying it that way round is the 
 
 Neither was looked for.
 
-**1. `phase.js` cannot run a fix round out-of-tree.** It builds its Fix and Triage prompts from a branch
-name and a sha and **never a path**, so an agent whose working directory is not the repository under
-test has nothing to locate it with. The fix agent searched the filesystem, committed nothing, and the
-round was spent. Driving the script against a repository elsewhere — an installed skill orchestrating a
-different checkout — cannot complete a fix round. Found by running it.
+**1. `phase.js` could not run a fix round out-of-tree — now fixed.** It built its Fix and Triage
+prompts from a branch name and a sha and **never a path**, so an agent whose working directory was not
+the repository under test had nothing to locate it with. The fix agent searched the filesystem,
+committed nothing, and the round was spent. That is the usage `build.md` documents — an installed skill
+orchestrating your own checkout — so the documented path was broken. Found by running it, and repaired
+here rather than left as a note: `phase.js` takes a `repoPath`, every one of its six prompts carries it,
+and an unusable value is a `usage-error` rather than something interpolated into a prompt.
 
 **2. The mutation count was documented three ways and none matched the script.** Surfaced by a reviewer
 verifying an adjacent claim. `scripts/negative-test.sh` defines `M1`–`M18` against `phase.js` and

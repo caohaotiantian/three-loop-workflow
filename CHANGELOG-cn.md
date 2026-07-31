@@ -13,7 +13,7 @@ three-loop-workflow skill 的完整版本历史。skill 的介绍、适用范围
 `false &&` 把两个空 diff 守卫同时关掉、所有 token 原样保留,它依然打印 `ok an uncommitted phase is
 rejected, not reviewed` 和 `ACCEPT: all checks passed`,退出码 0。直接把一个守卫整段删掉也照样通过,因为
 规则的措辞还留在它上面的注释里。两种情况都在一个全新 clone 里复现过。控制流现在**由执行来断言**:
-`scripts/sim-phase.js` 用桩 agent 驱动真实脚本,`scripts/negative-test.sh` 用二十三种方式破坏这两个脚本,
+`scripts/sim-phase.js` 用桩 agent 驱动真实脚本,`scripts/negative-test.sh` 用二十四种方式破坏这两个脚本,
 只要 harness 漏掉一个就失败。这里可以把结论说白:要检查一条**规则**,就去运行它;只对**文本**用 grep ——
 文本的存在本身就是你想要的性质。
 
@@ -103,7 +103,9 @@ Foundation —— 这四条此前都只是断言,从未被验证。四条都成�
 **测量自身的失败与结果一同公布。** 在采集到任何数据之前有两次尝试作废 —— 第一次,一个修复 agent 在开始后四
 分钟内运行 `git log --all` 并读到了预注册提交;第二次,`phase.js` 根本无法完成一个修复轮,因为它的 Fix 与
 Triage 提示词由分支名和 sha 构成、**从不包含路径**,工作目录不是被测仓库的 agent 没有任何东西可以定位它。
-那是发布版脚本的一个真实限制,是跑出来的。第三次作废发生在裁决阶段,原因是让 agent 回显一个上千字符的键。
+而那正是 `build.md` 记载的用法 —— 一个已安装的 skill 驱动你自己的 checkout —— 也就是说被记载的那条路径是坏的。
+**修好了,而不是记一笔:** `phase.js` 现在接受 `repoPath`,它的六个提示词全部携带它,不可用的值会成为
+`usage-error`,而不会被插进提示词。第三次作废发生在裁决阶段,原因是让 agent 回显一个上千字符的键。
 三处里有两处是实验者的;第二处是发布版脚本自身的缺陷,并按缺陷报告。每一次盲化被突破都源于有东西被留在了可达
 的位置,而不是 agent 绕过了某个控制 —— 但确实有一个 agent 读到了答案清单。
 

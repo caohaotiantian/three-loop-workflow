@@ -30,6 +30,8 @@ Record the gate output as commit trailers.
 
 **If you add a gate, write its failing case first and watch it fail.** A check that cannot fail when the behavior is wrong is worse than none. This skill's own v1 shipped one: a script that grepped for the words naming each rule, and passed cleanly after a rule had been replaced with its exact opposite. Presence of a word is not presence of a rule. If you cannot make a check fail, write a scenario instead.
 
+**Check what kind of thing you are gating.** A pattern can hold *prose* — the presence of a sentence is the property you want, and a grep is the right instrument. It cannot hold a *claim*: nothing separates "the script detects X" from "the script does not detect X" without also rejecting the true sentences a writer is entitled to make about X. If you find yourself adding one more counter-example to a regex, stop. That check does not converge, and the rounds you spend on it come out of the budget for the change.
+
 ## Review
 
 **Standard: one reviewer. Deep: two, in parallel, independent — union their findings.**
@@ -79,6 +81,8 @@ Record rejections briefly — one line each, saying what the finding claimed and
 Fix confirmed blocking findings. Triage non-blocking ones the same way: fix the cheap and correct ones, and for the rest say plainly what you are not doing and why.
 
 Name the root cause before you edit — `item X is caused by Y` — and change that cause. One at a time.
+
+**A fix round repairs what the review found. New machinery is new work.** If the repair suggests a check, a harness or a guard that does not exist yet, name it and raise it — do not build it here. Machinery added mid-fix arrives unreviewed, so the next round reviews *it* rather than the change: the confirmed count stops falling, the diff keeps growing, and the cap fires on scaffolding nobody planned. Adding the gate can be right. Deciding to add it mid-fix is not. This is the same judgment the Gates step asks for, arriving at the worst moment to make it — under budget pressure, on a defect you have just been shown.
 
 For a correctness bug, write the failing test first, then fix to green. For style, scope, or comment findings, no test is needed.
 
@@ -183,6 +187,7 @@ Four arguments are required, and no default changes how much review runs:
 | `depth` | `'standard'` (one reviewer) or `'deep'` (two, parallel, unioned). **One of `depth` or `reviewers` must be present** |
 | `reviewers` | `1` or `2`, accepted for callers written before `depth` existed. Passing both is an error if they disagree |
 | `branch` | optional, authoritative when given — the branch the phase commits on |
+| `repoPath` | absolute path to the repository under test. Omittable **only** when the agents already start there |
 | `maxRounds` | optional, default 3 — bounds fixes **spent**, not verifications |
 | `phaseLabel` | optional, default `'phase'` — labels agents and logs, nothing else |
 | `models` | optional per-stage model overrides: `{write, gates, review, triage, fix}` |
@@ -199,11 +204,18 @@ Four arguments are required, and no default changes how much review runs:
 let base = baseSha
 for (const p of plan.phases) {
   const r = await workflow({ scriptPath: SKILL + '/scripts/phase.js' },
-                           { ...p, planPath, baseSha: base, branch: 'my-task', depth: 'deep' })
+                           { ...p, planPath, baseSha: base, branch: 'my-task', depth: 'deep',
+                             repoPath: '/abs/path/to/your/repo' })
   if (r.status !== 'closed') break        // escalate; do not start the next phase on a broken one
   base = r.headSha
 }
 ```
+
+**Pass `repoPath` unless the agents already start in the repository.** The Write and Review prompts name
+`planPath`, so an absolute plan gives those two agents something to find the tree with. Triage and Fix
+are built from a branch name and a sha and nothing else. Without `repoPath` an agent standing elsewhere
+searches the filesystem, commits nothing, and the phase dies on the no-op-fix guard — a correct error
+three steps downstream of the cause. Measured, not inferred.
 
 Pass the same `baseSha` to every phase and phase 3's reviewer sees phases 1 and 2 as well — it will correctly report them as changes outside this phase's Goal, and you will spend a fix round arguing with it. One branch, an advancing base, one phase per review.
 

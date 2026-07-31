@@ -14,7 +14,7 @@ anything would have noticed otherwise — and both regressions this project has 
 `ok an uncommitted phase is rejected, not reviewed` and `ACCEPT: all checks passed`, exit 0. Deleting one
 guard outright also passed, because the rule's wording survived in the comment above it. Both were
 reproduced in a fresh clone. Control flow is now asserted by execution: `scripts/sim-phase.js` drives the
-real script with stub agents, and `scripts/negative-test.sh` breaks the two scripts twenty-three ways and
+real script with stub agents, and `scripts/negative-test.sh` breaks the two scripts twenty-four ways and
 fails if the harness misses one. The generalisation is worth stating plainly — to check a *rule*, run it;
 grep only for *prose*, where presence is the property you want.
 
@@ -125,10 +125,12 @@ pattern can hold prose but not a claim.
 
 **The measurement's own failures are published with it.** Two attempts were voided before any data was
 collected — in the first, a fix agent ran `git log --all` and read the pre-registration commit within
-four minutes; in the second, `phase.js` could not complete a fix round at all, because it builds its Fix
+four minutes; in the second, `phase.js` could not complete a fix round at all, because it built its Fix
 and Triage prompts from a branch name and a sha and **never a path**, so an agent whose working
-directory is not the repository under test has nothing to locate it with. That is a real limitation of
-the shipped script, found by running it. A third attempt, at adjudication, was voided for asking agents
+directory was not the repository under test had nothing to locate it with. That is the usage
+`build.md` documents — an installed skill driving your own checkout — so the documented path was
+broken. **Fixed rather than filed:** `phase.js` now takes `repoPath`, all six of its prompts carry it,
+and an unusable value is a `usage-error` instead of something interpolated into a prompt. A third attempt, at adjudication, was voided for asking agents
 to echo a thousand-character key. Two of the three were the experimenter's; the second is a defect in
 the shipped script, and is reported as one. Every breach of blinding traced to something left
 reachable rather than to an agent circumventing a control — but an agent did read the key.
