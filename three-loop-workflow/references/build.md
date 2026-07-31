@@ -30,6 +30,8 @@ Record the gate output as commit trailers.
 
 **If you add a gate, write its failing case first and watch it fail.** A check that cannot fail when the behavior is wrong is worse than none. This skill's own v1 shipped one: a script that grepped for the words naming each rule, and passed cleanly after a rule had been replaced with its exact opposite. Presence of a word is not presence of a rule. If you cannot make a check fail, write a scenario instead.
 
+**Check what kind of thing you are gating.** A pattern can hold *prose* — the presence of a sentence is the property you want, and a grep is the right instrument. It cannot hold a *claim*: nothing separates "the script detects X" from "the script does not detect X" without also rejecting the true sentences a writer is entitled to make about X. If you find yourself adding one more counter-example to a regex, stop. That check does not converge, and the rounds you spend on it come out of the budget for the change.
+
 ## Review
 
 **Standard: one reviewer. Deep: two, in parallel, independent — union their findings.**
@@ -79,6 +81,8 @@ Record rejections briefly — one line each, saying what the finding claimed and
 Fix confirmed blocking findings. Triage non-blocking ones the same way: fix the cheap and correct ones, and for the rest say plainly what you are not doing and why.
 
 Name the root cause before you edit — `item X is caused by Y` — and change that cause. One at a time.
+
+**A fix round repairs what the review found. New machinery is new work.** If the repair suggests a check, a harness or a guard that does not exist yet, name it and raise it — do not build it here. Machinery added mid-fix arrives unreviewed, so the next round reviews *it* rather than the change: the confirmed count stops falling, the diff keeps growing, and the cap fires on scaffolding nobody planned. Adding the gate can be right. Deciding to add it mid-fix is not. This is the same judgment the Gates step asks for, arriving at the worst moment to make it — under budget pressure, on a defect you have just been shown.
 
 For a correctness bug, write the failing test first, then fix to green. For style, scope, or comment findings, no test is needed.
 
@@ -133,7 +137,7 @@ Outside the repository is the property that matters: a worktree inside one lands
 - Use `--detach` for throwaway work so you do not strand disposable branches.
 - **Dependencies are not shared.** `node_modules`, virtualenvs and build caches are per-worktree and need reinstalling. On a large project that setup can exceed what parallelism saves — measure before assuming it is a win.
 
-On Claude Code, the Workflow tool takes `isolation: 'worktree'` per agent and handles creation and teardown, including the cleanup you would otherwise forget. It costs a few hundred milliseconds and disk per agent, so reach for it when writers actually overlap — not by default.
+On Claude Code, the Workflow tool takes `isolation: 'worktree'` per agent and creates the worktree for you. It removes it again only if the agent left it **unchanged** — which is never true of the writers this option exists for, so a worktree holding real work is still yours to remove with `git worktree remove`. It costs a few hundred milliseconds and disk per agent, so reach for it when writers actually overlap — not by default.
 
 ## Diagnosis — when the cause is not obvious
 
@@ -170,20 +174,55 @@ Skip this for internal refactors, test-only changes, and doc updates.
 
 ## Workflow mode (Claude Code)
 
-`scripts/phase.js` runs this loop as a deterministic script — round counting, closure arithmetic, and role isolation become code instead of instructions. Invoke it with the phase label, plan path, accept commands, and the `baseSha` you captured before editing — plus `reviewers: 2` for a Deep phase, which otherwise defaults to 1. See the header comment in that file.
+`scripts/phase.js` runs this loop as a deterministic script — round counting, closure arithmetic, and role isolation become code instead of instructions.
 
-**Chain multi-phase runs on the returned `headSha`.** Put yourself on one task branch before the first call; every phase commits to it in sequence. A closed phase returns the commit its review actually saw, and that becomes the next phase's `baseSha`:
+Four arguments are required, and no default changes how much review runs:
+
+| Arg | What it is |
+|---|---|
+| `planPath` | **required** — `.agent/<task>/plan.md`; a shared path lets two tasks overwrite each other |
+| `tasks` | **required** — the phase's task list, verbatim from the plan |
+| `acceptCmds` | **required** — the commands whose exit codes decide the phase |
+| `baseSha` | **required** — `git rev-parse HEAD` from before editing; *this phase's* base at Deep depth |
+| `depth` | `'standard'` (one reviewer) or `'deep'` (two, parallel, unioned). **One of `depth` or `reviewers` must be present** |
+| `reviewers` | `1` or `2`, accepted for callers written before `depth` existed. Passing both is an error if they disagree |
+| `branch` | optional, authoritative when given — the branch the phase commits on |
+| `repoPath` | absolute path to the repository under test. Omittable **only** when the agents already start there |
+| `maxRounds` | optional, default 3 — bounds fixes **spent**, not verifications |
+| `phaseLabel` | optional, default `'phase'` — labels agents and logs, nothing else |
+| `models` | optional per-stage model overrides: `{write, gates, review, triage, fix}` |
+
+`depth` rather than a bare count is deliberate, and the reason is the one default that was dangerous: `reviewers` used to default to 1, so a Deep phase ran the Standard review by having the argument forgotten, with nothing in the result to show it. Now omitting both is a `usage-error`, and the returned object states the `depth` and `reviewers` it actually used.
+
+**Chain multi-phase runs on the returned `headSha`.** Put yourself on one task branch before the first call; every phase commits to it in sequence, and passing `branch` makes that explicit rather than trusting the implementer's self-report. A closed phase returns the commit its review actually saw, and that becomes the next phase's `baseSha`:
 
 ```js
+// A driver script — `workflow()` is callable from inside a Workflow script; `Workflow` is the tool
+// the main agent calls, and the main agent does not execute JavaScript. Use the path where the skill
+// is actually installed, which for a user-level install is
+// ~/.claude/skills/three-loop-workflow/scripts/phase.js
 let base = baseSha
 for (const p of plan.phases) {
-  const r = await Workflow({ scriptPath: 'three-loop-workflow/scripts/phase.js',
-                             args: { ...p, planPath, baseSha: base, reviewers: 2 } })
+  const r = await workflow({ scriptPath: SKILL + '/scripts/phase.js' },
+                           { ...p, planPath, baseSha: base, branch: 'my-task', depth: 'deep',
+                             repoPath: '/abs/path/to/your/repo' })
   if (r.status !== 'closed') break        // escalate; do not start the next phase on a broken one
   base = r.headSha
 }
 ```
 
+**Pass `repoPath` unless the agents already start in the repository.** The Write and Review prompts name
+`planPath`, so an absolute plan gives those two agents something to find the tree with. Triage and Fix
+are built from a branch name and a sha and nothing else. Without `repoPath` an agent standing elsewhere
+searches the filesystem, commits nothing, and the phase dies on the no-op-fix guard — a correct error
+three steps downstream of the cause. Measured, not inferred.
+
 Pass the same `baseSha` to every phase and phase 3's reviewer sees phases 1 and 2 as well — it will correctly report them as changes outside this phase's Goal, and you will spend a fix round arguing with it. One branch, an advancing base, one phase per review.
+
+**What the script does that the manual path cannot.** It fails closed on an empty review. The gates step reports its own `git rev-parse HEAD`, and a head equal to the base — on any round, including a fix round that reset or dropped the phase's commits — stops the phase instead of handing a reviewer an empty range. A gates step that cannot report a usable head also stops the phase, rather than silently disabling the guards downstream of it.
+
+Note what that does **not** do: it does not detect a fabricated sha. If the implementer reports a well-formed sha it never created, the reported value is discarded in favour of the real head and the phase reviews the real diff — the fabrication is made harmless, not visible. Resolving a sha in the repository needs a shell, which a Workflow script does not have.
+
+**What it does not do, by decision rather than by omission.** The implementer commits before the gates run, so gate output cannot land in *that* commit's trailers — record them yourself, or on the fix commits; moving the commit after the gates would mean amending, which changes the sha every guard here is tracking. Non-blocking findings are accumulated and returned, not triaged: "fix the cheap and correct ones" is a scope judgment, and handing it to an agent is how scope creep gets automated. Gate-driven and review-driven fix rounds share one budget, because the cap is per phase and splitting it would change a documented rule — they are reported separately (`gateFixes`, `reviewFixes`, `exhaustedBy`) so an escalation can say which one spent it.
 
 Use it when a Deep change has several phases. For a single Standard change, running the loop by hand is cheaper than orchestrating it.

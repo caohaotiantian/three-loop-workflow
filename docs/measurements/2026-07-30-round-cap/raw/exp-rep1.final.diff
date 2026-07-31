@@ -1,0 +1,739 @@
+diff --git a/.github/workflows/check.yml b/.github/workflows/check.yml
+index 494fb96..a02cca7 100644
+--- a/.github/workflows/check.yml
++++ b/.github/workflows/check.yml
+@@ -22,3 +22,7 @@ jobs:
+         run: node scripts/sim-scenarios.js
+       - name: Repository acceptance
+         run: bash scripts/accept-release.sh
++      # Runs after, and separately: it drives accept-release.sh itself, so accept-release.sh cannot
++      # call it without recursing.
++      - name: Prove the acceptance sweeps can fail
++        run: bash scripts/negative-test-accept.sh
+diff --git a/CLAUDE.md b/CLAUDE.md
+index ce003e1..6801cd6 100644
+--- a/CLAUDE.md
++++ b/CLAUDE.md
+@@ -98,6 +98,9 @@ recomputed figure a different number of times.
+   agents; `node scripts/sim-scenarios.js` asserts the two-arm suite's scoring arithmetic;
+   `bash scripts/negative-test.sh` breaks `phase.js` fifteen ways and fails if the harness misses one.
+   Run all three after touching either script — and add the failing case to the harness *before* the fix.
++- **The acceptance gate's own mutation test:** `bash scripts/negative-test-accept.sh` breaks the shipped
++  documents and requires `accept-release.sh` to notice, on a throwaway copy of the working tree. Run it
++  after changing a sweep in that script; `accept-release.sh` cannot call it, because it would recurse.
+ - **Two-arm scenario suite (slow, spawns agents):** `Workflow({ scriptPath: "tests/run-scenarios.js" })`.
+   Runs every fixture with the skill loaded and withheld. A **discriminating** fixture both arms answer
+   correctly proves nothing and is reported INVALID; a **guard** both arms answer correctly is GUARD-HELD, a
+diff --git a/scripts/accept-release.sh b/scripts/accept-release.sh
+index 886b700..8107d88 100755
+--- a/scripts/accept-release.sh
++++ b/scripts/accept-release.sh
+@@ -170,6 +170,272 @@ else
+   ok "the third-reviewer coverage claim stays retired across the whole shipped skill"
+ fi
+ 
++echo "== build.md holds the rules SKILL.md and phase.js hold =="
++# These are prose, so grep is the right instrument: presence of the sentence IS the property. Each rule
++# below is also held somewhere that runs — reviewer inputs by scripts/sim-phase.js ("no reviewer
++# receives the implementer's self-assessment"), triage-before-fix by phase.js's call order — and
++# build.md is the copy nothing executes, which is how it was inverted with every harness still green.
++# What a presence check does NOT establish: that no contradicting sentence sits elsewhere in the file.
++grep -qF 'not your summary of the change, and not the whole skill' three-loop-workflow/references/build.md \
++  && ok "build.md's reviewers get the diff and the plan, and nothing else" \
++  || bad "build.md no longer excludes the implementer's summary from what a reviewer receives (SKILL.md, phase.js, sim-phase.js all do)"
++grep -qF 'Fix confirmed blocking findings' three-loop-workflow/references/build.md \
++  && ok "build.md's Fix step still fixes CONFIRMED findings" \
++  || bad "build.md's Fix step no longer says confirmed — triage before you fix, and before you count"
++# Two-sided, because this one has regressed twice. The audit round narrowed both phase.js and build.md
++# to what is true ("both claimed the fabricated-sha hole was closed. It is not"), and the next change to
++# this file reinstated it as a guarantee. Every sha operation phase.js performs is a SHAPE test
++# (`sha()`) or an equality test against the base; the reported value is discarded in favour of the
++# gates step's real head. Nothing resolves a sha, because a Workflow script has no shell — and
++# sim-phase.js asserts only the weaker property, that a fabricated sha cannot close an EMPTY diff.
++grep -qF 'it does not detect a fabricated sha' three-loop-workflow/references/build.md \
++  && ok "build.md still records that a fabricated sha is made harmless, not detected" \
++  || bad "build.md no longer records the fabricated-sha limit — the only place in the skill it is written down"
++# CLAUSE-scoped, and it has to be, because that is where negation scopes in English. Two narrower
++# scopes were tried and both let the claim through:
++#   LINE (`grep -v`) — build.md is one paragraph per line, so a positive claim appended to the
++#     negation's own paragraph was filtered out along with it. That is a rerun of 4105e9d, the
++#     regression this sweep exists for. Paragraph-scoping fails the same way, for the same reason.
++#   SENTENCE — a negator anywhere earlier in the sentence satisfied the test for a claim in a LATER
++#     clause, about a different subject. Demonstrated: "It does not merely make the fabrication
++#     harmless; it detects a fabricated sha and stops the phase." printed `ACCEPT: all checks passed`,
++#     exit 0, no FAIL. That is the phrasing a writer CORRECTING the passage would reach for first — a
++#     contrast against the negation already there — so it is the likeliest way this regresses again.
++#   CLAUSE BY SPLITTING — right scope, wrong instrument. Splitting the sentence on the boundary set
++#     and testing each piece assumes a boundary never falls INSIDE a claim, and " but " does exactly
++#     that between two adjectives. See CLAUSE below; the claim is located first and its clause read
++#     around it.
++#   CLAUSE, BUT ONLY WHERE ONE STARTS — every boundary was recognised by what begins the next clause,
++#     so the comma that CLOSES a fronted subordinate clause was not one, and the commonest sentence
++#     shape in English read as a single clause. See FRONTED below.
++# A1/A1b/A1c/A1d/A1e/A1f/A1h/A1i in scripts/negative-test-accept.sh make those edits and require this
++# to fail on each; A1g and B13 pin that a boundary outside the claim still holds.
++if python3 - <<'PYSHA'
++import io, os, re, sys
++# The CLAIM is a co-occurrence of an ACT and its OBJECT, in either order — not a wording, and not a
++# pair of stems. The first cut pinned one surface form — lowercase, singular, active, with an article —
++# and three near neighbours went straight past it: "detects a fabricated SHA" (the conventional
++# capitalisation of the acronym), "detects fabricated shas", and "the fabrication is detected by the
++# guard", which is the wording this check's own FAIL message uses. A2b/A2c/A2d pin all three.
++# The second cut pinned `detect*` and `fabricat*` and called that the claim. It was two words, and it
++# missed every other way to say the same thing: catches, rejects, identifies (A2e-A2g), and the sha
++# named as build.md:218 itself names it, "a sha it never created" (A2h). Enumerate the act and the
++# object instead. What this still is: a named vocabulary. A guarantee written outside it — a verb not
++# in ACT, an object not in OBJ — is invisible, and no regex over prose closes that.
++ACT = r"(?:detect|catch|caught|reject|identif|flag|spot|notic|recogni[sz]|discover)\w*"
++FAB = r"(?:fabricat\w*|invent\w*|forge[ds]?\b|fake[ds]?\b|bogus\b|made[ -]up|never\s+created)"
++# The OPERATIONAL half of the same claim, and the half 4105e9d actually regressed on: not "it detects
++# the fabrication" but "it resolves the reported sha and finds no object". Neither stem appears, so
++# the second cut passed that sentence verbatim (A7). It is false for one reason that holds however it
++# is worded — a Workflow script has no shell, so nothing it ships resolves anything. Judged like any
++# other claim rather than banned outright, because the limit is truthfully written with this same
++# phrase and a negator: B6/B7 pin that direction, and phase.js's own counterfactual needs it.
++SHA = r"(?:\bshas?\b|reported\s+(?:value|sha)\b)"
++# GAP is up to three words of filler between the two halves. A hyphenated word is ONE word here: with
++# the hyphen out of the class, "detects a well-formed but fabricated sha" did not match at all — not
++# because of the clause splitter, but because "well" and "formed" spent two of the three slots and
++# `\s+` then met a hyphen. That is the exact modifier build.md:218 uses for the sha. A1e pins it.
++# Written as word(-word)* rather than adding "-" to the class, so a bare "--" cannot become filler and
++# pull an em-dash clause boundary inside the match.
++GAP = r"(?:\s+[\w'`*]+(?:-[\w'`*]+)*){0,3}\s+"
++# The OBJECT is the fabricated SHA, not any fabricated thing. Enumerating the act and the object as two
++# free-standing vocabularies dropped the sha out of these two arms entirely — only the `resolv` arms
++# still required one — and what was left matched the skill's REGISTER instead of its proposition. Four
++# true sentences on other subjects failed acceptance: "Triage rejects invented findings before the
++# count.", "The gate catches faked green runs.", "A reviewer that spots a fabricated gate result must
++# escalate rather than fix it.", "Identify made-up citations before you ship." The skill already writes
++# this way (build.md:155 "That fakes the signal"), and the FAIL each of them drew — "claims the
++# fabrication is detected" — was also a wrong diagnosis of the sentence it named. B9-B12 pin the
++# direction; the repo's own disqualifier is that a gate which fails on right writing is the same defect
++# as one that passes on wrong writing.
++# So a fabrication word is the object only when it is BOUND to a sha, in either order — "a fabricated
++# sha" (A1-A2c, A2e-A2g), "a sha it never created" (A2h) — or when the fabrication IS the object
++# noun, whose only referent anywhere in this skill is that sha (A2d's passive, which is the wording
++# this check's own FAIL message uses). Residual, and it is the price of keeping A2d: that
++# nominalisation is unbound, so "spots the fabrication of a gate result" would still be reported.
++OBJ = r"(?:" + FAB + GAP + SHA + r"|" + SHA + GAP + FAB + r"|\bfabrications?\b|\bforger(?:y|ies)\b)"
++CLAIM = re.compile(ACT + GAP + OBJ + r"|" + OBJ + GAP + ACT
++                   + r"|\bresolv\w*" + GAP + SHA + r"|" + SHA + GAP + r"\bresolv\w*", re.I)
++# The negators have to cover how English actually negates, not just the auxiliary. The first cut was
++# `not|never|cannot|n't`, and it REJECTED three true statements of the very limit it protects:
++# "Nothing in phase.js detects a fabricated sha", "No part of the script detects a fabricated sha",
++# "The script is unable to detect a fabricated sha" — a negative subject, a negative determiner, and
++# periphrastic negation, none of which contain any of those four tokens. Two of them are more natural
++# than the sentence build.md actually ships. B1-B3 in negative-test-accept.sh pin this direction; a
++# gate that fails on right writing is the same defect as one that passes on wrong writing.
++# Cost of the broad tokens: a stray "no" or "without" anywhere in the claim's own clause masks it.
++# Accepted, because every regression this sweep has seen was an added clause carrying no negator.
++NEG = re.compile(r"\bnot\b|n't\b|\bnever\b|\bcannot\b|\bno\b|\bnothing\b|\bnone\b|\bneither\b"
++                 r"|\bnor\b|\bunable\b|\bfail(?:s|ed)?\s+to\b|\bwithout\b|\bimpossible\b", re.I)
++# One thing a negator can never be is part of the name of the thing. build.md:218 calls the fabricated
++# sha "a sha it never created", so "A sha the implementer never created is caught by the guard" carried
++# its own alibi and passed (A2h). The OBJ text is blanked before NEG is applied: the words that NAME
++# the object are not a denial that it is acted on. B8 pins that the real negator beside it survives.
++OBJ_RE = re.compile(OBJ, re.I)
++# Clause boundaries: the punctuation and conjunctions that start a new subject-verb unit. Bare " and "
++# is deliberately NOT one — it usually joins verb phrases under one subject and one negation ("does not
++# resolve and detect"), so splitting there would report correct prose. ", and" is, because the comma
++# marks the independent clause.
++# These words are clause boundaries only SOME of the time. " but ", " yet " and " though " also
++# coordinate two adjectives inside one noun phrase, and there the boundary lands between the claim's
++# two halves: "It detects a well-formed but fabricated sha" split into "It detects a well-formed" and
++# "fabricated sha ...", neither of which carries both halves, and acceptance passed on the check's own
++# verb and noun. Which is why the claim is located FIRST and the clause read around it below, rather
++# than splitting the sentence and hoping the claim survives intact. A1d/A1e/A1f pin it; A1g pins that
++# a boundary outside the claim still stops the negator reaching it.
++# A comma followed by a finite verb is a boundary too: it is the non-final member of a verb series,
++# a separate predication under the same subject. "the script resolves the reported value, finds no
++# object of that name, and stops the phase" is three, and reading them as one clause let the middle
++# one's "no" deny the first one's claim (A7). ", and" was already a boundary; this is its siblings.
++# The lookahead is what keeps it narrow — ", which this script cannot do" is not a verb, so
++# phase.js's counterfactual keeps the negator that makes it true.
++CLAUSE = re.compile(r"[;:]|—|--|\s+but\s+|\s+yet\s+|\s+however\b|\s+whereas\b|\s+although\b"
++                    r"|\s+though\s+|\s+while\s+|,\s+(?:and|or|so)\s+|,\s+(?=\w+(?:s|ed)\s)")
++# Every boundary above is identified by what STARTS the next clause. The comma that CLOSES a fronted
++# subordinate clause is identified by what precedes it instead, and what follows it is a subject noun
++# phrase, so the lookahead misses it — which left the commonest sentence shape in English reading as
++# one clause, with the subordinate clause's negator answering for the main clause's claim. Both of
++# these passed acceptance: "Because the manual path cannot do this, the script detects a fabricated sha
++# and stops the phase." (A1c's sentence with the conjunction moved to the front) and "If the
++# implementer reports a sha it did not create, the script detects the fabrication and stops the phase."
++# A1h/A1i pin them. When a statement OPENS with a subordinator, its first comma is a boundary.
++# Adding a boundary can only shrink the span a negator is read over, so this direction cannot mask a
++# claim; what it can do is reject a fronted sentence whose negator is genuinely in the other clause,
++# and a sentence of that shape is the defect, not the writing.
++FRONTED = re.compile(r"[\W\d_]*(?:if|because|when|whenever|while|whilst|although|though|unless|since"
++                     r"|until|after|before|once|whereas|provided|assuming|given|where|wherever"
++                     r"|even\s+if|even\s+though|as\s+long\s+as|so\s+that|now\s+that|in\s+case)\s", re.I)
++# A Markdown list item is a statement, whether or not it ends in a full stop — and most do not. A list
++# is ONE paragraph, so joining the paragraph and splitting on terminal punctuation collapsed the whole
++# list into one sentence and one clause, and a negator in any bullet then answered for a claim in a
++# different bullet. That is A1 again through formatting rather than through scoping, and the shipped
++# skill is bullet-heavy. Table rows are the same shape for the same reason. A8/A8b/A8c pin it.
++ITEM = re.compile(r"\n(?=[ \t]*(?:[-*+][ \t]|\d+[.)][ \t]|\|))")
++def statements(para):
++    for block in ITEM.split(para):
++        for sent in re.split(r"(?<=[.!?])\s+", " ".join(block.split())):
++            if sent: yield sent
++bad = []
++for dirpath, _, names in os.walk("three-loop-workflow"):
++    for n in sorted(names):
++        p = os.path.join(dirpath, n)
++        try: text = io.open(p, encoding="utf-8").read()
++        except (UnicodeDecodeError, OSError): continue
++        for para in re.split(r"\n\s*\n", text):
++            for sent in statements(para):
++                # The negator may sit anywhere in the clause, not only before the claim. Widening
++                # CLAIM to the co-occurrence brought in a counterfactual phase.js already ships —
++                # "Detecting the fabrication would need the sha resolved in the repository, which
++                # this script cannot do" — whose negator trails the verb; requiring it before the
++                # claim reported that correct sentence. Residuals, stated rather than hidden:
++                #   1. A false guarantee written OUTSIDE the ACT/OBJ/resolve vocabulary is invisible.
++                #      This is the big one and it is the form the regression actually took — 4105e9d's
++                #      second sentence said "resolves the reported value ... finds no object of that
++                #      name" and carried neither stem the check then had. Adding the vocabulary that
++                #      sentence used does not make the vocabulary complete; it makes it three lists
++                #      long. What this check pins is those lists, and the ok line below says so.
++                #   2. A negator trailing the claim in its OWN clause masks it ("it detects a
++                #      fabricated sha, which it does not actually do"). Self-contradicting prose no
++                #      writer produces, unlike (1).
++                #   3. The act and its object have to be within GAP — three filler words. A claim
++                #      written in this check's OWN stems at four is invisible, measured: "The guard
++                #      detects every well-formed but wholly fabricated sha." and "It detects, before
++                #      any reviewer runs, a fabricated sha." both print ACCEPT, exit 0, zero FAIL.
++                #      Widening the window does not remove that residual, it moves it — every finite
++                #      window has a first sentence outside it. So the window is stated on the ok line
++                #      below rather than papered over: what this check reports is a claim in its
++                #      vocabulary AND within its window, and the line says exactly that.
++                # Both are why the two-sided grep above is here: whatever this sweep misses, the
++                # sentence that states the limit has to still be present, in build.md, word for word.
++                bounds = [(b.start(), b.end()) for b in CLAUSE.finditer(sent)]
++                # A statement that opens with a subordinator closes that clause at its first comma.
++                if FRONTED.match(sent):
++                    fc = re.search(r",\s+", sent)
++                    if fc: bounds.append((fc.start(), fc.end()))
++                for m in CLAIM.finditer(sent):
++                    # The clause the claim SITS IN: from the last boundary that ends before it to the
++                    # first that begins after it. A boundary inside the claim is not a boundary — it is
++                    # filler the claim already spans, which is what an adjective coordinator is.
++                    lo = max([e for s, e in bounds if e <= m.start()] or [0])
++                    hi = min([s for s, e in bounds if s >= m.end()] or [len(sent)])
++                    if not NEG.search(OBJ_RE.sub(" ", sent[lo:hi])):
++                        bad.append(f"{p}: {sent[:160]}")
++for b in bad: print(b)
++sys.exit(1 if bad else 0)
++PYSHA
++then
++  ok "no un-negated detect-a-fabricated-sha or resolve-a-sha claim in this check's act/object vocabulary, within its three-word window"
++else
++  bad "the shipped skill claims the fabrication is detected (listed above)"
++fi
++
++echo "== every scripts/ path the shipped skill names resolves =="
++# Not a wording check: it resolves the path. A reader told to run `scripts/x.sh` looks in the skill's
++# own scripts/ directory, finds nothing, and has no way to tell an invented tool from a missing one.
++#
++# EVERY shipped file, not just the documents. The first cut read `--include='*.md'`, and the skill
++# ships two scripts whose comments a reader follows exactly as they follow build.md. Demonstrated:
++# appending "// See scripts/verify-plan.sh for how to check the plan before you start." to phase.js
++# printed `ACCEPT: all checks passed`, exit 0, zero FAIL — edcc26d7's defect, one file class over,
++# under a section header that claimed to cover every path the skill names. A5 pins it.
++#
++# Resolved against the SKILL, with one exemption. The first cut ALSO accepted the host repo root
++# unconditionally, which let a skill document send a reader to a script that ships only with this
++# repository (`scripts/negative-test.sh` printed `ok referenced script exists`; A3 pins it). But the
++# fallback was not covering nothing, as that removal claimed on the evidence of a `.md`-only
++# extraction: over the whole shipped surface phase.js:39 and check-workflow-syntax.sh:19 both name
++# `scripts/sim-phase.js`, deliberately, because that is where their invariants are asserted. So the
++# rule is the reader's rule — a path resolves inside the skill, or the sentence that names it says it
++# is in this repository AND it resolves there. A6 pins that the marker is not a blanket exemption
++# (a nonexistent path wearing it still fails); B4 pins that a marked, resolving one is accepted.
++#
++# "The sentence that names it" has to mean one statement. This check split statements the same way the
++# sweep above did, so a Markdown list collapsed into one sentence here too and the marker in one bullet
++# exempted a path named in another — A3 again, through formatting. Same fix, same reason: a list item
++# is a statement without a full stop. A6b pins it.
++if python3 - <<'PYPATH'
++import io, os, re, sys
++# Any file under scripts/, at any depth, with any extension — because that is what the header and the
++# ok line both say, and because the reader is misrouted identically whatever the suffix is. The first
++# cut read `scripts/NAME.(js|sh)`, which is neither: `scripts/verify-plan.py` and
++# `scripts/lib/verify-plan.js` were never extracted, so a skill that named them printed `ok every
++# scripts/ path the shipped skill names resolves`, exit 0, zero FAIL. That is 77cda1b's defect — a
++# header claiming more than the extraction covers — one axis over. A9/A9b pin both shapes.
++# An extension is still required: `scripts/` naming the directory rather than a file is not a
++# misroute, and a bare directory has nothing to resolve.
++PATH = re.compile(r"scripts/(?:[A-Za-z0-9_.-]+/)*[A-Za-z0-9_.-]+\.[A-Za-z0-9]+")
++HOST = re.compile(r"\bthis repositor(?:y|y's|ies)\b", re.I)
++ITEM = re.compile(r"\n(?=[ \t]*(?:[-*+][ \t]|\d+[.)][ \t]|\|))")
++def statements(para):
++    for block in ITEM.split(para):
++        for sent in re.split(r"(?<=[.!?])\s+", " ".join(block.split())):
++            if sent: yield sent
++ok, bad = {}, []
++for dirpath, _, names in os.walk("three-loop-workflow"):
++    for n in sorted(names):
++        p = os.path.join(dirpath, n)
++        try: text = io.open(p, encoding="utf-8").read()
++        except (UnicodeDecodeError, OSError): continue
++        for para in re.split(r"\n\s*\n", text):
++            for sent in statements(para):
++                for m in PATH.finditer(sent):
++                    rel = m.group(0)
++                    if os.path.isfile(os.path.join("three-loop-workflow", rel)):
++                        ok.setdefault(rel, "in the skill")
++                    elif HOST.search(sent) and os.path.isfile(rel):
++                        ok.setdefault(rel, "in this repository, and the sentence says so")
++                    else:
++                        bad.append(f"{p}: {rel} — {sent[:140]}")
++for rel in sorted(ok): print(f"  ok    referenced script exists ({ok[rel]}): {rel}")
++for b in bad: print(f"  MISS  {b}")
++sys.exit(1 if bad else 0)
++PYPATH
++then
++  ok "every scripts/ path the shipped skill names resolves"
++else
++  bad "the shipped skill names a script that does not exist in the shipped skill (listed above)"
++fi
++
+ # Scope note: the sweeps below run over the SHIPPED surface — the skill, the tests, the release
+ # workflow — where a stale reference misroutes a reader or a script. Deliberately out of scope:
+ #   .agent/                             gitignored working state
+diff --git a/scripts/negative-test-accept.sh b/scripts/negative-test-accept.sh
+new file mode 100755
+index 0000000..340e2ce
+--- /dev/null
++++ b/scripts/negative-test-accept.sh
+@@ -0,0 +1,390 @@
++#!/usr/bin/env bash
++# Mutation test for the prose sweeps in scripts/accept-release.sh.
++#
++# Same contract as scripts/negative-test.sh, aimed at a different target. negative-test.sh breaks
++# phase.js and requires sim-phase.js to notice; this one breaks the SHIPPED DOCUMENTS and requires
++# accept-release.sh to notice. It exists because two sweeps were added to that script that could not
++# fail on the defect they were written for, and nothing would have said so:
++#   A1  the fabricated-sha sweep filtered its negation by LINE, and build.md is one paragraph per
++#       line — so a positive claim appended to the negation's own paragraph was filtered out with it.
++#       Demonstrated in a fresh clone: `ACCEPT: all checks passed`, exit 0, no FAIL of any kind.
++#   A1b the same sweep, after A1 was fixed by scoping the negator to the SENTENCE: a negator in an
++#       earlier clause, about a different subject, still masked the claim. Same exit 0, same silence.
++#   A3  the script-path check accepted the host repo root as a second search root, so a skill document
++#       could name a script that ships only with this repository and not with the skill. Demonstrated
++#       with `scripts/negative-test.sh`, which printed `ok referenced script exists`.
++#   A5  the same check then read only `*.md`, so the identical misrouting inside one of the skill's
++#       two shipped SCRIPTS was invisible. Demonstrated on phase.js: exit 0, zero FAIL.
++#   A9  the same check extracted only `scripts/NAME.js` and `scripts/NAME.sh`, under a header and an
++#       ok line that both say EVERY scripts/ path — so `scripts/verify-plan.py` and
++#       `scripts/lib/verify-plan.js` resolved nowhere and acceptance said every path resolved.
++#   A1d the sweep then scoped negation by splitting on clause boundaries — but " but " coordinates two
++#       adjectives as readily as two clauses, and there the split cut the claim in half.
++#   A7  the sweep pinned the stems `detect*` and `fabricat*` and missed the OPERATIONAL half of the
++#       regression it was written for: 4105e9d's second sentence, appended verbatim, exit 0, zero FAIL.
++#   A8  the sweep read a Markdown list as one sentence, because a list is one paragraph and its items
++#       carry no full stops — so one bullet's negator answered for another bullet's claim. A6b is the
++#       same collapse in the script-path check, where it moved the host-repo marker off the path.
++#   A1h every clause boundary the sweep knew was recognised by what STARTS the next clause, so the
++#       comma closing a fronted subordinate clause was not one — and in "Because …, the script detects
++#       a fabricated sha" the subordinate clause's negator answered for the main clause's claim.
++#   B9  every acceptance case was a restatement of the sha limit itself, so none of them could see a
++#       sweep that had stopped requiring the sentence to be about a sha: ordinary prose on other
++#       subjects ("Triage rejects invented findings before the count.") failed acceptance.
++# A2, A4 and A6 are the cases those sweeps did already catch, pinned here so a fix to A1/A3/A5 cannot
++# quietly trade one direction of the check away for the other. B1-B12 are the opposite direction
++# again: prose the skill is entitled to write, which acceptance must not reject.
++#
++# It cannot be called from accept-release.sh — that script already calls negative-test.sh, and calling
++# this one would recurse. CI runs it as its own step.
++#
++# The tree under test is a COPY of the working tree, `.git` included, so the mutations never touch the
++# checkout you are sitting in and an interrupted run leaves nothing behind. The copy carries
++# uncommitted edits on purpose: a harness that silently tested HEAD would go green on the fix you have
++# not committed yet, which is the same false report it exists to prevent.
++#
++# A patch that no longer matches its file is a FAILURE, not a skip. And the unmutated copy has to PASS
++# first — without that control, a tree that fails acceptance for any unrelated reason makes every
++# mutation below look detected.
++set -uo pipefail
++cd "$(git rev-parse --show-toplevel)"
++root=$(pwd)
++
++TMP=$(mktemp -d)
++trap 'rm -rf "$TMP"' EXIT
++TREE="$TMP/tree"
++mkdir -p "$TREE"
++tar -cf - . | (cd "$TREE" && tar -xf -)
++
++fail=0
++
++echo "== control: the unmutated copy must pass, or nothing below is evidence =="
++if (cd "$TREE" && bash scripts/accept-release.sh) >"$TMP/base" 2>&1; then
++  echo "  ok        the working tree passes acceptance ($(grep -c '^  ok' "$TMP/base" | tr -d ' ') checks)"
++else
++  echo "  ERROR     acceptance already FAILS on this tree — fix that first, every result below is void"
++  grep '^  FAIL' "$TMP/base"
++  exit 1
++fi
++
++# mutate <name> <file-under-test> <python-patch-on-s>
++# Edits the copy. A patch that no longer matches its file is a FAILURE, not a skip — it means the
++# case below is testing nothing, which is the report this harness exists to prevent.
++mutate() {
++  local name="$1" file="$2" patch="$3"
++  cp "$root/$file" "$TREE/$file"
++  ACCEPT_PATCH="$patch" python3 - "$TREE/$file" <<'PY'
++import os, sys
++p = sys.argv[1]
++s = open(p, encoding='utf-8').read()
++exec(os.environ['ACCEPT_PATCH'])
++open(p, 'w', encoding='utf-8').write(s)
++PY
++  if cmp -s "$root/$file" "$TREE/$file"; then
++    printf '  ERROR     %s: the mutation did not apply — the patch no longer matches %s\n' "$name" "$file"
++    fail=$((fail+1)); cp "$root/$file" "$TREE/$file"; return 1
++  fi
++  return 0
++}
++
++# apply <name> <file-under-test> <python-patch-on-s> <expected-FAIL-substring>
++# The expected FAIL is required, not decorative. These mutations edit prose, and accept-release.sh runs
++# a hundred other checks over the same prose — a mutation that trips an unrelated sweep would exit
++# non-zero and look detected while the check under test stayed silent. Naming the FAIL is what makes
++# "detected" mean "detected BY THE CHECK THIS MUTATION TARGETS".
++apply() {
++  local name="$1" file="$2" patch="$3" want="$4"
++  mutate "$name" "$file" "$patch" || return
++  if (cd "$TREE" && bash scripts/accept-release.sh) >"$TMP/out" 2>&1; then
++    printf '  SURVIVED  %s — accept-release.sh exited 0 on a tree that breaks the rule\n' "$name"
++    fail=$((fail+1))
++  elif grep '^  FAIL' "$TMP/out" | grep -qF "$want"; then
++    printf '  detected  %s (%s check(s) failed)\n' "$name" "$(grep -c '^  FAIL' "$TMP/out" | tr -d ' ')"
++  else
++    printf '  WRONG     %s — acceptance failed, but not on "%s". It reported:\n' "$name" "$want"
++    grep '^  FAIL' "$TMP/out" | sed 's/^/            /'
++    fail=$((fail+1))
++  fi
++  cp "$root/$file" "$TREE/$file"
++}
++
++# accepts <name> <file-under-test> <python-patch-on-s>
++# The other direction, and the one a mutation test cannot see on its own: prose the shipped skill is
++# ENTITLED to write, which acceptance must not reject. Every `apply` above asserts that a check can
++# fail; without these, the cheapest way to make them all pass is a check that fails on everything. The
++# repo's own disqualifier, from the round that dropped a check rather than tune it: a gate that fails
++# on right writing is the same defect as one that passes on wrong writing.
++accepts() {
++  local name="$1" file="$2" patch="$3"
++  mutate "$name" "$file" "$patch" || return
++  if (cd "$TREE" && bash scripts/accept-release.sh) >"$TMP/out" 2>&1; then
++    printf '  accepted  %s\n' "$name"
++  else
++    printf '  REJECTED  %s — acceptance FAILED on prose the skill is entitled to write:\n' "$name"
++    grep '^  FAIL' "$TMP/out" | sed 's/^/            /'
++    fail=$((fail+1))
++  fi
++  cp "$root/$file" "$TREE/$file"
++}
++
++BUILD=three-loop-workflow/references/build.md
++
++echo "== mutation test: a claim the shipped skill must not make =="
++
++# The bypass. The sentence is appended to line 218 — the negation's OWN paragraph — which is where a
++# writer updating this passage would naturally put it, and which is where the previous regression
++# (4105e9d) actually landed.
++apply "A1 'it detects a fabricated sha' added to the paragraph that carries the negation" "$BUILD" \
++  'assert "it does not detect a fabricated sha" in s
++s = s.replace("it does not detect a fabricated sha.",
++              "it does not detect a fabricated sha. As of this release the script now detects a fabricated sha.", 1)' \
++  "claims the fabrication is detected"
++
++# The same defect class as A1 — a positive claim landing beside the negation — but reached the way a
++# writer CORRECTING that passage would reach for it: a contrast against the existing negation, in the
++# same sentence. A1's fix scoped the negator to the sentence, which is why this one still survived it:
++# the negator sits in the other clause, about the other subject. Negation in English scopes to a
++# clause, so the check has to as well.
++apply "A1b 'it detects a fabricated sha' contrasted against a negated clause in the same sentence" "$BUILD" \
++  's = s.rstrip("\n") + "\n\nIt does not merely make the fabrication harmless; it detects a fabricated sha and stops the phase.\n"' \
++  "claims the fabrication is detected"
++
++# The same masking through a coordinating conjunction rather than a semicolon, and with the negator
++# attached to a different subject entirely.
++apply "A1c the claim behind a ', but' whose negator belongs to another subject" "$BUILD" \
++  's = s.rstrip("\n") + "\n\nThe manual path cannot do this, but the script detects a fabricated sha and stops the phase.\n"' \
++  "claims the fabrication is detected"
++
++# A1d–A1f: the same class reached THROUGH the splitter instead of around it. " but ", " yet " and
++# " though " are clause boundaries only some of the time; between two adjectives they coordinate inside
++# one noun phrase, and splitting there cuts the claim in half so neither fragment carries both stems.
++# A1d isolates that from the CLAIM regex: it matches the unsplit sentence and nothing matches after the
++# split. A1e is the sentence a writer would actually produce, in build.md:218's own vocabulary — and it
++# needs a second fix, because "well-formed" is not one gap token to a regex whose token class has no
++# hyphen, so CLAIM misses A1e even unsplit.
++apply "A1d the claim split by a ' but ' coordinating two adjectives, not two clauses" "$BUILD" \
++  's = s.rstrip("\n") + "\n\nIt detects a valid but fabricated sha and stops the phase.\n"' \
++  "claims the fabrication is detected"
++
++apply "A1e the same with the hyphenated modifier build.md:218 itself uses" "$BUILD" \
++  's = s.rstrip("\n") + "\n\nIt detects a well-formed but fabricated sha and stops the phase.\n"' \
++  "claims the fabrication is detected"
++
++apply "A1f the same through ' yet ' and ' though ', which coordinate inside a phrase too" "$BUILD" \
++  's = s.rstrip("\n") + "\n\nIt detects a well-formed yet fabricated sha.\n\nIt detects a valid though fabricated sha.\n"' \
++  "claims the fabrication is detected"
++
++# The counterweight to A1d-A1f: those words are STILL clause boundaries when they start a clause, and
++# the negator on the other side of one must still not reach the claim. Without this, the cheapest way
++# to pass A1d is to drop them from the boundary set, which reopens A1c one conjunction over.
++apply "A1g the claim behind a clause-initial ' while ' whose negator belongs to another subject" "$BUILD" \
++  's = s.rstrip("\n") + "\n\nThe manual path cannot do this while the script detects a fabricated sha and stops the phase.\n"' \
++  "claims the fabrication is detected"
++
++# A1h/A1i are A1b/A1c/A1g's class reached through the commonest sentence shape in English: a fronted
++# subordinate clause, then a comma, then the main clause. Every boundary the sweep knew was identified
++# by what STARTS the next clause — punctuation, a coordinator, a comma before a finite verb — and what
++# follows this comma is a subject noun phrase, so the sentence read as one clause and the subordinate
++# clause's negator answered for the main clause's claim. A1i is A1c's own sentence with ", but " moved
++# to the front as "Because …, "; A1h is 4105e9d's regressed sentence with "never created" rewritten as
++# "did not create", which is what keeps it out of the OBJ blanking that makes A7 detectable.
++apply "A1h the claim after a fronted 'If …,' whose negator belongs to the subordinate clause" "$BUILD" \
++  's = s.rstrip("\n") + "\n\nIf the implementer reports a sha it did not create, the script detects the fabrication and stops the phase.\n"' \
++  "claims the fabrication is detected"
++
++apply "A1i the same through a fronted 'Because …,' — A1c with the conjunction moved to the front" "$BUILD" \
++  's = s.rstrip("\n") + "\n\nBecause the manual path cannot do this, the script detects a fabricated sha and stops the phase.\n"' \
++  "claims the fabrication is detected"
++
++# The direction the sweep already caught. Pinned so scoping the negation cannot lose it.
++apply "A2 the same claim as its own paragraph" "$BUILD" \
++  's = s.rstrip("\n") + "\n\nAs of this release the script detects a fabricated sha.\n"' \
++  "claims the fabrication is detected"
++
++# A2b–A2d: the same claim in the surface forms a writer actually reaches for. The first cut of the
++# sweep pinned one — lowercase, singular, active, with an article — so all three of these were
++# invisible. A2d is the passive, which is the wording the check's own FAIL message uses.
++apply "A2b the claim with the acronym capitalised the conventional way" "$BUILD" \
++  's = s.rstrip("\n") + "\n\nAs of this release the script detects a fabricated SHA.\n"' \
++  "claims the fabrication is detected"
++
++apply "A2c the claim in the plural, with no article" "$BUILD" \
++  's = s.rstrip("\n") + "\n\nThe script detects fabricated shas.\n"' \
++  "claims the fabrication is detected"
++
++apply "A2d the claim in the passive voice" "$BUILD" \
++  's = s.rstrip("\n") + "\n\nThe fabrication is detected by the guard.\n"' \
++  "claims the fabrication is detected"
++
++# A2e-A2h: the claim is an ACT, and "detect" is one word for it. A sweep pinned to that stem passes
++# every synonym a writer reinstating the guarantee would reach for first. A2h also names the sha the
++# way build.md:218 names it — "a sha it never created" — which carries a negator of its own; the
++# words that NAME the fabricated sha are not a denial that it is caught.
++apply "A2e the claim with 'catches' instead of 'detects'" "$BUILD" \
++  's = s.rstrip("\n") + "\n\nThe script catches a fabricated sha and stops the phase.\n"' \
++  "claims the fabrication is detected"
++
++apply "A2f the claim with 'rejects'" "$BUILD" \
++  's = s.rstrip("\n") + "\n\nThe script rejects a fabricated sha and stops the phase.\n"' \
++  "claims the fabrication is detected"
++
++apply "A2g the claim with 'identifies'" "$BUILD" \
++  's = s.rstrip("\n") + "\n\nThe guard identifies a fabricated sha before review.\n"' \
++  "claims the fabrication is detected"
++
++apply "A2h the claim naming the sha as build.md does, not as 'fabricated'" "$BUILD" \
++  's = s.rstrip("\n") + "\n\nA sha the implementer never created is caught by the guard.\n"' \
++  "claims the fabrication is detected"
++
++# A7 is the operational half of the regression this whole sweep was written for: the SECOND sentence
++# of 4105e9d, verbatim. It carries neither "detect" nor "fabricat", so the stem check never saw it —
++# the sweep pinned that commit's headline sentence and nothing else. What is false in it is that the
++# script resolves the reported sha at all; a Workflow script has no shell. Note both of its negators
++# ("never created", "finds no object") belong to other propositions, which is why clause-wide negation
++# read it as a denial.
++# A8-A8c: A1 again, reached through list formatting. A Markdown list is one paragraph, and items
++# routinely carry no terminal punctuation, so the whole list collapses into one sentence and one
++# clause and any negator in any item answers for a claim in a different item. A8b pins that distance
++# does not help; A8c is the same in a table, which is the other place the skill writes short
++# unpunctuated statements. The shipped skill is bullet-heavy — the SKILL.md guard list, build.md's
++# Gates and Diagnosis — so this is the likeliest formatting for a future regression.
++apply "A8 the claim in a bullet whose neighbouring bullet carries the negator" "$BUILD" \
++  's = s.rstrip("\n") + "\n\n- the reported sha is never resolved\n- it detects a fabricated sha and stops the phase\n"' \
++  "claims the fabrication is detected"
++
++apply "A8b the same with the negator two bullets away" "$BUILD" \
++  's = s.rstrip("\n") + "\n\n- the reported sha is never resolved\n- the phase reviews the real diff\n- it detects a fabricated sha and stops the phase\n"' \
++  "claims the fabrication is detected"
++
++apply "A8c the same across two rows of a table" "$BUILD" \
++  's = s.rstrip("\n") + "\n\n| What | Behaviour |\n| --- | --- |\n| the reported sha | never resolved |\n| the guard | detects a fabricated sha and stops the phase |\n"' \
++  "claims the fabrication is detected"
++
++apply "A7 the false guarantee stated operationally, verbatim from 4105e9d" "$BUILD" \
++  's = s.rstrip("\n") + "\n\nIf the implementer reports a well-formed sha it never created, the script resolves the reported value in the repository, finds no object of that name, and stops the phase with an \x60\x60agent-error\x60\x60.\n"' \
++  "claims the fabrication is detected"
++
++echo "== acceptance test: true statements of the same limit, which must NOT be rejected =="
++
++# B1-B3 are all true, all say the thing build.md:218 already says, and two of them are more natural
++# phrasings of it than the sentence actually shipped. The first cut of the sweep rejected all three:
++# its negator list was `not|never|cannot|n't`, which knows auxiliary negation and not negative
++# subjects ("Nothing", "No part") or periphrastic negation ("is unable to").
++accepts "B1 the limit stated with a negative subject ('Nothing ... detects')" "$BUILD" \
++  's = s.rstrip("\n") + "\n\nNothing in phase.js detects a fabricated sha.\n"'
++
++accepts "B2 the limit stated with a negative determiner ('No part ... detects')" "$BUILD" \
++  's = s.rstrip("\n") + "\n\nNo part of the script detects a fabricated sha.\n"'
++
++accepts "B3 the limit stated periphrastically ('is unable to detect')" "$BUILD" \
++  's = s.rstrip("\n") + "\n\nThe script is unable to detect a fabricated sha.\n"'
++
++# B5-B8 are the counterweights to A2e-A2h and A7. Widening what counts as the claim widens what can be
++# wrongly rejected, and each of these is a true sentence the passage is entitled to contain.
++# B5 pins that a negator mid-clause still counts — the cheapest way to catch A7's "finds no object"
++#    is to demand a clause-initial negator, and that rejects this.
++# B6/B7 pin that "resolves a sha" is judged like any other claim and not forbidden outright — the
++#    cheapest way to catch A7 is an absolute rule on that phrase, and these are how the limit is
++#    truthfully written.
++# B8 pins that masking "never created" out of A2h did not also mask the real negator beside it.
++accepts "B5 the limit with the negator mid-clause ('There is no check that detects')" "$BUILD" \
++  's = s.rstrip("\n") + "\n\nThere is no check that detects a fabricated sha.\n"'
++
++accepts "B6 the resolve limit stated with a negative subject" "$BUILD" \
++  's = s.rstrip("\n") + "\n\nNothing resolves a sha, because a Workflow script has no shell.\n"'
++
++accepts "B7 the resolve limit stated of the script itself" "$BUILD" \
++  's = s.rstrip("\n") + "\n\nThe script never resolves the reported sha; it discards it in favour of the real head.\n"'
++
++accepts "B8 the limit with the sha named as build.md names it" "$BUILD" \
++  's = s.rstrip("\n") + "\n\nA sha the implementer never created is not detected.\n"'
++
++# B9-B12 are the direction B1-B8 could not see. Every case above is a sentence ABOUT the sha limit, so
++# all of them agree with a check that has stopped asking whether the sentence is about a sha at all —
++# and the sweep's ACT/OBJ arms had. These are ordinary skill prose on other subjects, in the register
++# this skill already writes (build.md:155 "That fakes the signal"): a reviewer catching invented work,
++# triage rejecting findings, a gate catching a faked green run. None of them says anything about a sha,
++# none of them is false, and each one failed acceptance with "the shipped skill claims the fabrication
++# is detected" — a FAIL that also misdiagnoses the sentence it names.
++accepts "B9 an ACT on a fabricated NON-sha object ('spots a fabricated gate result')" "$BUILD" \
++  's = s.rstrip("\n") + "\n\nA reviewer that spots a fabricated gate result must escalate rather than fix it.\n"'
++
++accepts "B10 the same with 'invented' ('rejects invented findings')" "$BUILD" \
++  's = s.rstrip("\n") + "\n\nTriage rejects invented findings before the count.\n"'
++
++accepts "B11 the same with 'faked' ('catches faked green runs')" "$BUILD" \
++  's = s.rstrip("\n") + "\n\nThe gate catches faked green runs.\n"'
++
++accepts "B12 the same with 'made-up' and 'forged'" "$BUILD" \
++  's = s.rstrip("\n") + "\n\nIdentify made-up citations before you ship.\n\nA reviewer that discovers a forged gate result must escalate.\n"'
++
++# The counterweight to A1h/A1i. A fronted subordinate clause is a boundary, not a verdict: the limit
++# stated in that shape, with the negator where it belongs, must still be accepted. Without this the
++# cheapest way to pass A1h is to reject every fronted sentence that carries the claim.
++accepts "B13 the limit in the fronted shape, negated in the main clause" "$BUILD" \
++  's = s.rstrip("\n") + "\n\nBecause a Workflow script has no shell, no check detects a fabricated sha.\n"'
++
++# The counterpart to A3, and the reason the script-path check cannot simply require every path to
++# resolve inside the skill: two shipped scripts already point at this repository's harnesses on
++# purpose, and that is useful to a reader as long as the sentence says where to look.
++accepts "B4 a host-repo path whose own sentence says it is in this repository" "$BUILD" \
++  's = s.rstrip("\n") + "\n\nThis repository\x27s scripts/negative-test.sh breaks phase.js fifteen ways.\n"'
++
++echo "== mutation test: a script path the installed skill cannot resolve =="
++
++# The bypass. negative-test.sh ships with this REPOSITORY and not with the skill, so a reader of the
++# installed copy at ~/.claude/skills/three-loop-workflow/ has no such file. The host-root fallback in
++# the check accepted it anyway.
++apply "A3 the skill names a script that exists only at the host repo root" "$BUILD" \
++  's = s.rstrip("\n") + "\n\nVerify the harness with `scripts/negative-test.sh` before you close.\n"' \
++  "names a script that does not exist"
++
++# The original defect (edcc26d7): a path that resolves nowhere at all. Pinned so dropping the fallback
++# cannot be undone by loosening the extraction instead.
++apply "A4 the skill names a script that exists nowhere" "$BUILD" \
++  's = s.rstrip("\n") + "\n\nCheck the plan with `scripts/verify-plan.sh` first.\n"' \
++  "names a script that does not exist"
++
++# The bypass, one file class over. The check read `--include='*.md'`, so the same misrouting inside a
++# shipped SCRIPT was invisible — and the skill ships two of those. A reader of phase.js's comments is
++# misled by an unresolvable path exactly as a reader of build.md is.
++apply "A5 a shipped SCRIPT, not a document, names a script that exists nowhere" \
++  three-loop-workflow/scripts/phase.js \
++  's = s.rstrip("\n") + "\n// See scripts/verify-plan.sh for how to check the plan before you start.\n"' \
++  "names a script that does not exist"
++
++# The exemption must not become a blanket one. Saying "in this repository" tells the reader where to
++# look; it does not make the file exist, and the path still has to resolve at the host root.
++apply "A6 a nonexistent path wearing the host-repo marker" "$BUILD" \
++  's = s.rstrip("\n") + "\n\nSee scripts/verify-plan.sh in this repository for how.\n"' \
++  "names a script that does not exist"
++
++# A6b is A8's cause in the other check: both split statements the same way, so a list collapses here
++# too and the host-repo marker in one bullet exempts a path named in another. That is A3 — a path the
++# installed skill cannot resolve — reached through list formatting. The marker has to be in the
++# sentence that names the path, or it tells the reader nothing about that path.
++apply "A6b the host-repo marker in a different bullet from the path it exempts" "$BUILD" \
++  's = s.rstrip("\n") + "\n\n- run `scripts/negative-test.sh` before you close\n- this repository ships the harnesses\n"' \
++  "names a script that does not exist"
++
++# A9/A9b are A4 — a path that resolves nowhere — worn in the two shapes the extractor did not read.
++# It matched `scripts/NAME.js` and `scripts/NAME.sh` and nothing else, under a header and an ok line
++# that both say EVERY scripts/ path the shipped skill names. A reader sent to scripts/verify-plan.py
++# or scripts/lib/verify-plan.js looks in the installed skill's scripts/ directory and finds nothing,
++# exactly as A4's reader does, and cannot tell an invented tool from a missing one. This is 77cda1b's
++# defect — a header claiming more than the extraction covers — one axis over.
++apply "A9 the skill names a scripts/ path with an extension the extractor did not read" "$BUILD" \
++  's = s.rstrip("\n") + "\n\nRun `scripts/verify-plan.py` before you start.\n"' \
++  "names a script that does not exist"
++
++apply "A9b the skill names a scripts/ path in a subdirectory" "$BUILD" \
++  's = s.rstrip("\n") + "\n\nRun `scripts/lib/verify-plan.js` before you start.\n"' \
++  "names a script that does not exist"
++
++echo
++if [ "$fail" -eq 0 ]; then
++  echo "negative-test-accept: every mutation was detected, and every true statement was accepted"
++else
++  echo "negative-test-accept: $fail case(s) failed — accept-release.sh is not asserting what it claims"
++fi
++exit "$fail"
+diff --git a/three-loop-workflow/references/build.md b/three-loop-workflow/references/build.md
+index e195f7d..196f02c 100644
+--- a/three-loop-workflow/references/build.md
++++ b/three-loop-workflow/references/build.md
+@@ -16,6 +16,8 @@ Follow the plan's phase task list. Tests first where the project practises TDD 
+ 
+ Before you hand off to review, read your own diff once and remove: anything not traceable to the Goal or a recorded Decision, abstractions used once, and comments that narrate the process rather than explain the code. This self-pass is free and does not replace the review.
+ 
++A phase that ends with uncommitted work has not ended: the review diffs ref-to-ref, so anything left in the working tree is reviewed as though you had changed nothing.
++
+ If the plan conflicts with what you find in the code, stop and say so. Do not decide unilaterally and do not paper over it — go fix the plan.
+ 
+ ## Gates
+@@ -24,6 +26,7 @@ Run the project's mechanical checks from the project guide's _common-commands_:
+ 
+ - Do this **before** spawning a reviewer. Reviewing code that does not compile wastes a subagent on defects the compiler already found.
+ - A recalled result is not a result. Re-run and paste this run's output.
++- Record which commands you actually ran, not the ones the project guide lists. A gate you skipped is a gate the reviewer will assume ran.
+ - Exit 0 with every test skipped is not a pass. Check the tally, not just the code.
+ 
+ Record the gate output as commit trailers.
+@@ -141,6 +144,7 @@ Do not declare the cause obvious to save a round. That shortcut, under budget pr
+ 
+ 1. Generate **3–5 ranked, falsifiable hypotheses**. Each states a concrete prediction. If you cannot state what you would observe, it is a hunch, not a hypothesis.
+ 2. Look for the **discriminating** evidence — the one observation that differs between your top two hypotheses. Let that pick the cause instead of confirming the first plausible one.
++3. Record the surviving hypothesis and the observation that picked it, before you edit anything.
+ 
+ Anchoring on the first theory that fits is the most common debugging failure. If no hypothesis survives its discriminating test, escalate rather than shipping a guess.
+ 
+@@ -156,7 +160,9 @@ A failure that reproduces every time stays a fix target.
+ 
+ ## Round cap
+ 
+-Three fix rounds per phase, counted independently per phase. Hitting the cap escalates with a deadlock report (`references/escalation.md`). It never lowers the bar and never becomes a quiet round four.
++Three fix rounds per phase, counted independently per phase. Hitting the cap escalates with a deadlock report (`references/escalation.md`). It never lowers the bar and never becomes a quiet round four. A change that edits its own checks should expect to spend the cap: when this repo rebuilt its own gates the cap fired, and much of what that change had to fix was in the new checks themselves.
++
++Count the rounds in which you actually spent a fix, not the number of times you re-ran the gates — verifying once more than you fixed is correct, because the last fix still has to be checked.
+ 
+ If a *different* item failed each round, or the fix kept growing, the cap is firing on a planning defect rather than a local bug. Say so in the escalation and point at the plan.
+ 

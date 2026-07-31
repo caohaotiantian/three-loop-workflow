@@ -1,0 +1,347 @@
+diff --git a/scripts/accept-release.sh b/scripts/accept-release.sh
+index 886b700..e86dc59 100755
+--- a/scripts/accept-release.sh
++++ b/scripts/accept-release.sh
+@@ -144,9 +144,275 @@ grep -qi 'Leave the task' three-loop-workflow/references/close.md \
+   && ok "close.md keeps the task directory" || bad "close.md deletes the plan"
+ 
+ echo "== the shipped skill states rules, not statistics =="
+-if grep -rqE '[0-9]+(\.[0-9]+)?%|percentage points|116 findings' three-loop-workflow/; then
++# Enumerating number WORDS is sound where enumerating the qualifier adjectives below is not: that set
++# is open, this one is closed. It has to actually be closed. A gap in it is a hole with no symptom: cut
++# the list off at fifty and `Seventy findings`, `eighty findings`, `ninety findings` and `A thousand
++# findings` all walk past, while `Ninety-five findings` still matches, by accident, on its trailing
++# `five`. So: one..nineteen, every ten from twenty to ninety, the magnitudes, and `dozen`. A compound
++# larger than these is caught on its last word — `a hundred and seventeen findings` matches at
++# `seventeen findings`.
++# Split in two, because the two arms below need different halves. RULENUM is the numbers this skill
++# states its own RULE values with — `Standard: one reviewer`, `Deep: two`, `Three fix rounds per
++# phase`, `the blocking count is zero`. In front of `percent` they are figures like any other and are
++# swept. In front of `findings` they are the skill's own prose; see the findings arm below.
++RULENUM='zero|one|two|three'
++COUNTNUM='four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety|hundred|thousand|million|billion|dozen'
++# A percentage in either spelling of BOTH halves. `47%`, `47 percent` and `forty-seven percent` are one
++# published figure written three ways, so matching the symbol alone lets a swept line back in by
++# rewording. `percentage points` stays spelled out because it is the one form that carries no numeral
++# of its own.
++# No decimal tail `(\.[0-9]+)?` and no compound `([- ]$WORDNUM)?` in this arm: neither can decide
++# anything the rest of it does not already decide. Without them, `56.5%` is caught at `5%` — the `.`
++# puts a word boundary in front of the fraction — and `forty-seven percent` at `seven percent`. A
++# sub-expression no case in the table below can notice is not coverage, so it is not carried.
++# The second alternation is a count of FINDINGS, which is the shape both figures that reached the
++# shipped surface were written in: a numeral, then AT MOST TWO words containing no punctuation, then
++# the noun. The qualifier run is deliberately not an enumeration. A closed adjective list
++# ("non-blocking|blocking|confirmed|reported") is escaped by picking a fifth word — `twenty-one
++# confirmed severe findings` walks straight through it, as do `21 real findings` and `21 of the
++# findings`. Two words with no punctuation is a noun phrase, which is the actual property: a count and
++# the thing counted do not straddle a comma, a dash, or a sentence end. The bound is pinned from both
++# sides below — `ten gates returned no findings` is three words away and fires if the bound is widened,
++# and `Ten of the twenty-one confirmed severe findings` is two words away and stops being caught if it
++# is tightened.
++# Not a character window. "A numeral within 40 characters of `findings`" matches the shape of the
++# skill's rule prose rather than the shape of a statistic — build.md:38, "Deep: two, in parallel,
++# independent — union their findings", clears it by a single character, and deleting the word
++# "independent" or swapping the dash for a colon makes the gate fail on a correct document. Word
++# boundaries alone do not fix that; the window itself is the defect.
++# The numeral is either spelling. Matching only the words reads the defect too literally — "Ten of the
++# twenty-one" and "10 of the 21" are one defect, and digits are the likelier way for the next one to be
++# written. Digits are also the safe half to widen: the argument for scoping this arm to counts of
++# findings is that the skill states RULE values in words ("Three fix rounds per phase", "Standard: one
++# reviewer"), and none of those is at risk from a digit.
++# What it does not catch, stated as a boundary rather than as an assurance — a wording here that reads
++# as coverage overstates what the code does. It catches a PERCENTAGE in either spelling of either half,
++# and a COUNT OF FINDINGS where the numeral is digits or one of the
++# words listed above and sits within two unpunctuated words of the noun. Everything else is missed:
++# any other quantity, a count of anything but findings, a numeral separated from it by punctuation or
++# by three words. A general sweep for numbers is not available — one that fired on the rule values
++# above ("Three fix rounds per phase", "Standard: one reviewer") would be turned off within a release,
++# and then the two holes this does close are uncovered too. Review is still the mechanism.
++# A literal like `116 findings` needs no alternative of its own: it is this shape with the numeral
++# frozen, so the general arm subsumes it — and a hardcoded copy is what rule one at the top of this
++# file says not to keep.
++# The numeral here is NOT the one the percentage arm uses. `one`, `two` and `three` are how this skill
++# writes its rules, so a bare RULENUM in front of `findings` is its own register, not a statistic. All
++# of these are correct prose, and a swept RULENUM fails the gate, which blocks CI, on every one of them:
++# `**Standard: one reviewer. Deep: two reviewers union findings.**` — a one-word-shorter reword of the
++# sentence build.md:38 ships — `If one of the findings is a phantom, triage catches it`, `one review,
++# one set of findings`. The qualifier bound cannot be what separates them: `21 of the findings were
++# defects` has to catch and `one of the findings` has to be admitted, and those are one shape with two
++# numerals, so no bound over that alternation tells them apart. The split is therefore made on the
++# numeral. Digits are untouched — the argument above for widening to digits is exactly that the skill
++# states rule values in WORDS — and a compound stays in, because that is one of the ways such a count
++# gets written (`Ten of the twenty-one confirmed findings`).
++# The cost, named rather than assured: a spelled-out count of zero, one, two or three findings is
++# admitted — `the second reviewer added two findings` is a statistic this arm will not see. That is the
++# cost `zero` alone already carries, paid over the four numbers that carry the same risk, and it buys a
++# gate that does not accuse the document it guards. `2 findings` is still caught.
++
++# Both arms are assembled by a function rather than by straight-line assignment, so that the fixture
++# table below can be re-run against a BROKEN copy of the sweep. `stat_build` with no argument builds
++# the real thing; every other argument breaks exactly one named piece of it. That is the only reason
++# this is a function: the property the table claims — every piece is noticed by some case — is not a
++# property you can read, and the mutation loop under the table is what executes it.
++_alt() (  # _alt <arm>... — joins the non-empty arms into one group. An emptied arm is DROPPED rather
++          # than left as an empty alternative, which would match the empty string at every position
++          # and make every mutation look as though the table had noticed it.
++  out=""
++  for a in "$@"; do [ -n "$a" ] || continue; out="${out:+$out|}$a"; done
++  [ -n "$out" ] || out='\bx\b\bx\b'   # unreachable: mutations break one piece at a time
++  printf '(%s)' "$out"
++)
++_drop() (  # _drop <token> <a|b|c> — the alternation without that token
++  IFS='|'; out=""
++  for t in $2; do [ "$t" = "$1" ] || out="${out:+$out|}$t"; done
++  printf '%s' "$out"
++)
++stat_build() {  # stat_build [piece-to-break] — sets STAT
++  local brk="${1:-}"
++  local rule="$RULENUM" count="$COUNTNUM"
++  local pct_anchor='\b' pct_sym='%' pct_word='percent' pct_gap=' ?' points='percentage points'
++  local find_anchor='\b' bound='{0,2}' digits='[0-9]+' compound=y rulesplit=y
++  case "$brk" in
++    '')          ;;
++    pct-anchor)  pct_anchor='' ;;
++    pct-symbol)  pct_sym='' ;;
++    pct-word)    pct_word='' ;;
++    pct-gap)     pct_gap='' ;;
++    points)      points='' ;;
++    find-anchor) find_anchor='' ;;
++    bound-wide)  bound='{0,3}' ;;
++    bound-tight) bound='{0,1}' ;;
++    digits)      digits='' ;;
++    compound)    compound='' ;;
++    rule-split)  rulesplit='' ;;   # RULENUM back in the findings arm, where it accuses rule prose
++    word:*)      rule=$(_drop "${brk#word:}" "$rule"); count=$(_drop "${brk#word:}" "$count") ;;
++    *)           bad "stat_build: no such piece '$brk'"; return 1 ;;
++  esac
++  local wordnum bare pct findcount
++  wordnum=$(_alt "$rule" "$count")
++  pct="$pct_anchor$(_alt "$digits" "$wordnum")$pct_gap$(_alt "$pct_sym" "$pct_word")"
++  [ -n "$points" ] && pct="$pct|$points"
++  if [ -n "$rulesplit" ]; then bare="($count)"; else bare="$wordnum"; fi
++  findcount="$find_anchor$(_alt "$digits" "${compound:+${wordnum}[- ]${wordnum}}" "$bare")"
++  findcount="$findcount( [A-Za-z-]+)$bound findings"
++  STAT="$pct|$findcount"
++}
++stat_build
++
++# The sweep is asserted by execution against pinned sentences before it is used, because the two ways
++# it can be wrong cost different things and both have shipped. Missing a real figure is the hole it was
++# added to close. Firing on correct prose is worse: this gate blocks CI, so a sweep that accuses the
++# skill's own rule sentences is a sweep somebody turns off, and then the first fault is uncovered too.
++#
++# The sweep is ONE invocation, and this is the whole of it. The fixture table below and the live check
++# at the bottom of this block both call it, so the table pins the flag list as well as the pattern.
++# Written out twice instead — `grep -qiE "$STAT"` in the table and `grep -rqiE "$STAT"
++# three-loop-workflow/` live — the table would pin `$STAT`, which is not the sweep: dropping `-i` from
++# the live copy alone leaves every case green while `Seventy findings came back from the second
++# reviewer.` ships. `-H` so the line-number prefix is present whichever grep is on PATH; the fixture
++# reader below needs it and the live listing wants it.
++stat_scan() { grep -rniHE "$STAT" "$@"; }
++# The table is RECORDED here and evaluated further down, because it is run more than once: once against
++# the real sweep, and once per mutation. One sentence per line of one file, one scan per run.
++_sweep_dir=$(mktemp -d); _sweep_file="$_sweep_dir/cases.txt"
++_sweep_want=(); _sweep_sent=()
++sweep_case() { _sweep_want+=("$1"); _sweep_sent+=("$2"); }  # sweep_case catches|admits <sentence>
++# Figures. Grouped by the arm each one exercises. Whether every arm is actually pinned is not decided
++# here and is not asserted in a comment — see the mutation loop below, which breaks each piece in turn
++# and requires a case to notice. A comment claiming the table pins a piece is not evidence that any
++# case fails when that piece is deleted.
++sweep_case catches 'Ten of the twenty-one confirmed findings in the last release were defects'
++sweep_case catches 'Nine of the fourteen blocking findings'
++sweep_case catches '10 of the 21 confirmed findings in the last release were defects'
++sweep_case catches '10 of 21 confirmed findings were defects in the gates'
++sweep_case catches '21 confirmed findings'
++sweep_case catches '116 findings'
++# The qualifier between the numeral and the noun is arbitrary. These are enumerated from the DEFECT
++# (a numeral quantifying `findings`), not from the adjectives a particular escape happened to use,
++# which is how a closed four-word list gets arrived at.
++sweep_case catches 'Ten of the twenty-one confirmed severe findings were defects'
++sweep_case catches 'twenty-one distinct findings'
++sweep_case catches '21 of the findings were defects'
++# The unit is either spelling too. "47% more confirmed findings" and "47 percent more confirmed
++# findings" are one published figure, and a sweep that reads only the symbol admits the second.
++sweep_case catches 'a 47 percent uplift'
++sweep_case catches 'the second reviewer added 47 percent more confirmed findings'
++sweep_case catches 'a forty-seven percent uplift'
++# The word list has to be CLOSED, not merely long, so there is one case per token, and the token lists
++# below are LITERAL — deliberately not spelled `$COUNTNUM`. A table generated from the enumeration it
++# exists to pin goes green the moment a token is deleted, because the case is deleted with it.
++# Hand-picked sentences do not scale here either: a single case for `sixty` reading `Sixty of the
++# ninety confirmed findings were defects` still matches on `ninety` once `sixty` is removed, and a
++# token nobody thought to write a sentence for — `million`, `billion` — gets no case at all. One
++# mechanical case per token is what the mutation loop below can hold to account.
++for _w in four five six seven eight nine ten eleven twelve thirteen fourteen fifteen sixteen \
++          seventeen eighteen nineteen twenty thirty forty fifty sixty seventy eighty ninety \
++          hundred thousand million billion dozen; do
++  sweep_case catches "$_w findings"
++done
++# RULENUM is out of the findings arm, so its tokens are pinned where they still decide something.
++for _w in zero one two three; do sweep_case catches "a $_w percent uplift"; done
++sweep_case catches 'Sixty of the ninety confirmed findings were defects'
++# The two arms nothing above depends on. Without these two cases both could be deleted with every other
++# case still green, and `pinned by execution` would be a claim this table does not keep.
++sweep_case catches 'the second reviewer found 56.5% of the defects'
++# No numeral, deliberately: `30-70 percentage points` would be caught by the arm above it on `70
++# percent`, leaving this literal still unpinned. Bare, it is the only thing that can match.
++sweep_case catches 'the gap between reviewers is measured in percentage points'
++# Ordinary prose in this skill's own register. The first four are rule sentences shipped today or one
++# innocuous reword away from them: build.md:38 clears the un-anchored version by a single character.
++sweep_case admits  '**Standard: one reviewer. Deep: two, in parallel, independent — union their findings.**'
++sweep_case admits  '**Standard: one reviewer. Deep: two, in parallel: union their findings.**'
++sweep_case admits  '**Standard: one reviewer. Deep: two in parallel, union their findings.**'
++sweep_case admits  'Take the union of their findings'
++sweep_case admits  'None of the blocking findings survived triage this round.'
++sweep_case admits  'Once the reviewer is done, triage the reported findings.'
++sweep_case admits  'a milestone reached before the reviewer reports findings'
++sweep_case admits  'Someone reviewing a diff returns findings'
++# Pins the two-word bound from the other side. `ten gates returned no findings` sits exactly three
++# words from the noun, so widening the run to {0,3} makes this arm accuse a sentence that counts gates,
++# not findings — the boundary the paragraph above states. `Deep: two reviewers union their findings.`
++# is the same rule sentence with every comma and dash removed; with `two` in RULENUM rather than in the
++# findings arm it pins no bound, and it is kept as the register the sweep has to stay off.
++sweep_case admits  'ten gates returned no findings'
++sweep_case admits  'Deep: two reviewers union their findings.'
++# The same register with no punctuation left to hide behind — a swept RULENUM accuses every one of
++# these. The first is a correct one-word-shorter reword of the sentence build.md:38 ships.
++sweep_case admits  '**Standard: one reviewer. Deep: two reviewers union findings.**'
++sweep_case admits  'If one of the findings is a phantom, triage catches it'
++sweep_case admits  'One reviewer, two findings, one round'
++sweep_case admits  'one review, one set of findings'
++sweep_case admits  'three fix rounds, three findings, one phase'
++# The shipped termination rule and its reword. With the group above, these are what pins RULENUM out
++# of the findings arm: put any of `zero one two three` back into it and one of them fires.
++sweep_case admits  'the change closes when the confirmed blocking count is zero and the gates are green'
++sweep_case admits  'closes when there are zero confirmed blocking findings'
++# Pins the \b in front of the findings arm. `written` ends in `ten`, so without the anchor the numeral
++# is read out of the middle of a word and the gate accuses a sentence with no count in it. `Everyone
++# reported findings` cannot do that job — `one` sits in RULENUM, not in this arm, so that sentence is
++# admitted whether the anchor is there or not. It is kept as a case of the register, nothing more.
++sweep_case admits  'the reviewer returns written findings, not a verdict'
++sweep_case admits  'Everyone reported findings'
++# And the same anchor in the percentage arm: `written` ends in `ten` there too.
++sweep_case admits  'the reviewer returns written percentages, not raw counts'
++
++printf '%s\n' "${_sweep_sent[@]}" > "$_sweep_file"
++# The count goes to stdout because the caller reads it; the disagreements go to a file, following the
++# harnesses above, so that capturing the count cannot swallow the report of what disagreed.
++sweep_run() {  # sweep_run — echoes how many cases disagree with $STAT; names them in $_sweep_dir/bad
++  local marks i n=0 want got
++  marks=" $(stat_scan "$_sweep_file" 2>/dev/null | sed -E 's/^([^:]*:)?([0-9]+):.*$/\2/' | tr '\n' ' ')"
++  : > "$_sweep_dir/bad"
++  i=0
++  while [ "$i" -lt "${#_sweep_sent[@]}" ]; do
++    want="${_sweep_want[$i]}"
++    case "$marks" in *" $((i+1)) "*) got=catches ;; *) got=admits ;; esac
++    if [ "$got" != "$want" ]; then
++      n=$((n+1))
++      printf '        wanted %-8s got %-8s %s\n' "$want" "$got" "${_sweep_sent[$i]}" >> "$_sweep_dir/bad"
++    fi
++    i=$((i+1))
++  done
++  printf '%s' "$n"
++}
++_sweep_bad=$(sweep_run)
++if [ "$_sweep_bad" = 0 ]; then
++  ok "the statistic sweep behaves on ${#_sweep_sent[@]} pinned sentences"
++else
++  bad "the statistic sweep is wrong on $_sweep_bad of ${#_sweep_sent[@]} pinned sentences:"
++  cat "$_sweep_dir/bad"
++fi
++
++# The table's own property, executed rather than claimed. Break one named piece of the sweep, re-run
++# every case, and require at least one of them to notice. A piece nothing notices is not covered,
++# whatever the comment beside it says: an unpinned `\b`, decimal tail or compound reads as coverage and
++# is none. The token list is read back off the pattern rather than written out again, so a number word
++# added to RULENUM or COUNTNUM without a case fails HERE, on the commit that adds it, rather than
++# whenever someone next re-reads the enumeration.
++# What this does not do, stated as a boundary: the structural pieces are named by hand in `stat_build`,
++# so a new sub-expression added without a name is still unmutated. Review is still the mechanism.
++_pieces='pct-anchor pct-symbol pct-word pct-gap points find-anchor bound-wide bound-tight digits compound rule-split'
++for _t in $(printf '%s|%s' "$RULENUM" "$COUNTNUM" | tr '|' ' '); do _pieces="$_pieces word:$_t"; done
++_unpinned=''; _nmut=0
++for _p in $_pieces; do
++  _nmut=$((_nmut+1))
++  stat_build "$_p"
++  [ "$(sweep_run)" = 0 ] && _unpinned="$_unpinned $_p"
++done
++stat_build
++if [ -z "$_unpinned" ]; then
++  ok "every piece of the sweep is pinned by a case ($_nmut mutations, each one noticed)"
++else
++  bad "the table notices nothing when these are broken:$_unpinned"
++fi
++
++_stat_hits=$(stat_scan three-loop-workflow/ || true)
++if [ -n "$_stat_hits" ]; then
+   bad "a statistic is back in the shipped skill:"
+-  grep -rnE '[0-9]+(\.[0-9]+)?%|percentage points|116 findings' three-loop-workflow/
++  printf '%s\n' "$_stat_hits"
+ else
+   ok "no statistics anywhere in the shipped skill"
+ fi
+@@ -349,6 +615,24 @@ grep -qiE 'read the result as a product, not as a diff' three-loop-workflow/refe
+   && ok "close.md mentions the whole-artifact read" \
+   || bad "close.md no longer mentions the whole-artifact read"
+ 
++echo "== every script the shipped skill names is shipped with it =="
++# The skill's prose is read inside arbitrary consumer projects, so a `scripts/…` path in it resolves
++# against the INSTALLED skill and nothing else. A named script that is not shipped is an instruction
++# nobody can follow, and one shipped: `scripts/verify-plan.sh`, invented in build.md's Diagnosis step,
++# passed every check in this file because nothing here read the skill's own paths. Executable, not a
++# grep for wording: the check is whether the file is there.
++# Markdown only. The comments inside three-loop-workflow/scripts/ name this repository's harnesses
++# (sim-phase.js, negative-test.sh), which are correctly not part of the shipped package.
++skill_scripts=$(grep -rhoE 'scripts/[A-Za-z0-9_.-]+\.(sh|js)' --include='*.md' three-loop-workflow | sort -u)
++if [ -z "$skill_scripts" ]; then
++  bad "no scripts/ path found in the skill's prose — this check has stopped checking anything"
++else
++  for p in $skill_scripts; do
++    [ -e "three-loop-workflow/$p" ] && ok "the skill names $p, which is shipped" \
++      || bad "the skill names three-loop-workflow/$p, which does not exist"
++  done
++fi
++
+ echo "== README paths exist =="
+ for p in $(grep -oE '\(\./[A-Za-z0-9_./-]+\)' README.md | tr -d '()'); do
+   [ -e "$p" ] && ok "README path $p" || bad "README path missing: $p"
+diff --git a/three-loop-workflow/references/build.md b/three-loop-workflow/references/build.md
+index e195f7d..fc37171 100644
+--- a/three-loop-workflow/references/build.md
++++ b/three-loop-workflow/references/build.md
+@@ -16,6 +16,8 @@ Follow the plan's phase task list. Tests first where the project practises TDD 
+ 
+ Before you hand off to review, read your own diff once and remove: anything not traceable to the Goal or a recorded Decision, abstractions used once, and comments that narrate the process rather than explain the code. This self-pass is free and does not replace the review.
+ 
++A phase that ends with uncommitted work has not ended: the review diffs ref-to-ref, so anything left in the working tree is reviewed as though you had changed nothing.
++
+ If the plan conflicts with what you find in the code, stop and say so. Do not decide unilaterally and do not paper over it — go fix the plan.
+ 
+ ## Gates
+@@ -24,6 +26,7 @@ Run the project's mechanical checks from the project guide's _common-commands_:
+ 
+ - Do this **before** spawning a reviewer. Reviewing code that does not compile wastes a subagent on defects the compiler already found.
+ - A recalled result is not a result. Re-run and paste this run's output.
++- Record which commands you actually ran, not the ones the project guide lists. A gate you skipped is a gate the reviewer will assume ran.
+ - Exit 0 with every test skipped is not a pass. Check the tally, not just the code.
+ 
+ Record the gate output as commit trailers.
+@@ -141,6 +144,7 @@ Do not declare the cause obvious to save a round. That shortcut, under budget pr
+ 
+ 1. Generate **3–5 ranked, falsifiable hypotheses**. Each states a concrete prediction. If you cannot state what you would observe, it is a hunch, not a hypothesis.
+ 2. Look for the **discriminating** evidence — the one observation that differs between your top two hypotheses. Let that pick the cause instead of confirming the first plausible one.
++3. Record the surviving hypothesis and the observation that ruled the others out, before you edit anything.
+ 
+ Anchoring on the first theory that fits is the most common debugging failure. If no hypothesis survives its discriminating test, escalate rather than shipping a guess.
+ 
+@@ -156,7 +160,9 @@ A failure that reproduces every time stays a fix target.
+ 
+ ## Round cap
+ 
+-Three fix rounds per phase, counted independently per phase. Hitting the cap escalates with a deadlock report (`references/escalation.md`). It never lowers the bar and never becomes a quiet round four.
++Three fix rounds per phase, counted independently per phase. Hitting the cap escalates with a deadlock report (`references/escalation.md`). It never lowers the bar and never becomes a quiet round four. A change that edits its own checks should expect to spend the cap: the new checks need checking too, and that is where the rounds go.
++
++Count the rounds in which you actually spent a fix, not the number of times you re-ran the gates — verifying once more than you fixed is correct, because the last fix still has to be checked.
+ 
+ If a *different* item failed each round, or the fix kept growing, the cap is firing on a planning defect rather than a local bug. Say so in the escalation and point at the plan.
+ 

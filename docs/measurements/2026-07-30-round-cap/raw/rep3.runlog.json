@@ -1,0 +1,17 @@
+{
+ "agentCount": 32,
+ "totalTokens": 2009047,
+ "totalToolCalls": 780,
+ "logs": [
+  "\u25b8 running dynamic workflow three-loop-phase",
+  "[three-loop-phase] exp-rep3: gates failures (1), running fix round 1 of 6",
+  "[three-loop-phase] exp-rep3: review failures (10), running fix round 2 of 6",
+  "[three-loop-phase] exp-rep3: triage rejected 1/6 blocking findings",
+  "[three-loop-phase] exp-rep3: review failures (5), running fix round 3 of 6",
+  "[three-loop-phase] exp-rep3: triage rejected 1/5 blocking findings",
+  "[three-loop-phase] exp-rep3: review failures (4), running fix round 4 of 6",
+  "[three-loop-phase] exp-rep3: review failures (5), running fix round 5 of 6",
+  "[three-loop-phase] exp-rep3: review failures (2), running fix round 6 of 6",
+  "\u25b8 three-loop-phase done"
+ ]
+}

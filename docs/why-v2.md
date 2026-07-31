@@ -241,8 +241,9 @@ committed per-task archive; `check-consistency.sh`; and — last, by the owner's
 scripts. v2 enforces nothing mechanically, and says so plainly rather than implying a guarantee it
 does not provide.
 
-**A test suite that can fail.** Every fixture runs in both arms. A fixture both arms answer correctly
-is reported **INVALID**, not green.
+**A test suite that can fail.** Every fixture runs in both arms. A *discriminating* fixture both arms
+answer correctly is reported **INVALID**, not green — and as Part 4 records, six of the seven fixtures
+are guards, judged on whether the skill made a correct default worse.
 
 ---
 

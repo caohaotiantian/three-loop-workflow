@@ -2,6 +2,155 @@
 
 Full version history for the three-loop-workflow skill. See [README.md](./README.md) for what the skill is, when it applies, and how to install it.
 
+## v2.2.0 — the gates can fail now
+
+An adversarial audit of the whole repository found that every mechanism checking this project was one of
+four things: a token grep, a boolean an agent typed, a parser that says nothing about logic, or nothing at
+all. The invariants were correct, but they were correct because the author was attentive, not because
+anything would have noticed otherwise — and both regressions this project has shipped passed a green gate.
+
+**The acceptance script was v1's `check-consistency.sh` again.** It pinned `phase.js`'s guards with
+`grep -q`. Disabling both empty-diff guards with `false &&`, leaving every token in place, still printed
+`ok an uncommitted phase is rejected, not reviewed` and `ACCEPT: all checks passed`, exit 0. Deleting one
+guard outright also passed, because the rule's wording survived in the comment above it. Both were
+reproduced in a fresh clone. Control flow is now asserted by execution: `scripts/sim-phase.js` drives the
+real script with stub agents, and `scripts/negative-test.sh` breaks the two scripts twenty-four ways and
+fails if the harness misses one. The generalisation is worth stating plainly — to check a *rule*, run it;
+grep only for *prose*, where presence is the property you want.
+
+**The acceptance script is also tracked now.** It lived in a gitignored task directory, was cited as the
+`Gates:` evidence of six release commits, and the one before it is already unrecoverable. `SKILL.md` §2 no
+longer tells you to keep one there.
+
+**CI runs on every push and pull request.** Until now nothing ran automatically at all; the release
+workflow was checkout, zip, upload. It now refuses a tag that disagrees with the frontmatter version and
+verifies what is inside the archive.
+
+**`phase.js` fails closed on anything an agent only reports.** A well-formed sha the implementer never
+created used to close a phase on an empty diff; the gates step's own `git rev-parse HEAD` is cross-checked
+against the base now, on every round, including a fix round that reset the phase's commits. An unparseable
+sha stops the phase instead of silently disabling the guards downstream of it. A dead fix agent is an
+error rather than a spent round. Reviewers receive the diff and the plan and nothing else — the
+implementer's own low-confidence list used to go to both of them, correlating the independence the
+two-reviewer rule depends on. Non-blocking findings and triage rejections accumulate and come back to the
+caller, and prior rejections are carried into the next round's triage so the same phantom is not
+re-derived. `depth: 'standard' | 'deep'` is the preferred way to say how much review runs; `reviewers` still
+works, but passing neither is now an error, because a count that defaulted to 1 let a Deep phase run the
+Standard review by being forgotten.
+
+**The two-arm suite computes its verdict instead of asserting it.** `suite_pass` was a boolean the scoring
+agent typed; an agent returning zero rows and `suite_pass: true` produced a green run, inside the suite
+that exists because its predecessor was green for sixteen releases while measuring nothing. The reading
+agent now reports only what it read and every comparison is arithmetic in the script.
+
+**"A fixture both arms pass is INVALID" was false for six of the seven fixtures**, and it was the property
+advertised as distinguishing this suite from the one deleted for being theatre. Six are regression guards,
+for which both arms answering correctly is a pass. Every statement of the claim now carries its qualifier.
+
+**The install command did not install.** `cp -r three-loop-workflow <repo>/.claude/skills/` copies the
+folder's *contents* when `skills/` does not exist yet — the normal state of a repo where Claude Code has
+run but no skill was ever installed. `SKILL.md` landed one level too high, exit 0, no warning, and the
+skill never activated. Both READMEs `mkdir -p` first, and the gate now runs the README's own commands.
+
+**`close.md` gains a whole-artifact read at Deep depth.** Round after round of diff review on the v2.0.0
+release left the most serious defect in that release standing, and readers handed the finished files with
+no change context found it at once. The modality that caught it appeared nowhere in the skill.
+
+**`SKILL.md` says what to do when there is no project guide.** One of the three Deep triggers and the
+Gates step both dereference roles from an anchor map that no external standard requires, with no fallback
+written anywhere — so on a repo that had not adopted the convention, a third of the Deep checklist was
+silently inert.
+
+**The script had never run, because it could not.** Every claim about `scripts/phase.js` rested on
+harnesses that fed it a well-formed object. The first invocation through the actual Workflow tool
+returned `usage-error: planPath is required` with a complete argument list — the tool delivers `args` to
+a script as a JSON *string*, and destructuring a string yields all-undefined. Settled with a probe
+script, not by inference. `tests/run-scenarios.js` had the same defect silently: the documented
+`args: {repo: "<path>"}` ran against the default tree without a word. Both normalise `args` now, and
+report an unusable shape as itself rather than blaming the first field that looks missing.
+
+It was then run end to end for the first time: one Standard phase, driven from an absolute path outside
+the repository so an installed skill resolves too, returning `closed` at round one with no fix spent, a
+real chainable head, the gates step's own output and tally, three substantive non-blocking findings, and
+the implementer's concerns returned to the caller instead of sent to the reviewer.
+
+**The runtime claims are checked and sourced.** Codex's `.agents/skills` discovery, opencode reading
+both its own and Claude's locations, this skill's frontmatter conforming to the Agent Skills spec, and
+AGENTS.md's contribution to the Linux Foundation's Agentic AI Foundation had all been asserted and never
+verified. All four hold; `references/platforms.md` carries the sources now, which is what this skill asks
+of any claim about external behaviour.
+
+**"A third mostly repeated the second" is retired as a coverage claim.** Re-analysis of the same data
+contradicted it depending on the denominator, and the artifacts were never kept. Stopping at two is
+stated as the cost decision it is.
+
+**Two behavioural fixtures** cover the rules this release adds, and both are guards. The whole-artifact
+read was written as discriminating and measured twice; both arms answered it correctly both times, the
+second time with no giveaway reported at all. So the rule is not counter-intuitive to a model asked the
+question directly — the evidence for it was never that, it was that four rounds of diff review did not
+think to ask. It is demoted with that reasoning dated in `expected.json`. The suite still has exactly one
+discriminating fixture; adding two rules added none.
+
+The suite's giveaway signal — which had gone quietly dead, requiring a boolean both arms leave false
+while filling in the quote beside it — counts an arm on either signal now, and immediately flagged five
+fixtures where the old one flagged none.
+
+Also: the syntax gate fails on `Date.now()`, `Math.random()`, argless `new Date()` and a missing
+`export const meta`, with committed fixtures in both directions; two factual errors in `build.md` about
+worktree cleanup and the chaining example are corrected.
+
+Read the result narrowly. Three fix rounds were spent and the cap was reached. Of the nineteen confirmed
+findings, ten were defects in the gates and harnesses this release adds — the checks needed checking,
+twice — and two were found only by the whole-artifact read it introduces. Two claims in this release's own
+commit messages were themselves overstated and are corrected in the task record rather than by rewriting
+history. Whether three rounds is the right cap for a change shaped like this one is not settled here.
+
+**It was measured afterwards, and the cap is not what was wrong.** The question that paragraph leaves
+open was pre-registered and run: one document-shaped Deep change, seeded with six defects drawn from
+classes this repository has actually shipped, reviewed by the real script with the cap deliberately
+lifted to six so that a convergence point above three could be observed at all. Two of three replicates
+never reached zero. But every replicate found and repaired the seeded defects in its **first** review
+round — what consumed the rest was the change *growing*: the fix step invented new checks for the rules
+it had just repaired, and each following round reviewed the new checks instead of the change. The one
+replicate whose fix step added nothing converged in a single review round. Raising the cap would have
+bought more rounds of the same thing, so the cap stays at three and `references/escalation.md` gains
+what to look for instead: reaching the cap on a document-shaped change is the ordinary exit, the
+commonest cause is the fix step opening a second change inside the first, and the remedy is to split
+rather than to re-plan.
+
+Worth naming what the fix step reached for: a **grep that tries to tell a true claim from a false one**
+— `check-consistency.sh`, deleted in v2.0.0 for being bypassable, re-invented from scratch and then
+iterated against one counter-example at a time until the budget ran out. `escalation.md` now says that a
+pattern can hold prose but not a claim.
+
+**The measurement's own failures are published with it.** Two attempts were voided before any data was
+collected — in the first, a fix agent ran `git log --all` and read the pre-registration commit within
+four minutes; in the second, `phase.js` could not complete a fix round at all, because it built its Fix
+and Triage prompts from a branch name and a sha and **never a path**, so an agent whose working
+directory was not the repository under test had nothing to locate it with. That is the usage
+`build.md` documents — an installed skill driving your own checkout — so the documented path was
+broken. **Fixed rather than filed:** `phase.js` now takes `repoPath`, all six of its prompts carry it,
+and an unusable value is a `usage-error` instead of something interpolated into a prompt. A third attempt, at adjudication, was voided for asking agents
+to echo a thousand-character key. Two of the three were the experimenter's; the second is a defect in
+the shipped script, and is reported as one. Every breach of blinding traced to something left
+reachable rather than to an agent circumventing a control — but an agent did read the key.
+
+Raw artifacts are committed — git bundles of every replicate, the per-round series, the adjudicator
+verdicts, the analysis script — because three earlier measurements in this project cannot be reproduced
+and one was deleted before anyone thought to keep it. `scripts/accept-release.sh` now recomputes every
+figure the results documents publish and fails if either language drifts; the hole was demonstrated
+before the check was wired in, and `scripts/negative-test.sh` keeps that demonstration.
+
+**The per-round records that did exist are now tracked.** `.agent/` is gitignored, so the only
+round-by-round review data this project ever produced sat on one disk.
+`docs/measurements/2026-07-30-round-data/` holds it verbatim, unedited, including the claims its authors
+later corrected.
+
+**The mutation count was wrong in three places.** `scripts/negative-test.sh` breaks `phase.js` eighteen
+ways and `run-scenarios.js` five. `CLAUDE.md` said "fifteen" twice and this entry said "twenty-one".
+Both corrected; the count in the rescued task record stays as written, because retro-editing a dated
+record is what the Non-goals forbid.
+
 ## v2.1.0 — multi-phase Deep work actually runs
 
 Three criticisms were published with v2.0.0 as "recorded, not fixed". They had reached that list

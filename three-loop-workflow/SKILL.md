@@ -4,7 +4,7 @@ description: Structured workflow for non-trivial code changes — features, beha
 license: MIT
 compatibility: Claude Code (subagents, Workflow). Codex/opencode run the manual path — see references/platforms.md
 metadata:
-  version: "2.1.0"
+  version: "2.2.0"
 ---
 
 # Three-Loop Workflow
@@ -12,6 +12,8 @@ metadata:
 **Plan → Build → Close.** Depth is chosen per change. Most changes run a short Plan, a Build, and no Close.
 
 **The project guide** is this repo's agent instruction file — `AGENTS.md`, `CLAUDE.md`, or both. Read whichever exist; projects keeping both usually put shared rules in `AGENTS.md` and runtime-specific ones in `CLAUDE.md`. It names sections by *role* (`_load-bearing-docs_`, `_common-commands_`, `_engineering-norms_`, …) via an anchor map at its top, so this skill can reference a role without knowing your headings.
+
+**If no guide exists, or a role is missing**, derive what you need from the repo — gate commands from its build config, contract files from what depends on them — say what you inferred, and offer to write the anchor map. A missing role never means the rule it feeds is skipped.
 
 ## 1. Choose depth — first, before reading anything else
 
@@ -31,9 +33,9 @@ Terse phrasing is not a depth signal. "Just quickly add X" describes urgency, no
 
 ## 2. Durable state — `.agent/<task>/plan.md`
 
-Every task gets **its own gitignored directory** under `.agent/`, named for the task: `.agent/rate-limit-headers/plan.md`. Anything else scoped to the task — an acceptance script, scratch notes — lives beside it in that directory.
+Every task gets **its own gitignored directory** under `.agent/`, named for the task: `.agent/rate-limit-headers/plan.md`. Scratch notes live beside it. An acceptance command that outlives the task belongs in the repository — nothing backs this directory up.
 
-Never a shared path. Two tasks both writing `.agent/plan.md` overwrite each other, and a finished task leaves no record of what it decided. The directory is that record.
+Never a shared path. Two tasks both writing `.agent/plan.md` overwrite each other, and a finished task leaves no record of what it decided.
 
 It is the **re-entry point after context compaction**: if you resume and cannot remember the task, read its plan first — `ls -t .agent/*/plan.md | head -1` is the most recent.
 
@@ -61,7 +63,7 @@ Reviewers are fresh subagents receiving the diff and the plan — and **nothing 
 
 **How many reviewers.** Standard: one. Deep: **two, in parallel, independently** — take the union of what they find.
 
-Two is measured on this repo's own design documents, not chosen for symmetry. A second independent reviewer catches much of what the first missed, including blockers; a third mostly repeats the second. Reviewers miss *different* things — that is the whole reason a second one pays. What was measured, and what it does not establish, are in `references/plan.md`.
+Two is measured on this repo's own design documents, not chosen for symmetry. A second independent reviewer catches much of what the first missed, including blockers. Reviewers miss *different* things — that is the whole reason a second one pays. Stopping at two is a cost decision, not a finding that a third adds nothing. `references/plan.md` says what was measured and what it does not settle; the figures are published outside this skill, with their limits.
 
 - **The author never reviews their own work.** This binds to identity, not to invocation: an agent that wrote the change cannot review it, whether the second role arrives by assignment, self-claim, or lead approval.
 - Ask for **everything, and triage yourself**. Do not tell a reviewer to be conservative or to report only high-severity items — it will comply literally and report less.

@@ -1,0 +1,140 @@
+{
+  "seedsInDenominator": 6,
+  "trialsAnalysed": 2,
+  "trialsIncomplete": [
+    {
+      "trial": 1,
+      "returned": 2,
+      "expected": 3
+    }
+  ],
+  "reviewersPerTrial": 3,
+  "orderingsAveraged": 6,
+  "meanCoverageByReviewerCount": [
+    1,
+    1,
+    1
+  ],
+  "marginalGain": [
+    null,
+    0,
+    0
+  ],
+  "perTrial": [
+    {
+      "trial": 2,
+      "perReviewerSeeds": [
+        {
+          "reviewer": 1,
+          "found": [
+            "S1",
+            "S2",
+            "S3",
+            "S4",
+            "S5",
+            "S6"
+          ],
+          "reported": 7,
+          "correctEditsFlagged": 0
+        },
+        {
+          "reviewer": 2,
+          "found": [
+            "S1",
+            "S2",
+            "S3",
+            "S4",
+            "S5",
+            "S6"
+          ],
+          "reported": 7,
+          "correctEditsFlagged": 0
+        },
+        {
+          "reviewer": 3,
+          "found": [
+            "S1",
+            "S2",
+            "S3",
+            "S4",
+            "S5",
+            "S6"
+          ],
+          "reported": 6,
+          "correctEditsFlagged": 0
+        }
+      ],
+      "unionSeeds": [
+        "S1",
+        "S2",
+        "S3",
+        "S4",
+        "S5",
+        "S6"
+      ],
+      "meanCoverageByK": [
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "trial": 3,
+      "perReviewerSeeds": [
+        {
+          "reviewer": 1,
+          "found": [
+            "S1",
+            "S2",
+            "S3",
+            "S4",
+            "S5",
+            "S6"
+          ],
+          "reported": 7,
+          "correctEditsFlagged": 0
+        },
+        {
+          "reviewer": 2,
+          "found": [
+            "S1",
+            "S2",
+            "S3",
+            "S4",
+            "S5",
+            "S6"
+          ],
+          "reported": 6,
+          "correctEditsFlagged": 0
+        },
+        {
+          "reviewer": 3,
+          "found": [
+            "S1",
+            "S2",
+            "S3",
+            "S4",
+            "S5",
+            "S6"
+          ],
+          "reported": 6,
+          "correctEditsFlagged": 0
+        }
+      ],
+      "unionSeeds": [
+        "S1",
+        "S2",
+        "S3",
+        "S4",
+        "S5",
+        "S6"
+      ],
+      "meanCoverageByK": [
+        1,
+        1,
+        1
+      ]
+    }
+  ],
+  "note": "coverage = share of the six seeded defects found, averaged over every reviewer ordering"
+}

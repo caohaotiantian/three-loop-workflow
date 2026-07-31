@@ -1,0 +1,18 @@
+bc2c3be249fbb6b7ed3a38becc8932b01b14fda6	2026-07-31T03:23:53+08:00	fix(gates): the sweep's comments narrated the review that produced them
+046add687f9e69568eba3ae74e70f5e7f25f8ec5	2026-07-31T03:18:22+08:00	fix(plan): the Goal still promised four changes review had reverted
+1a05f9487b719db410e376bf6eebcda24dc94edf	2026-07-31T02:57:09+08:00	fix(gates): the table's coverage property was a comment, and nothing ran it
+64d71e659ecf97df779d4f17944ee35031a17c66	2026-07-31T02:48:26+08:00	fix(gates): the findings arm fired on the register it was guarding
+2d4477240f701f967fbcd9b2794b6d30e32a234f	2026-07-31T02:46:06+08:00	fix(gates): the fixture table pinned the pattern, but the sweep is an invocation
+277e1405aecd66506a00d047b358757cd785ec46	2026-07-31T02:12:27+08:00	fix(gates): the pinned fixture table did not pin the two arms that predate it
+b047110d5a17b9d02d2ff6282d75daeaa85b6169	2026-07-31T02:08:58+08:00	fix(gates): WORDNUM stopped at fifty, and the comment above it claimed either spelling
+796d93059a12d3b39d07772c94c88452c80026da	2026-07-31T02:05:32+08:00	fix(gates): the statistic sweep read `47%` but not `47 percent`
+ef310ff70bf8aab032713c27944fb049a367dd08	2026-07-31T02:03:54+08:00	fix(gates): the statistic sweep's qualifier list was a closed enumeration of four words
+e716f1c016265293ab7415c48f06266d239539db	2026-07-31T01:43:38+08:00	fix(gates): the statistic sweep admitted the digit spelling of the figure it was added for
+af6a1574a4f6b7af5c15cf6d4a5f17e4b8577cb0	2026-07-31T01:41:48+08:00	fix(gates): the statistic sweep fired on the skill's own rule sentences
+5e4b783c471d1b8daf661f2f9286dbb1fa58a2eb	2026-07-31T01:20:21+08:00	fix(build): the round-cap paragraph published a finding count with no record behind it
+d3d7d51b3f0384ac7942473d0ff15ce63aa4398b	2026-07-31T01:17:46+08:00	fix(build): Diagnosis step 3 named a script that was never written
+94ed92e84ecb894d08fc919b55f9e8809405a54e	2026-07-31T01:16:26+08:00	fix(build): the Fix step's opening inverted triage-before-fix
+08a5924bd343ef40f691e118ba945e1a555cd413	2026-07-31T01:15:59+08:00	fix(build): the reviewer-input sentence sent reviewers what phase.js refuses to send
+949676023ff2aadfd2ef01fe8707a88e611e01de	2026-07-31T01:15:26+08:00	fix(build): the Workflow-mode note claimed a fabricated-sha check the script cannot run
+72b75cee8330817f3e5ca828f8804c8d600689ab	2026-07-31T01:02:39+08:00	fix(build): the second-reviewer clause put a statistic back on the shipped surface
+6b25b7a95d003ec37be7945b72874f8ba0000a93	2026-07-31T00:58:34+08:00	docs(build): bring build.md into line with the shipped script

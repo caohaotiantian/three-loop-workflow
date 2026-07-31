@@ -1,0 +1,1727 @@
+{
+ "verdicts": [
+  {
+   "finding_id": "F001",
+   "upheld": true,
+   "votes": [
+    {
+     "refuted": false,
+     "why": "Confirmed: the replaced sentence was the accurate one \u2014 phase.js only shape-tests the sha (40-hex), compares it to base, and substitutes the gates step's gateHead; no object lookup exists, and its comment says detection would require a shell the Workflow script does not have."
+    },
+    {
+     "refuted": false,
+     "why": "The only sha handling in phase.js is the 40-hex shape test `sha(v)`, the equality test against `base`, and substitution of the gates-reported `gateHead`; no object lookup exists, and the sentence the diff deleted was the accurate statement of that limit."
+    },
+    {
+     "refuted": false,
+     "why": "The only sha handling in phase.js is the 40-hex shape test `sha(v)`, the `writeHead === base` equality at line 247, and the `gateHead` substitution at 306-316; no object lookup exists, and lines 237-242 say so explicitly \u2014 the diff deleted the sentence that recorded that limit and replaced it with a claim of resolution."
+    }
+   ],
+   "shuffleStride": 7
+  },
+  {
+   "finding_id": "F002",
+   "upheld": true,
+   "votes": [
+    {
+     "refuted": false,
+     "why": "Confirmed: build.md:40 now sends reviewers \"the implementer's own list of low-confidence areas\", while SKILL.md:62 says diff and plan \"and **nothing else**\" and phase.js's review-prompt comment excludes \"its list of low-confidence areas\" by name, returning concerns to the caller instead; the old \"not your summary of the change, and not the whole skill\" exclusions are dropped."
+    },
+    {
+     "refuted": false,
+     "why": "The new build.md:40 hands reviewers \"the implementer's own list of low-confidence areas\", which SKILL.md:62 (\"the diff and the plan \u2014 and **nothing else**\") and phase.js:328-332 (\"not its list of low-confidence areas, not an instruction about where to look\u2026 a shared attention directive correlates the two readings\") both forbid by name; the retained \"the value comes from their independence\" clause and the dropped \"not the whole skill\" exclusion are as described."
+    },
+    {
+     "refuted": false,
+     "why": "The diff replaces \"Each gets the diff and the plan \u2014 not your summary of the change, and not the whole skill\" with a sentence handing reviewers \"the implementer's own list of low-confidence areas\", while SKILL.md:62 still says \"the diff and the plan \u2014 and **nothing else**\" and phase.js:328-332 excludes that exact input by name (\"not its list of low-confidence areas... The concerns are returned to the caller instead\")."
+    }
+   ],
+   "shuffleStride": 7
+  },
+  {
+   "finding_id": "F003",
+   "upheld": true,
+   "votes": [
+    {
+     "refuted": false,
+     "why": "Confirmed: build.md:82 now says \"Fix every reported blocking finding, then triage\", against build.md:70 \"Do not fix a finding you have not confirmed\", build.md:76 \"The confirmed count is what closes the phase\", SKILL.md:70 \"Triage before you fix, and before you count\", and phase.js's \"Triage before counting\" block which runs triage before the closure arithmetic."
+    },
+    {
+     "refuted": false,
+     "why": "build.md:82 now reads \"Fix every reported blocking finding, then triage\", against its own Triage section twelve lines up (line 70 \"Do not fix a finding you have not confirmed\", line 76 \"The confirmed count is what closes the phase\"), SKILL.md:70 \"Triage before you fix, and before you count\", and phase.js:370 \"Triage before counting\u2026 Closing on the RAW count lets a phantom defect consume a fix round\"."
+    },
+    {
+     "refuted": false,
+     "why": "The diff changes \"Fix confirmed blocking findings\" to \"Fix every reported blocking finding, then triage\", twelve lines below the unchanged Triage section's \"**Do not fix a finding you have not confirmed.**\" and \"**The confirmed count is what closes the phase**, not the reported one\", and against SKILL.md:70 and phase.js:369-372 (\"Triage before counting\")."
+    }
+   ],
+   "shuffleStride": 7
+  },
+  {
+   "finding_id": "F004",
+   "upheld": true,
+   "votes": [
+    {
+     "refuted": false,
+     "why": "Confirmed: build.md:147 in the target tree reads \"check it with `scripts/verify-plan.sh`\"; the only scripts present are scripts/{accept-release.sh,negative-test.sh,sim-phase.js,sim-scenarios.js} and three-loop-workflow/scripts/{phase.js,check-workflow-syntax.sh}, and the diff touches only build.md, so no such script was added."
+    },
+    {
+     "refuted": false,
+     "why": "build.md:147 at 2fbf2d9 does say \"check it with `scripts/verify-plan.sh`\"; `grep -rn verify-plan` over the repo matches nothing else, and neither scripts/ (accept-release.sh, negative-test.sh, sim-phase.js, sim-scenarios.js) nor three-loop-workflow/scripts/ (phase.js, check-workflow-syntax.sh) contains such a file \u2014 the tool is invented."
+    },
+    {
+     "refuted": false,
+     "why": "build.md:147 at 2fbf2d9 does read \"check it with `scripts/verify-plan.sh`\"; `git grep verify-plan 2fbf2d9` matches that line and nothing else, and neither scripts/ (accept-release.sh, negative-test.sh, sim-phase.js, sim-scenarios.js) nor three-loop-workflow/scripts/ (phase.js, check-workflow-syntax.sh) contains it \u2014 the cited sibling references at lines 11, 109, 179, 204, 207 are exact and all point at the skill's own scripts dir."
+    }
+   ],
+   "shuffleStride": 7
+  },
+  {
+   "finding_id": "F005",
+   "upheld": true,
+   "votes": [
+    {
+     "refuted": false,
+     "why": "Confirmed: the same inversion as F002, and sim-phase.js:361-369 asserts it by execution \u2014 scenario \"no reviewer receives the implementer's self-assessment\" fails if any review prompt contains the concerns text, so build.md now instructs the manual path to do what the harness tests the scripted path never does."
+    },
+    {
+     "refuted": false,
+     "why": "Same inversion, verified in code as well as prose: sim-phase.js:361-369 runs scenario \"no reviewer receives the implementer's self-assessment\" and fails if any review prompt contains the concerns or an attention directive, while phase.js returns concerns to the caller \u2014 so build.md now tells the manual path to do what the scripted path is tested to prevent."
+    },
+    {
+     "refuted": false,
+     "why": "phase.js:328-332 carries the rule in code and sim-phase.js:359-369 asserts it by execution \u2014 scenario \"no reviewer receives the implementer's self-assessment\" fails if any review prompt includes the concerns and requires them returned to the caller \u2014 so the new build.md:40 sentence instructs the manual path to do what the scripted path is tested to prevent, and drops the \"not the whole skill\" clause."
+    }
+   ],
+   "shuffleStride": 7
+  },
+  {
+   "finding_id": "F006",
+   "upheld": true,
+   "votes": [
+    {
+     "refuted": false,
+     "why": "Confirmed: the ordering inversion contradicts build.md:70/76, SKILL.md:70-71, phase.js:369-395 (triage agent runs before the closure arithmetic), and CLAUDE.md's \"triage findings before counting them\"; build.md:74 records that blind adversarial checking rejects a large share of blocking-graded findings, so the \"round you will spend anyway\" rationale is false."
+    },
+    {
+     "refuted": false,
+     "why": "Same verified inversion as F003, and the stated rationale is contradicted by build.md's own unchanged paragraph at line 74 recording that blind adversarial checking rejects a large share of blocking-graded findings, plus SKILL.md:70-71, phase.js:369-395, and CLAUDE.md's \"triage findings before counting them\"."
+    }
+   ],
+   "shuffleStride": 7
+  },
+  {
+   "finding_id": "F007",
+   "upheld": true,
+   "votes": [
+    {
+     "refuted": false,
+     "why": "Confirmed: build.md:218 claims the script \"resolves the reported value in the repository\", but phase.js's own comment states a fabricated sha \"is not itself detected\" and that detecting it \"would need the sha resolved in the repository, which this script cannot do \u2014 it has no shell\"; sim-phase.js:290 asserts only the empty-diff property, and the measurements record lists this exact overclaim as a previously confirmed finding."
+    },
+    {
+     "refuted": false,
+     "why": "phase.js is untouched by this diff and still states at 237-242 that a fabricated sha \"is not itself detected\u2026 Detecting the fabrication would need the sha resolved in the repository, which this script cannot do \u2014 it has no shell\"; sim-phase.js:290-297 asserts only the empty-diff case, and the record at harden-audit-findings-plan.md:180 logs this exact overclaim as a previously confirmed finding."
+    },
+    {
+     "refuted": false,
+     "why": "phase.js states the opposite at lines 237-242 (\"a fabricated sha does not survive into the returned `headSha`, but it is not itself detected... Detecting the fabrication would need the sha resolved in the repository, which this script cannot do \u2014 it has no shell\"), sim-phase.js:290-297 asserts only the weaker empty-diff property, and harden-audit-findings-plan.md:180 records this exact overclaim as a previously confirmed and fixed finding."
+    }
+   ],
+   "shuffleStride": 7
+  },
+  {
+   "finding_id": "F008",
+   "upheld": true,
+   "votes": [
+    {
+     "refuted": false,
+     "why": "Confirmed: `grep -rn verify-plan` over the repository returns nothing outside the new line, and neither scripts/ nor three-loop-workflow/scripts/ contains verify-plan.sh, so the added Diagnosis step 3 cites a script that does not exist."
+    },
+    {
+     "refuted": false,
+     "why": "Confirmed independently of F004: the step is unrunnable as written, and it is exactly the failure mode CLAUDE.md's Engineering Norms name (\"Do not claim a script does something without testing that it does\")."
+    },
+    {
+     "refuted": false,
+     "why": "Same verified fact as F004: `scripts/verify-plan.sh` exists nowhere in the tree at either commit, so the new Diagnosis step 3 cannot be followed, and it is exactly the 'claim a script does something without testing it' failure CLAUDE.md's Engineering Norms name."
+    }
+   ],
+   "shuffleStride": 7
+  },
+  {
+   "finding_id": "F009",
+   "upheld": true,
+   "votes": [
+    {
+     "refuted": false,
+     "why": "Confirmed: build.md:163 publishes \"Ten of the twenty-one confirmed findings in the last release\", but .agent/harden-audit-findings/plan.md:293 and docs/measurements/2026-07-30-round-data/harden-audit-findings-plan.md:293 both say \"Of the 19 confirmed findings, 10 were defects in the gates and harnesses added by the change itself\"; twenty-one appears only as CHANGELOG.md's \"breaks the two scripts twenty-one ways\", and v2.2.0 is unreleased (newest tag v2.1.0)."
+    },
+    {
+     "refuted": false,
+     "why": "The record is 19, not 21: .agent/harden-audit-findings/plan.md:293 and docs/measurements/\u2026/harden-audit-findings-plan.md:293 say \"Of the 19 confirmed findings, 10 were defects in the gates\u2026\", CHANGELOG.md:102 says \"nineteen\" (rounds tally 9+6+4=19), and the newest tag is v2.1.0 while the section described is the unreleased v2.2.0 on fix/audit-hardening."
+    },
+    {
+     "refuted": false,
+     "why": "The record is 19, not 21: harden-audit-findings-plan.md:293 says \"Of the 19 confirmed findings, **10 were defects in the gates and harnesses added by the change itself**\" and its per-round tallies sum 9+6+4=19, while \"twenty-one\" is CHANGELOG.md:17's negative-test mutation count; the change is the unreleased v2.2.0 section and the newest tag is v2.1.0."
+    }
+   ],
+   "shuffleStride": 7
+  },
+  {
+   "finding_id": "F010",
+   "upheld": false,
+   "votes": [
+    {
+     "refuted": true,
+     "why": "Reproduced 4105e9d's exact line at build.md:218 in a fresh worktree: the gate exits 2 with both halves FAIL, the sweep quoting the line, so it is not defeated by the edit it exists to catch; only by a different, self-contradicting edit that keeps the negation verbatim."
+    },
+    {
+     "refuted": true,
+     "why": "Replaying 4105e9d's actual build.md:218 edit against the new gate gives 2 FAILs / exit 2 (presence check plus the sweep quoting the line), so 'the sweep passes on a rerun of the defect it was written for' is false; a contradiction in any other paragraph also FAILs (exit 1); 'Two-sided, because this one has regressed twice' is accurate; and paragraph-scoping would change nothing since build.md is one-paragraph-per-line, while the cited :325-343 precedent joins lines to WIDEN scope."
+    },
+    {
+     "refuted": true,
+     "why": "Reinstating 4105e9d's actual line-218 wording verbatim makes the gate exit 2 with BOTH halves FAILing (presence check plus the sweep, which quotes the line), so \"the sweep passes on a rerun of the defect it was written for\" is false by execution; build.md is one-paragraph-per-line so the proposed paragraph-scoping fix is a no-op for the contrived same-line append actually demonstrated, the cited precedent is at :288-306 not :325-343, and the section's own comment already discloses that a presence check cannot see a contradicting sentence."
+    }
+   ],
+   "shuffleStride": 7
+  },
+  {
+   "finding_id": "F011",
+   "upheld": false,
+   "votes": [
+    {
+     "refuted": true,
+     "why": "The comment at :204 declares both roots deliberately and edcc26d states the property as 'resolves it against both roots'; verify-plan.sh (the motivating regression) resolves at neither root and still FAILs, and the skill does name host scripts -- check-workflow-syntax.sh:19 and phase.js:39 both cite scripts/sim-phase.js."
+    },
+    {
+     "refuted": true,
+     "why": "Injecting `scripts/verify-plan.sh` into build.md still FAILs (exit 1), so the invented-tool case the check was added for is caught; the fallback admits only the four names existing at the host root and, as the claim concedes, nothing in the shipped tree exercises it, and a relative `scripts/...` path legitimately has two resolution roots (installed skill, host project whose gates the skill tells you to run)."
+    },
+    {
+     "refuted": true,
+     "why": "\"The host-root fallback covers nothing that exists\" is false \u2014 the claim only scanned *.md, while the shipped skill's own scripts name host-repo scripts (check-workflow-syntax.sh:19 \"see scripts/sim-phase.js in this repository\"; phase.js:39 and :281), so the two-root design has a real referent; the adding commit edcc26d7 states the both-roots behaviour outright and scopes the property to invented/deleted names, which the check still holds."
+    }
+   ],
+   "shuffleStride": 7
+  },
+  {
+   "finding_id": "F012",
+   "upheld": false,
+   "votes": [
+    {
+     "refuted": true,
+     "why": "Same fallback: it is inert today (every extracted path resolves inside the skill), the check still catches the invented-tool case it was added for, and 'the skill names the host repo's' is true of the shipped tree via check-workflow-syntax.sh:19 and phase.js:39; narrowing the test is a stricter variant, not a defect in what shipped."
+    },
+    {
+     "refuted": true,
+     "why": "Same branch and same refutation as F011: the motivating failure still FAILs, the change is net-new coverage rather than a relaxed gate, and F012 itself concedes 'nothing currently in the skill would fail' under the strict form, so the comment states the policy the code implements rather than an untested behaviour claim."
+    },
+    {
+     "refuted": true,
+     "why": "The comment \"the skill names its own scripts and the host repo's\" is true of the shipped skill \u2014 check-workflow-syntax.sh:19 and phase.js:39/:281 name scripts/sim-phase.js and negative-test.sh \"in this repository\" \u2014 the claim reached \"not true today\" only by restricting its resolution to *.md; the two-root acceptance is disclosed on the very line after the comment quoted, not a hidden hole, and the check still fails on the invented-tool and deleted/renamed cases it was added for."
+    }
+   ],
+   "shuffleStride": 7
+  },
+  {
+   "finding_id": "F013",
+   "upheld": true,
+   "votes": [
+    {
+     "refuted": false,
+     "why": "Reproduced: appending `// See scripts/verify-plan.sh \u2026` to three-loop-workflow/scripts/phase.js yields ACCEPT: all checks passed, exit 0 \u2014 and the extraction confirms 10 `scripts/phase.js` from .md plus 2 `scripts/sim-phase.js` from phase.js:39 and check-workflow-syntax.sh:19 that the `--include='*.md'` filter hides, so the comment's own justification at :230-231 (\"the extraction below returns exactly one path\") is an artifact of a filter neither the header at :225 nor the comment at :226-235 discloses (the claim's word \"print\" is loose \u2014 they are comments scoped \"in this repository\" \u2014 but the coverage gap it demonstrates is real)."
+    },
+    {
+     "refuted": true,
+     "why": "The two cited non-.md lines are not violations at all \u2014 phase.js:39 says \"this repository's scripts/sim-phase.js\" and check-workflow-syntax.sh:19 says \"see scripts/sim-phase.js in this repository\", i.e. correct, explicitly-qualified references to the host repo, and 194ad1d's own body records \"No .md under three-loop-workflow/ names a host-repo script\"; dropping `--include='*.md'` as the claim implies would make the gate FAIL on those two correct sentences, which is the false-positive disqualifier the claim itself invokes elsewhere."
+    },
+    {
+     "refuted": false,
+     "why": "Reproduced: appending `// See scripts/verify-plan.sh for how to check the plan before you start.` to three-loop-workflow/scripts/phase.js produced ACCEPT: all checks passed, exit 0, zero FAIL lines \u2014 edcc26d7's defect one file class over. The extractor at :236 carries `--include='*.md'` while the section header at :225 and the per-path `ok` line both assert that every scripts/ path the shipped skill names resolves, and the comment at :226-235 does not mention the restriction. The factual premise holds too: `grep -rn 'scripts/.*\\.(js|sh)'` over the skill's non-.md files returns phase.js:39 and check-workflow-syntax.sh:19, both naming scripts/sim-phase.js, which is not one of the skill's two shipped scripts. My first refutation \u2014 that both say \"in this repository\", so no reader is misrouted \u2014 is why the fix needs an exemption rule rather than a bare filter drop, not why the gap is harmless; the repo's own later fix (77cda1b) reaches the same conclusion with the same demonstration. An ok line reading as coverage that is not there is this repo's twice-shipped defect class."
+    }
+   ],
+   "shuffleStride": 7
+  },
+  {
+   "finding_id": "F014",
+   "upheld": true,
+   "votes": [
+    {
+     "refuted": false,
+     "why": "All three reproduce with exit 0 and no FAIL \u2014 `CLAIM = re.compile(r\"detects? a fabricated sha\")` is case-sensitive and article-bound, so the conventional \"fabricated SHA\", the plural \"fabricated shas\", and the passive \"The fabrication is detected\" all walk past it, and the passive form is literally the wording of the check's own FAIL message at :223 and its ok message at :220, which claims coverage of the whole shipped skill that a single surface-form regex does not provide."
+    },
+    {
+     "refuted": true,
+     "why": "All three variants do pass (confirmed, exit 0), but this is the generic \"a grep on prose is defeatable by rephrasing\" objection the repo already answers: the mandatory negation sentence is separately pinned by `grep -qF` at :191, the comment at :179 discloses that a presence check cannot establish \"no contradicting sentence sits elsewhere\", 19bf961's body records that grep is all there is here \u2014 and broadening CLAIM to passive/plural/uppercase forms is precisely what enlarges the false-FAIL surface flagged as the disqualifier in F015."
+    },
+    {
+     "refuted": false,
+     "why": "Reproduced: all three near-neighbours appended to build.md produced ACCEPT: all checks passed, exit 0, zero FAIL \u2014 \"the script detects a fabricated SHA\" (no `re.I` on accept-release.sh:203), \"The script detects fabricated shas.\" (the regex hard-requires the singular with an article), and \"The fabrication is detected by the guard.\" (passive, which is the wording of the check's own FAIL message at :222). The `ok` line at :220 reports the broad property \"nothing in the shipped skill claims a fabricated sha is detected\" while the sweep tests one lowercase active surface form, and A1/A2 in negative-test-accept.sh pin only that same form, so the mutation harness cannot see the gap either. This is an absence check over prose, where wording-pinning is unsound \u2014 unlike the presence greps at :179/:191, where presence of the sentence genuinely is the property."
+    }
+   ],
+   "shuffleStride": 7
+  },
+  {
+   "finding_id": "F015",
+   "upheld": true,
+   "votes": [
+    {
+     "refuted": true,
+     "why": "The three FAILs reproduce, but this is the loud direction: nothing in the shipped tree trips it (baseline is green at 103 ok), the companion grep at :191 already mandates the canonical negation `it does not detect a fabricated sha` so the phrasing the sweep permits is the one the skill is required to carry anyway, and a false FAIL prints the offending sentence and is fixed by rewording \u2014 unlike b805a76's case, where the generalisation would have flagged prose already committed (references/plan.md:79), which is what made it a disqualifier there."
+    },
+    {
+     "refuted": false,
+     "why": "Reproduced: \"Nothing in phase.js detects a fabricated sha.\", \"No part of the script detects a fabricated sha.\" and \"The script is unable to detect a fabricated sha.\" each exit 1 with `FAIL the shipped skill claims the fabrication is detected` \u2014 three true statements rejected, because NEG lacks \"nothing/no/unable\" while CLAIM's `detects?` matches the bare infinitive, and b805a76's body (one commit earlier, same series) states verbatim \"a gate that fails on right writing is the same defect as one that passes on wrong writing\" as its reason for not shipping exactly this."
+    },
+    {
+     "refuted": false,
+     "why": "Reproduced: \"Nothing in phase.js detects a fabricated sha.\", \"No part of the script detects a fabricated sha.\" and \"The script is unable to detect a fabricated sha.\" each produced `FAIL the shipped skill claims the fabrication is detected`, exit 1 \u2014 three true statements of the very limit the check protects, rejected because `NEG = \\bnot\\b|\\bnever\\b|\\bcannot\\b|n't\\b` (accept-release.sh:204) covers only auxiliary negation, not a negative subject, a negative determiner, or periphrastic negation. b805a76's own message \u2014 three commits earlier in this same diff \u2014 states the disqualifier: \"a gate that fails on right writing is the same defect as one that passes on wrong writing\", and declined to add a check for that reason. The defence that no currently-shipped sentence trips it does not survive: two of the three are more natural phrasings than the sentence build.md actually ships, and the FAIL message accuses a correct sentence of asserting its own opposite."
+    }
+   ],
+   "shuffleStride": 7
+  },
+  {
+   "finding_id": "F016",
+   "upheld": true,
+   "votes": [
+    {
+     "refuted": false,
+     "why": "Reproduced both bypasses on a clone at 194ad1d: `sent[:m.start()]` means any negator earlier in the same sentence masks the claim, so \"It does not merely make the fabrication harmless; it detects a fabricated sha and stops the phase.\" and the \"cannot \u2026 but \u2026 detects a fabricated sha\" form both print ACCEPT: all checks passed, exit 0, zero FAIL, while the A1 control correctly FAILs \u2014 the negation at build.md:218 survives so the :191 presence grep passes too, meaning the two-sided arrangement described at :185 does not close this direction and the unconditional ok at :220 (\"nothing in the shipped skill claims a fabricated sha is detected\") is false."
+    },
+    {
+     "refuted": false,
+     "why": "Reproduced on a clean 194ad1d tree: appending either sentence to build.md gives `ACCEPT: all checks passed`, exit 0, zero FAILs \u2014 the sweep matches `detects a fabricated sha` and then suppresses it because `sent[:m.start()]` carries an unrelated negator (\"does not merely\", \"cannot do this\"), and case (b) reads naturally under the section's own heading \"What the script does that the manual path cannot\", so the negation-scoping the previous commit rewrote (line\u2192sentence) still leaves a reachable hole one clause wide."
+    },
+    {
+     "refuted": false,
+     "why": "Reproduced on a clean clone at 194ad1d: both (a) \"It does not merely make the fabrication harmless; it detects a fabricated sha and stops the phase.\" and (b) \"The manual path cannot do this, but the script detects a fabricated sha and stops the phase.\" printed ACCEPT: all checks passed, exit 0, zero FAIL \u2014 as a separate paragraph and inserted directly into the negation's own paragraph at build.md:218. The sweep's `NEG.search(sent[:m.start()])` at accept-release.sh:214 is satisfied by any negator earlier in the sentence, in a different clause, and `re.split(r\"(?<=[.!?])\\s+\")` never splits on a semicolon or comma, so the whole construction is one 'sentence'. The comment at :194 asserts \"SENTENCE-scoped, and it has to be\" and discloses no clause-level gap, and A1/A2 in negative-test-accept.sh pin only claims with no earlier negator, so nothing in the harness would notice. The repo's own later history fixed exactly this with a CLAUSE-scoped rewrite whose comment quotes claim (a) verbatim."
+    }
+   ],
+   "shuffleStride": 7
+  },
+  {
+   "finding_id": "F017",
+   "upheld": false,
+   "votes": [
+    {
+     "refuted": true,
+     "why": "Miscounts the load-bearing files \u2014 CLAUDE.md's _load-bearing-docs_ lists SKILL.md, references/*.md, three-loop-workflow/scripts/*, scripts/**, and CLAUDE.md, and `.github/workflows/check.yml` is in none of them, so it is two not three; D3 already declares a load-bearing `scripts/` edit so the Deep depth is unchanged by the additions, the claim itself concedes each file is a direct consequence of D3, and the plan lives in a gitignored `.agent/<task>/` that is not part of the diff under review (no such plan is present in this checkout or in the 194ad1d tree, so the quoted lines cannot be inspected)."
+    },
+    {
+     "refuted": true,
+     "why": "The plan is a gitignored working document not in the diff, and the deviation is already in the durable record \u2014 ed122d7's body says \"Deviation from the plan, recorded rather than papered over: the Non-goals say 'build.md only'. A defect that no gate can fail on is how this one shipped, so the check goes in with it\"; the claim also miscounts (.github/workflows/check.yml is not in CLAUDE.md's _load-bearing-docs_ list, so it is two load-bearing files, not three) and concedes every file is a necessary consequence of D3, so the proposed remedy \"drop what D3 does not cover\" would delete the very failing-case harness CLAUDE.md requires."
+    },
+    {
+     "refuted": false,
+     "why": "The diff touches five files; the plan's Non-goals (\"`build.md` only. No change to `SKILL.md`, to `phase.js`, or to any other file.\") permit none of them, and D3 breaks that Non-goal for the gate. scripts/negative-test-accept.sh (new, 120 lines) and CLAUDE.md:98-100 are both under _load-bearing-docs_ (`scripts/**`, `CLAUDE.md`), plus .github/workflows/check.yml. The on-disk plan at .agent/revise-build-md/plan.md now carries an amended D3 that names all four files and confesses the point verbatim: \"Naming one was an understatement \u2014 the first cut of this Decision said only `scripts/accept-release.sh`, and the other three landed as its consequences without ever being recorded, which is how a reviewer reading the plan alone would have known to read one file out of four.\" That amendment is timestamped 22:11 on 2026-07-30, 35 minutes after 194ad1d was committed at 21:36, so the record under review is the un-amended one the claim quotes. Not merely a nit in this repo: the depth gate keys off which load-bearing files change, and reviewers are handed the plan as one of their two inputs."
+    }
+   ],
+   "shuffleStride": 7
+  },
+  {
+   "finding_id": "F018",
+   "upheld": true,
+   "votes": [
+    {
+     "refuted": true,
+     "why": "Misattributes the cause: the demonstrated sentence is missed even with ` but ` deleted from CLAUSE and even at whole-sentence scope \u2014 CLAIM's token class `[\\w'`*]+` excludes the hyphen, so \"detects a well-formed fabricated sha\" (no `but` at all) is also missed; the reverse-order \"control\" only shows CLAIM matching \"detects a fabricated\" in clause 1, it does not isolate the splitter."
+    },
+    {
+     "refuted": false,
+     "why": "Reproduced on a clean clone at 77cda1b: appending `It detects a well-formed but fabricated sha and stops the phase.` to build.md gives exit 0, zero FAIL, while `a fabricated but well-formed sha` exits 1 \u2014 isolating the cause to CLAUSE (:229-230) splitting bare ` but ` inside a noun phrase so `detect*` and `fabricat*` land in different fragments; ` though ` behaves the same, the :225-228 comment reasons about ` and ` and never applies it here, the :243-247 residual does not cover it, and A1c uses ` but ` only as a true clause coordinator."
+    },
+    {
+     "refuted": false,
+     "why": "Reproduced in a clean clone at 77cda1b: appending `It detects a well-formed but fabricated sha and stops the phase.` to three-loop-workflow/references/build.md gives `ACCEPT: all checks passed`, exit 0, zero FAIL, while the reverse adjective order (`a fabricated but well-formed sha`) FAILS \u2014 so CLAUSE's bare ` but ` (accept-release.sh:229) is severing the CLAIM's own two stems, not a NEG problem; ` though ` and ` while ` behave identically (`a harmless though/while fabricated sha` both exit 0). No formatting deviation is needed, the sentence uses the check's own target vocabulary and build.md:218's own phrasing (\"a well-formed sha it never created\"), the negation grep at :191 still passes because the negation is untouched, the residual disclosed at :243-248 covers only a trailing negator (this has none), and no case in scripts/negative-test-accept.sh probes an intra-phrase coordinator."
+    }
+   ],
+   "shuffleStride": 7
+  },
+  {
+   "finding_id": "F019",
+   "upheld": false,
+   "votes": [
+    {
+     "refuted": true,
+     "why": "Reads :207 (\"the CLAIM is the co-occurrence, not a wording\") as a semantic guarantee when its own comment scopes it to surface forms of the same two stems (capitalisation/plural/passive, pinned as A2b-A2d); and the actual 4105e9d regression, applied verbatim to the target tree, fails the gate twice \u2014 the presence grep at :191 plus the sweep \u2014 so the \"operational half\" only survives when bolted on beside the true limit it contradicts."
+    },
+    {
+     "refuted": true,
+     "why": "Demonstrations reproduce but describe the unavoidable boundary of a two-stem regex (visible at :212), not a bug: applying 4105e9d's actual replacement exits 2, caught by both the :191 presence grep and the CLAIM sweep, so only the second sentence in isolation slips through; and the two cited comments narrow on their surrounding lines \u2014 :207 is followed by the three surface forms it means (A2b/A2c/A2d), and :255 matches the file's uniform ok-line style where every other property-shaped message also sits on a single grep."
+    },
+    {
+     "refuted": true,
+     "why": "The bypasses reproduce, but they are the inherent scope of a lexical sweep, not a defect, and the framing misreads the file: 4105e9d replayed verbatim FAILS twice (`build.md no longer records the fabricated-sha limit` from the presence grep at :191 plus `the shipped skill claims the fabrication is detected`), so the regression it was written for is caught; the comment at :207 (\"The CLAIM is the co-occurrence, not a wording\") is explicitly contrasting stem co-occurrence against one surface form \u2014 the next four lines enumerate `SHA`/plural/passive \u2014 not promising paraphrase detection; and :255 is a one-line ok summary sitting under ~50 lines of comment that state the check's exact semantics. Residual requires a writer to keep the literal sentence \"it does not detect a fabricated sha\" and add a directly contradicting operational description in the same file."
+    }
+   ],
+   "shuffleStride": 7
+  },
+  {
+   "finding_id": "F020",
+   "upheld": true,
+   "votes": [
+    {
+     "refuted": false,
+     "why": "Reproduced on the target commit: two unpunctuated bullets collapse to one sentence and one clause, so `never` in bullet 1 masks the claim in bullet 2 (exit 0, zero FAIL), while the same bullet alone and the same bullets with terminal periods both FAIL \u2014 a valid control isolating sentence/clause scoping, an A1-class hole that :239-247 does not disclose and negative-test-accept.sh does not pin."
+    },
+    {
+     "refuted": false,
+     "why": "Reproduced exactly: two unpunctuated bullets exit 0 with zero FAIL, the second bullet alone exits 1, the negator two bullets away still survives, and the same pair with terminal periods IS caught \u2014 isolating the cause to `(?<=[.!?])\\s+` at :238 collapsing an unpunctuated list into one sentence that CLAUSE cannot split (single `-` is not a boundary), so any NEG token in the list masks a claim elsewhere in it; tables have the same exposure, the :243-247 residual does not cover it, and every case in negative-test-accept.sh uses terminated sentences."
+    },
+    {
+     "refuted": true,
+     "why": "The mechanism reproduces only under formatting the shipped skill never uses: all 43 bullets across SKILL.md and references/*.md end in terminal punctuation (`grep -rn '^ *[-*] ' | grep -vE '[.!?:]...$'` returns nothing), and the identical two bullets written in house style (`- The reported sha is never resolved.` / `- It detects a fabricated sha and stops the phase.`) FAIL, as does the version where only the negator bullet is punctuated \u2014 the bypass needs the negator's own bullet to be unterminated, so the stated rationale (\"bullet-heavy, so this is the likeliest formatting for a future regression\") is contradicted by the files. It also misattributes its quote: \"Negation in English scopes to a clause, so the check has to as well\" is in scripts/negative-test-accept.sh's A1b comment, not accept-release.sh:196-205."
+    }
+   ],
+   "shuffleStride": 7
+  },
+  {
+   "finding_id": "F021",
+   "upheld": true,
+   "votes": [
+    {
+     "refuted": true,
+     "why": "The over-firing is real (I reproduced all five sentences), but it is a forced consequence of pinned behaviour rather than an oversight: A2 and A2d in negative-test-accept.sh:176-193 require the sweep to catch `As of this release the script detects a fabricated sha.` and `The fabrication is detected by the guard.`, and the latter contains no sha token anywhere in its sentence or paragraph \u2014 so requiring a sha in the ACT/OBJ arms would reopen a demonstrated bypass. No prose in the shipped skill triggers it today (a \u00b110-word scan over all 8 shipped files finds only the two intended, negated occurrences in build.md and phase.js), and when it does fire it names the offending sentence and blocks at authoring time rather than shipping a false guarantee. The `accepts` counterweight the claim invokes (:106) was written for the sweep rejecting the limit statement the passage MUST contain (B1-B3); these are optional sentences the skill does not write."
+    },
+    {
+     "refuted": false,
+     "why": "Verified in a fresh clone: `Triage rejects invented findings before the count.`, `The reviewer catches invented abstractions and unused helpers.`, `Flag a fabricated test result the moment you see one.` and two more each give exit 1 with `FAIL the shipped skill claims the fabrication is detected` \u2014 true prose in the file's own register (build.md:70-78 is entirely about rejecting findings), and every `accepts` case in the harness is a restatement of the sha limit, so nothing can see this direction."
+    },
+    {
+     "refuted": false,
+     "why": "Confirmed by execution: all five cited sentences (plus others) exit 1 with 'claims the fabrication is detected' on prose that names no sha, and every accepts case in negative-test-accept.sh restates the sha limit, so the direction negative-test-accept.sh:106 calls the same defect is untested."
+    }
+   ],
+   "shuffleStride": 7
+  },
+  {
+   "finding_id": "F022",
+   "upheld": true,
+   "votes": [
+    {
+     "refuted": false,
+     "why": "Reproduced both sentences on a clean clone: `If the implementer reports a sha it did not create, the script detects the fabrication and stops the phase.` and `Because the manual path cannot do this, the script detects a fabricated sha and stops the phase.` each print `ACCEPT: all checks passed`, exit 0, zero FAIL. CLAUSE at :273-274 has no boundary for a fronted subordinate clause \u2014 its comma lookahead `,\\s+(?=\\w+(?:s|ed)\\s)` fires on `, finds no object` (which is what makes A7 detectable) but not on `, the script detects` \u2014 so lo/hi at :314-315 span the whole sentence and the subordinate clause's negator answers for the main clause's claim. Same defect class A1b/A1c/A1g are pinned against, reached through a shape none of them uses. (The claim's `:160-168` pointer for the residuals is a miscitation \u2014 they are at :297-306 \u2014 but the substance holds: neither residual covers this.)"
+    },
+    {
+     "refuted": false,
+     "why": "Confirmed: `Because the manual path cannot do this, the script detects a fabricated sha and stops the phase.` exits 0 while A1c's own `, but ` version exits 1 \u2014 and `Although\u2026, ` / `While\u2026, ` also pass, because the boundary set spells those subordinators `\\s+although\\b` so sentence-initial ones never match, while `,\\s+(?=\\w+(?:s|ed)\\s)` does not fire on `, the script detects`; the comment's own description of CLAUSE as \"conjunctions that start a new subject-verb unit\" is not delivered for fronted clauses, and neither documented residual covers it."
+    },
+    {
+     "refuted": false,
+     "why": "Confirmed and broader than claimed: both cited sentences plus 'Although the manual path cannot do this, the script detects a fabricated sha.' exit 0 with zero FAIL while the ', but ' form (pinned as A1c) exits 1, because the :274 boundary needs a word ending in s/ed after the comma."
+    }
+   ],
+   "shuffleStride": 7
+  },
+  {
+   "finding_id": "F023",
+   "upheld": true,
+   "votes": [
+    {
+     "refuted": true,
+     "why": "Same substance as the over-firing claim, and refuted for the same reason: `Triage rejects invented findings before the count.` and `The gate catches faked green runs.` do fail, but the sha-less ACT/OBJ arms at :238 are required by A2d (`The fabrication is detected by the guard.`, negative-test-accept.sh:191-193), which has no sha token to key on \u2014 so the proposed narrowing would reinstate a pinned bypass. No shipped sentence collides today, acceptance is green, and the FAIL line prints the offending sentence verbatim, so the diagnosis wording misleads for at most one authoring cycle rather than shipping unbacked coverage."
+    },
+    {
+     "refuted": false,
+     "why": "Same demonstrated over-fire: `Triage rejects invented findings before the count.` and `The gate catches faked green runs.` both exit 1 on a FAIL message that misdiagnoses them as claiming a sha fabrication is detected; the B-case line range cited (126-160) is wrong \u2014 B1-B8 sit at 249-282 \u2014 but the substance holds, every B case is about the sha limit and none covers unrelated prose."
+    },
+    {
+     "refuted": false,
+     "why": "Confirmed: 'Triage rejects invented findings before the count.' and 'The gate catches faked green runs.' both exit 1 with a wrong diagnosis; build.md:70-78 is a whole section about rejecting findings that are not there, so this is prose the file is one edit away from (line cite for B1-B8 is off, substance is not)."
+    }
+   ],
+   "shuffleStride": 7
+  },
+  {
+   "finding_id": "F024",
+   "upheld": false,
+   "votes": [
+    {
+     "refuted": false,
+     "why": "Reproduced on a clean clone of b6947d3: appending `It detects a sha that the implementer fabricated, and stops the phase.` to references/build.md gives exit 0, zero FAIL, and prints `no un-negated detect/catch/reject/identify or resolve-a-sha claim in the shipped skill`. GAP at :237 is `{0,3}` filler words, so an in-vocabulary claim (detect + fabricat) separated by four words \u2014 `detects a sha the implementer fabricated` \u2014 never matches CLAIM at all. The two residuals documented at :298-306 are (1) a guarantee written OUTSIDE the ACT/OBJ/resolve vocabulary and (2) a negator trailing the claim in its own clause; neither covers an in-vocabulary claim at distance, so the success line's universal is false in a way the file does not disclose."
+    },
+    {
+     "refuted": true,
+     "why": "The 3-word bound is stated at the point of definition (accept-release.sh:231, \"GAP is up to three words of filler between the two halves\"), and the claim's second demo sentence (\"The guard verifies the reported sha exists...\") uses a verb outside ACT with no `resolv` stem, which is precisely documented residual #1 at :298 \u2014 so the assertion that \"neither residual is this one\" misreads the surrounding lines for half its evidence."
+    },
+    {
+     "refuted": true,
+     "why": "Demo reproduces, but its second sentence uses no ACT/OBJ/resolv stem at all and is therefore exactly documented residual 1 at :298-303 which the claim denies; the first is a 5-word gap against the GAP=3 window stated outright at :231/:237, and widening it is precisely what causes the over-fire F021/F023 attack."
+    }
+   ],
+   "shuffleStride": 7
+  },
+  {
+   "finding_id": "F025",
+   "upheld": false,
+   "votes": [
+    {
+     "refuted": true,
+     "why": "Reproduced (`scripts/verify-plan.py` passes silently), but the blind spot is empty and stays empty: the skill ships exactly two scripts, phase.js and check-workflow-syntax.sh, flat in scripts/, and CLAUDE.md's Engineering Norms fix Workflow scripts as plain JavaScript with shell helpers. That is what distinguishes it from 77cda1b, which fixed a filter whose blind spot held real content \u2014 phase.js:39 and check-workflow-syntax.sh:19 already named scripts/sim-phase.js when the `--include='*.md'` filter hid them. Note the `\\.(js|sh)` restriction is not something this change introduced; it is verbatim from the pre-77cda1b `grep -rohE 'scripts/[A-Za-z0-9_.-]+\\.(js|sh)'`. Demonstrating the gap requires inventing a file class the skill does not ship and could not ship without a load-bearing change to its own norms."
+    },
+    {
+     "refuted": true,
+     "why": "All 12 `scripts/` mentions in the shipped skill are flat `.js` paths (`scripts/phase.js`, `scripts/sim-phase.js`), the shipped scripts dir holds two flat files, and CLAUDE.md's norms confine workflow scripts to plain JavaScript \u2014 the `.py`/subdirectory gap has no instantiation, and widening the extractor is what would import the false-positive problem the neighbouring sweep already has."
+    },
+    {
+     "refuted": true,
+     "why": "Demo reproduces, but all 12 scripts/ mentions across the 8 shipped files are top-level .js/.sh and all resolve, so the header is true of the shipped surface; unlike 77cda1b's missed file class which already held live references, this needs a .py or subdirectory path the skill's own norms exclude."
+    }
+   ],
+   "shuffleStride": 7
+  },
+  {
+   "finding_id": "F026",
+   "upheld": true,
+   "votes": [
+    {
+     "refuted": true,
+     "why": "Ran the extracted sweep: across the whole shipped skill `resolv*` occurs 11 times and bare `sha` 14 times, and the two co-occur within the window exactly once \u2014 build.md:218, the negated limit; the worktree-path, plan-decision, role-anchor and `resolvedDepth` uses all pass, so this is a bigram about one object, not the register match f81fb21 fixed. Of the three cited sentences, #1 asserts the gates step 'resolves the sha the reviewer will see' when phase.js only receives a reported string it shape-checks (the true form, 'The gates step reports its own `git rev-parse HEAD`, and the reported sha is discarded in favour of it.', PASSES), and #3 is false of the skill \u2014 phase.js:334 hands reviewers `git diff base..branch` and discards the reported sha. #2 is the generic clause-scoping cost shared by all four arms and named at accept-release.sh:299-302 ('a sentence of that shape is the defect, not the writing'); B6/B7/B13's phrasings and 'A Workflow script cannot resolve a sha; a shell can.' all PASS, so no accepted way to state the limit is blocked. The `bad` line is not a misdiagnosis of A7: :234-236 defines the resolve arm as 'the OPERATIONAL half of the same claim', and the FAIL prints the offending file and sentence."
+    },
+    {
+     "refuted": false,
+     "why": "Extracted the PYSHA sweep from scripts/accept-release.sh@0134daa and ran it on an isolated tree: all three cited sentences flag (exit 1) \u2014 the resolve arms (`\\bresolv\\w*` GAP SHA / SHA GAP `\\bresolv\\w*`, lines 257-258) require no fabrication word and no subject test, so true prose about the gates agent, a shell, or the manual reviewer resolving a sha is rejected with FAIL 'the shipped skill claims the fabrication is detected'; B6/B7 (negative-test-accept.sh:293-297) only pin negated resolve statements, and the comment at :229-230 asserts the arm is 'false however it is worded', which is exactly what is untrue. One overreach in the claim: A7's sentence ('resolves the reported value ... finds no object ... stops the phase') genuinely IS a claim that the fabrication is detected, so the bad line is not a misdiagnosis of A7 \u2014 but it is of the true sentences, and the core defect reproduces."
+    },
+    {
+     "refuted": false,
+     "why": "Reproduced: the resolve arms at accept-release.sh:257-258 fire on un-negated `resolv*`+sha with no requirement the sentence be about fabrication; all three cited sentences flag (exit 1), including \"A shell resolves a sha; a Workflow script has none.\" where the semicolon clause boundary puts `none` out of reach. B6/B7 (negative-test-accept.sh:293-297, not :602-606 \u2014 the file is 390 lines) pin only negated resolve statements, so this direction is uncovered, and the bad line at :369 does misdiagnose resolve-arm hits while the ok line at :367 names both arms."
+    }
+   ],
+   "shuffleStride": 7
+  },
+  {
+   "finding_id": "F027",
+   "upheld": false,
+   "votes": [
+    {
+     "refuted": true,
+     "why": "Confirmed 12 of 20 commits lack `Gates:` trailers, but the diff under review contains no commit messages and nothing in the shipped skill, gate, or prose is wrong because of it; no repository gate checks trailers and CLAUDE.md's commit norms require only conventional prefixes and no AI mentions. The central inference is also wrong: 0134daa's own body records a measured run ('printed exit 0, zero FAIL, and the gate reported that every such path resolved'), as do 2a3e076 ('Watched REJECTED on all three, green after') and 0656e8c ('both print ACCEPT, exit 0, zero FAIL'), so CLAUDE.md's substantive norm \u2014 state what you ran \u2014 is met, and build.md:220 itself relaxes the trailer placement ('record them yourself, or on the fix commits')."
+    },
+    {
+     "refuted": false,
+     "why": "Verified with `%(trailers:key=Gates)`: the 12 named commits carry no Gates trailer and their messages do not contain the word 'gates' at all, while 2fbf2d9-194ad1d and all seven pre-base commits (244c20a5, 9969e1b, ca73ece, b7faef5, 512b167, 12f13a6, 65a3702) and the whole preceding history do; exp-rep1 resolves to 0134daa, the tip, which has none. build.md:32 states the rule and CLAUDE.md binds this repo to the skill's own cycle. Mitigation only, not a dissolution: .github/workflows/check.yml runs the full gate on push to every branch, so CI holds evidence the trailers do not."
+    },
+    {
+     "refuted": true,
+     "why": "The trailer counts are accurate, but this is commit metadata rather than a property of the documentation change, and the repo's own binding norm (CLAUDE.md, Engineering Norms) requires only \"conventional prefixes, no mention of AI involvement, model names, or tooling\" \u2014 no `Gates:` trailer \u2014 and no check in scripts/ or CI enforces or inspects trailers."
+    }
+   ],
+   "shuffleStride": 7
+  },
+  {
+   "finding_id": "F028",
+   "upheld": true,
+   "votes": [
+    {
+     "refuted": true,
+     "why": "The premise-scoping argument fails on build.md's actual manual path: it tells the reader to *Capture* `baseSha = git rev-parse HEAD` themselves (build.md:5), and the 'reported sha'/'reported value' vocabulary exists only in Workflow mode (build.md:198-218), so there is no third-party sha for a manual reader to resolve. Both demonstration sentences import that Workflow-mode object into a path where it does not exist or invent an instruction the skill never gives (nothing quotes a sha in the plan). Running the extracted sweep, every natural manual-path phrasing PASSES \u2014 'In the manual path you have a shell, so check the head yourself before you review.', 'Run `git rev-parse HEAD` yourself and confirm the commit exists before you trust the report.', 'If a subagent reports a sha, resolve it in the repository before you trust it.', 'By hand you have a shell: resolve the reported value yourself, which the script cannot do.' The only flagged shape is a negator sitting in a different clause, which is symmetric across all four arms (the ACT analogue flags identically) and is the residual accept-release.sh:299-302 states and accepts."
+    },
+    {
+     "refuted": false,
+     "why": "Reproduced by execution: both appended sentences exit 1, as does 'In the manual path the reviewer resolves the sha you reported...' and 'The reviewer runs git diff, which resolves the reported sha in your repository' \u2014 all true, since build.md:5 and :45 tell a human with a shell to capture baseSha and diff ref-to-ref, so the premise at :189/:229-230 ('a Workflow script has no shell, so nothing it ships resolves anything') holds only for phase.js while the sweep walks the whole skill. Line citations are off (the walk is at :319, the premise at :229-230, not :269-271/:234-238) and the prescribed fix is the claimant's, not a requirement, but the quoted text is verbatim and the defect is at the cited construct."
+    },
+    {
+     "refuted": false,
+     "why": "Confirmed by executing the full gate in a fresh clone at 0134daa: appending `Resolve the sha with \\`git rev-parse\\` before you quote it in the plan.` to build.md yields `FAIL the shipped skill claims the fabrication is detected`, exit 1 \u2014 a true manual-path instruction rejected, because the premise at :189/:229-232 is scoped to the Workflow script while the sweep walks all of three-loop-workflow/ and lines 1-176 of build.md's 222 document the manual path, where a shell exists."
+    }
+   ],
+   "shuffleStride": 7
+  },
+  {
+   "finding_id": "F029",
+   "upheld": true,
+   "votes": [
+    {
+     "refuted": false,
+     "why": "build.md:40 now says reviewers get \"the diff, the plan, and the implementer's own list of low-confidence areas\"; phase.js:328-332 states \"The diff and the plan, and nothing else. Not the implementer's summary, not its list of low-confidence areas\", SKILL.md:62 repeats it, negative-test.sh:125 (M11) injects concerns as a deliberate break, and sim-phase.js:361-369 asserts no reviewer prompt leaks them."
+    },
+    {
+     "refuted": false,
+     "why": "build.md:40 now says reviewers get \"the diff, the plan, and the implementer's own list of low-confidence areas\", while phase.js:328-332 comments \"The diff and the plan, and nothing else. Not the implementer's summary, not its list of low-confidence areas\", SKILL.md:62 says \"and **nothing else**\", and sim-phase.js:361-369 asserts by execution that no review prompt leaks the concerns."
+    },
+    {
+     "refuted": false,
+     "why": "build.md:40 now says reviewers get \"the implementer's own list of low-confidence areas\"; phase.js:328-332 says \"The diff and the plan, and nothing else. Not the implementer's summary, not its list of low-confidence areas\", the prompt at 333-344 carries neither, SKILL.md:62 says \"nothing else\", negative-test.sh:125 injects exactly that concerns line as a deliberate break, and sim-phase.js:367 asserts no reviewer prompt leaks them."
+    }
+   ],
+   "shuffleStride": 7
+  },
+  {
+   "finding_id": "F030",
+   "upheld": true,
+   "votes": [
+    {
+     "refuted": false,
+     "why": "build.md:218 asserts the script \"resolves the reported value in the repository\"; phase.js:237-242 states the opposite (\"it is not itself detected ... which this script cannot do \u2014 it has no shell\") and the only checks on `work.headSha` are the 40-hex shape test at 243-246 and the equality-to-base test at 247-249 \u2014 there is no object lookup anywhere in the file."
+    },
+    {
+     "refuted": false,
+     "why": "build.md:218 asserts \"the script resolves the reported value in the repository, finds no object of that name, and stops the phase with an `agent-error`\", while phase.js:239-242 states the fabrication \"is not itself detected\u2026 Detecting the fabrication would need the sha resolved in the repository, which this script cannot do \u2014 it has no shell\"; the only checks on `work.headSha` are the 40-hex shape test (243-246) and equality-to-base (247-249)."
+    },
+    {
+     "refuted": false,
+     "why": "build.md:218 asserts the script \"resolves the reported value in the repository\"; phase.js:237-242 states the opposite in terms (\"it is not itself detected ... needs the sha resolved in the repository, which this script cannot do \u2014 it has no shell\"), and the only checks on work.headSha are the 40-hex shape test (243-246) and equality-to-base (247-249). No lookup path exists, and the deleted sentence was the accurate one."
+    }
+   ],
+   "shuffleStride": 7
+  },
+  {
+   "finding_id": "F031",
+   "upheld": true,
+   "votes": [
+    {
+     "refuted": false,
+     "why": "Same reversal \u2014 the old line was \"Fix confirmed blocking findings.\" \u2014 and triage in phase.js is a single `tryAgent` call before any fix round, so the stated rationale (\"costs a round you will spend anyway\") is false on its own terms."
+    },
+    {
+     "refuted": false,
+     "why": "build.md:82's \"Fix every reported blocking finding, then triage\" is the inverse of the unchanged line 76 six lines above it and of SKILL.md:70-71 and phase.js:370-374, whose comment gives the exact failure mode (\"a phantom defect consume a fix round and exhaust the cap on already-correct code\")."
+    },
+    {
+     "refuted": false,
+     "why": "The diff replaced \"Fix confirmed blocking findings.\" with \"Fix every reported blocking finding, then triage\", inverting SKILL.md:70, phase.js:370-374, and build.md's own untouched line 76 six lines above. Triage is a separate agent call inside the round and does not increment `fixes` (phase.js:267-268, 374-379), so the added rationale is wrong on its own terms too."
+    }
+   ],
+   "shuffleStride": 7
+  },
+  {
+   "finding_id": "F032",
+   "upheld": true,
+   "votes": [
+    {
+     "refuted": false,
+     "why": "build.md:147 does read \"check it with `scripts/verify-plan.sh`\"; the file exists nowhere in the tree (`git ls-tree` shows only accept-release.sh, negative-test.sh, sim-phase.js, sim-scenarios.js under scripts/, and check-workflow-syntax.sh + phase.js under three-loop-workflow/scripts/), and `git grep verify-plan` returns that one line as its only hit."
+    },
+    {
+     "refuted": false,
+     "why": "build.md:147 does say \"check it with `scripts/verify-plan.sh`\", and `git grep verify-plan` at e811d50 returns only that line \u2014 no such file exists in `scripts/` (accept-release.sh, negative-test.sh, sim-phase.js, sim-scenarios.js) or in `three-loop-workflow/scripts/` (check-workflow-syntax.sh, phase.js)."
+    },
+    {
+     "refuted": false,
+     "why": "build.md:147 at e811d50 reads \"check it with `scripts/verify-plan.sh`\"; no verify-plan.sh exists in the tree or in the commit's ls-tree (scripts/ holds accept-release.sh, negative-test.sh, sim-phase.js, sim-scenarios.js; three-loop-workflow/scripts/ holds check-workflow-syntax.sh, phase.js). Its side-claim about path convention is wrong (build.md:11/109/179 already say `scripts/phase.js`), but the missing-script core is real and e811d50's own message lists it as an unfixed finding."
+    }
+   ],
+   "shuffleStride": 7
+  },
+  {
+   "finding_id": "F033",
+   "upheld": true,
+   "votes": [
+    {
+     "refuted": false,
+     "why": "build.md:163 does carry a spelled-out statistic that accept-release.sh:146-151's regex `[0-9]+(\\.[0-9]+)?%|percentage points|116 findings` cannot match; the \"twenty-one\" denominator matches nothing but CHANGELOG.md:17's mutation count (which CLAUDE.md states as \"fifteen\"). One supporting sentence is inaccurate \u2014 CHANGELOG.md:102-103 does record the \"ten ... defects in the gates\" half \u2014 but the wrong figure on a statistic-free surface is real."
+    },
+    {
+     "refuted": false,
+     "why": "build.md:163 adds \"Ten of the twenty-one confirmed findings in the last release\u2026\" \u2014 a spelled-out statistic on the shipped surface that accept-release.sh:147's regex `[0-9]+(\\.[0-9]+)?%|percentage points|116 findings` cannot match, so the gate prints \"no statistics anywhere in the shipped skill\"; the only other `twenty-one` in the tree is CHANGELOG.md:17's mutation count, and e811d50's own message names this line as a known, unfixed finding."
+    },
+    {
+     "refuted": false,
+     "why": "build.md:163 carries a spelled-out statistic on the always-shipped surface, and accept-release.sh:147's regex `[0-9]+(\\.[0-9]+)?%|percentage points|116 findings` cannot see words, so the gate prints \"no statistics anywhere in the shipped skill\". Its aside that no artifact records ten gate defects is wrong (CHANGELOG.md:103 does), but \"twenty-one confirmed findings\" is unsourced and the no-statistics violation is real."
+    }
+   ],
+   "shuffleStride": 7
+  },
+  {
+   "finding_id": "F034",
+   "upheld": true,
+   "votes": [
+    {
+     "refuted": false,
+     "why": "Same inversion at build.md:40, and the reviewer-prompt template printed at build.md:44-60 passes neither a summary nor a concerns list, so the paragraph contradicts its own example as well as phase.js:328-332 and SKILL.md:62."
+    },
+    {
+     "refuted": false,
+     "why": "Confirmed at the cited lines: build.md:40's new reviewer-input list contradicts phase.js:328-332's explicit comment and its prompt at 333-344 (diff and plan only), SKILL.md:62, and the file's own reviewer-prompt template at build.md:44-60, which passes no summary or concerns list."
+    },
+    {
+     "refuted": false,
+     "why": "Verified against the cited lines: phase.js:328-332's comment forbids exactly the concerns list build.md:40 now hands reviewers, the reviewPrompt at 333-344 contains only diff+plan, SKILL.md:62 repeats the rule, and the template printed at build.md:44-59 passes neither a summary nor concerns \u2014 so the paragraph does contradict its own example."
+    }
+   ],
+   "shuffleStride": 7
+  },
+  {
+   "finding_id": "F035",
+   "upheld": true,
+   "votes": [
+    {
+     "refuted": false,
+     "why": "Same false capability at build.md:218; sim-phase.js:290 asserts only the narrower \"a fabricated but well-formed headSha cannot close a phase on an empty diff\", and the replaced sentence was the accurate statement of the limit."
+    },
+    {
+     "refuted": false,
+     "why": "The deleted sentence matched phase.js:237-242 verbatim in substance; the replacement at build.md:218 asserts a repository object lookup that phase.js has no code path for and explicitly says it cannot perform, and sim-phase.js:290 asserts only the narrower property (a fabricated sha cannot close a phase on an empty diff)."
+    },
+    {
+     "refuted": false,
+     "why": "Same as F030 and verified at both cites: build.md:218 asserts a repository resolution that phase.js:237-242 explicitly says it cannot perform, and sim-phase.js:290 asserts only the narrower property (a fabricated well-formed sha cannot close a phase on an empty diff). The restatement asserts a guard that is not in the code."
+    }
+   ],
+   "shuffleStride": 7
+  },
+  {
+   "finding_id": "F036",
+   "upheld": true,
+   "votes": [
+    {
+     "refuted": false,
+     "why": "build.md:82 now reads \"Fix every reported blocking finding, then triage\", against build.md:70/76, SKILL.md:70-71, and phase.js:370-373 (\"Triage before counting ... the arithmetic below runs on confirmed findings only\"); CHANGELOG.md:163 records only 50-70% of blocking-graded findings surviving adjudication."
+    },
+    {
+     "refuted": false,
+     "why": "build.md:82 reads \"Fix every reported blocking finding, then triage\", directly against build.md:70/76 (\"Do not fix a finding you have not confirmed\", \"The confirmed count is what closes the phase\"), SKILL.md:70 (\"Triage before you fix, and before you count\"), and phase.js:370-374, which triages `reported` before the closure arithmetic."
+    },
+    {
+     "refuted": false,
+     "why": "build.md:82 now reads \"Fix every reported blocking finding, then triage\", against build.md:70/76 (\"Do not fix a finding you have not confirmed\", \"The confirmed count is what closes the phase\"), SKILL.md:70-71 (\"Triage before you fix, and before you count\"), and phase.js:370-374 which triages `reported` before the closure count; CHANGELOG records blocking-graded precision at 50-70%."
+    }
+   ],
+   "shuffleStride": 7
+  },
+  {
+   "finding_id": "F037",
+   "upheld": true,
+   "votes": [
+    {
+     "refuted": false,
+     "why": "Same verified fact as F032 \u2014 build.md:147 names a nonexistent `scripts/verify-plan.sh`, and build.md is shipped skill guidance that otherwise routes mechanical checks through the project guide's _common-commands_ rather than a repo-local path."
+    },
+    {
+     "refuted": false,
+     "why": "Same verified fact as F032 \u2014 `scripts/verify-plan.sh` is referenced at build.md:147 and exists nowhere at e811d50; the tracked script inventory is accept-release.sh, negative-test.sh, sim-phase.js, sim-scenarios.js, check-workflow-syntax.sh, phase.js."
+    },
+    {
+     "refuted": false,
+     "why": "Same verified fact as F032: `scripts/verify-plan.sh` is absent from the working tree and from `git ls-tree` at e811d50, so step 3 of Diagnosis instructs a reader to run a file that does not exist. The claim's secondary point about routing checks through _common-commands_ is inaccurate (build.md hardcodes `scripts/phase.js` elsewhere), but that does not rescue the missing file."
+    }
+   ],
+   "shuffleStride": 7
+  },
+  {
+   "finding_id": "F038",
+   "upheld": true,
+   "votes": [
+    {
+     "refuted": false,
+     "why": "CHANGELOG.md:102-103 says \"Of the nineteen confirmed findings, ten were defects in the gates and harnesses this release adds\", so build.md:163's \"twenty-one\" is wrong, and e811d50's own commit body lists it as a known finding left in the branch."
+    },
+    {
+     "refuted": false,
+     "why": "CHANGELOG.md:102-103 records \"Of the nineteen confirmed findings, ten were defects in the gates and harnesses this release adds\" \u2014 build.md:163 says twenty-one, a number that appears in the tree only as CHANGELOG.md:17's negative-test mutation count, and it slips past accept-release.sh:146-152 only because it is spelled out."
+    },
+    {
+     "refuted": false,
+     "why": "CHANGELOG.md:102-103 reads \"Of the nineteen confirmed findings, ten were defects in the gates and harnesses this release adds\" \u2014 build.md:163's denominator of twenty-one is wrong, and twenty-one appears in the tree only as negative-test.sh's mutation count (CHANGELOG.md:17). The word-form also slips past accept-release.sh:146-151's numeric regex, which e811d50's message concedes."
+    }
+   ],
+   "shuffleStride": 7
+  },
+  {
+   "finding_id": "F039",
+   "upheld": true,
+   "votes": [
+    {
+     "refuted": false,
+     "why": "build.md:218 claims the script resolves the reported sha in the repository, but phase.js:239-242 states it cannot ('it has no shell'), and no writeHead-vs-gateHead comparison exists, so a fabricated sha on a non-empty diff is undetected."
+    },
+    {
+     "refuted": false,
+     "why": "build.md:218 now reads \"It also detects a fabricated sha ... resolves the reported value in the repository\", while phase.js:240-242 says the opposite verbatim (\"is not itself detected ... which this script cannot do \u2014 it has no shell\") and sim-phase.js:290 only asserts the weaker empty-diff property; the deleted sentence was the limit's only statement in the skill."
+    },
+    {
+     "refuted": false,
+     "why": "build.md:218 now claims the script \"resolves the reported value in the repository\", while phase.js:237-242 states the opposite (\"is not itself detected ... it has no shell\") and sim-phase.js:290 only asserts the empty-diff case; the deleted sentence was the accurate one."
+    }
+   ],
+   "shuffleStride": 7
+  },
+  {
+   "finding_id": "F040",
+   "upheld": true,
+   "votes": [
+    {
+     "refuted": false,
+     "why": "build.md:40 says reviewers get the implementer's low-confidence areas; SKILL.md:62 says 'the diff and the plan \u2014 and nothing else' and phase.js:328-332 names that list as deliberately withheld, with concerns returned to the caller at line 426."
+    },
+    {
+     "refuted": false,
+     "why": "build.md:40 now sends reviewers \"the implementer's own list of low-confidence areas\", which phase.js:328-332 explicitly refuses (\"not its list of low-confidence areas ... a shared attention directive correlates the two readings\"; concerns go to the caller at phase.js:426), and the unchanged prompt block at build.md:47-58 still sends only the diff and plan."
+    },
+    {
+     "refuted": false,
+     "why": "build.md:40 now sends reviewers \"the implementer's own list of low-confidence areas\", which phase.js:328-332 explicitly refuses (\"Not ... its list of low-confidence areas ... The concerns are returned to the caller instead\") and SKILL.md:62 forbids (\"the diff and the plan \u2014 and nothing else\"), while the unchanged prompt block at 44-60 sends neither."
+    }
+   ],
+   "shuffleStride": 7
+  },
+  {
+   "finding_id": "F041",
+   "upheld": true,
+   "votes": [
+    {
+     "refuted": false,
+     "why": "The Triage section (build.md:68-78) precedes Fix and forbids fixing unconfirmed findings; the new line at 82 reverses that order and its rationale, contradicting SKILL.md and phase.js's triage-before-count block."
+    },
+    {
+     "refuted": false,
+     "why": "Confirmed at build.md:82; contradicts build.md:70/76, SKILL.md (the triage-before-fix bullet, line 70 not 71 \u2014 a one-line citation drift that does not touch the substance), phase.js:370-394 and CLAUDE.md's \"triage findings before counting them\", and the file's own section order is Triage then Fix."
+    },
+    {
+     "refuted": false,
+     "why": "Same verified inversion as F046 \u2014 the document's own section order is Triage (line 68) then Fix (line 80), and the added clause tells the reader to fix unconfirmed findings; the SKILL.md line cited is 70 rather than 71 but the rule is there verbatim."
+    }
+   ],
+   "shuffleStride": 7
+  },
+  {
+   "finding_id": "F042",
+   "upheld": true,
+   "votes": [
+    {
+     "refuted": false,
+     "why": "build.md:147 invokes `scripts/verify-plan.sh`; the tree's only shell scripts are scripts/accept-release.sh, scripts/negative-test.sh and three-loop-workflow/scripts/check-workflow-syntax.sh, and grep -rn verify-plan hits only that line."
+    },
+    {
+     "refuted": false,
+     "why": "build.md:147 does add `check it with scripts/verify-plan.sh`; `grep -rn verify-plan` over the whole tree returns nothing and scripts/ holds only accept-release.sh, negative-test.sh, sim-phase.js, sim-scenarios.js \u2014 the shipped skill now instructs running a script that does not exist anywhere."
+    },
+    {
+     "refuted": false,
+     "why": "build.md:147 does name `scripts/verify-plan.sh`; `find . -name 'verify-plan*'` returns nothing and the only shell scripts in the tree are accept-release.sh, negative-test.sh and check-workflow-syntax.sh, so the added step cannot be executed."
+    }
+   ],
+   "shuffleStride": 7
+  },
+  {
+   "finding_id": "F043",
+   "upheld": true,
+   "votes": [
+    {
+     "refuted": false,
+     "why": "The only record says nineteen (harden-audit-findings-plan.md:293 and CHANGELOG.md:102; rounds 9+6+4=19); 21 appears nowhere as a findings count, and accept-release.sh:147 greps only for %-forms so a spelled-out figure evades it."
+    },
+    {
+     "refuted": false,
+     "why": "build.md:163 says \"Ten of the twenty-one confirmed findings\" while the only record, harden-audit-findings-plan.md:293, says \"Of the 19 confirmed findings, 10 were defects in the gates\"; the word-spelled figure also slips past accept-release.sh:147, whose regex only matches digits/percent \u2014 the exact rule commit 72b75ce was written to enforce."
+    },
+    {
+     "refuted": false,
+     "why": "The only record, harden-audit-findings-plan.md:293, says \"Of the 19 confirmed findings, 10 were defects in the gates\" (rounds 9+6+4=19); 21 is negative-test.sh's mutation count, and accept-release.sh:147 greps only for digits/percent so a spelled-out figure slips the statistics sweep."
+    }
+   ],
+   "shuffleStride": 7
+  },
+  {
+   "finding_id": "F044",
+   "upheld": true,
+   "votes": [
+    {
+     "refuted": false,
+     "why": "phase.js:238-242 explicitly disclaims the mechanism build.md:218 now asserts, and sim-phase.js:290 asserts only the weaker empty-diff property, so the note states the opposite of the shipped behaviour."
+    },
+    {
+     "refuted": false,
+     "why": "Verified: phase.js:238-242 states the fabricated sha \"is not itself detected\" and that detecting it \"needs a shell\" the script lacks; sim-phase.js:290 is scoped to an empty diff; CLAUDE.md:144-146 repeats the limit \u2014 so the new build.md:218 sentence asserts a mechanism that cannot exist and removes the limit's only skill-side statement."
+    },
+    {
+     "refuted": false,
+     "why": "Same verified fact as F039: phase.js:238-242 and CLAUDE.md:144-146 both record that a fabricated sha is rendered harmless, not detected, and the new sentence deletes that limit and asserts a shell-based lookup the runtime cannot perform."
+    }
+   ],
+   "shuffleStride": 7
+  },
+  {
+   "finding_id": "F045",
+   "upheld": true,
+   "votes": [
+    {
+     "refuted": false,
+     "why": "SKILL.md:62 and phase.js:328-332 both bar the implementer's low-confidence list from reviewers, and the unchanged review prompt at build.md:44-60 sends only the diff and plan, so line 40 instructs the opposite of the shipped rule."
+    },
+    {
+     "refuted": false,
+     "why": "Confirmed: SKILL.md:62 says reviewers receive \"the diff and the plan \u2014 and nothing else\", phase.js:328-332 names the low-confidence list as specifically excluded, and the new build.md:40 clause is contradicted by its own following sentence about independence."
+    },
+    {
+     "refuted": false,
+     "why": "Same verified contradiction as F040: SKILL.md:62 says \"nothing else\", phase.js:328-332 lists low-confidence areas as an excluded input, and the new clause's attention directive defeats the independence the same sentence still claims."
+    }
+   ],
+   "shuffleStride": 7
+  },
+  {
+   "finding_id": "F046",
+   "upheld": true,
+   "votes": [
+    {
+     "refuted": false,
+     "why": "build.md:82 now says 'Fix every reported blocking finding, then triage', against build.md:70/76, SKILL.md:70 ('Triage before you fix, and before you count') and phase.js:370-395, which triages before the closure arithmetic."
+    },
+    {
+     "refuted": false,
+     "why": "build.md:82 now says \"Fix every reported blocking finding, then triage\", directly against build.md:70 (\"Do not fix a finding you have not confirmed\"), build.md:76 (\"The confirmed count is what closes the phase\"), SKILL.md:70 (\"Triage before you fix, and before you count\") and phase.js:370-394, which triages and closes on triage.confirmed."
+    },
+    {
+     "refuted": false,
+     "why": "build.md:82 reads \"Fix every reported blocking finding, then triage\", directly against build.md:70/76, SKILL.md:70-71, and phase.js:370-394 which triages first and closes on triage.confirmed."
+    }
+   ],
+   "shuffleStride": 7
+  },
+  {
+   "finding_id": "F047",
+   "upheld": true,
+   "votes": [
+    {
+     "refuted": false,
+     "why": "Same verified defect as F042: verify-plan.sh exists nowhere in the tree (find and grep both empty), and build.md's other script references resolve inside the installed skill, not a consumer repo."
+    },
+    {
+     "refuted": false,
+     "why": "Same verified fact as F042 \u2014 no verify-plan.sh exists in the tree (the only shell scripts are scripts/accept-release.sh, scripts/negative-test.sh, three-loop-workflow/scripts/check-workflow-syntax.sh), and the repo-relative path would not resolve inside a consuming project either."
+    },
+    {
+     "refuted": false,
+     "why": "Same verified fact as F042: `scripts/verify-plan.sh` exists nowhere in the tree, and the only reference to the name is the new build.md:147 line itself."
+    }
+   ],
+   "shuffleStride": 7
+  },
+  {
+   "finding_id": "F048",
+   "upheld": true,
+   "votes": [
+    {
+     "refuted": false,
+     "why": "harden-audit-findings-plan.md:293 reads 'Of the 19 confirmed findings, 10 were defects in the gates...' and its per-round log sums to 19 (lines 171/213/248); the denominator 21 has no artifact behind it."
+    },
+    {
+     "refuted": false,
+     "why": "The record sums exactly as claimed (rounds of 9, 6 and 4 confirmed = 19, stated at line 293), so the shipped \"twenty-one\" has no artifact behind it; the only quibble is that \"twenty-one\" does appear once in CHANGELOG.md:17 as negative-test.sh's mutation count, a different quantity, which does not rescue the figure."
+    },
+    {
+     "refuted": false,
+     "why": "Verified the per-round log sums to 19 (lines 171, 213, 248) and line 293 states 10 of 19; no artifact in the tree supports a denominator of 21."
+    }
+   ],
+   "shuffleStride": 7
+  },
+  {
+   "finding_id": "F049",
+   "upheld": false,
+   "votes": [
+    {
+     "refuted": true,
+     "why": "The two load-bearing assertions do not hold. (1) 'The plan file was never amended' \u2014 the only copy of this task's plan.md I could locate (.agent/revise-build-md/plan.md, baseSha 244c20a, identical in two independent worktrees) records **D3. The Non-goal `build.md` only is deliberately broken, once, for the gate**, with problem \u2192 options (a)/(b) \u2192 choice \u2192 why, plus a Cost paragraph naming scripts/accept-release.sh as _load-bearing-docs_. So the plan records D1, D2 and D3, and D3 covers exactly this deviation. (2) build.md:21 requires 'stop and say so\u2026 do not paper over it', and d3d7d51 devotes a full paragraph to stating the deviation and its justification, with the watched-failing output pasted in \u2014 the opposite of papering over. The plan.md:24-vs-:23 off-by-one in the commit body is a citation nit; the clause is quoted verbatim and is unambiguous. The task was already Deep (plan.md:3), so no process rigor was skipped."
+    },
+    {
+     "refuted": true,
+     "why": "The cited plan does not exist in the repository \u2014 no plan file anywhere contains 'build.md only' \u2014 and build.md:21's rule ('stop and say so\u2026 do not paper over it') is about a plan/code conflict and was in any case satisfied: d3d7d51's message states the deviation and its justification explicitly rather than concealing it."
+    },
+    {
+     "refuted": true,
+     "why": "The cited plan does not exist in the repository \u2014 `.agent/revise-build-md/` is absent from every worktree and `git log --all -- '.agent/*'` finds nothing, so `plan.md:23` and the `only D1 and D2` claim are unverifiable; the only recoverable copy of that plan carries a Decision D3 (`The Non-goal \"build.md only\" is deliberately broken, once, for the gate`) that directly contradicts `no Decision covering it`, and d3d7d51's message does `stop and say so` at length in permanent history rather than in a gitignored file."
+    }
+   ],
+   "shuffleStride": 7
+  },
+  {
+   "finding_id": "F050",
+   "upheld": false,
+   "votes": [
+    {
+     "refuted": true,
+     "why": "The digit gap is real but pre-existing and explicitly disclaimed, not a defect the change introduced. Before this diff the sweep was `[0-9]+(\\.[0-9]+)?%|percentage points|116 findings`; `10 of 21 confirmed findings` escaped it then and escapes it now \u2014 the change is a strict superset that closes one hole without widening any. The accusation that the comment 'reads as an assurance that digits are handled' misreads it: :151-152 is scoped explicitly to what the *word-numeral arm* does not catch, and :154 immediately disclaims general coverage ('Review is still the mechanism; this closes one hole in it'), matching the commit's 'rather than claiming coverage it does not have'. This is a suggestion to also add a digit arm, not a defect in what was added."
+    },
+    {
+     "refuted": true,
+     "why": "The digit gap is pre-existing and unchanged by this diff (the % arm and the '116 findings' literal were already there); the new arm only adds coverage, the comment at :151-154 explicitly scopes itself to spelled numbers and says 'Review is still the mechanism; this closes one hole in it', so 'it does not also catch digits' is an incompleteness suggestion, not a defect introduced here."
+    },
+    {
+     "refuted": false,
+     "why": "Confirmed by running the assembled $STAT: `Ten of the twenty-one confirmed findings\u2026` is caught while `10 of the 21 confirmed findings\u2026`, `21 confirmed findings` and `10 of 21 confirmed findings were defects in the gates` all escape \u2014 the pre-existing arms cover only `%`, `percentage points` and the frozen literal `116 findings`, so a digit-spelled finding count still ships, and the :153-154 rationale for scoping (rule values are stated in words) is exactly why a digit arm would not misfire."
+    }
+   ],
+   "shuffleStride": 7
+  },
+  {
+   "finding_id": "F051",
+   "upheld": true,
+   "votes": [
+    {
+     "refuted": false,
+     "why": "Confirmed by execution, including the one-character margin. With the script's pinned UTF-8 locale, build.md:38 matches at `[^.]{0,41}` and not at `{0,40}` (measured by bisecting the window: n=40 \u2192 0 matches, n=41 \u2192 1). Rewriting the em dash to a colon, and separately deleting `independent`, each makes the real accept-release.sh print `FAIL a statistic is back in the shipped skill: three-loop-workflow/references/build.md:38: ...` and exit non-zero \u2014 both run end-to-end, not simulated. `none of the findings`, `Someone reviewing a diff returns findings`, `a milestone reached before the reviewer reports findings`, `Two reviewers, union their findings` all CAUGHT as stated. The claim overstates one detail \u2014 plan.md:13 needs a 74-character window, not 41, so it is not 'in the same window' \u2014 but the central defect (a false-positive-prone CI gate whose passing depends on a 41-vs-40 coincidence in the skill's central rule sentence, contradicting the design intent asserted at :153-154) is real."
+    },
+    {
+     "refuted": false,
+     "why": "Same unanchored-alternation defect, verified: 'none of the findings', 'Someone reviewing\u2026findings', 'a milestone\u2026findings' all CAUGHT, and build.md:38 escapes only by the 41-vs-40 character span, so replacing '\u2014' with ':' or deleting 'independent' makes the gate fire on the skill's own rule sentence."
+    },
+    {
+     "refuted": false,
+     "why": "Same defect, and the margin is exactly as stated: the span between `two` and `findings` in three-loop-workflow/references/build.md:38 measures 41 characters against `[^.]{0,40}`, and substituting a colon for the em dash or deleting `independent` both make the real gate print `a statistic is back in the shipped skill` and exit non-zero on correct prose."
+    }
+   ],
+   "shuffleStride": 7
+  },
+  {
+   "finding_id": "F052",
+   "upheld": true,
+   "votes": [
+    {
+     "refuted": false,
+     "why": "Reproduced against the real script in a fresh clone at 5e4b783: appending `None of the blocking findings survived triage this round.` to references/build.md yields exactly `FAIL a statistic is back in the shipped skill: three-loop-workflow/references/build.md:224` and `ACCEPT: 1 check(s) FAILED`, exit 1 \u2014 the cited line number matches to the digit. WORDNUM at :155 is a bare alternation with no `\\b`, so `one` matches inside None/done/someone/milestone/money/unioned; I confirmed CAUGHT for `Once the reviewer is done, triage the reported findings.`, `It is done; the confirmed findings close the phase.`, `Money spent on findings`, `everyone who reads the findings`. plan.md:79 does contain `unioned` in a findings sentence and escapes only because the word falls after `findings`. This is a CI gate on the load-bearing scripts/** surface firing on correct prose, which the file's own header (:20-23) names as worse than useless; the sibling replicate's plan reached the same conclusion independently ('every generalisation that catches a spelled-out statistic also flags correct prose'). Only inaccuracy: `\\b` alone would not fix `Two reviewers, union their findings`, so the suggested fix is incomplete \u2014 the defect is not."
+    },
+    {
+     "refuted": false,
+     "why": "Reproduced end-to-end: appending 'None of the blocking findings survived triage this round.' to build.md adds exactly one new failure to the real gate \u2014 'FAIL a statistic is back in the shipped skill: build.md:224' \u2014 because WORDNUM at :155 has no word boundary and 'one' matches inside 'None'."
+    },
+    {
+     "refuted": false,
+     "why": "Reproduced against the real script in a clean clone: appending `None of the blocking findings survived triage this round.` to build.md yields `FAIL a statistic is back in the shipped skill: three-loop-workflow/references/build.md:224` and exit 1; `Once the reviewer is done\u2026`, `It is done; the confirmed findings\u2026`, `The unioned findings are counted once.`, `Everyone reads the findings.` and `Money aside, the reported findings decide it.` all fail too \u2014 WORDNUM at :155 is unanchored alternation matched with the newly added -i, and it is a CI-blocking gate on load-bearing scripts/**."
+    }
+   ],
+   "shuffleStride": 7
+  },
+  {
+   "finding_id": "F053",
+   "upheld": false,
+   "votes": [
+    {
+     "refuted": true,
+     "why": "Its evidentiary step is invalid and its factual claims do not survive checking. '.agent/revise-build-md/ still contains only the original plan.md' proves nothing about amendment: this skill records Decisions *inside* plan.md, so an amendment adds no file \u2014 and the copy of this task's plan I found does carry D3, a recorded Decision whose title is 'The Non-goal `build.md` only is deliberately broken, once, for the gate', explicitly listing scripts/accept-release.sh as load-bearing. 'It should not be accepted silently' is already satisfied: d3d7d51 argues the deviation in a dedicated paragraph, and 5e4b783 does address the gate change ('Fixed the gate as well, because this one escaped it\u2026 Scoped to counts of *findings*, and the comment says so'), so 'does not mention scope at all' is wrong. The arithmetic is also off \u2014 `git diff --stat` over the range is 37 insertions / 3 deletions, of which accept-release.sh is 30 added lines, not 32 (32 is its changed-line total)."
+    },
+    {
+     "refuted": true,
+     "why": "Its concrete evidence is false: `.agent/revise-build-md/` does not exist in the tree at all (only close-remaining, harden-audit-findings, promote-v2-release), so 'still contains only the original plan.md' cannot be checked, and the deviation was recorded in commit d3d7d51's message, i.e. not accepted silently."
+    },
+    {
+     "refuted": true,
+     "why": "Same unverifiable premise \u2014 `.agent/revise-build-md/` is not in the tree at all, so `still contains only the original plan.md` cannot be checked and the one recoverable copy of that plan records Decision D3 authorising exactly this deviation; the supporting arithmetic is also wrong (`git diff --numstat` gives 30 added lines in accept-release.sh of 37, not 32, and 5e4b783 is +12, not +14), and the claim concedes the deviation may be right on its merits, making it a bookkeeping objection rather than a defect in the change."
+    }
+   ],
+   "shuffleStride": 7
+  },
+  {
+   "finding_id": "F054",
+   "upheld": false,
+   "votes": [
+    {
+     "refuted": true,
+     "why": "The closed four-word qualifier list is the documented precision choice that replaced the window: widening it to arbitrary adjacent words makes the sweep fire on 'one reviewer returns findings', 'two reviewers return findings' and 'two independent reviewers produce findings' \u2014 the exact false-positive class af6a157 removed and that lines 162-164 say makes the gate one somebody turns off."
+    },
+    {
+     "refuted": false,
+     "why": "Confirmed by execution: 'Ten of the twenty-one confirmed severe findings were defects' \u2014 the escape sentence this arm was written for, plus one adjective \u2014 admits, as do '21 real findings', 'twenty-one distinct findings' and '21 of the findings were defects'; and the narrowness buys nothing, since replacing the four-word list with ( [a-z-]+){0,3} passes all 14 pinned fixtures, hits zero lines in three-loop-workflow/, and catches every one of those escapes."
+    },
+    {
+     "refuted": true,
+     "why": "The closed enumeration is the property af6a157 was written to establish, not an oversight. I applied the claim's own proposed fix \u2014 an open qualifier run \u2014 and it passes all 14 fixtures while false-positiving on 'Standard: one reviewer who returns findings', 'Deep: two reviewers in parallel union their findings', and 'Three fix rounds per phase then triage the findings', each one reword from shipped build.md:38. Lines 161-164 state that trade-off outright ('A general one is not available \u2014 a check that fired on the rule values above would be turned off within a release'), and the file header at :20-22 calls a gate that accuses correct documents worse than useless. In :150 the load-bearing word is the capitalised ADJACENT; the four qualifiers are enumerated in plain sight four lines below."
+    }
+   ],
+   "shuffleStride": 7
+  },
+  {
+   "finding_id": "F055",
+   "upheld": false,
+   "votes": [
+    {
+     "refuted": true,
+     "why": "Lines 161-162 state in the file that the sweep does not catch 'any quantity that is not a count of findings, in either spelling' \u2014 '47 percent' is precisely that, so it is documented out of scope rather than an undisclosed hole, and the % arm is pre-existing prose the diff only re-assigns into $STAT."
+    },
+    {
+     "refuted": true,
+     "why": "Attacks a limitation the file states explicitly: :161-163 declares that any quantity which is not a count of findings is out of scope, and '47 percent' is a ratio, not a count. The cited escape was caught in the only form it was ever written \u2014 72b75ce records the sweep failing on build.md:42 and naming the line \u2014 so the percent arm did its job; the spelled variant is speculative, and grep -rniE '[0-9]+ percent' over the shipped tree returns nothing."
+    },
+    {
+     "refuted": true,
+     "why": "47% was never an escape \u2014 72b75ce's message records that the existing sweep 'already fails on exactly this line and named it', so the analogy to the spelled-out finding count (which did escape) does not hold. 'a 47 percent uplift' is a quantity that is not a count of findings, which lines 161-164 explicitly declare out of scope with the reason given; and line 147's percent arm is unchanged by this diff, so this is a request to widen a pre-existing boundary, not a defect the change introduced. The gate can and does fail when a percentage is reintroduced."
+    }
+   ],
+   "shuffleStride": 7
+  },
+  {
+   "finding_id": "F056",
+   "upheld": false,
+   "votes": [
+    {
+     "refuted": true,
+     "why": "Lines 161-164 are a scope disclaimer, not a coverage guarantee \u2014 they say a general sweep 'is not available' and 'Review is still the mechanism; this closes one hole in it' \u2014 and the [0-9]+ alternative covers every value in the digit spelling, so the missing sixty/seventy/eighty/ninety/thousand words are an incomplete half of an explicitly partial check."
+    },
+    {
+     "refuted": true,
+     "why": "Converse-error reading: :161-163 states an exclusion set ('what it does not catch: any quantity that is not a count of findings'), not a completeness guarantee that all finding-counts are caught. The underlying gap is marginal \u2014 e716f1c added the [0-9]+ alternative covering every magnitude, and 'hundred' plus the WORDNUM pair form catch the common large word spellings, leaving only word-spelled 60-99/thousand, which is not how this repo has ever written a figure."
+    },
+    {
+     "refuted": true,
+     "why": "Converse error. Line 161-162 states what the sweep does NOT catch \u2014 'any quantity that is not a count of findings, in either spelling' \u2014 where 'in either spelling' modifies the missed set (digits or words alike), following the preceding paragraph 'The numeral is either spelling'; it never asserts every finding count is caught. The adjacent lines 163-164 explicitly disclaim completeness ('Review is still the mechanism; this closes one hole in it'), and the finite WORDNUM list is printed in full on the very next line at :168, visible to any reader."
+    }
+   ],
+   "shuffleStride": 7
+  },
+  {
+   "finding_id": "F057",
+   "upheld": false,
+   "votes": [
+    {
+     "refuted": true,
+     "why": "The table does discriminate the arm it exists to pin: deleting FINDCOUNT gives 6/14 mismatches, digits-only 2/14, words-only 4/14, dropping the qualifier group 5/14, and reverting to the old [^.]{0,40} window 10/14 \u2014 so 'most of the sweep can be deleted with this section still printing ok' is false; line 184 openly scopes the catches fixtures to finding counts and the ok line claims only 'behaves on 14 pinned sentences', and the residue (no fixture exercises the redundant \\b) is a coverage gap, not wrong behaviour."
+    },
+    {
+     "refuted": true,
+     "why": "Headline is false by execution: run against the pre-fix window arm the table reports 9 of 14 mismatches, and deleting FINDCOUNT reports 6 of 14 \u2014 it does pin the arm this change added. Mutations (b)/(c) hit pre-existing % arms whose absence from the fixtures the file itself discloses at :184 ('Figures. Every one is a count of findings'); and removing the live check at :207-212 would take its ok line with it, so 'the whole gate can be removed and still report coverage' does not hold."
+    },
+    {
+     "refuted": true,
+     "why": "Headline is false by execution: the table catches 6 of 7 substantive mutations of the arm it exists to pin (drop digit alt 4/14, drop word alt 2/14, drop qualifier group 5/14, drop adjacency 3/14, revert to the 40-char window 2/14, drop FINDCOUNT entirely 6/14), so 'most of the sweep can be deleted' is wrong; mutations (b) and (c) hit the % / percentage-points arms that the fixture comment at :184 explicitly scopes out ('Every one is a count of findings, which is the only quantity that has ever escaped here') and that this diff does not touch; only the \\b is unpinned, and removing it yields zero hits on the shipped tree \u2014 defence in depth whose removal changes nothing observable, the category CLAUDE.md itself names. 'The whole no-statistics gate can be removed and this file still reports coverage' is a non-sequitur: deleting a section deletes its ok lines, and a negative grep is green on a clean tree by construction."
+    }
+   ],
+   "shuffleStride": 7
+  },
+  {
+   "finding_id": "F058",
+   "upheld": true,
+   "votes": [
+    {
+     "refuted": false,
+     "why": "Reproduced at 277e140: changing only :275/:277 from `-rqiE`/`-rniE` to `-rqE`/`-rnE` and appending `Seventy findings came back from the second reviewer.` to build.md still prints `ok the statistic sweep behaves on 31 pinned sentences`, `ok no statistics anywhere in the shipped skill`, `ACCEPT: all checks passed`, exit 0 \u2014 `-i` is load-bearing (WORDNUM is lowercase-only) and new in this diff (the base at 244c20a used `-rqE`), and sweep_case's own `grep -qiE` is a second, unlinked copy."
+    },
+    {
+     "refuted": false,
+     "why": "sweep_case at :210 runs `printf | grep -qiE \"$STAT\"` while the live check at :275/:277 runs its own `grep -rqiE`/`-rniE`; changing only the live pair to -rqE/-rnE and appending `Seventy findings came back from the second reviewer.` to build.md gave `ok the statistic sweep behaves on 31 pinned sentences`, `ok no statistics anywhere in the shipped skill`, `ACCEPT: all checks passed`, exit 0."
+    }
+   ],
+   "shuffleStride": 7
+  },
+  {
+   "finding_id": "F059",
+   "upheld": true,
+   "votes": [
+    {
+     "refuted": false,
+     "why": "Mutation-tested at 277e140: PCT's `\\b` deletes with 31/31 green, and `sixty` deletes with 31/31 green because ':237 Sixty of the ninety confirmed findings' still matches on `ninety confirmed findings` \u2014 the exact accidental-masking the comment at :235-236 claims was designed out; `million` and `billion` (added by b047110) have no fixture at all; the pinned-token list the claim gives (one, seven, fourteen, seventy, eighty, ninety, thousand, dozen) matches my run exactly, and the only slip is arithmetic (24 of 32 unpinned, not 22 of 31)."
+    },
+    {
+     "refuted": false,
+     "why": "Confirmed by mutation: PCT's `\\b` deletes 31/31 green, and `sixty` deletes green because its only case `Sixty of the ninety confirmed findings` re-matches on `ninety` \u2014 the accidental-masking failure :235-236 claims was designed out; `git show b047110` shows `million`/`billion` added with no case; pinned tokens are exactly the eight it names (its 22-of-31 count is 24-of-32, a counting slip, not a misread)."
+    }
+   ],
+   "shuffleStride": 7
+  },
+  {
+   "finding_id": "F060",
+   "upheld": false,
+   "votes": [
+    {
+     "refuted": true,
+     "why": "`.agent/revise-build-md/plan.md` does not exist in the repository \u2014 `.agent/` is gitignored, the diff under review touches only scripts/accept-release.sh and references/build.md, no file anywhere contains the quoted `32 of 37`, and the one surviving copy of a revise-build-md plan states D3's Cost as a file list ('four files besides build.md, three of them load-bearing') with no line-count figure at all; the claim's own reconstruction also fails, since at 5e4b783 the split was 30 of 37 added lines, not 32."
+    },
+    {
+     "refuted": true,
+     "why": "The cited artifact does not exist \u2014 `.agent/` is gitignored and holds only close-remaining, harden-audit-findings and promote-v2-release; nothing in the repo contains \"32 of 37\"; the surviving copies of a `revise-build-md/plan.md` have a D3 Cost naming four files, not a line figure; and the claim's own check `git diff --numstat 244c20a..exp-rep3` reports 286 insertions, not the 148 it asserts."
+    }
+   ],
+   "shuffleStride": 7
+  },
+  {
+   "finding_id": "F061",
+   "upheld": true,
+   "votes": [
+    {
+     "refuted": false,
+     "why": "Reproduced at 277e140 in a clean clone: replacing build.md:38 with `**Standard: one reviewer. Deep: two reviewers union findings.**` makes the gate print `FAIL a statistic is back in the shipped skill: three-loop-workflow/references/build.md:38` and exit non-zero; `If one of the findings is a phantom, triage catches it`, `One reviewer, two findings, one round` and `one review, one set of findings` all match $STAT too, which is exactly the false-positive mode the block's own header at :205-206 calls the worse of the two."
+    },
+    {
+     "refuted": false,
+     "why": "Reproduced by execution at 277e140: rewording build.md:38 to `**Standard: one reviewer. Deep: two reviewers union findings.**` makes the CI-blocking gate print `FAIL  a statistic is back in the shipped skill: three-loop-workflow/references/build.md:38`; `one of the findings`, `two findings`, `one set of findings` and `two blocking findings remain` also fire, and no admits fixture pins that shape \u2014 the exact failure mode :205-206 calls the worse one."
+    }
+   ],
+   "shuffleStride": 7
+  },
+  {
+   "finding_id": "F062",
+   "upheld": true,
+   "votes": [
+    {
+     "refuted": false,
+     "why": "Mutation-tested all 31 fixtures at 277e140: deleting PCT's `\\b` (:167), PCT's `(\\.[0-9]+)?` (:167) and NUMERAL's `([- ]$WORDNUM)?` (:162) each leaves 31/31 green, so :214-216's 'every arm has at least one case that fails when that arm alone is deleted' is false; only FINDCOUNT's anchor fails (1/31), and the fixture comment at :264 says 'the \\b anchoring NUMERAL' as though there were one when there are two."
+    },
+    {
+     "refuted": false,
+     "why": "Mutation-tested: deleting PCT's `\\b`, PCT's `(\\.[0-9]+)?`, or NUMERAL's `([- ]$WORDNUM)?` each leaves 31/31 green, while the controls it names fail exactly as stated (FINDCOUNT `\\b` 1/31, `%` 1/31, `percentage points` 1/31, {0,3} 1/31, `zero` 1/31, digit arm 8/31) \u2014 so the :214-216 property is false and :264's \"the \\b anchoring NUMERAL\" names one of two anchors."
+    }
+   ],
+   "shuffleStride": 7
+  },
+  {
+   "finding_id": "F063",
+   "upheld": false,
+   "votes": [
+    {
+     "refuted": true,
+     "why": "The diff-side fact is true (build.md is +7/-1 and those four passages equal the base) but it is not a defect, and the commit messages inside the range say why in their own words. 08a5924: \"Restored the sentence, which already states exactly what is sent and is what the Goal item asked for.\" 9496760: \"Restored the sentence, which is the accurate restatement D2 asked for.\" 94ed92e: \"The ordering is already explicit three times ... and a fourth copy is what invited the contradiction.\" 72b75ce restored \"so a second reviewer buys less here than on a plan\", which is precisely Goal bullet :12. So the base text already delivered those four items; 6b25b7a's premise that build.md had drifted there was itself wrong, and each of the four commits explicitly names the Goal item it is about and records why. Nothing was silently abandoned. The claim's remaining assertions are unverifiable against the artifact under review: .agent/revise-build-md/plan.md is gitignored, is not in the diff, does not exist in the repo, and the only surviving copies (both identical, in scratchpad worktrees) are the earlier exp-rep1 version with no \"Corrects the record\" paragraphs at :68-81 at all \u2014 so \"the plan still asserts them\" and \"no Decision records that\" cannot be checked, while the claim itself concedes the plan was amended twice on 2026-07-31. Finally, plan.md calls the plan \"working state \u2014 keep it short and edit it as you learn\" and close.md states \"The change is described by its commits and its PR\", so a caller is not told by a Goal bullet that a change shipped."
+    },
+    {
+     "refuted": true,
+     "why": "The cited artifact .agent/revise-build-md/plan.md is gitignored and absent from this checkout, so the Goal's actual wording cannot be checked, and the four bullets it quotes are end-state properties of build.md rather than a change manifest \u2014 all four hold in the shipped document (build.md:42 says what a second reviewer buys on a diff, :40 states exactly what each reviewer receives, the Triage-before-Fix order is explicit in the section order plus build.md:70 and SKILL.md:70, and :218 correctly states what the script does and does not detect), which is precisely what the follow-up commit's D4 concedes by closing each bullet \"against the sentence that already answers it\"; the claim's \"no Decision records that\" is also wrong on the tracked record \u2014 08a5924 and 94ed92e each attribute their revert to the plan's existing Non-goals at plan.md:24, 9496760 to D2, and 72b75ce argues the restored sentence \"is also the claim the record supports\", so three of the four explicitly reason back to the Goal item and conclude the pre-existing sentence is what it asked for, leaving a bookkeeping tidy-up (the fix commit 046add6 has no tracked diff at all) rather than a defect in the reviewed change."
+    },
+    {
+     "refuted": false,
+     "why": "The four promised sentences (build.md:40, :42, :79, :218) are byte-identical base-to-head after 72b75ce/08a5924/94ed92e/9496760 reverted them, build.md's diff is exactly +7/-1 over the other items, and nothing in the range records a Decision for the abandonment; plan.md itself is gitignored and unreadable here, but 046add6 quotes plan.md:12-14/:17 with the same four bullets."
+    }
+   ],
+   "shuffleStride": 7
+  },
+  {
+   "finding_id": "F064",
+   "upheld": true,
+   "votes": [
+    {
+     "refuted": true,
+     "why": "SKILL.md:102 and the skill's own review prompt (build.md:56) define the banned content parenthetically as \"round numbers, review history, plan references\" \u2014 grepping every added comment line in scripts/accept-release.sh finds zero round numbers, zero reviewer/round/review-history references, and zero .agent/ or plan.md references. Every \"reviewer\" occurrence in the added comments is inside a quoted fixture sentence the sweep must catch or admit (i.e. the regex's input data), and the only sha (72b75ce, twice) names a build.md:42 line that no longer exists in the tree, so it is the only way to identify the sentence. The comments explain the code: which regex piece decides what, which pieces mutation-testing proved decide nothing (and were therefore deleted), and what the sweep does not catch \"stated as a boundary rather than as an assurance\" \u2014 content CLAUDE.md's Engineering Norms actively require (\"Do not claim a script does something without testing that it does. State what you ran, not what you intended\") and which the file's own preamble rule 2 has demanded since before this diff. The style is pre-existing, not introduced: the base file's header at :4-14 and :23-25 already narrates the grep -q bypass and the SIGPIPE measurement, and the claim's own count concedes 3 dated-history lines in the base. The anti-bloat norm the line/comment ratio implicitly appeals to binds only \"the always-loaded SKILL.md surface\", explicitly not scripts. Also inaccurate on its face: the diff does not edit build.md:18 (the self-pass paragraph); it inserts an unrelated new paragraph after it."
+    },
+    {
+     "refuted": false,
+     "why": "All 14 cited lines exist verbatim at those line numbers in scripts/accept-release.sh at 1a05f94 and git blame attributes every one to a commit inside the reviewed range (b047110, 796d930, e716f1c, 5e4b783, 2d44772, 64d71e6, 1a05f94) \u2014 they carry dates (\"on 2026-07-31\", \"this is the correction of 2026-07-31\", \"Until 2026-07-31\"), a commit sha (\"the line 72b75ce removed from build.md:42\"), and revision history (\"previously ran one..twenty\", \"used to be this test and no longer is\", \"for three releases\"), which is process narration that SKILL.md:102 forbids outright and build.md:17 \u2014 the paragraph immediately above the line this same diff adds at :19 \u2014 tells the implementer to strip in the self-pass; the measurements check out (base 383 lines/75 comments, HEAD 672/220, 291 added lines of which 145 are comment-only and 140 code), the pre-existing style defence does not hold because the base file's three history lines carry no sha or date-of-fix, and the branch's own follow-up commit bc2c3be rewrote every one of these 14 lines into present-tense code rationale for exactly this reason."
+    },
+    {
+     "refuted": false,
+     "why": "All 14 cited lines carry the quoted dates/shas/\"previously\"/\"for three releases\" verbatim; SKILL.md:102 reads \"Never leave round numbers, review history, or plan references in source comments\"; the later comment-only rewrite kept every explanation in present tense with all sweep cases and mutations green, proving the history was residue, not explanation (only error: 13 vs the actual 17 dated lines)."
+    }
+   ],
+   "shuffleStride": 7
+  },
+  {
+   "finding_id": "F065",
+   "upheld": true,
+   "votes": [
+    {
+     "refuted": false,
+     "why": "Reproduced in a clean clone of bc2c3be: changing `stat_scan() { grep -rniHE ... }` to `grep -rnHE` leaves `ok the statistic sweep behaves on 68 pinned sentences` and `ok every piece of the sweep is pinned by a case (44 mutations, each one noticed)` green, and with `Seventy findings came back from the second reviewer.` appended to three-loop-workflow/references/build.md the run prints `ok no statistics anywhere in the shipped skill` / `ACCEPT: all checks passed`, exit 0 \u2014 while the unmutated script FAILs on that same tree. So the comment at :270-276 (\"the table pins the flag list as well as the pattern\", naming that exact sentence as the escape it prevents) is false. Provenance is inside the range: 2d44772's own message records `-i` removed from stat_scan failing the table on `Seventy findings`, and 1a05f94 deleted `sweep_case catches 'Seventy findings'` and `'A thousand findings'` in favour of the lowercase mechanical loop, un-pinning `-i` while leaving the claim standing. This is also exactly what the file's own comment at :283-286 forbids."
+    },
+    {
+     "refuted": false,
+     "why": "Reproduced in a clean clone: dropping only -i from stat_scan at :277 leaves all 68 fixtures and all 44 mutations green and ships the planted capitalised sentence (ACCEPT: all checks passed), while the unmutated script FAILs on the same tree; the same mutation at 64d71e6 still fails, so the property the :271 comment claims was lost at 1a05f94 inside the range."
+    },
+    {
+     "refuted": false,
+     "why": "Reproduced in a clean clone at bc2c3be: `grep -rniHE` -> `grep -rnHE` leaves all 68 cases green and all 44 mutations 'noticed', and the planted `Seventy findings came back from the second reviewer.` in build.md yields `ok no statistics anywhere in the shipped skill` / `ACCEPT: all checks passed`, exit 0, while the unmutated script FAILs on the same tree; 1a05f94 did delete the only two capitalised fixtures, so the comment at :271 claims a pinning the table does not perform."
+    }
+   ],
+   "shuffleStride": 7
+  },
+  {
+   "finding_id": "F066",
+   "upheld": true,
+   "votes": [
+    {
+     "refuted": false,
+     "why": "Reproduced with only `-r` removed (`grep -niHE`): the live `stat_scan three-loop-workflow/` at :412 emits `grep: three-loop-workflow/: Is a directory` on stderr, `|| true` swallows the nonzero exit, `_stat_hits` is empty, and the run prints `ok the statistic sweep behaves on 68 pinned sentences`, `ok every piece of the sweep is pinned by a case (44 mutations, each one noticed)`, `ok no statistics anywhere in the shipped skill`, `ACCEPT: all checks passed`, exit 0, with the planted `Seventy findings...` shipping. The table calls stat_scan on a single regular file ($_sweep_file), so no fixture can ever pin `-r` \u2014 a strictly deeper gap than the -i case and not fixed by adding a capitalised fixture. Only quibble: it is not literally silent (grep writes to stderr), but nothing fails. Same false comment claim at :271."
+    },
+    {
+     "refuted": false,
+     "why": "Reproduced: grep -niHE (only -r removed) makes the live scan a silent no-op via `|| true` and prints ok no statistics anywhere in the shipped skill / ACCEPT: all checks passed; the table calls stat_scan on a single regular file at :367, so no fixture can ever pin -r, and the :271 claim that the table pins the flag list is false for -i, -r and -H alike."
+    },
+    {
+     "refuted": false,
+     "why": "Reproduced: `grep -niHE` (only -r removed) makes `stat_scan three-loop-workflow/` error to stderr, exit 1 into `|| true`, leaving _stat_hits empty and printing `ok no statistics anywhere in the shipped skill` with ACCEPT exit 0; no case can pin -r because sweep_run scans a single regular file, so the same :271 claim covers a flag whose removal voids the live check entirely."
+    }
+   ],
+   "shuffleStride": 7
+  },
+  {
+   "finding_id": "F067",
+   "upheld": false,
+   "votes": [
+    {
+     "refuted": true,
+     "why": "The escape is real (verified: `a 47-percent uplift in confirmed findings` and `a forty-seven-percent uplift` both pass the sweep clean) but the cited comment does not claim otherwise. :188-195 is explicitly framed as a boundary, not an assurance \u2014 'either spelling of either half' quantifies over the two halves' spellings (digits|words, %|percent), both of which the code does handle, not over the joiner between them, and the very next sentence lists 'a numeral separated from it by punctuation' among what is missed, closing with 'Review is still the mechanism.' The mutation-asymmetry argument is a category error: the loop pins that each existing piece is noticed when broken and can never detect a missing alternative; `bound-wide` (:246) exists because a wider findings bound produces false positives on the skill's own rule prose ('ten gates returned no findings'), a distinct cost with no percentage-arm analogue, not to prove completeness from the wide side."
+    },
+    {
+     "refuted": true,
+     "why": "Execution against the assembled $STAT shows all four half-spelling combinations are caught (47%, 47 percent, forty-seven%, forty-seven percent, plus 47percent and 47 % ), so :189's 'either spelling of either half' is accurate \u2014 the hyphen is a joiner, not a half's spelling, and the same paragraph already lists 'a numeral separated from it by punctuation' among what is missed; the missing wide-side pct-gap mutation is correct too, since widening the gap flips no fixture and accuses no correct prose, unlike bound-wide."
+    },
+    {
+     "refuted": true,
+     "why": "The hyphen gap is real but the comment does not claim it: :160-163 names exactly the three forms the arm exists for (47%, 47 percent, forty-seven percent) and all three are caught, while :188-195 is the boundary paragraph that says what is missed, never mentions the numeral/unit separator, and closes with 'Everything else is missed' and 'Review is still the mechanism' \u2014 and the unmutated-sub-expression point is already stated as a boundary at :395-396."
+    }
+   ],
+   "shuffleStride": 7
+  }
+ ],
+ "matches": [
+  {
+   "finding_id": "F001",
+   "matched": "S2",
+   "tally": {
+    "S2": 3
+   }
+  },
+  {
+   "finding_id": "F002",
+   "matched": "S3",
+   "tally": {
+    "S3": 3
+   }
+  },
+  {
+   "finding_id": "F003",
+   "matched": "S5",
+   "tally": {
+    "S5": 3
+   }
+  },
+  {
+   "finding_id": "F004",
+   "matched": "S4",
+   "tally": {
+    "S4": 3
+   }
+  },
+  {
+   "finding_id": "F005",
+   "matched": "S3",
+   "tally": {
+    "S3": 3
+   }
+  },
+  {
+   "finding_id": "F006",
+   "matched": "S5",
+   "tally": {
+    "S5": 3
+   }
+  },
+  {
+   "finding_id": "F007",
+   "matched": "S2",
+   "tally": {
+    "S2": 3
+   }
+  },
+  {
+   "finding_id": "F008",
+   "matched": "S4",
+   "tally": {
+    "S4": 3
+   }
+  },
+  {
+   "finding_id": "F009",
+   "matched": "S6",
+   "tally": {
+    "S6": 3
+   }
+  },
+  {
+   "finding_id": "F010",
+   "matched": null,
+   "tally": {
+    "NONE": 3
+   }
+  },
+  {
+   "finding_id": "F011",
+   "matched": null,
+   "tally": {
+    "NONE": 3
+   }
+  },
+  {
+   "finding_id": "F012",
+   "matched": null,
+   "tally": {
+    "NONE": 3
+   }
+  },
+  {
+   "finding_id": "F013",
+   "matched": null,
+   "tally": {
+    "NONE": 3
+   }
+  },
+  {
+   "finding_id": "F014",
+   "matched": null,
+   "tally": {
+    "NONE": 3
+   }
+  },
+  {
+   "finding_id": "F015",
+   "matched": null,
+   "tally": {
+    "NONE": 3
+   }
+  },
+  {
+   "finding_id": "F016",
+   "matched": null,
+   "tally": {
+    "NONE": 3
+   }
+  },
+  {
+   "finding_id": "F017",
+   "matched": null,
+   "tally": {
+    "NONE": 3
+   }
+  },
+  {
+   "finding_id": "F018",
+   "matched": null,
+   "tally": {
+    "NONE": 3
+   }
+  },
+  {
+   "finding_id": "F019",
+   "matched": null,
+   "tally": {
+    "NONE": 3
+   }
+  },
+  {
+   "finding_id": "F020",
+   "matched": null,
+   "tally": {
+    "NONE": 3
+   }
+  },
+  {
+   "finding_id": "F021",
+   "matched": null,
+   "tally": {
+    "NONE": 3
+   }
+  },
+  {
+   "finding_id": "F022",
+   "matched": null,
+   "tally": {
+    "NONE": 3
+   }
+  },
+  {
+   "finding_id": "F023",
+   "matched": null,
+   "tally": {
+    "NONE": 3
+   }
+  },
+  {
+   "finding_id": "F024",
+   "matched": null,
+   "tally": {
+    "NONE": 3
+   }
+  },
+  {
+   "finding_id": "F025",
+   "matched": null,
+   "tally": {
+    "NONE": 3
+   }
+  },
+  {
+   "finding_id": "F026",
+   "matched": null,
+   "tally": {
+    "NONE": 3
+   }
+  },
+  {
+   "finding_id": "F027",
+   "matched": null,
+   "tally": {
+    "NONE": 3
+   }
+  },
+  {
+   "finding_id": "F028",
+   "matched": null,
+   "tally": {
+    "NONE": 3
+   }
+  },
+  {
+   "finding_id": "F029",
+   "matched": "S3",
+   "tally": {
+    "S3": 3
+   }
+  },
+  {
+   "finding_id": "F030",
+   "matched": "S2",
+   "tally": {
+    "S2": 3
+   }
+  },
+  {
+   "finding_id": "F031",
+   "matched": "S5",
+   "tally": {
+    "S5": 3
+   }
+  },
+  {
+   "finding_id": "F032",
+   "matched": "S4",
+   "tally": {
+    "S4": 3
+   }
+  },
+  {
+   "finding_id": "F033",
+   "matched": "S6",
+   "tally": {
+    "S6": 3
+   }
+  },
+  {
+   "finding_id": "F034",
+   "matched": "S3",
+   "tally": {
+    "S3": 3
+   }
+  },
+  {
+   "finding_id": "F035",
+   "matched": "S2",
+   "tally": {
+    "S2": 3
+   }
+  },
+  {
+   "finding_id": "F036",
+   "matched": "S5",
+   "tally": {
+    "S5": 3
+   }
+  },
+  {
+   "finding_id": "F037",
+   "matched": "S4",
+   "tally": {
+    "S4": 3
+   }
+  },
+  {
+   "finding_id": "F038",
+   "matched": "S6",
+   "tally": {
+    "S6": 3
+   }
+  },
+  {
+   "finding_id": "F039",
+   "matched": "S2",
+   "tally": {
+    "S2": 3
+   }
+  },
+  {
+   "finding_id": "F040",
+   "matched": "S3",
+   "tally": {
+    "S3": 3
+   }
+  },
+  {
+   "finding_id": "F041",
+   "matched": "S5",
+   "tally": {
+    "S5": 3
+   }
+  },
+  {
+   "finding_id": "F042",
+   "matched": "S4",
+   "tally": {
+    "S4": 3
+   }
+  },
+  {
+   "finding_id": "F043",
+   "matched": "S6",
+   "tally": {
+    "S6": 3
+   }
+  },
+  {
+   "finding_id": "F044",
+   "matched": "S2",
+   "tally": {
+    "S2": 3
+   }
+  },
+  {
+   "finding_id": "F045",
+   "matched": "S3",
+   "tally": {
+    "S3": 2
+   }
+  },
+  {
+   "finding_id": "F046",
+   "matched": "S5",
+   "tally": {
+    "S5": 3
+   }
+  },
+  {
+   "finding_id": "F047",
+   "matched": "S4",
+   "tally": {
+    "S4": 3
+   }
+  },
+  {
+   "finding_id": "F048",
+   "matched": "S6",
+   "tally": {
+    "S6": 3
+   }
+  },
+  {
+   "finding_id": "F049",
+   "matched": null,
+   "tally": {
+    "NONE": 3
+   }
+  },
+  {
+   "finding_id": "F050",
+   "matched": null,
+   "tally": {
+    "NONE": 3
+   }
+  },
+  {
+   "finding_id": "F051",
+   "matched": null,
+   "tally": {
+    "NONE": 3
+   }
+  },
+  {
+   "finding_id": "F052",
+   "matched": null,
+   "tally": {
+    "NONE": 3
+   }
+  },
+  {
+   "finding_id": "F053",
+   "matched": null,
+   "tally": {
+    "NONE": 3
+   }
+  },
+  {
+   "finding_id": "F054",
+   "matched": null,
+   "tally": {
+    "NONE": 3
+   }
+  },
+  {
+   "finding_id": "F055",
+   "matched": null,
+   "tally": {
+    "NONE": 3
+   }
+  },
+  {
+   "finding_id": "F056",
+   "matched": null,
+   "tally": {
+    "NONE": 3
+   }
+  },
+  {
+   "finding_id": "F057",
+   "matched": null,
+   "tally": {
+    "NONE": 3
+   }
+  },
+  {
+   "finding_id": "F058",
+   "matched": null,
+   "tally": {
+    "NONE": 3
+   }
+  },
+  {
+   "finding_id": "F059",
+   "matched": null,
+   "tally": {
+    "NONE": 3
+   }
+  },
+  {
+   "finding_id": "F060",
+   "matched": null,
+   "tally": {
+    "NONE": 3
+   }
+  },
+  {
+   "finding_id": "F061",
+   "matched": null,
+   "tally": {
+    "NONE": 3
+   }
+  },
+  {
+   "finding_id": "F062",
+   "matched": null,
+   "tally": {
+    "NONE": 3
+   }
+  },
+  {
+   "finding_id": "F063",
+   "matched": null,
+   "tally": {
+    "NONE": 3
+   }
+  },
+  {
+   "finding_id": "F064",
+   "matched": null,
+   "tally": {
+    "NONE": 3
+   }
+  },
+  {
+   "finding_id": "F065",
+   "matched": null,
+   "tally": {
+    "NONE": 2
+   }
+  },
+  {
+   "finding_id": "F066",
+   "matched": null,
+   "tally": {
+    "NONE": 2
+   }
+  },
+  {
+   "finding_id": "F067",
+   "matched": null,
+   "tally": {
+    "NONE": 2
+   }
+  }
+ ],
+ "incomplete": [],
+ "groups": 13,
+ "note": "refuted=true means NOT a real defect; upheld requires >=2 of 3 adjudicators declining to refute"
+}

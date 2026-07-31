@@ -18,6 +18,8 @@ The skill files (`SKILL.md`, `references/`, `scripts/`) are the single source of
 
 [**Announcing v2.0.0**](./docs/announcement-v2.0.0.md) — the short version, and how to upgrade.
 [**Why we rebuilt it**](./docs/why-v2.md) — the long version, with the measurements.
+[**Is three fix rounds the right cap?**](./docs/2026-07-31-round-cap-experiment.md) — pre-registered,
+raw data committed, and the answer is that the cap was not the problem.
 Release notes and full version history live in [CHANGELOG.md](./CHANGELOG.md).
 
 ## What is the three-loop workflow?
@@ -64,11 +66,21 @@ The skill is **self-contained** — no external plugin, no companion agents, no 
 
 ```bash
 # Project-level: applies only inside <your-repo>
+mkdir -p <your-repo>/.claude/skills
 cp -r three-loop-workflow <your-repo>/.claude/skills/
 
 # User-level: applies across all projects
+mkdir -p ~/.claude/skills
 cp -r three-loop-workflow ~/.claude/skills/
+
+# Confirm it landed at the right depth — if this file is missing, the skill will not activate
+test -f ~/.claude/skills/three-loop-workflow/SKILL.md && echo installed
 ```
+
+The `mkdir -p` matters. If `skills/` does not already exist — the normal state of a repo where Claude
+Code has run but no skill was ever installed — `cp -r` copies the folder's *contents* into
+`.claude/skills/`, putting `SKILL.md` one level too high. It exits 0 and nothing warns you; the skill
+simply never activates.
 
 Or package it as a single distributable `.skill` file:
 
@@ -175,10 +187,14 @@ The skill never hard-codes a filename. It reads `AGENTS.md`, `CLAUDE.md`, or bot
 │       ├── phase.js                  The Build loop as a deterministic Workflow script
 │       └── check-workflow-syntax.sh  Parses a Workflow script (node --check cannot)
 ├── tests/                            Two-arm behavioral suite: every fixture runs with the skill
-│                                     loaded AND withheld; a fixture both arms pass is INVALID
+│                                     loaded AND withheld. Six of seven fixtures are regression
+│                                     guards; a *discriminating* fixture both arms pass is INVALID
 ├── docs/
 │   ├── announcement-v2.0.0.md        Release announcement
 │   ├── why-v2.md                     The long-form account of the rebuild
+│   ├── 2026-07-31-round-cap-*.md     Does a document-shaped Deep change converge in three rounds?
+│   ├── measurements/                 Pre-registration and raw artifacts, committed so the figures
+│   │                                 can be recomputed rather than taken on trust
 │   └── design/, implementation/      Frozen v1 per-task archive — historical, not current behavior
 ├── README.md                         this file
 ├── README-cn.md                      Chinese version
@@ -196,7 +212,7 @@ If you change the discipline itself, run the two-arm suite:
 Workflow({ scriptPath: "tests/run-scenarios.js" })
 ```
 
-A fixture that both arms answer correctly is reported INVALID rather than green — it proves the rule is not carrying weight. Read `tests/README.md` before writing one; most of the ways to write a scenario produce a test of reading comprehension instead of a test of the skill.
+Each fixture declares its kind. A **discriminating** fixture both arms answer correctly is reported INVALID rather than green — it proves the rule is not carrying weight. A **guard** exists to catch the skill making a decision the model already gets right *worse*, so both arms answering it correctly is a pass; the serious result there is `GUARD-BROKEN`. Six of the seven current fixtures are guards, which the suite reports rather than hides. Read `tests/README.md` before writing one; most of the ways to write a scenario produce a test of reading comprehension instead of a test of the skill.
 
 ## License
 

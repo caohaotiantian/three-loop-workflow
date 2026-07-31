@@ -18,6 +18,8 @@ skill 文件(`SKILL.md`、`references/`、`scripts/`)是唯一事实标准 —�
 
 [**v2.0.0 发布公告**](./docs/announcement-v2.0.0-cn.md) —— 简版,以及如何升级。
 [**我们为什么重写**](./docs/why-v2-cn.md) —— 详版,附全部实测数据。
+[**三轮修复上限合适吗?**](./docs/2026-07-31-round-cap-experiment-cn.md) —— 预注册、原始数据已提交,
+结论是问题不在上限。
 完整的版本历史见 [CHANGELOG-cn.md](./CHANGELOG-cn.md)。
 
 ## 什么是三循环工作流
@@ -64,11 +66,20 @@ agent 类编码失败有共同模式:急于动手实现、悄悄选择默认值�
 
 ```bash
 # 项目级:只在 <your-repo> 里生效
+mkdir -p <your-repo>/.claude/skills
 cp -r three-loop-workflow <your-repo>/.claude/skills/
 
 # 用户级:跨所有项目生效
+mkdir -p ~/.claude/skills
 cp -r three-loop-workflow ~/.claude/skills/
+
+# 确认落在正确的层级 —— 如果这个文件不存在,skill 不会被激活
+test -f ~/.claude/skills/three-loop-workflow/SKILL.md && echo installed
 ```
+
+`mkdir -p` 是必需的。如果 `skills/` 目录本来不存在 —— 这正是「跑过 Claude Code 但从未安装过任何
+skill」的仓库的常见状态 —— `cp -r` 会把这个文件夹的**内容**拷进 `.claude/skills/`,`SKILL.md` 就落高了
+一层。命令退出码是 0,不会有任何警告,skill 只是永远不会被激活。
 
 或打包成单个可分发的 `.skill` 文件:
 
@@ -173,10 +184,13 @@ skill 从不写死文件名。它会读取 `AGENTS.md`、`CLAUDE.md` 或两者 �
 │       ├── phase.js                  把 Build 循环写成确定性的 Workflow 脚本
 │       └── check-workflow-syntax.sh  解析 Workflow 脚本(node --check 做不到)
 ├── tests/                            双臂行为套件:每个 fixture 都在「加载 skill」与「屏蔽 skill」
-│                                     两种条件下各跑一次;两臂都答对的 fixture 判为 INVALID
+│                                     两种条件下各跑一次。七个 fixture 里有六个是回归 guard;
+│                                     *区分性* fixture 若两臂都答对,判为 INVALID
 ├── docs/
 │   ├── announcement-v2.0.0-cn.md     发布公告
 │   ├── why-v2-cn.md                  重写全过程的长文
+│   ├── 2026-07-31-round-cap-*.md     文档形态的 Deep 变更能在三轮内收敛吗?
+│   ├── measurements/                 预注册与原始产物,已提交,好让数字能被重算而不是被相信
 │   └── design/、implementation/       已冻结的 v1 每任务归档 —— 历史记录,不代表当前行为
 ├── README.md                         英文说明
 ├── README-cn.md                      本文件
@@ -194,7 +208,7 @@ skill 从不写死文件名。它会读取 `AGENTS.md`、`CLAUDE.md` 或两者 �
 Workflow({ scriptPath: "tests/run-scenarios.js" })
 ```
 
-两臂都答对的 fixture 会被判为 INVALID 而不是绿灯 —— 那说明这条规则没有起作用。写 fixture 之前请先读 `tests/README.md`;写场景题的大多数写法,最后测的都是阅读理解,而不是这个 skill。
+每个 fixture 都声明自己的类型。**区分性(discriminating)** fixture 若两臂都答对,会被判为 INVALID 而不是绿灯 —— 那说明这条规则没有起作用。**guard** 的存在是为了抓住 skill 把模型本来就能做对的判断变得*更差*,所以两臂都答对它就是通过;那里真正严重的结果叫 `GUARD-BROKEN`。当前七个 fixture 里有六个是 guard,套件会把这件事报出来,而不是藏起来。写 fixture 之前请先读 `tests/README.md`;写场景题的大多数写法,最后测的都是阅读理解,而不是这个 skill。
 
 ## 许可证
 
