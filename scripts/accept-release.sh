@@ -15,11 +15,10 @@
 set -uo pipefail
 cd "$(git rev-parse --show-toplevel)"
 
-# Word counts are locale-dependent, and the published figures are the UTF-8 ones: `wc -w` reports 6,047
-# for the v2.0.0 prose under a UTF-8 locale and 6,046 under LC_ALL=C. A gate that recomputes different
-# numbers than the documents state, depending on who invokes it, is worse than useless — it accuses
-# correct documents of being stale. Pin a UTF-8 locale, and refuse to run if none exists rather than
-# quietly measuring something else.
+# A UTF-8 locale is pinned for everything else this script greps and sorts. It used to be pinned for the
+# word counts too, on the theory that locale was what made them differ — that was not enough: `wc -w`
+# differs between BSD and glibc under the SAME UTF-8 locale, so the pin fixed a real bug and left a
+# larger one standing. Word counts no longer go through `wc` at all; see `words()` below.
 # Captured rather than piped into `grep -q`: under `set -o pipefail`, grep -q exits on the first match,
 # `locale -a` dies of SIGPIPE, and the pipeline reports failure — so no locale ever matched and the
 # script refused to run in exactly the case it was meant to repair. Measured, not reasoned about.
@@ -45,6 +44,16 @@ fail=0
 # python3 rather than sed: BSD sed reads `:a;s/…;ta` as one long label name, so the loop never runs and
 # the function silently returns its input ungrouped. python3 is already required further down.
 group() { python3 -c "import sys; print(f'{int(sys.argv[1]):,}')" "$1"; }
+
+# Word counts, computed identically on every platform. `wc -w` is NOT portable for this: BSD's splits
+# on characters glibc's does not. `author-\u2260-reviewer` in references/platforms.md counts as two words
+# on macOS and one on Linux, and three more lines in the v1 archive do the same — so the same tree gave
+# 6,047/43,822 on the machine that published those figures and 6,046/43,819 in CI, and this gate could
+# never pass on both. It never did: CI failed on every run from the day it was added.
+# python3 splits on Unicode whitespace and nothing else, which is what the figures always meant.
+words() { python3 -c '
+import sys, io
+print(sum(len(io.open(f, encoding="utf-8", errors="replace").read().split()) for f in sys.argv[1:]))' "$@"; }
 
 ok()  { printf '  ok    %s\n' "$1"; }
 bad() { printf '  FAIL  %s\n' "$1"; fail=$((fail+1)); }
@@ -208,17 +217,17 @@ echo "== recomputed metrics: v2.0.0, the release the published docs describe =="
 # Recompute from the TAG, not from HEAD. Every published figure sits in a document about the v2.0.0
 # release; syncing them to the working tree retro-edits history.
 t0=$(mktemp -d); git archive v2.0.0 three-loop-workflow | tar -x -C "$t0"
-s_v2=$(wc -w < "$t0/three-loop-workflow/SKILL.md" | tr -d ' ')
-p_v2=$(cat "$t0/three-loop-workflow/SKILL.md" "$t0/three-loop-workflow/references"/*.md | wc -w | tr -d ' ')
+s_v2=$(words "$t0/three-loop-workflow/SKILL.md")
+p_v2=$(words "$t0/three-loop-workflow/SKILL.md" "$t0/three-loop-workflow/references"/*.md)
 pr_v2=$(cat "$t0/three-loop-workflow/SKILL.md" "$t0/three-loop-workflow/references"/*.md \
   | grep -oiE '\bnever\b|\bdo not\b|\bdon'"'"'t\b|\bforbidden\b|\bmust not\b' | wc -l | tr -d ' ')
 rm -rf "$t0"
 tmp=$(mktemp -d); git archive v1.14.0 three-loop-workflow docs | tar -x -C "$tmp"
-s_v1=$(wc -w < "$tmp/three-loop-workflow/SKILL.md" | tr -d ' ')
-p_v1=$(cat "$tmp/three-loop-workflow/SKILL.md" "$tmp/three-loop-workflow/references"/*.md | wc -w | tr -d ' ')
+s_v1=$(words "$tmp/three-loop-workflow/SKILL.md")
+p_v1=$(words "$tmp/three-loop-workflow/SKILL.md" "$tmp/three-loop-workflow/references"/*.md)
 f_v1=$(find "$tmp/three-loop-workflow" -type f | wc -l | tr -d ' ')
-pkg_v1=$(cat "$tmp/three-loop-workflow/SKILL.md" "$tmp/three-loop-workflow/references"/* | wc -w | tr -d ' ')
-arch_v1=$(cat "$tmp/docs/design"/*.md "$tmp/docs/implementation"/*.md | wc -w | tr -d ' ')
+pkg_v1=$(words "$tmp/three-loop-workflow/SKILL.md" "$tmp/three-loop-workflow/references"/*)
+arch_v1=$(words "$tmp/docs/design"/*.md "$tmp/docs/implementation"/*.md)
 pr_v1=$(cat "$tmp/three-loop-workflow/SKILL.md" "$tmp/three-loop-workflow/references"/*.md \
   | grep -oiE '\bnever\b|\bdo not\b|\bdon'"'"'t\b|\bforbidden\b|\bmust not\b' | wc -l | tr -d ' ')
 md1=$(git ls-tree -r --name-only v1.14.0 -- three-loop-workflow | grep -cE '\.md$')
@@ -233,7 +242,7 @@ echo "== the always-loaded surface has not bloated =="
 # Anti-bloat is held by review, not by a ceiling — v1 reached 2,915 words under a numeric cap, which is
 # why the cap is not the mechanism. This is a backstop against silent drift, set well above the
 # reviewed size, not the thing that keeps the file short.
-s_now=$(wc -w < three-loop-workflow/SKILL.md | tr -d ' ')
+s_now=$(words three-loop-workflow/SKILL.md)
 [ "$s_now" -le 1500 ] && ok "SKILL.md is $s_now words (backstop 1500)" \
                       || bad "SKILL.md has drifted to $s_now words — re-review before raising the backstop"
 
@@ -254,7 +263,10 @@ want "$pkg_v1" "v1 package words"; want "$arch_v1" "v1 per-task archive words"
 # The error that matters more: a number published that the tree contradicts. Enumerate EVERY
 # comma-formatted figure and every "<n> words" figure across all eight docs and require each to be a
 # recomputed value or a named historical constant.
-ALLOW_HIST="2,920 2,888 1,000 90"
+# 6,047 and 43,822 are the same two measurements taken with BSD `wc -w`, which splits on U+2260.
+# They are published in the v2.0.0 documents and stay there; the portable values are published
+# beside them. Allowed as historical constants because that is exactly what they now are.
+ALLOW_HIST="2,920 2,888 1,000 90 6,047 43,822"
 for n in $(grep -ohE '[0-9]+,[0-9]{3}' $DOCS | sort -u; \
            grep -ohE '[0-9][0-9,]*[[:space:]]*(words|词)' $DOCS | grep -oE '^[0-9][0-9,]*' | sort -u); do
   raw=${n//,/}
