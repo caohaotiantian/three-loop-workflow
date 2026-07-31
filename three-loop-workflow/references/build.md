@@ -162,7 +162,9 @@ A failure that reproduces every time stays a fix target.
 
 Three fix rounds per phase, counted independently per phase. Hitting the cap escalates with a deadlock report (`references/escalation.md`). It never lowers the bar and never becomes a quiet round four.
 
-If a *different* item failed each round, or the fix kept growing, the cap is firing on a planning defect rather than a local bug. Say so in the escalation and point at the plan.
+If a *different* item failed each round, the cap is firing on a planning defect rather than a local bug. Say so in the escalation and point at the plan.
+
+If the **fix kept growing**, look at the fix step before you blame the plan. A fix round that adds a check, a harness or a guard has started a second change inside the first, and the next round reviews *that* — so the count stops falling while the diff grows, on a plan that may be perfectly sound. Measured on this repository's own reference material: the same plan, run repeatedly, both converged and did not, and what separated the runs was whether the fix step built machinery. `escalation.md` has the remedy.
 
 ## Behavior check
 

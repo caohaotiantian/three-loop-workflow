@@ -489,6 +489,20 @@ const INVARIANTS = [
       eq(r.res.status, 'usage-error'),
       eq(r.n('write'), 0, 'nothing may be dispatched on an unusable repoPath')) },
 
+  // Omitting repoPath is legitimate, but it is also how the out-of-tree failure reappears, and the way
+  // it surfaces is three steps from the cause: a fix round quietly lands nothing and the no-op guard
+  // reports the symptom. The error has to name the likely cause, or the next person re-derives it.
+  { name: 'a no-op fix round names repoPath as the likely cause when it was omitted',
+    args: base,
+    reply: l => l.startsWith('write') ? write()
+      : l.startsWith('gates') ? gates({ headSha: B })
+      : l.startsWith('review') ? review(1)
+      : l.startsWith('triage') ? { confirmed: ['bug0'], rejected: [] }
+      : {},
+    expect: r => all(
+      eq(r.res.status, 'agent-error'), eq(r.res.stage, 'fix'),
+      has(r.res.reason || '', 'repoPath', 'the error must name the likely cause, not only the symptom')) },
+
   { name: 'omitting repoPath leaves every prompt as it was',
     args: base,
     reply: (l, calls) => l.startsWith('write') ? write()
