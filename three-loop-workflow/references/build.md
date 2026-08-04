@@ -18,6 +18,8 @@ Before you hand off to review, read your own diff once and remove: anything not 
 
 If the plan conflicts with what you find in the code, stop and say so. Do not decide unilaterally and do not paper over it — go fix the plan.
 
+**Commit before you leave this step.** The review reads `git diff <baseSha>..HEAD`, and work still sitting in your working tree is outside that range — the reviewer gets an empty diff and reports nothing wrong with a change it cannot see, which reads exactly like a clean review. Fix rounds already commit here (see Fix); this is the same point in the first pass through.
+
 ## Gates
 
 Run the project's mechanical checks from the project guide's _common-commands_: typecheck, lint, build, tests. Run them yourself, in this session, and paste the real output.
@@ -26,7 +28,7 @@ Run the project's mechanical checks from the project guide's _common-commands_: 
 - A recalled result is not a result. Re-run and paste this run's output.
 - Exit 0 with every test skipped is not a pass. Check the tally, not just the code.
 
-Record the gate output as commit trailers.
+Record the gate output as commit trailers — on the next commit, since the work these run against is already committed. `scripts/phase.js` makes the same trade for the same reason (`references/orchestration.md`).
 
 **If you add a gate, write its failing case first and watch it fail.** A check that cannot fail when the behavior is wrong is worse than none. This skill's own v1 shipped one: a script that grepped for the words naming each rule, and passed cleanly after a rule had been replaced with its exact opposite. Presence of a word is not presence of a rule. If you cannot make a check fail, write a scenario instead.
 
