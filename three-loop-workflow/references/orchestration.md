@@ -48,7 +48,7 @@ Four arguments are required, and no default changes how much review runs:
 |---|---|
 | `planPath` | **required** — `.agent/<task>/plan.md`; a shared path lets two tasks overwrite each other |
 | `tasks` | **required** — the phase's task list, verbatim from the plan |
-| `acceptCmds` | **required** — the commands whose exit codes decide the phase |
+| `acceptCmds` | **required** — an **array** of the commands whose exit codes decide the phase: `["npm test", "npm run lint"]`. A bare string is a `usage-error` |
 | `baseSha` | **required** — `git rev-parse HEAD` from before editing; *this phase's* base at Deep depth |
 | `depth` | `'standard'` (one reviewer) or `'deep'` (two, parallel, unioned). **One of `depth` or `reviewers` must be present** |
 | `reviewers` | `1` or `2`, accepted for callers written before `depth` existed. Passing both is an error if they disagree |

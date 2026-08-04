@@ -24,6 +24,8 @@
 #             changes nothing observable, so it is only load-bearing when the counter also fails
 #   M19       repoPath dropped from the Fix and Triage prompts, which is how a phase driven against a
 #             repository elsewhere loses the only thing telling its agents where the tree is
+#   M20       the acceptCmds shape guard, without which a string or any other length-bearing value
+#             passes the emptiness test and dies at `.map` with the Write agent already spent
 #   M18/S5    the args normaliser — the Workflow tool passes args as a JSON string, so without it\n#             every invocation through the tool fails (phase.js) or silently ignores args (runner)\n#   S1-S4     the two-arm runner's scoring: an agent-asserted pass, the row-set check, the
 #             discriminating floor, and a broken guard scored as held
 #
@@ -174,6 +176,14 @@ apply "M7 closure computed on the raw count, before triage" \
 
 apply "M8 a dead reviewer treated as a pass" \
   's = s.replace("if (verdicts.length < reviewers) {", "if (false) {")'
+
+# Disabled with `false &&` rather than deleted, so the rule's wording survives verbatim in the source
+# and the third argument can show that a token grep still passes on the mutant. Reverting this guard
+# restores the crash it was added for: a non-array acceptCmds reaches `.map` with the Write agent
+# already spent.
+apply "M20 the acceptCmds shape guard reverted, so a non-array reaches .map" \
+  's = s.replace("if (!Array.isArray(acceptCmds))", "if (false \x26\x26 !Array.isArray(acceptCmds))")' \
+  'Array.isArray(acceptCmds)'
 
 echo
 echo "== mutation test: the two-arm runner's scoring =="
