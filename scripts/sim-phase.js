@@ -134,6 +134,34 @@ const INVARIANTS = [
     reply: () => write(),
     expect: r => eq(r.res && r.res.status, 'usage-error') },
 
+  // A non-array acceptCmds used to pass the emptiness test and die later at `.map is not a function`,
+  // after the Write agent had run and committed — the caller paid for an agent and got a stack trace
+  // naming a line three steps from the cause. A string is the reported case; `{length: 1}` fails
+  // identically, and `null` threw at the emptiness test itself because `.length` was read before
+  // anything could reject it.
+  //
+  // Both halves are asserted deliberately. Status alone is not enough: a guard placed BELOW the Write
+  // dispatch still ends the phase in `usage-error` and still bills you for the agent, which is the
+  // whole harm. Same shape as the repoPath invariant below.
+  // The last two are why the rejection cannot describe the value with JSON.stringify: it throws on a
+  // circular object and on a BigInt, turning a clean usage-error back into the crash this guard exists
+  // to remove. The message is asserted too — D1 rejected coercing a string because a rejection that
+  // names the correction is cheaper than one that does not, and an unasserted message can be reverted
+  // to "acceptCmds is required", which sends the caller hunting for an argument they did supply.
+  ...[['a string', 'npm test'], ['a length-bearing object', { length: 1 }], ['null', null],
+      ['a bigint', 10n], ['a circular object', (() => { const o = {}; o.self = o; return o })()]]
+    .map(([label, value]) => ({
+      name: `usage: ${label} acceptCmds is rejected before any agent is dispatched`,
+      args: { ...base, acceptCmds: value },
+      reply: () => write(),
+      expect: r => all(
+        eq(r.res && r.res.status, 'usage-error'),
+        eq(r.n('write'), 0, 'nothing may be dispatched on an unusable acceptCmds'),
+        has(String((r.res && r.res.reason) || ''), 'array',
+          'the rejection must name the shape it wanted'),
+        ok(!/is required/.test(String((r.res && r.res.reason) || '')),
+          'the shape error must not reuse "acceptCmds is required" and send the caller after a missing argument')) })),
+
   { name: 'usage: a baseSha that is not a full 40-hex sha is rejected',
     args: { ...base, baseSha: 'abc1234' },
     reply: l => l.startsWith('write') ? write() : gates(),

@@ -19,7 +19,7 @@ export const meta = {
 //               let two tasks overwrite each other.
 //   tasks       the phase's task list, verbatim from the plan. Required — a phase dispatched with an
 //               empty task list produces a meaningless run that still looks like a run.
-//   acceptCmds  the commands whose exit codes decide the phase.
+//   acceptCmds  an ARRAY of the commands whose exit codes decide the phase. A bare string is rejected.
 //   baseSha     `git rev-parse HEAD` captured BEFORE editing. At Deep depth this is *this phase's*
 //               base, not the base of the whole change.
 //   depth       'standard' (one reviewer) or 'deep' (two, in parallel, unioned). Named in the skill's
@@ -106,6 +106,14 @@ if (input.__argsError) return { status: 'usage-error', reason: input.__argsError
 if (!planPath) return { status: 'usage-error', reason: 'planPath is required — plans live at .agent/<task>/plan.md, one directory per task, so there is no default to fall back to' }
 if (!baseSha) return { status: 'usage-error', reason: 'baseSha is required and must be captured BEFORE editing' }
 if (!tasks || !String(tasks).trim()) return { status: 'usage-error', reason: 'tasks is required — a phase dispatched with an empty task list produces a run that looks complete and implemented nothing' }
+// Shape before presence, because the presence test reads `.length` and that is the crash: a string or
+// any other length-bearing value passes it and dies at the `.map` further down, once the Write agent has
+// already run and committed. `null` never reached a check at all — the `= []` default only fires on
+// `undefined`. The two messages stay separate: "acceptCmds is required" sends the caller looking for a
+// missing argument, which is the wrong search when they passed one in the wrong shape.
+// The type, not the value: JSON.stringify throws on a circular object and on a BigInt, which would put
+// the crash back on the line that exists to remove it.
+if (!Array.isArray(acceptCmds)) return { status: 'usage-error', reason: `acceptCmds must be an array of commands (got ${acceptCmds === null ? 'null' : typeof acceptCmds}) — pass ["npm test"], not "npm test"` }
 if (!acceptCmds.length) return { status: 'usage-error', reason: 'acceptCmds is required — a phase with no runnable acceptance cannot close' }
 if (!Number.isInteger(maxRounds) || maxRounds < 0) return { status: 'usage-error', reason: `maxRounds must be a non-negative integer (got ${JSON.stringify(maxRounds)})` }
 

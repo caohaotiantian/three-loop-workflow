@@ -47,7 +47,7 @@ still printed `ok an uncommitted phase is rejected, not reviewed` and `ACCEPT: a
 Deleting one guard outright also passed, because the rule's wording survived in the comment above it. Both
 were demonstrated in a fresh clone. Control flow is now asserted by **execution** — `scripts/sim-phase.js`
 drives the real script with stub agents — and `scripts/negative-test.sh` breaks the two scripts
-twenty-four ways and requires the harness to notice each one. The lesson generalises: to check a *rule*, run it; grep only for
+twenty-five ways and requires the harness to notice each one. The lesson generalises: to check a *rule*, run it; grep only for
 *prose*, which is the one thing whose presence is the property you want.
 
 Nothing replaced the consistency gate as such. The scenario suite was replaced by the two-arm runner below;
@@ -107,7 +107,7 @@ recomputed figure a different number of times.
 - **Invariant harnesses (fast, deterministic, no agents):**
   `node scripts/sim-phase.js` asserts `phase.js`'s control flow by driving the real script with stub
   agents; `node scripts/sim-scenarios.js` asserts the two-arm suite's scoring arithmetic;
-  `bash scripts/negative-test.sh` breaks `phase.js` nineteen ways, `run-scenarios.js` five, and the
+  `bash scripts/negative-test.sh` breaks `phase.js` twenty ways, `run-scenarios.js` five, and the
   round-cap experiment's published figures three, and fails if the harness misses one.
   Run all three after touching either script — and add the failing case to the harness *before* the fix.
 - **Two-arm scenario suite (slow, spawns agents):** `Workflow({ scriptPath: "tests/run-scenarios.js" })`.
