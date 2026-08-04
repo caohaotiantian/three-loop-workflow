@@ -462,8 +462,8 @@ const INVARIANTS = [
   // a phase could not complete a fix round: the Fix and Triage prompts were built from a branch name
   // and a sha and never a path, so the fix agent had nothing to locate the tree with. It searched the
   // filesystem, committed nothing, and the phase died on this script's own no-op-fix guard — which
-  // fired correctly. build.md documents driving the script from an installed skill, which is exactly
-  // that case, so this is the documented usage failing.
+  // fired correctly. orchestration.md documents driving the script from an installed skill, which is
+  // exactly that case, so this is the documented usage failing.
   //
   // EVERY stage is asserted, not just the two that were broken. The defect was that one prompt knew
   // where the repository was and another did not; pinning only the two that failed would leave the

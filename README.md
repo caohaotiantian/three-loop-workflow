@@ -179,7 +179,8 @@ The skill never hard-codes a filename. It reads `AGENTS.md`, `CLAUDE.md`, or bot
 │   ├── SKILL.md                      Always loaded: depth gate first, then routing
 │   ├── references/
 │   │   ├── plan.md                   The plan artifact, facts-vs-decisions, spikes, plan review
-│   │   ├── build.md                  write → gates → review → triage → fix; diagnosis; flakes; worktrees
+│   │   ├── build.md                  write → gates → review → triage → fix; diagnosis; flakes
+│   │   ├── orchestration.md          Worktrees for concurrent writers; the Build loop as a script
 │   │   ├── close.md                  Deep-tier closeout: orphans, blast radius, migrations
 │   │   ├── escalation.md             When and how to ask; deadlock reports
 │   │   └── platforms.md              Runtimes, and how the skill degrades off Claude Code

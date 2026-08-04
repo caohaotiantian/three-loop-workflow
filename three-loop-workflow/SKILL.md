@@ -4,7 +4,7 @@ description: Structured workflow for non-trivial code changes — features, beha
 license: MIT
 compatibility: Claude Code (subagents, Workflow). Codex/opencode run the manual path — see references/platforms.md
 metadata:
-  version: "2.2.0"
+  version: "2.3.0"
 ---
 
 # Three-Loop Workflow
@@ -23,11 +23,13 @@ Two questions: **if this is wrong, how much breaks?** and **how hard is it to un
 |---|---|---|
 | **Direct** | Contained and reversible. Typo, comment, formatting, doc reordering, local rename, patch/minor dependency bump. | Make the change. Run the gates (§3). Done. |
 | **Standard** | Default for real work. A feature, a behavior fix, a refactor, a perf change — contained blast radius, revertable with one commit. | Plan brief → build → gates → one fresh-reviewer diff review → fix. |
-| **Deep** | Any one of: a breaking change to a published contract (schema, exit code, CLI, wire protocol, storage layout); a migration of persisted data or config; an edit that changes a rule in a contract file listed under the project guide's _load-bearing-docs_; or a decision with no clear winner that the repository cannot answer. | Standard, plus: alternatives recorded before choosing, phased build, and a Close pass. |
+| **Deep** | Any one of: a breaking change to a published contract (schema, exit code, CLI, wire protocol, storage layout); a migration of persisted data or config; an edit that changes a rule in a contract file listed under the project guide's _load-bearing-docs_; or a decision the repository cannot settle whose alternatives commit to different structures, so choosing wrong means redoing the work rather than editing it. | Standard, plus: alternatives recorded before choosing, phased build, and a Close pass. |
 
 Between Direct and Standard, choose **Standard**. Between Standard and Deep, the Deep list is a **checklist, not a vibe** — if no item fires, Standard is correct. Do not upgrade the whole change because one corner of it is risky; run Standard and escalate that corner.
 
 Terse phrasing is not a depth signal. "Just quickly add X" describes urgency, not blast radius — grade the change, not the sentence.
+
+**If this skill loaded after you started editing**, stop and grade now rather than carrying on. Capture `baseSha` from the last commit before your edits, write the plan from what you already have, and say that you started first. A plan written late still binds the review, and the edits you already made are still in the diff.
 
 **Depth is a cost decision, and Deep scales with the change.** Counting only the reviewers this skill mandates: Direct none, Standard one, Deep two on the plan plus two per phase, plus a Close pass. Anything you delegate on top — Explore sweeps, a behavior check, `scripts/phase.js`'s own write/gates/triage/fix agents — is additional. A one-line rule edit that trips the Deep list still records its alternatives and still takes two reviewers: those are the parts that catch the risk. Its "phased build" is one phase and its Close is a few questions, not a program. Run the parts that catch the risk, not the ceremony.
 
@@ -63,13 +65,12 @@ Reviewers are fresh subagents receiving the diff and the plan — and **nothing 
 
 **How many reviewers.** Standard: one. Deep: **two, in parallel, independently** — take the union of what they find.
 
-Two is measured on this repo's own design documents, not chosen for symmetry. A second independent reviewer catches much of what the first missed, including blockers. Reviewers miss *different* things — that is the whole reason a second one pays. Stopping at two is a cost decision, not a finding that a third adds nothing. `references/plan.md` says what was measured and what it does not settle; the figures are published outside this skill, with their limits.
+Why two, why not three, and what the measurement behind it does not settle: `references/plan.md`.
 
 - **The author never reviews their own work.** This binds to identity, not to invocation: an agent that wrote the change cannot review it, whether the second role arrives by assignment, self-claim, or lead approval.
 - Ask for **everything, and triage yourself**. Do not tell a reviewer to be conservative or to report only high-severity items — it will comply literally and report less.
 - **Triage before you fix, and before you count.** Check each finding against the actual code and reject the ones that misread it. Expect to reject a large share, including findings graded blocking — see `references/build.md`. That is the cost of asking for everything, and it is cheaper than the alternative.
 - **Closure is computed, not asserted** — from the count of *confirmed* findings, never the reviewer's summary verdict and never the raw report. Counting unconfirmed findings makes a phantom defect burn a fix round and can exhaust the cap on work that was already correct.
-- Two *independent* reviewers is not the same as double-checking your own work. Re-reading your own reasoning adds nothing; a reader who never saw it finds much of what you missed.
 
 **Termination**: the change closes when the *confirmed* blocking count is zero and the gates are green. Fix rounds are capped at **3**; hitting the cap escalates with a deadlock report — it never lowers the bar.
 
@@ -91,7 +92,7 @@ Never substitute a silent default for a real decision. Record what the user deci
 | Close a Deep change | `references/close.md` |
 | Escalate, or handle a round-cap deadlock | `references/escalation.md` |
 | Run on Codex or opencode | `references/platforms.md` |
-| Run the Build loop as a script (Claude Code) | `references/build.md` (Workflow mode) → `scripts/phase.js` |
+| Run writers in parallel, or the Build loop as a script | `references/orchestration.md` |
 
 Read the reference for the loop you are in. You do not need the others.
 
