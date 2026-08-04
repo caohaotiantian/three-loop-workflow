@@ -76,6 +76,8 @@ This step is not optional bookkeeping. Measured on this repo's own review output
 
 Record rejections briefly — one line each, saying what the finding claimed and what the code actually does. That record is what stops the same phantom coming back next round.
 
+**Put it where it outlives the round.** Running by hand, that is the task's `.agent/<task>/` directory, beside the plan; `scripts/phase.js` carries the rejections in the phase result instead. A rejection recorded only in the current turn's output is gone at the next compaction, and then the phantom returns to a reviewer with nothing to contradict it.
+
 ## Fix
 
 Fix confirmed blocking findings. Triage non-blocking ones the same way: fix the cheap and correct ones, and for the rest say plainly what you are not doing and why.
