@@ -43,6 +43,17 @@ else" and had nothing to say about arriving after the editing had started, which
 activate. Capture the base from the last commit before your edits, grade the change now, write the plan
 from what you have, and say that you started first.
 
+**Two preconditions the loop did not enforce.** `scripts/phase.js` took a non-array `acceptCmds` — a
+string, a length-bearing object, `null` — past its own emptiness check and died at `.map is not a
+function` once the write agent had already run and committed, reporting a stack trace three steps from
+the cause. All three are now a `usage-error` raised before any agent is dispatched, with a message that
+names the shape rather than sending the caller after an argument they did supply. Separately,
+`build.md` never said to commit before the *first* review, although its Fix step had ordered exactly
+that for every later round: the reviewer reads `git diff <baseSha>..HEAD`, and work still sitting in the
+working tree makes that range empty, which is indistinguishable from a clean review. The rule now closes
+the Write step, and the trailer instruction says where gate output goes once the work is already
+committed.
+
 Room for the two additions came out of `SKILL.md`'s two-reviewer justification, which
 `references/plan.md` already carries in more detail *and with its limits*. That is the anti-bloat norm
 working as designed — rules on the always-loaded surface, the measurement behind them in the reference —
