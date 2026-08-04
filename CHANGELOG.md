@@ -6,10 +6,11 @@ Full version history for the three-loop-workflow skill. See [README.md](./README
 
 An adversarial critic read the shipped package — `SKILL.md`, the references, `phase.js` — and asked what
 the skill *enforces* rather than what it says. Most of its structural verdict is declined below. Four of
-its findings were true of the package, and are fixed here.
+its numbered findings were true of the package, and are fixed here, along with the activation gap it
+names but does not number.
 
-**`references/build.md` is no longer the file every change loads.** It was the largest reference in the
-package, and `SKILL.md`'s routing sent every Standard change to all of it — including a worktree how-to
+**`references/build.md` is no longer the file every change loads in full.** It is the largest reference
+in the package, and `SKILL.md`'s routing sent every Standard change to all of it — including a worktree how-to
 and the whole `phase.js` argument manual, which are read only by someone running concurrent writers or
 driving the loop as a script. Both now live in `references/orchestration.md`, and `build.md` keeps the
 loop. The rule a single-writer reader actually needs — phases share one working tree, a branch name is

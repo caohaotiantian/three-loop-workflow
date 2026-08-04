@@ -60,6 +60,8 @@ Do not modify code.
 
 **The author never reviews their own work** — bound to identity, not invocation. An agent that wrote the change cannot review it, whether the second role arrives by assignment, self-claim, or approval of its own plan.
 
+Nor is a second *independent* reviewer the same thing as double-checking your own work. Re-reading your own reasoning adds nothing; a reader who never saw it finds much of what you missed.
+
 **Closure is computed from `blocking_count`, not from the reviewer's prose.** A reviewer that writes "looks good overall" while listing a blocking issue has not passed. Read the counts.
 
 Ask for everything and triage yourself. A reviewer told to be conservative reports less — including real defects.

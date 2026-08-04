@@ -140,8 +140,8 @@ recomputed figure a different number of times.
 - Anti-bloat binds the always-loaded `SKILL.md` surface — push detail into references. Review is the
   mechanism, not a ceiling: v1 reached 2,915 words under a numeric cap, which is why the cap is not the
   mechanism. `accept-release.sh` fails above **1,500** words, and that is a backstop against silent drift
-  set above the reviewed size, not a budget to spend — the file is 1,493 words and every addition to it
-  now has to displace something. Rules live here; the measurements behind them live in the references,
+  set above the reviewed size, not a budget to spend — the file is 1,468 words, and the slack above it is
+  not an allowance: an addition that does not displace something has to argue for itself in review. Rules live here; the measurements behind them live in the references,
   because a statistic on the always-loaded surface costs tokens on every activation, changes no behavior,
   and drifts.
 - Workflow scripts are plain JavaScript — no TypeScript, no `Date.now()`, no `Math.random()`, no argless

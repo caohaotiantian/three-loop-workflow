@@ -93,4 +93,4 @@ Note what that does **not** do: it does not detect a fabricated sha. If the impl
 
 **What it does not do, by decision rather than by omission.** The implementer commits before the gates run, so gate output cannot land in *that* commit's trailers — record them yourself, or on the fix commits; moving the commit after the gates would mean amending, which changes the sha every guard here is tracking. Non-blocking findings are accumulated and returned, not triaged: "fix the cheap and correct ones" is a scope judgment, and handing it to an agent is how scope creep gets automated. Gate-driven and review-driven fix rounds share one budget, because the cap is per phase and splitting it would change a documented rule — they are reported separately (`gateFixes`, `reviewFixes`, `exhaustedBy`) so an escalation can say which one spent it.
 
-Use it when a Deep change has several phases. For a single Standard change, running the loop by hand is cheaper than orchestrating it.
+Use it when a Deep change has several phases — the scope this file's opening states.
