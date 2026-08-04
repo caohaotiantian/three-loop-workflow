@@ -53,7 +53,7 @@ Some questions are neither repo-answerable nor a matter of preference: *does thi
 
 A spike is bounded by three rules:
 
-1. **Throwaway.** Marked so from the first line, run outside the repository — `$TMPDIR`, or a detached worktree placed as `build.md` ("Parallel work and worktrees") describes — and deleted afterward. It never lands in the main tree.
+1. **Throwaway.** Marked so from the first line, run outside the repository — `$TMPDIR`, or a detached worktree placed as `orchestration.md` ("Worktrees") describes — and deleted afterward. It never lands in the main tree.
 2. **The answer is the only output.** Record the question and what you measured in the plan's Decisions. The code is discarded; git is not the memory here, the plan is.
 3. **It answers one question.** A spike does not authorize starting the real work. Record the number, then plan with it.
 

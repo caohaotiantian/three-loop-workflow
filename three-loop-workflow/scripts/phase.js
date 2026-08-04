@@ -144,8 +144,8 @@ if (callerBranch !== undefined && !ref(callerBranch)) {
 // agent searched the filesystem, committed nothing, and the phase died on the no-op-fix guard below,
 // which fired correctly on a cause three steps upstream of it.
 //
-// `build.md` documents driving this script from an installed skill against your own repository, which
-// is exactly that case. Omitting it is still supported and still correct when the agents already
+// `orchestration.md` documents driving this script from an installed skill against your own repository,
+// which is exactly that case. Omitting it is still supported and still correct when the agents already
 // start in the repository; passing it is what makes the documented usage work.
 const repoRoot = repoPath === undefined ? null : dir(repoPath)
 if (repoPath !== undefined && !repoRoot) {

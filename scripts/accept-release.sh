@@ -61,8 +61,8 @@ chk() { if [ "$2" = "$3" ]; then ok "$1 ($2)"; else bad "$1: expected '$3', got 
 
 echo "== layout =="
 [ -f three-loop-workflow/SKILL.md ] && ok "SKILL.md present" || bad "SKILL.md missing"
-chk "shipped skill file count" "$(find three-loop-workflow -type f | wc -l | tr -d ' ')" "8"
-chk "reference count"          "$(find three-loop-workflow/references -name '*.md' | wc -l | tr -d ' ')" "5"
+chk "shipped skill file count" "$(find three-loop-workflow -type f | wc -l | tr -d ' ')" "9"
+chk "reference count"          "$(find three-loop-workflow/references -name '*.md' | wc -l | tr -d ' ')" "6"
 chk "shipped script count"     "$(find three-loop-workflow/scripts -type f | wc -l | tr -d ' ')" "2"
 chk "fixture count"            "$(find tests/scenarios -name 's*.md' | wc -l | tr -d ' ')" "11"
 # Every fixture must be declared in expected.json, and every declaration must have a fixture. The
@@ -160,7 +160,8 @@ fi
 rm -f /tmp/_neg.out
 
 echo "== one plan directory per task =="
-for f in SKILL.md references/plan.md references/build.md references/close.md references/escalation.md; do
+for f in SKILL.md references/plan.md references/build.md references/close.md references/escalation.md \
+         references/orchestration.md; do
   grep -qF '.agent/<task>' "three-loop-workflow/$f" \
     && ok "per-task plan path in $f" || bad "$f prescribes a shared plan path"
 done
@@ -426,7 +427,7 @@ fi
 echo "== packaged .skill carries the skill and nothing else =="
 pkg=$(mktemp -d)/x.skill
 zip -qr "$pkg" three-loop-workflow/
-chk "archive entry count" "$(unzip -Z1 "$pkg" | grep -vc '/$')" "8"
+chk "archive entry count" "$(unzip -Z1 "$pkg" | grep -vc '/$')" "9"
 unzip -Z1 "$pkg" | grep -qE "$V1" && bad "a v1 file is inside the .skill" || ok "no v1 file in .skill"
 unzip -Z1 "$pkg" | grep -q 'three-loop-workflow/SKILL.md' && ok "SKILL.md in .skill" || bad "SKILL.md not in .skill"
 rm -rf "$(dirname "$pkg")"

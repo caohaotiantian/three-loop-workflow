@@ -176,7 +176,8 @@ skill 从不写死文件名。它会读取 `AGENTS.md`、`CLAUDE.md` 或两者 �
 │   ├── SKILL.md                      始终加载:先是深度判定,然后是路由表
 │   ├── references/
 │   │   ├── plan.md                   计划文件、事实与决策之分、spike、计划评审
-│   │   ├── build.md                  编写 → 门禁 → 评审 → 分诊 → 修复;诊断;flaky;worktree
+│   │   ├── build.md                  编写 → 门禁 → 评审 → 分诊 → 修复;诊断;flaky
+│   │   ├── orchestration.md          并发写入者的 worktree;把 Build 循环当脚本运行
 │   │   ├── close.md                  Deep 档收尾:孤儿清理、影响半径、迁移验证
 │   │   ├── escalation.md             何时以及如何上报;死锁报告
 │   │   └── platforms.md              各运行时,以及离开 Claude Code 后哪些能力降级

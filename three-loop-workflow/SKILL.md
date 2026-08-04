@@ -91,7 +91,7 @@ Never substitute a silent default for a real decision. Record what the user deci
 | Close a Deep change | `references/close.md` |
 | Escalate, or handle a round-cap deadlock | `references/escalation.md` |
 | Run on Codex or opencode | `references/platforms.md` |
-| Run the Build loop as a script (Claude Code) | `references/build.md` (Workflow mode) → `scripts/phase.js` |
+| Run writers in parallel, or the Build loop as a script | `references/orchestration.md` |
 
 Read the reference for the loop you are in. You do not need the others.
 
