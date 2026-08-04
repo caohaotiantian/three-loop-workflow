@@ -2,6 +2,58 @@
 
 Full version history for the three-loop-workflow skill. See [README.md](./README.md) for what the skill is, when it applies, and how to install it.
 
+## v2.3.0 — the common path gets lighter, and three limits get named
+
+An adversarial critic read the shipped package — `SKILL.md`, the references, `phase.js` — and asked what
+the skill *enforces* rather than what it says. Most of its structural verdict is declined below. Four of
+its findings were true of the package, and are fixed here.
+
+**`references/build.md` is no longer the file every change loads.** It was the largest reference in the
+package, and `SKILL.md`'s routing sent every Standard change to all of it — including a worktree how-to
+and the whole `phase.js` argument manual, which are read only by someone running concurrent writers or
+driving the loop as a script. Both now live in `references/orchestration.md`, and `build.md` keeps the
+loop. The rule a single-writer reader actually needs — phases share one working tree, a branch name is
+not isolation — stays in `build.md` and points at the how-to from there, so the worktree guidance is
+reachable from the common path rather than only from a Workflow-mode routing row.
+
+**Triage rejections have somewhere to live.** `build.md` said to record them "briefly" and never said
+where, so in practice they lived in the turn's output and were gone at the next compaction — after which
+the same phantom finding returns to a reviewer with nothing to contradict it. Running by hand, the record
+goes in the task's `.agent/<task>/` directory beside the plan; `scripts/phase.js` carries it in the phase
+result. Stated so it is followable on both paths, not only on the one that has a return value.
+
+**The gates step's `all_pass` is named as what it is.** `phase.js` cross-checks the sha an agent reports,
+and the reference documents that it does. `all_pass` sits beside it, is also agent-reported, and nothing
+downstream contradicts it — a gates agent that reports green on a red build is believed. That asymmetry
+was undocumented, which is the failure this project has already shipped twice: a limit that reads as a
+guarantee. `orchestration.md` now states it, and says what to do instead when it matters more than the
+orchestration does. The script's own comment carried the narrower fact that the gates agent judges
+nothing; it did not carry this one, and no reader of the reference could have found it.
+
+**The Deep checklist loses its one non-checklist item.** "A decision with no clear winner that the
+repository cannot answer" is satisfiable by almost any design-shaped task, three lines under a rule that
+calls the list "a checklist, not a vibe". It now binds to the depth gate's own second question:
+alternatives that commit to different structures, where choosing wrong means redoing the work rather than
+editing it. A cheap-to-reverse open decision still escalates under §5 — it just no longer drags the whole
+change to Deep.
+
+**A skill that loads mid-edit can recover.** §1 said to choose depth "first, before reading anything
+else" and had nothing to say about arriving after the editing had started, which is how skills routinely
+activate. Capture the base from the last commit before your edits, grade the change now, write the plan
+from what you have, and say that you started first.
+
+Room for the two additions came out of `SKILL.md`'s two-reviewer justification, which
+`references/plan.md` already carries in more detail *and with its limits*. That is the anti-bloat norm
+working as designed — rules on the always-loaded surface, the measurement behind them in the reference —
+and it leaves the always-loaded word backstop a backstop rather than a budget that has been spent.
+
+**Declined, and why.** Plan review on Standard doubles the cost of the common path with no measurement
+behind it. One reviewer inside Deep would relax a rule on a preference, and the measurement that could
+justify it — reviewer yield on diffs rather than on design documents — has not been run. A different loop
+for document-shaped Deep changes was already answered by the round-cap experiment: the cap is not what
+fails, scope growth in the fix step is. The rest are covered where they already sit, and repeating them
+on the always-loaded surface would spend words to duplicate a pointer.
+
 ## v2.2.0 — the gates can fail now
 
 An adversarial audit of the whole repository found that every mechanism checking this project was one of

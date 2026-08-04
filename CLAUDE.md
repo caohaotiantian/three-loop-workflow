@@ -9,7 +9,7 @@
 
 This repo distributes the **three-loop-workflow** Claude skill, shipped from `three-loop-workflow/`.
 
-**v2.1.0 is current.** It is a ground-up rewrite, not an increment: v1's L1/L2/L3/F loops, Full/Light/None
+**v2.3.0 is current.** The v2 line is a ground-up rewrite, not an increment: v1's L1/L2/L3/F loops, Full/Light/None
 tiers, five-voter panel, committed per-task document archive, and `check-consistency.sh` are all gone.
 v1.14.0 remains at tag `v1.14.0` for anyone who needs it. `docs/why-v2.md` is the full account of what
 changed and on what evidence.
