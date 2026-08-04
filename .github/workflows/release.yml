@@ -31,7 +31,7 @@ jobs:
       - name: Verify the archive contents
         run: |
           entries=$(unzip -Z1 three-loop-workflow.skill | grep -vc '/$')
-          test "$entries" = "8" || { echo "expected 8 files in the archive, found $entries" >&2; exit 1; }
+          test "$entries" = "9" || { echo "expected 9 files in the archive, found $entries" >&2; exit 1; }
           unzip -Z1 three-loop-workflow.skill | grep -qx 'three-loop-workflow/SKILL.md' \
             || { echo "SKILL.md is not at three-loop-workflow/SKILL.md in the archive" >&2; exit 1; }
       - name: Attach to the GitHub release
