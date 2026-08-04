@@ -32,7 +32,7 @@
 # M5 also covers termination: without the loop's structural bound it does not return at all, so the
 # harness's runaway ceiling is what catches it.
 #
-# M1-M3 and M9 additionally assert the point of the whole exercise: the grep the previous gate used
+# M1-M3, M9, M19 and M20 additionally assert the point of the whole exercise: the grep the previous gate used
 # still passes on the mutated file. Deleting a guard is nearly the only mutation a grep can detect, and
 # where the rule's wording also appears in a nearby comment it cannot detect even that.
 #

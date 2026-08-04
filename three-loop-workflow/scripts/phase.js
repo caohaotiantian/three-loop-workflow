@@ -111,7 +111,9 @@ if (!tasks || !String(tasks).trim()) return { status: 'usage-error', reason: 'ta
 // already run and committed. `null` never reached a check at all — the `= []` default only fires on
 // `undefined`. The two messages stay separate: "acceptCmds is required" sends the caller looking for a
 // missing argument, which is the wrong search when they passed one in the wrong shape.
-if (!Array.isArray(acceptCmds)) return { status: 'usage-error', reason: `acceptCmds must be an array of commands (got ${JSON.stringify(acceptCmds)}) — pass ["npm test"], not "npm test"` }
+// The type, not the value: JSON.stringify throws on a circular object and on a BigInt, which would put
+// the crash back on the line that exists to remove it.
+if (!Array.isArray(acceptCmds)) return { status: 'usage-error', reason: `acceptCmds must be an array of commands (got ${acceptCmds === null ? 'null' : typeof acceptCmds}) — pass ["npm test"], not "npm test"` }
 if (!acceptCmds.length) return { status: 'usage-error', reason: 'acceptCmds is required — a phase with no runnable acceptance cannot close' }
 if (!Number.isInteger(maxRounds) || maxRounds < 0) return { status: 'usage-error', reason: `maxRounds must be a non-negative integer (got ${JSON.stringify(maxRounds)})` }
 
