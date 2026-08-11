@@ -35,7 +35,7 @@ Terse phrasing is not a depth signal. "Just quickly add X" describes urgency, no
 
 ## 2. Durable state — `.agent/<task>/plan.md`
 
-Every task gets **its own gitignored directory** under `.agent/`, named for the task: `.agent/rate-limit-headers/plan.md`. Scratch notes and a journal live beside it. What must outlive the task moves into the repository — an acceptance command, a rule for the guide — nothing backs this directory up.
+Every task gets **its own gitignored directory** under `.agent/`, named for the task: `.agent/rate-limit-headers/plan.md`. Scratch notes and a journal live beside it. Nothing backs this up, so what must outlive the task has to reach the repository — an acceptance command now, a rule for the guide later.
 
 Never a shared path. Two tasks both writing `.agent/plan.md` overwrite each other, and a finished task leaves no record of what it decided.
 

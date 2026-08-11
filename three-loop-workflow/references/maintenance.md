@@ -4,7 +4,7 @@ The project guide is read at the start of every change and rewritten almost neve
 
 This pass closes the loop the rest of the skill leaves open: work leaves notes, the notes are folded into the guide, and what does not survive folding is dropped.
 
-**It is its own task, never a step inside another one.** Grade it with the depth gate like anything else — correcting a stale number is Direct; changing a rule in a contract file is Deep. Folding the guide in the middle of a feature is the same mistake as adding a harness in the middle of a fix round: a second change inside the first, arriving unreviewed (`build.md`, Fix).
+**It is its own task, never a step inside another one.** Grade it with the depth gate like anything else — correcting a stale number is Direct; changing a rule in a file the guide lists under _load-bearing-docs_ is Deep, by the same test `SKILL.md` §1 applies to everything else. Folding the guide in the middle of a feature is the same mistake as adding a harness in the middle of a fix round: a second change inside the first, arriving unreviewed (`build.md`, Fix).
 
 ## The journal — `.agent/<task>/journal.md`
 
@@ -25,6 +25,8 @@ An entry is a few lines: what happened, and the rule that generalises from it. "
 
 Nothing backs the directory up, and it does not travel: run this pass in a fresh clone and you read an empty journal, which is indistinguishable from a clean project. Fold on the machine the work happened on.
 
+All of that rests on `.agent/` being in the repository's `.gitignore`, which the skill asserts everywhere and establishes nowhere. Check it once per repo. If it is not ignored, the journal is committed, every reviewer reads it alongside the diff, and the argument above inverts: it becomes the archive this skill deleted, at full price.
+
 ## The pass
 
 Three steps, in this order. Verifying before promoting keeps you from appending to a document whose existing claims are already false.
@@ -44,7 +46,11 @@ Put each promoted item under the role it belongs to, per the guide's anchor map 
 
 Prune *notes*. The task's directory and its `plan.md` stay where they are (`close.md`, "Clean up"). Pruning has no undo, which is the design; nothing here is the only copy of anything that mattered, because step 2 ran first.
 
-If your runtime keeps a persistent store of its own — notes it carries between sessions, outside the repository — it is a third target, and it drifts hardest, because it is loaded before every task and checked by nothing. Verify it the same way. Prefer the store that has a gate: a fact the repository already holds true by construction should not be copied into one that holds nothing.
+### A third target, if your runtime has one
+
+Some runtimes keep a persistent store of their own — notes carried between sessions, outside the repository. Where one exists it drifts hardest, because it is loaded before every task and checked by nothing, so run all three steps over it as well: verify, promote what belongs in the repository instead, prune the rest. Prefer the store that has a gate — a fact the repository already holds true by construction should not be copied into one that holds nothing.
+
+Whether a given runtime keeps such a store changes between releases; `platforms.md` says to look rather than to assume.
 
 ## What this pass does not do
 

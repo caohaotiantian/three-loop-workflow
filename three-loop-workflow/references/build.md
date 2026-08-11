@@ -132,6 +132,7 @@ Write an entry when — and only when — one of these is true:
 - Something cost you real time that a note would have saved: a platform quirk, a tool that reports success while doing nothing, a documented command whose behavior is not its behavior.
 - An idea was raised and deliberately **not** done, so nobody re-proposes it without new information.
 - The project guide claimed something the repo contradicted. Record it and keep going — do not detour to fix the guide now, and do not let it grow into a second change.
+- Something was settled that has no other home. What changes the Goal, a Decision or Accept goes in `plan.md`; what is tactical goes in the commit body (`escalation.md`, "Record the answer"). This is for what belongs to neither, because it is not about this diff at all.
 
 **Never a summary of what you did.** The commits already carry that, and a journal that accumulates it
 becomes the per-task archive this skill deleted. The entry condition above and this prohibition are the
