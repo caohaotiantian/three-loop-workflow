@@ -52,8 +52,10 @@ drives the real script with stub agents — and `scripts/negative-test.sh` break
 twenty-five ways and requires the harness to notice each one. The lesson generalises: to check a *rule*, run it; grep only for
 *prose*, which is the one thing whose presence is the property you want.
 
-Nothing replaced the consistency gate as such. The scenario suite was replaced by the two-arm runner below;
-a *discriminating* fixture that both arms pass is INVALID, while a guard both arms pass is a pass.
+Nothing replaced the consistency gate as such. The two-arm runner that replaced the scenario suite was
+itself deleted on 2026-08-11, for the third instance of the same disease: 23 agents per run to return
+one bit, four of its eleven fixtures unable to fail by construction, and fourteen commits since it was
+last run. What survives is `tests/probe.js` — the same question, asked on demand, scored by a person.
 
 ## Load-Bearing Documents
 
@@ -82,10 +84,10 @@ audit records), and the `docs/design/` + `docs/implementation/` archives.
 Agents asked to improve this skill have repeatedly redirected their effort into the test suite —
 elaborating fixtures and harnesses, spending a large share of the budget there, and leaving the skill
 itself no better. Classifying `tests/**` as load-bearing would route *more* attention there. So: do not
-spend a change's budget on the suite unless the change is about the suite. One procedural fact does
-apply, because the gate does not honour the classification — `tests/run-scenarios.js` is mutated five
-ways by `scripts/negative-test.sh`, syntax-gated in CI, and has its fixture list pinned by
-`accept-release.sh`, so touching it means re-running the three harnesses below before you commit.
+spend a change's budget on the suite unless the change is about the suite. What remains under `tests/`
+after the 2026-08-11 cut is small on purpose: eight `gate-fixtures/` that cost nothing, and `probe.js`,
+which is an instrument rather than a gate. The deterministic harnesses live in `scripts/`, which **is**
+load-bearing.
 
 `docs/design/` and `docs/implementation/` are a **frozen v1 archive**, kept as the record of how v1 was
 built. v2 does not produce per-task documents; its plan lives in a gitignored `.agent/<task>/plan.md`, one directory per task. Do not add
@@ -147,17 +149,19 @@ pairs quotes a recomputed figure a different number of times; the fifth pair is 
   committed to do, before any of it existed.
 - **Invariant harnesses (fast, deterministic, no agents):**
   `node scripts/sim-phase.js` asserts `phase.js`'s control flow by driving the real script with stub
-  agents; `node scripts/sim-scenarios.js` asserts the two-arm suite's scoring arithmetic;
-  `bash scripts/negative-test.sh` breaks `phase.js` twenty ways, `run-scenarios.js` five, and the
-  round-cap experiment's published figures three, and fails if the harness misses one.
-  Run all three after touching either script — and add the failing case to the harness *before* the fix.
-- **Two-arm scenario suite (slow, spawns agents):** `Workflow({ scriptPath: "tests/run-scenarios.js" })`.
-  Runs every fixture with the skill loaded and withheld. A **discriminating** fixture both arms answer
-  correctly proves nothing and is reported INVALID; a **guard** both arms answer correctly is GUARD-HELD, a
-  pass — ten of the eleven current fixtures are guards. `GUARD-BROKEN` is the most serious result it can
-  return. The verdict and the pass condition are computed in the runner, never asserted by the scoring
-  agent. Answers live in `tests/expected.json`, deliberately outside the fixtures. Paths resolve relative
-  to the repo root; pass `args: {repo: "<path>"}` to run it against a checkout elsewhere.
+  agents; `bash scripts/negative-test.sh` breaks `phase.js` and the round-cap experiment's published
+  figures and fails if the harness misses one. Both run in about two seconds and spawn no agents.
+  Run them after touching `phase.js` — and add the failing case to the harness *before* the fix.
+  Do not trust their headline line alone: on 2026-08-11 `sim-phase` printed *all 54 invariants hold*
+  while 21 of 88 mutations survived it. What a harness prints is a count of what it asserts, never a
+  measure of what it would catch.
+- **Control-arm probe (spawns agents; an instrument, not a gate):**
+  `Workflow({ scriptPath: "tests/probe.js" })`. Poses a situation to fresh agents that have never seen
+  the skill, several times, and hands you the answers to score. Answered correctly unprompted means the
+  rule is redundant; answered wrong means it is load-bearing; answered better means the rule is wrong.
+  Run it when deciding whether to write or keep a rule, not to stay green. Read its header first — a
+  situation that names the rule measures reading comprehension, which is how both previous behavioural
+  suites here died.
 - **Workflow-script syntax gate:** `bash three-loop-workflow/scripts/check-workflow-syntax.sh <file.js>` —
   reliably parses a Workflow script (`node --check` mis-parses these `export` + top-level-`return` files).
   Works; use it on every `.js` change.
@@ -171,10 +175,11 @@ pairs quotes a recomputed figure a different number of times; the fifth pair is 
 ## Engineering Norms
 
 - This repo distributes a Claude skill, not application code. Primary artifacts: Markdown, JavaScript
-  Workflow scripts, shell gate helpers, and behavioral fixtures.
+  Workflow scripts, shell gate helpers, and the syntax gate's fixtures.
 - **A check that cannot fail when the behavior is wrong is worse than no check** — it reads as coverage
   that does not exist. Before adding a gate, write the failing case first and watch it fail. If you cannot
-  make it fail, write a two-arm scenario instead.
+  make it fail, do not write it — and do not reach for an agent-run fixture to cover what a mutation
+  cannot, which is the move that produced two dead suites here.
 - **Do not claim a script does something without testing that it does.** A v2 draft once shipped a claim
   that a bundled script rejected AI attribution in commit messages; the script contained no such check, and
   nobody had run it. State what you ran, not what you intended.

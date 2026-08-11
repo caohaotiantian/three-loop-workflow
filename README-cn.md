@@ -185,9 +185,9 @@ skill 从不写死文件名。它会读取 `AGENTS.md`、`CLAUDE.md` 或两者 �
 │   └── scripts/
 │       ├── phase.js                  把 Build 循环写成确定性的 Workflow 脚本
 │       └── check-workflow-syntax.sh  解析 Workflow 脚本(node --check 做不到)
-├── tests/                            双臂行为套件:每个 fixture 都在「加载 skill」与「屏蔽 skill」
-│                                     两种条件下各跑一次。十一个 fixture 里有十个是回归 guard;
-│                                     *区分性* fixture 若两臂都答对,判为 INVALID
+├── tests/                            gate-fixtures/ 供语法门禁使用(确定性、零成本),以及
+│                                     probe.js —— 按需运行的对照臂仪器,用来问「这条规则
+│                                     到底有没有改变模型的行为」
 ├── docs/
 │   ├── announcement-v2.0.0-cn.md     发布公告
 │   ├── why-v2-cn.md                  重写全过程的长文
@@ -204,13 +204,15 @@ skill 从不写死文件名。它会读取 `AGENTS.md`、`CLAUDE.md` 或两者 �
 
 这个 skill **按其自身定义就是 load-bearing 的**。修改 `SKILL.md` 或任何 `references/*.md` 都是在改动契约文件里的规则,按 skill 自己的深度判定属于 **Deep** 档:先记录备选方案再选择、两名独立评审者、外加一次 Close。
 
-如果你改动的是纪律本身,请运行双臂套件:
+如果你要往这套纪律里加一条规则 —— 或者想知道某条规则是否还值它花掉的 token —— 请运行探针:
 
 ```
-Workflow({ scriptPath: "tests/run-scenarios.js" })
+Workflow({ scriptPath: "tests/probe.js" })
 ```
 
-每个 fixture 都声明自己的类型。**区分性(discriminating)** fixture 若两臂都答对,会被判为 INVALID 而不是绿灯 —— 那说明这条规则没有起作用。**guard** 的存在是为了抓住 skill 把模型本来就能做对的判断变得*更差*,所以两臂都答对它就是通过;那里真正严重的结果叫 `GUARD-BROKEN`。当前十一个 fixture 里有十个是 guard,套件会把这件事报出来,而不是藏起来。写 fixture 之前请先读 `tests/README.md`;写场景题的大多数写法,最后测的都是阅读理解,而不是这个 skill。
+它把一个处境抛给若干从未见过这个 skill 的全新 agent,重复数次,然后把答案交给你评分。**不用提示就答对**,说明这条规则与模型自身的判断重复。**答错**,说明它在承重 —— 这是这里唯一的正面结果。**答得比规则更好**,说明规则本身是错的。
+
+它是仪器,不是门禁:没有任何东西保证它是绿的,也刻意不进 CI。写处境之前请先读 `probe.js` 的文件头。**题面里出现规则本身,测的就是阅读理解** —— 这个项目此前两套行为测试都死于这一点,其中第二套(十一个 fixture、每次 23 个 agent、只返回 1 bit)已于 2026-08-11 删除。
 
 ## 许可证
 

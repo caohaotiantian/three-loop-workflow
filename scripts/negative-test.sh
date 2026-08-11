@@ -42,7 +42,6 @@ set -uo pipefail
 cd "$(git rev-parse --show-toplevel)"
 
 SRC=three-loop-workflow/scripts/phase.js
-SCEN=tests/run-scenarios.js
 TMP=$(mktemp -d)
 trap 'rm -rf "$TMP"' EXIT
 fail=0
@@ -77,31 +76,6 @@ PY
   fi
 }
 
-
-# Same contract for the two-arm runner: sim-scenarios.js has to notice when its scoring is broken. Added
-# after a reviewer mutated the pass condition to honour an agent-supplied `suite_pass` and all twelve
-# cases stayed green, because no canned reply had ever set it.
-apply_scen() {
-  local name="$1" patch="$2"
-  cp "$SCEN" "$TMP/run-scenarios.js"
-  SCEN_PATCH="$patch" python3 - "$TMP/run-scenarios.js" <<'PATCHEOF'
-import os, sys
-p = sys.argv[1]
-s = open(p).read()
-exec(os.environ['SCEN_PATCH'])
-open(p, 'w').write(s)
-PATCHEOF
-  if cmp -s "$SCEN" "$TMP/run-scenarios.js"; then
-    printf '  ERROR %s: the mutation did not apply\n' "$name"
-    fail=$((fail+1)); return
-  fi
-  if SCENARIOS_JS="$TMP/run-scenarios.js" node scripts/sim-scenarios.js >"$TMP/sout" 2>&1; then
-    printf '  SURVIVED  %s\n' "$name"
-    fail=$((fail+1))
-  else
-    printf '  detected  %s (%s rule(s) broke)\n' "$name" "$(grep -c '^  FAIL' "$TMP/sout" | tr -d ' ')"
-  fi
-}
 
 echo "== mutation test: each broken invariant must be detected by execution =="
 
@@ -188,20 +162,10 @@ apply "M20 the acceptCmds shape guard reverted, so a non-array reaches .map" \
 echo
 echo "== mutation test: the two-arm runner's scoring =="
 
-apply_scen "S1 the runner honours an agent-supplied suite_pass" \
-  's = s.replace("const suite_pass = malformed.length === 0 &&", "const suite_pass = reading.suite_pass === true ? true : malformed.length === 0 &&")'
 
-apply_scen "S2 the row-set completeness check dropped" \
-  's = s.replace("if (unscored.length || unknown.length || duplicated.length || malformed.length) {", "if (false) {")'
 
-apply_scen "S3 the discriminating floor removed" \
-  's = s.replace("  discriminating.length >= 1 &&", "")'
 
-apply_scen "S5 the args normaliser removed (a JSON string silently falls back to the defaults)" \
-  's = s.replace("const FIXTURES = input.fixtures", "const FIXTURES = (typeof args === \x27object\x27 && args && args.fixtures)")'
 
-apply_scen "S4 a broken guard scored as held" \
-  "s = s.replace(\"verdict = onRight ? 'GUARD-HELD' : 'GUARD-BROKEN'\", \"verdict = 'GUARD-HELD'\")"
 
 # The round-cap experiment's analysis has the same contract as everything above: it must fail when the
 # thing it checks is wrong. It is what entitles a number to appear in the results documents, so a

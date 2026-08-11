@@ -64,25 +64,6 @@ echo "== layout =="
 chk "shipped skill file count" "$(find three-loop-workflow -type f | wc -l | tr -d ' ')" "10"
 chk "reference count"          "$(find three-loop-workflow/references -name '*.md' | wc -l | tr -d ' ')" "7"
 chk "shipped script count"     "$(find three-loop-workflow/scripts -type f | wc -l | tr -d ' ')" "2"
-chk "fixture count"            "$(find tests/scenarios -name 's*.md' | wc -l | tr -d ' ')" "11"
-# Every fixture must be declared in expected.json, and every declaration must have a fixture. The
-# answers live outside the scenario text on purpose; a fixture with no expected answer is never scored
-# and a declaration with no fixture is never run, and neither shows up as a failure on its own.
-_fx=$(find tests/scenarios -name 's*.md' -exec basename {} \; | sort | tr '\n' ' ')
-_ex=$(python3 -c "import json;print(' '.join(sorted(json.load(open('tests/expected.json')))) + ' ')")
-chk "every fixture is declared in expected.json" "$_fx" "$_ex"
-# ...and that the RUNNER will actually run them. tests/run-scenarios.js is a Workflow script and has no
-# filesystem, so its fixture list is a literal. Adding a scenario file therefore does not add it to the
-# run, and the suite reports green over whatever subset the literal happens to name — which is how two
-# fixtures added on 2026-07-31 were silently not run while the suite still passed. Only the gate can see
-# both sides, so the gate is where they are compared.
-_rf=$(python3 -c "
-import re
-s = open('tests/run-scenarios.js').read()
-m = re.search(r\"input\.fixtures \|\| \[(.*?)\]\", s, re.S)
-print(' '.join(sorted(re.findall(r\"'([^']+)'\", m.group(1)))) + ' ' if m else 'UNPARSEABLE')")
-chk "the runner's fixture list matches the fixtures on disk" "$_rf" "$_ex"
-
 echo "== version agrees with the changelog, in both languages =="
 # Derived, not hardcoded: the old script carried a literal that had to be hand-edited every release,
 # which is one more place for the version to drift.
@@ -93,7 +74,7 @@ chk "SKILL.md frontmatter matches the newest CHANGELOG entry" "$v_skill" "$v_log
 chk "CHANGELOG-cn newest entry matches CHANGELOG"             "$v_log_cn" "$v_log"
 
 echo "== the shipped scripts parse, declare meta, and avoid the forbidden primitives =="
-for f in three-loop-workflow/scripts/phase.js tests/run-scenarios.js; do
+for f in three-loop-workflow/scripts/phase.js; do
   if bash three-loop-workflow/scripts/check-workflow-syntax.sh "$f" >/dev/null 2>&1; then
     ok "workflow-syntax $f"
   else
@@ -127,28 +108,6 @@ else
   bad "a phase.js invariant is broken:"; grep -A1 '^  FAIL' /tmp/_sim.out
 fi
 rm -f /tmp/_sim.out
-
-echo "== the two-arm suite computes its own verdict =="
-if node scripts/sim-scenarios.js >/tmp/_scen.out 2>&1; then
-  ok "the scoring arithmetic is correct ($(grep -c '^  ok' /tmp/_scen.out | tr -d ' ') rules asserted)"
-else
-  bad "a scenario-scoring rule is broken:"; grep -A1 '^  FAIL' /tmp/_scen.out
-fi
-rm -f /tmp/_scen.out
-# Two token greps used to sit here, asserting that `suite_pass` is computed and absent from any agent
-# schema. Both were bypassable — `const suite_pass = reading.suite_pass && false &&` satisfies the first,
-# and a double-quoted schema entry evades the second — so they claimed more than they checked, against
-# this file's own rule at the top. Deleted rather than patched: sim-scenarios.js above catches the
-# semantic version of both, by execution, and negative-test.sh proves it can.
-
-# The runner's floor catches a reply that labels everything `guard`, but `kind` is agent-reported and a
-# Workflow script cannot read expected.json. This reads it here, deterministically.
-n_disc=$(python3 -c "import json;print(sum(1 for v in json.load(open('tests/expected.json')).values() if v.get('kind')=='discriminating'))")
-if [ "$n_disc" -ge 1 ]; then
-  ok "expected.json declares $n_disc discriminating fixture(s)"
-else
-  bad "expected.json declares no discriminating fixture — the suite could only measure regressions"
-fi
 
 echo "== and that harness can actually fail =="
 if bash scripts/negative-test.sh >/tmp/_neg.out 2>&1; then
@@ -306,140 +265,6 @@ h=$(grep -n 'all 20 v1\|20 v1 files\|20 个 v1 文件' $ALLMD 2>/dev/null)
 h=$(grep -rn '\.agent/accept\.sh' $ALLMD three-loop-workflow tests 2>/dev/null)
 [ -z "$h" ] && ok "no reference to the abolished shared .agent/accept.sh path" || bad "abolished path referenced: $h"
 chk "v1 Markdown + script split sums to the file count" "$((md1+sc1))" "$f_v1"
-# Both numeral forms, because this repo uses both. The CONTROL-ARM result is written in Chinese with
-# Arabic numerals (`7 个行为 fixture 里有 6 个`, `7 个 fixture 里,只有 1 个`), so the Arabic patterns are
-# the live ones here; the Chinese-numeral pair was added on the mistaken belief that they were dead,
-# which briefly REMOVED coverage. Every pattern below was planted and watched to fire before shipping.
-h=$(grep -n '5 of 6\|5 of 7\|5 个 fixture\|7 个 fixture 里有 5\|7 个行为 fixture 里有 5\|七个 fixture 里有五个\|六个 fixture 里有五个' $ALLMD 2>/dev/null)  # tally-exempt: matcher
-[ -z "$h" ] && ok "no '5 of 6'/'5 of 7' misstatement of the control-arm result, in either language" || bad "inconsistent fixture result: $h"  # tally-exempt: matcher message
-
-# The guards inventory, RECOMPUTED from expected.json rather than compared against a literal. It went
-# stale twice and silently: the suite grew on 2026-07-30 and again on 2026-07-31, and "six of the
-# seven" survived in eight places until 2026-08-11, three of them inside scripts/ and tests/. The deny-list above could not see
-# it, because it guards a different claim that happens to share a phrasing — the CONTROL-ARM result,
-# which is a dated measurement and must not be swept with this one.
-# Spelled out because that is how the documents say it; the lookup covers the range a fixture suite
-# plausibly reaches, and the check fails loudly rather than silently if it is ever exceeded.
-_num() { case "$1" in
-  1) echo one;; 2) echo two;; 3) echo three;; 4) echo four;; 5) echo five;; 6) echo six;;
-  7) echo seven;; 8) echo eight;; 9) echo nine;; 10) echo ten;; 11) echo eleven;; 12) echo twelve;;
-  13) echo thirteen;; 14) echo fourteen;; 15) echo fifteen;; 16) echo sixteen;; 17) echo seventeen;;
-  18) echo eighteen;; 19) echo nineteen;; 20) echo twenty;; *) echo "OUT-OF-RANGE";; esac; }
-_cnum() { case "$1" in
-  1) echo 一;; 2) echo 二;; 3) echo 三;; 4) echo 四;; 5) echo 五;; 6) echo 六;; 7) echo 七;;
-  8) echo 八;; 9) echo 九;; 10) echo 十;; 11) echo 十一;; 12) echo 十二;; 13) echo 十三;;
-  14) echo 十四;; 15) echo 十五;; 16) echo 十六;; 17) echo 十七;; 18) echo 十八;; 19) echo 十九;;
-  20) echo 二十;; *) echo "OUT-OF-RANGE";; esac; }
-_tot=$(python3 -c "import json;print(len(json.load(open('tests/expected.json'))))")
-_grd=$(python3 -c "import json;print(sum(1 for v in json.load(open('tests/expected.json')).values() if v['kind']=='guard'))")
-_en_g=$(_num "$_grd"); _en_t=$(_num "$_tot"); _cn_g=$(_cnum "$_grd"); _cn_t=$(_cnum "$_tot")
-case "$_en_g$_en_t$_cn_g$_cn_t" in
-  *OUT-OF-RANGE*) bad "the fixture tally ($_grd of $_tot) is outside the number lookup — extend _num/_cnum" ;;
-  *)
-    # Every site the 2026-08-11 sweep corrected, not just the prose ones. The first version of this
-    # check covered three of eight; the other five — both README directory-tree lines, the comment in
-    # tests/run-scenarios.js, the assertion label in scripts/sim-scenarios.js and this script's own
-    # comment below — were each demonstrated to go stale again with the gate still green.
-    # Loose on the article so "ten of eleven" and "ten of the eleven" both satisfy it; the tally itself
-    # is what is pinned.
-    # Scans EVERY occurrence rather than asking whether the file mentions the tally somewhere. A
-    # presence check is satisfied by one correct sentence while a second one in the same file says
-    # something else — demonstrated on both READMEs, which carry the claim twice each, and it is the
-    # "check that cannot fail" shape this repo has shipped twice.
-    # Gated on EXIT STATUS, not on empty output. Capturing stdout alone made this fail-open: any
-    # exception inside the heredoc printed nothing, and nothing read as "no disagreements". Verified by
-    # injecting `raise SystemExit(9)` alongside a wrong tally — the old form printed ok and exited 0.
-    if EN_G="$_en_g" EN_T="$_en_t" CN_G="$_cn_g" CN_T="$_cn_t" python3 - >/tmp/_tally.out 2>&1 <<'PYEOF'
-import io, os, re
-en_g, en_t = os.environ["EN_G"], os.environ["EN_T"]
-cn_g, cn_t = os.environ["CN_G"], os.environ["CN_T"]
-WORD = r"(?:one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty)"
-# Digits as well as words: this repo writes tallies both ways, and a word-only pattern let a site go
-# stale just by choosing the other form. Demonstrated: a digit-form tally passed while it was wrong.
-NUM = rf"(?:{WORD}|\d{{1,2}})"
-DIGIT = {"1":"one","2":"two","3":"three","4":"four","5":"five","6":"six","7":"seven","8":"eight",
-         "9":"nine","10":"ten","11":"eleven","12":"twelve","13":"thirteen","14":"fourteen",
-         "15":"fifteen","16":"sixteen","17":"seventeen","18":"eighteen","19":"nineteen","20":"twenty"}
-EN = re.compile(rf"\b({NUM}) of (?:the |its )?({NUM})\b", re.I)
-CN = re.compile(r"([〇零一二三四五六七八九十]+)个 fixture 里有([〇零一二三四五六七八九十]+)个")
-FILES = ["CLAUDE.md", "README.md", "README-cn.md", "tests/README.md",
-         "tests/run-scenarios.js", "scripts/sim-scenarios.js", "scripts/accept-release.sh"]
-DATED = {"tests/README.md"}   # records a measurement, not the inventory; must NOT track the tally
-out = []
-for f in FILES:
-    try: lines = io.open(f, encoding="utf-8").read().splitlines()
-    except FileNotFoundError: out.append(f"{f}: file missing"); continue
-    stated = False
-    for i, ln in enumerate(lines, 1):
-        if not re.search(r"fixture|guard", ln, re.I): continue
-        if "tally-exempt" in ln: continue   # a matcher quoting the wrong forms on purpose
-        for m in EN.finditer(ln):
-            a, b = m.group(1).lower(), m.group(2).lower()
-            a, b = DIGIT.get(a, a), DIGIT.get(b, b)
-            if (a, b) == (en_g, en_t): stated = True; continue
-            if f in DATED: continue
-            out.append(f"{f}:{i}: '{m.group(0)}' is not the recomputed {en_g} of {en_t}")
-        for m in CN.finditer(ln):
-            if (m.group(1), m.group(2)) == (cn_t, cn_g): stated = True; continue
-            out.append(f"{f}:{i}: '{m.group(0)}' is not the recomputed {cn_t}/{cn_g}")
-    # The absence case. The presence checks this scan replaced caught a claim DELETED outright; the
-    # mismatch scan alone does not, because a file with no occurrence has nothing to disagree with.
-    # LIMIT, stated rather than implied: this is per FILE, not per site. A file that states the tally
-    # twice and loses one of them still passes. Catching that would need an expected site count, which
-    # is the hardcoded literal this whole check exists to remove.
-    if f not in DATED and not stated:
-        out.append(f"{f}: states the guards inventory nowhere — it did before, so this is a deletion")
-if out:
-    raise SystemExit("\n".join(out))
-PYEOF
-    then
-      ok "every stated guards inventory matches the recomputed tally ($_grd of $_tot)"
-    else
-      bad "the guards inventory disagrees with expected.json, or went missing:"
-      sed 's/^/        /' /tmp/_tally.out
-    fi
-    rm -f /tmp/_tally.out
-    # The control-arm measurement is a different claim and is deliberately NOT recomputed: it records
-    # what one dated run observed on the suite as it stood, and rewriting it would publish a result
-    # nobody has measured.
-    _ctrl='6 of its 7 fixtures are answered correctly by the control arm'  # tally-exempt: quotes the dated sentence
-    grep -qF "$_ctrl" tests/README.md \
-      && ok "the dated control-arm measurement is left as written" \
-      || bad "tests/README.md's control-arm measurement was edited — it is a dated result, not an inventory"
-    ;;
-esac
-
-echo "== the suite's headline claim is stated accurately =="
-# Ten of the eleven fixtures are guards, for which both arms answering correctly is GUARD-HELD — a pass.
-# An unqualified "a fixture both arms pass is INVALID" describes the suite that is not running.
-# Paragraph-scoped and bilingual. A line-scoped grep missed docs/why-v2.md, whose claim wraps across two
-# lines so that "both arms" and "INVALID" never share one, and it never inspected the four Chinese
-# documents at all. Demonstrated: reverting why-v2.md alone left the old check silent.
-if python3 - <<'PYCHK'
-import io, re, sys
-DOCS = ["README.md","README-cn.md","CLAUDE.md","tests/README.md",
-        "CHANGELOG.md","CHANGELOG-cn.md","docs/why-v2.md","docs/why-v2-cn.md",
-        "docs/announcement-v2.0.0.md","docs/announcement-v2.0.0-cn.md"]
-CLAIM = re.compile(r"both arms|两臂都答对|两条臂都答对")
-VERDICT = re.compile(r"INVALID|not evidence about the skill|fails on any fixture")
-QUALIFIER = re.compile(r"discriminating|区分性|guard|6 of 7|six of seven|七个 fixture 里有六个|六个是")  # tally-exempt: matcher
-bad = []
-for d in DOCS:
-    try: text = io.open(d, encoding="utf-8").read()
-    except FileNotFoundError: continue
-    for para in re.split(r"\n\s*\n", text):
-        flat = " ".join(para.split())
-        if CLAIM.search(flat) and VERDICT.search(flat) and not QUALIFIER.search(flat):
-            bad.append(f"{d}: {flat[:150]}")
-for b in bad: print(b)
-sys.exit(1 if bad else 0)
-PYCHK
-then
-  ok "every both-arms claim carries its qualifier, in both languages"
-else
-  bad "an unqualified both-arms-pass claim survives (listed above)"
-fi
-
 echo "== the install commands actually install =="
 for r in README.md README-cn.md; do
   line=$(grep -n 'cp -r three-loop-workflow' "$r" | head -1)
