@@ -309,6 +309,46 @@ chk "v1 Markdown + script split sums to the file count" "$((md1+sc1))" "$f_v1"
 h=$(grep -n '5 of 6\|5 of 7\|5 个 fixture\|7 个 fixture 里有 5' $ALLMD 2>/dev/null)
 [ -z "$h" ] && ok "no '5 of 6'/'5 of 7' misstatement of the control-arm result" || bad "inconsistent fixture result: $h"
 
+# The guards inventory, RECOMPUTED from expected.json rather than compared against a literal. It went
+# stale silently once: two fixtures were added on 2026-07-31 and "six of the seven" survived in eight
+# places until 2026-08-11, three of them inside scripts/ and tests/. The deny-list above could not see
+# it, because it guards a different claim that happens to share a phrasing — the CONTROL-ARM result,
+# which is a dated measurement and must not be swept with this one.
+# Spelled out because that is how the documents say it; the lookup covers the range a fixture suite
+# plausibly reaches, and the check fails loudly rather than silently if it is ever exceeded.
+_num() { case "$1" in
+  1) echo one;; 2) echo two;; 3) echo three;; 4) echo four;; 5) echo five;; 6) echo six;;
+  7) echo seven;; 8) echo eight;; 9) echo nine;; 10) echo ten;; 11) echo eleven;; 12) echo twelve;;
+  13) echo thirteen;; 14) echo fourteen;; 15) echo fifteen;; 16) echo sixteen;; 17) echo seventeen;;
+  18) echo eighteen;; 19) echo nineteen;; 20) echo twenty;; *) echo "OUT-OF-RANGE";; esac; }
+_cnum() { case "$1" in
+  1) echo 一;; 2) echo 二;; 3) echo 三;; 4) echo 四;; 5) echo 五;; 6) echo 六;; 7) echo 七;;
+  8) echo 八;; 9) echo 九;; 10) echo 十;; 11) echo 十一;; 12) echo 十二;; 13) echo 十三;;
+  14) echo 十四;; 15) echo 十五;; 16) echo 十六;; 17) echo 十七;; 18) echo 十八;; 19) echo 十九;;
+  20) echo 二十;; *) echo "OUT-OF-RANGE";; esac; }
+_tot=$(python3 -c "import json;print(len(json.load(open('tests/expected.json'))))")
+_grd=$(python3 -c "import json;print(sum(1 for v in json.load(open('tests/expected.json')).values() if v['kind']=='guard'))")
+_en_g=$(_num "$_grd"); _en_t=$(_num "$_tot"); _cn_g=$(_cnum "$_grd"); _cn_t=$(_cnum "$_tot")
+case "$_en_g$_en_t$_cn_g$_cn_t" in
+  *OUT-OF-RANGE*) bad "the fixture tally ($_grd of $_tot) is outside the number lookup — extend _num/_cnum" ;;
+  *)
+    for f in CLAUDE.md README.md; do
+      grep -qi "$_en_g of the $_en_t current fixtures are guards" "$f" \
+        && ok "$f states the recomputed guards inventory ($_grd of $_tot)" \
+        || bad "$f does not say '$_en_g of the $_en_t current fixtures are guards' — recomputed from expected.json"
+    done
+    grep -qF "当前${_cn_t}个 fixture 里有${_cn_g}个是 guard" README-cn.md \
+      && ok "README-cn.md states the recomputed guards inventory" \
+      || bad "README-cn.md does not state the recomputed guards inventory ($_grd of $_tot)"
+    # The control-arm measurement is a different claim and is deliberately NOT recomputed: it records
+    # what one dated run observed on the suite as it stood, and rewriting it would publish a result
+    # nobody has measured.
+    grep -qF "6 of its 7 fixtures are answered correctly by the control arm" tests/README.md \
+      && ok "the dated control-arm measurement is left as written" \
+      || bad "tests/README.md's control-arm measurement was edited — it is a dated result, not an inventory"
+    ;;
+esac
+
 echo "== the suite's headline claim is stated accurately =="
 # Ten of the eleven fixtures are guards, for which both arms answering correctly is GUARD-HELD — a pass.
 # An unqualified "a fixture both arms pass is INVALID" describes the suite that is not running.
