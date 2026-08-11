@@ -28,12 +28,19 @@ request number outlives "not merged yet".
 v1 accumulated a per-task document archive that nobody read, and `close.md` still carries the finding.
 An entry here has an entry condition (a trap, a rejected idea, a decision with no other home, a guide
 claim the repo contradicted), an explicit prohibition on restating what the commits already say, and a
-pass that prunes it. Without all three it is the same archive with a promise attached.
+pass that prunes it. The real difference is **cost on failure**, not a promise that somebody reads it:
+a committed, reviewed archive costs attention on every clone and in every review whether it is read or
+not, while a journal in a gitignored directory costs nothing if it is never folded — it is simply lost,
+which is the right outcome for a note that was not worth promoting. An earlier draft claimed a "defined
+consumer" instead, and plan review killed it: the trigger is "someone asks", which is exactly what let
+the last archive rot.
 
-**`SKILL.md`'s §2 generalises instead of growing.** It said an acceptance command that outlives the task
-belongs in the repository, and said nothing about anything else that does — describing a directory that
-grows monotonically, holds the only copy of everything in it, and had a no-cleanup rule and no promotion
-rule. It now names the general case, which is what pays for the routing row beside it.
+**`SKILL.md`'s §2 generalises a rule — it does not buy back the words.** It said an acceptance command
+that outlives the task belongs in the repository, and said nothing about anything else that does,
+describing a directory that grows monotonically, holds the only copy of everything in it, and had a
+no-cleanup rule and no promotion rule. It now names the general case. Being precise about what that
+bought: the rewrite costs ten words of its own, so nothing here was displaced and all three edits are
+additions. What the generalisation earns is the argument for the addition, not the budget for it.
 
 **The always-loaded `description` gains a clause, and this is the part that was measured.** A routing row
 on its own is unreachable text: the description scoped this skill to code changes, so a request to
