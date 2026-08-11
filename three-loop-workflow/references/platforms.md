@@ -26,5 +26,6 @@ This skill never names a fixed instruction file. It reads **`AGENTS.md`, `CLAUDE
 | Parallel reviewers (Deep) | `parallel()` in `scripts/phase.js` | Run them one after another; independence matters, simultaneity does not |
 | Round counting | `scripts/phase.js` | Count by hand in the plan file |
 | Asking the user | `AskUserQuestion` | `STOP: QUESTION` in normal output, then stop spawning |
+| A periodic maintenance pass (`maintenance.md`) | A scheduled session or recurring job can run it on a real interval | No scheduler — it runs when you are asked, or when you notice |
 
 **Be honest about isolation.** A runtime with no subagents cannot enforce author-≠-reviewer; clearing context is a weaker approximation, because the same session's habits persist. Say so in the change rather than claiming a review happened that did not.

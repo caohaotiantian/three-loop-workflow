@@ -82,6 +82,8 @@ Record rejections briefly — one line each, saying what the finding claimed and
 
 **Put it where it outlives the round.** Running by hand, that is the task's `.agent/<task>/` directory, beside the plan; `scripts/phase.js` carries the rejections in the phase result instead. A rejection recorded only in the current turn's output is gone at the next compaction, and then the phantom returns to a reviewer with nothing to contradict it.
 
+A rejection outlives the round; some of what you learn outlives the *task*. A trap that cost you an hour, an idea you rejected for a reason that will still hold next time, a claim in the project guide the repo contradicts — those go in `.agent/<task>/journal.md`, and `references/maintenance.md` is what folds them into the guide later. Do not detour to fix the guide now.
+
 ## Fix
 
 Fix confirmed blocking findings. Triage non-blocking ones the same way: fix the cheap and correct ones, and for the rest say plainly what you are not doing and why.

@@ -65,6 +65,8 @@ someone follow these instructions and fail?
 
 **Leave the task's `.agent/<task>/` directory.** It is gitignored, it costs nothing, and it is the only local record of what this task planned and decided once the branch is merged. Delete it when you no longer want that record, not as routine cleanup.
 
+Its `journal.md`, if the task wrote one, is waiting for a reader: `references/maintenance.md` is the pass that folds it into the project guide and prunes what it promoted. That is a separate task, not a step here.
+
 Remove scratch worktrees, spike directories, and temporary artifacts the work created — those are not the record.
 
 ## What Close does not do
