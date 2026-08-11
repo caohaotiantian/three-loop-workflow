@@ -179,14 +179,15 @@ skill 从不写死文件名。它会读取 `AGENTS.md`、`CLAUDE.md` 或两者 �
 │   │   ├── build.md                  编写 → 门禁 → 评审 → 分诊 → 修复;诊断;flaky
 │   │   ├── orchestration.md          并发写入者的 worktree;把 Build 循环当脚本运行
 │   │   ├── close.md                  Deep 档收尾:孤儿清理、影响半径、迁移验证
+│   │   ├── maintenance.md            把任务 journal 折回项目指南的维护 pass
 │   │   ├── escalation.md             何时以及如何上报;死锁报告
 │   │   └── platforms.md              各运行时,以及离开 Claude Code 后哪些能力降级
 │   └── scripts/
 │       ├── phase.js                  把 Build 循环写成确定性的 Workflow 脚本
 │       └── check-workflow-syntax.sh  解析 Workflow 脚本(node --check 做不到)
-├── tests/                            双臂行为套件:每个 fixture 都在「加载 skill」与「屏蔽 skill」
-│                                     两种条件下各跑一次。七个 fixture 里有六个是回归 guard;
-│                                     *区分性* fixture 若两臂都答对,判为 INVALID
+├── tests/                            gate-fixtures/ 供语法门禁使用(确定性、零成本),以及
+│                                     probe.js —— 按需运行的对照臂仪器,用来问「这条规则
+│                                     到底有没有改变模型的行为」
 ├── docs/
 │   ├── announcement-v2.0.0-cn.md     发布公告
 │   ├── why-v2-cn.md                  重写全过程的长文
@@ -203,13 +204,17 @@ skill 从不写死文件名。它会读取 `AGENTS.md`、`CLAUDE.md` 或两者 �
 
 这个 skill **按其自身定义就是 load-bearing 的**。修改 `SKILL.md` 或任何 `references/*.md` 都是在改动契约文件里的规则,按 skill 自己的深度判定属于 **Deep** 档:先记录备选方案再选择、两名独立评审者、外加一次 Close。
 
-如果你改动的是纪律本身,请运行双臂套件:
+如果你要往这套纪律里加一条规则 —— 或者想知道某条规则是否还值它花掉的 token —— 请运行探针:
 
 ```
-Workflow({ scriptPath: "tests/run-scenarios.js" })
+Workflow({ scriptPath: "tests/probe.js" })
 ```
 
-每个 fixture 都声明自己的类型。**区分性(discriminating)** fixture 若两臂都答对,会被判为 INVALID 而不是绿灯 —— 那说明这条规则没有起作用。**guard** 的存在是为了抓住 skill 把模型本来就能做对的判断变得*更差*,所以两臂都答对它就是通过;那里真正严重的结果叫 `GUARD-BROKEN`。当前七个 fixture 里有六个是 guard,套件会把这件事报出来,而不是藏起来。写 fixture 之前请先读 `tests/README.md`;写场景题的大多数写法,最后测的都是阅读理解,而不是这个 skill。
+它把一个处境抛给若干从未见过这个 skill 的全新 agent,重复数次,然后把答案交给你评分。**不用提示就答对**,说明这条规则与模型自身的判断重复。**答错**,说明它在承重 —— 这是这里唯一的正面结果。**答得比规则更好**,说明规则本身是错的。
+
+它是仪器,不是门禁:没有任何东西保证它是绿的,也刻意不进 CI。写处境之前请先读 `probe.js` 的文件头。**题面里出现规则本身,测的就是阅读理解** —— 这个项目此前两套行为测试都死于这一点,其中第二套(十一个 fixture、每次 23 个 agent、只返回 1 bit)已于 2026-08-11 删除。
+
+探针只跑对照臂,这有一项代价值得点名:**它测不出 skill 把一个有能力的模型变得更差** —— 也就是某条规则把它从正确的默认判断上推开。那正是被删套件里那些 guard 存在的理由,现在没有任何东西接替。要问这个问题,只能手工跑两条臂再对比。
 
 ## 许可证
 

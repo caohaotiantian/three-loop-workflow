@@ -32,12 +32,9 @@ At **Deep** depth, record alternatives *before* choosing, not as post-hoc justif
 
 ## Facts vs. decisions
 
-Before asking the user anything, try to answer it from the code, from git history, and from the project guide.
+Look up what the repo settles; ask what it cannot. The part worth stating is the failure mode, which is not a competence gap but a temptation: **relabelling a real decision as "a fact the repo can answer" and resolving it quietly.** If you are choosing on the user's behalf, that is a decision, however obvious the choice looks from here.
 
-- **A fact the repo settles** — what a module does today, which constant already exists, how a caller is wired — is **looked up, never asked**. Asking someone to confirm what the code already says invites a rubber-stamp of something that was never a decision.
-- **A product, scope, or risk-tolerance judgment the repo cannot answer** goes to the user.
-
-The failure mode to avoid is relabelling a real decision as "a fact the repo can answer" and resolving it quietly. If you are choosing on the user's behalf, that is a decision.
+If the guide answers something *wrongly* — a command that no longer exists, a count that has moved — carry on with what the repo actually says, and correct the guide line in its own commit rather than folding it into this change (`build.md`, "The journal").
 
 ## Claims need their source
 

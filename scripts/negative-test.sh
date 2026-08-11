@@ -42,10 +42,11 @@ set -uo pipefail
 cd "$(git rev-parse --show-toplevel)"
 
 SRC=three-loop-workflow/scripts/phase.js
-SCEN=tests/run-scenarios.js
 TMP=$(mktemp -d)
 trap 'rm -rf "$TMP"' EXIT
 fail=0
+tried=0
+detected=0
 
 # apply <name> <python-patch> [grep-token-that-must-still-be-present]
 apply() {
@@ -58,6 +59,7 @@ s = open(p).read()
 $patch
 open(p, 'w').write(s)
 PY
+  tried=$((tried+1))
   if cmp -s "$SRC" "$TMP/phase.js"; then
     printf '  ERROR %s: the mutation did not apply — the patch no longer matches the source\n' "$name"
     fail=$((fail+1)); return
@@ -66,6 +68,7 @@ PY
     printf '  SURVIVED  %s — sim-phase.js exited 0 on broken control flow\n' "$name"
     fail=$((fail+1))
   else
+    detected=$((detected+1))
     printf '  detected  %s (%s)\n' "$name" "$(grep -c '^  FAIL' "$TMP/out" | tr -d ' ') invariant(s) broke"
   fi
   if [ -n "$token" ]; then
@@ -77,31 +80,6 @@ PY
   fi
 }
 
-
-# Same contract for the two-arm runner: sim-scenarios.js has to notice when its scoring is broken. Added
-# after a reviewer mutated the pass condition to honour an agent-supplied `suite_pass` and all twelve
-# cases stayed green, because no canned reply had ever set it.
-apply_scen() {
-  local name="$1" patch="$2"
-  cp "$SCEN" "$TMP/run-scenarios.js"
-  SCEN_PATCH="$patch" python3 - "$TMP/run-scenarios.js" <<'PATCHEOF'
-import os, sys
-p = sys.argv[1]
-s = open(p).read()
-exec(os.environ['SCEN_PATCH'])
-open(p, 'w').write(s)
-PATCHEOF
-  if cmp -s "$SCEN" "$TMP/run-scenarios.js"; then
-    printf '  ERROR %s: the mutation did not apply\n' "$name"
-    fail=$((fail+1)); return
-  fi
-  if SCENARIOS_JS="$TMP/run-scenarios.js" node scripts/sim-scenarios.js >"$TMP/sout" 2>&1; then
-    printf '  SURVIVED  %s\n' "$name"
-    fail=$((fail+1))
-  else
-    printf '  detected  %s (%s rule(s) broke)\n' "$name" "$(grep -c '^  FAIL' "$TMP/sout" | tr -d ' ')"
-  fi
-}
 
 echo "== mutation test: each broken invariant must be detected by execution =="
 
@@ -186,22 +164,12 @@ apply "M20 the acceptCmds shape guard reverted, so a non-array reaches .map" \
   'Array.isArray(acceptCmds)'
 
 echo
-echo "== mutation test: the two-arm runner's scoring =="
+echo "== mutation test: the survivors the 2026-08-11 audit found =="
 
-apply_scen "S1 the runner honours an agent-supplied suite_pass" \
-  's = s.replace("const suite_pass = malformed.length === 0 &&", "const suite_pass = reading.suite_pass === true ? true : malformed.length === 0 &&")'
 
-apply_scen "S2 the row-set completeness check dropped" \
-  's = s.replace("if (unscored.length || unknown.length || duplicated.length || malformed.length) {", "if (false) {")'
 
-apply_scen "S3 the discriminating floor removed" \
-  's = s.replace("  discriminating.length >= 1 &&", "")'
 
-apply_scen "S5 the args normaliser removed (a JSON string silently falls back to the defaults)" \
-  's = s.replace("const FIXTURES = input.fixtures", "const FIXTURES = (typeof args === \x27object\x27 && args && args.fixtures)")'
 
-apply_scen "S4 a broken guard scored as held" \
-  "s = s.replace(\"verdict = onRight ? 'GUARD-HELD' : 'GUARD-BROKEN'\", \"verdict = 'GUARD-HELD'\")"
 
 # The round-cap experiment's analysis has the same contract as everything above: it must fail when the
 # thing it checks is wrong. It is what entitles a number to appear in the results documents, so a
@@ -217,6 +185,7 @@ apply_exp() {
   cp -r docs/measurements/2026-07-30-round-cap/raw "$TMP/exp/raw"
   cp docs/2026-07-31-round-cap-experiment.md    "$TMP/exp/en.md"
   cp docs/2026-07-31-round-cap-experiment-cn.md "$TMP/exp/cn.md"
+  tried=$((tried+1))
   if ! EXP_DIR="$TMP/exp" python3 -c "$script"; then
     printf '  ERROR %s: the mutation did not apply\n' "$name"; fail=$((fail+1)); return
   fi
@@ -224,9 +193,45 @@ apply_exp() {
     printf '  SURVIVED  %s — exp-analyse.mjs exited 0 on data it must reject\n' "$name"
     fail=$((fail+1))
   else
+    detected=$((detected+1))
     printf '  detected  %s\n' "$name"
   fi
 }
+
+# ── M21-M30: the survivors an ad-hoc mutation audit found on 2026-08-11 ──────────────────────────
+# sim-phase.js printed "all 54 invariants hold" against every one of these. The invariants that kill
+# them were added in the same change; these mutations are what make that permanent, so that deleting
+# one of those invariants shows up here as a survivor rather than as a smaller number nobody reads.
+
+apply "M21 the reviewers-below-one guard deleted (a phase closes green having reviewed nothing)" \
+  's = s.replace("if (reviewers < 1)", "if (false && reviewers < 1)")'
+
+apply "M22 lastHead tracking dropped (a no-op fix after an advancing round grinds to cap-exhausted)" \
+  's = s.replace("lastHead = gateHead", "lastHead = lastHead")'
+
+apply "M23 the closed phase returns the writer's claimed head instead of the one the gates saw" \
+  's = s.replace("headSha: gateHead", "headSha: writeHead")'
+
+apply "M24 verifyRound frozen (every round labelled r1; a 4-round escalation reports round 1)" \
+  's = s.replace("verifyRound++", "verifyRound")'
+
+apply "M25 the dead-write-agent return deleted (TypeError instead of agent-error)" \
+  "s = s.replace(\"if (!work) return { status: 'agent-error', phaseLabel, round: 0, stage: 'write' }\", '')"
+
+apply "M26 the dead-redispatch return deleted" \
+  "s = s.replace(\"if (!retry) return { status: 'agent-error', phaseLabel, round: 0, stage: 'write-redispatch' }\", '')"
+
+apply "M27 the dead-gates-agent return deleted" \
+  "s = s.replace(\"if (!gates) return { status: 'agent-error', phaseLabel, round, stage: 'gates' }\", '')"
+
+apply "M28 the dead-triage-agent return deleted" \
+  "s = s.replace(\"if (!triage) return { status: 'agent-error', phaseLabel, round, stage: 'triage' }\", '')"
+
+apply "M29 the cap-exhausted payload blanks what is unresolved" \
+  "import re; s = re.sub(r'unresolved: [^,\\n]+', 'unresolved: []', s, count=1)"
+
+apply "M30 exhaustedBy pinned to a constant (the escalation cannot say which stage spent the budget)" \
+  "import re; s = re.sub(r'exhaustedBy: [^,\\n}]+', \"exhaustedBy: 'mixed'\", s, count=1)"
 
 echo
 echo "== mutation test: the round-cap experiment's published figures =="
@@ -253,7 +258,10 @@ open(p,"w").write(n)'
 
 echo
 if [ "$fail" -eq 0 ]; then
-  echo "negative-test: every mutation was detected"
+  echo "negative-test: $detected/$tried mutations killed"
+  echo "  (the denominator is hand-written: it counts the defects someone thought to inject."
+  echo "   An audit on 2026-08-11 injected 88 into phase.js and 21 survived, so a 100% kill rate"
+  echo "   here bounds nothing above the mutations below.)"
 else
   echo "negative-test: $fail mutation(s) SURVIVED — sim-phase.js is not asserting what it claims"
 fi

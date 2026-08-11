@@ -386,7 +386,7 @@ while (verifyRound <= maxRounds + 1) {
       `Check specifically:\n` +
       `- Does every changed line trace to the Goal or a recorded Decision?\n` +
       `- Does anything land in the plan's Non-goals?\n` +
-      `- Does new behavior have a test, and does \`git log ${base}..${branch}\` show it failing first?\n` +
+      `- Does new behavior have a test, and did that test ever fail?\n` +
       `- Any comment narrating process rather than explaining code?\n` +
       `\nDo not modify code.`
 

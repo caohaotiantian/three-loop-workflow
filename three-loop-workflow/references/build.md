@@ -5,7 +5,9 @@ One cycle: **write → gates → review → fix**. At Deep depth, one cycle per 
 Capture `baseSha = git rev-parse HEAD` **before editing anything**. The reviewer needs it and you cannot reconstruct it later.
 
 **At Deep depth, `baseSha` advances with each phase.** Capture it once before phase 1, then before each
-later phase re-capture it from the previous phase's last commit. One fixed base for the whole change
+later phase re-capture it from the previous phase's last commit. **Keep the phase-1 value**, in the
+plan: Close diffs the whole change against it (`close.md`), and by then the live one points at the last
+phase only. One fixed base for the whole change
 means phase 3's reviewer also sees phases 1 and 2, correctly reports them as work outside this phase's
 Goal, and you spend a fix round arguing with a correct review. This holds whether you run the loop by
 hand or through `scripts/phase.js` (`references/orchestration.md`).
@@ -22,15 +24,11 @@ If the plan conflicts with what you find in the code, stop and say so. Do not de
 
 ## Gates
 
-Run the project's mechanical checks from the project guide's _common-commands_: typecheck, lint, build, tests. Run them yourself, in this session, and paste the real output.
+Run the project's mechanical checks from the project guide's _common-commands_, in this session, and paste the real output. A recalled result is not a result, and exit 0 with every test skipped is not a pass.
 
-- Do this **before** spawning a reviewer. Reviewing code that does not compile wastes a subagent on defects the compiler already found.
-- A recalled result is not a result. Re-run and paste this run's output.
-- Exit 0 with every test skipped is not a pass. Check the tally, not just the code.
+Record the gate output as commit trailers. The work is already committed by the time these run, so put them on the next commit — or amend, which is safe by hand because nothing here is tracking the sha. A clean pass that ends with no further commit is exactly the case that needs the amend. `scripts/phase.js` cannot amend — an amend would change the sha it returns as the next phase's base — and it does not record trailers at all: its fix prompt tells the agent to commit and name the item, and says nothing about gate output. Driving the loop through the script, the trailers are yours to add afterwards, and a phase that closes with no fix round has no commit made *after* the gates ran to carry them (`references/orchestration.md`).
 
-Record the gate output as commit trailers. The work is already committed by the time these run, so put them on the next commit — or amend, which is safe by hand because nothing here is tracking the sha. A clean pass that ends with no further commit is exactly the case that needs the amend. `scripts/phase.js` cannot amend, because its guards track that sha, so it records on the fix commits instead (`references/orchestration.md`).
-
-**If you add a gate, write its failing case first and watch it fail.** A check that cannot fail when the behavior is wrong is worse than none. This skill's own v1 shipped one: a script that grepped for the words naming each rule, and passed cleanly after a rule had been replaced with its exact opposite. Presence of a word is not presence of a rule. If you cannot make a check fail, write a scenario instead.
+**If you add a gate, write its failing case first and watch it fail.** A check that cannot fail when the behavior is wrong is worse than none. This skill's own v1 shipped one: a script that grepped for the words naming each rule, and passed cleanly after a rule had been replaced with its exact opposite. Presence of a word is not presence of a rule. If you cannot make a check fail, do not write it. Reaching for an agent-run fixture to cover what a mutation cannot is how this project built two suites that measured nothing.
 
 **Check what kind of thing you are gating.** A pattern can hold *prose* — the presence of a sentence is the property you want, and a grep is the right instrument. It cannot hold a *claim*: nothing separates "the script detects X" from "the script does not detect X" without also rejecting the true sentences a writer is entitled to make about X. If you find yourself adding one more counter-example to a regex, stop. That check does not converge, and the rounds you spend on it come out of the budget for the change.
 
@@ -98,7 +96,7 @@ Then re-run the gates and re-review. The cycle ends when blocking count is zero 
 
 ## Commits
 
-**Derive the convention, don't impose one.** Before your first commit, read `git log --oneline -20` and match what is there — prefix style, capitalization, scope vocabulary, whether bodies are used. A repo whose history reads `[api] fix null deref` is not asking for `fix(api): …`, and an agent that "corrects" it has made the history worse while feeling helpful.
+**Derive the convention, don't impose one.** Read `git log --oneline -20` and match it. A repo whose history reads `[api] fix null deref` is not asking for `fix(api): …`, and an agent that "corrects" it has made the history worse while feeling helpful.
 
 With no discernible convention, default to Conventional Commits: `<type>(<scope>): <summary>`, with a body explaining *why* when the change is not self-evident.
 
@@ -106,8 +104,6 @@ Whatever the format, two things hold:
 
 - **The message names the phase and the item it addresses**, so it ties back to the plan. Under Conventional that is `fix(phase2): off-by-one in bucket refill`; under another convention, carry the same two facts in that convention's shape.
 - **Gate output goes in the trailers** (see Gates, above).
-
-**One logical change per commit.** The test: can this commit be reverted alone without taking something unrelated with it? That is what keeps `bisect` and `revert` usable.
 
 **If the change breaks a published contract, stop and check your depth.** That is a Deep-tier trigger, and escalating it is `escalation.md`'s first row. Discovering it mid-build is normal; committing past it is not. Mark it however your convention marks breakage — Conventional uses `!` or a `BREAKING CHANGE:` footer.
 
@@ -118,6 +114,27 @@ Phases run sequentially and share one working tree; `scripts/phase.js` assumes e
 If you deviate from that and run writers concurrently — parallel phases, an agent team, two experiments at once — give each writer its own worktree, and run that writer's gates inside it. Gates are not read-only: they leave build output, caches and coverage data behind.
 
 Where to put a worktree, and the four things that bite: `references/orchestration.md`.
+
+## The journal — what outlives the task
+
+A triage rejection outlives the round. Some of what you learn outlives the *task*, and has no diff to
+attach it to. That goes in `.agent/<task>/journal.md`, beside the plan, and `references/maintenance.md`
+is the pass that folds it into the project guide later.
+
+Write an entry when — and only when — one of these is true:
+
+- Something cost you real time that a note would have saved: a platform quirk, a tool that reports success while doing nothing, a documented command whose behavior is not its behavior.
+- An idea was raised and deliberately **not** done, so nobody re-proposes it without new information.
+- The project guide claimed something the repo contradicted. If the **guide** is wrong, correct that line now in its own commit and go back to what you were doing. If the **command** it describes is broken, do not fix that here — state in the guide what it currently does and file the repair (`references/maintenance.md`).
+- Something was settled that has no other home. What changes the Goal, a Decision or Accept goes in `plan.md`; what is tactical goes in the commit body (`escalation.md`, "Record the answer"). This is for what belongs to neither, because it is not about this diff at all.
+
+**Never a summary of what you did.** The commits already carry that, and a journal that accumulates it
+becomes the per-task archive this skill deleted. The entry condition above and this prohibition are the
+only two things keeping it from becoming that archive again, which is why they are here rather than only
+in the reference: the agent writing a journal is mid-change, and mid-change you are reading this file.
+
+Running through `scripts/phase.js`, the same applies — the script returns the rejections, and anything
+worth keeping past the change still has to be written down by you.
 
 ## Diagnosis — when the cause is not obvious
 
@@ -130,13 +147,7 @@ Anchoring on the first theory that fits is the most common debugging failure. If
 
 ## Flaky tests
 
-If a failure passes on re-run with no code change, it is **non-deterministic** — a flake, not a regression in this diff.
-
-Do not disable the test, loosen the assertion, add a retry, or raise a timeout to get a green bar. That fakes the signal and can bury a real intermittent bug.
-
-Say the cause is non-deterministic, leave the test alone, and raise the flake as its own piece of work. The intermittent reproduction is itself the discriminating observation — you do not need a deterministic repro to call it.
-
-A failure that reproduces every time stays a fix target.
+Raise the flake as its own work. The non-obvious part: the intermittent reproduction **is** the discriminating observation, so you do not owe a deterministic repro before calling it one.
 
 ## Round cap
 

@@ -61,28 +61,9 @@ chk() { if [ "$2" = "$3" ]; then ok "$1 ($2)"; else bad "$1: expected '$3', got 
 
 echo "== layout =="
 [ -f three-loop-workflow/SKILL.md ] && ok "SKILL.md present" || bad "SKILL.md missing"
-chk "shipped skill file count" "$(find three-loop-workflow -type f | wc -l | tr -d ' ')" "9"
-chk "reference count"          "$(find three-loop-workflow/references -name '*.md' | wc -l | tr -d ' ')" "6"
+chk "shipped skill file count" "$(find three-loop-workflow -type f | wc -l | tr -d ' ')" "10"
+chk "reference count"          "$(find three-loop-workflow/references -name '*.md' | wc -l | tr -d ' ')" "7"
 chk "shipped script count"     "$(find three-loop-workflow/scripts -type f | wc -l | tr -d ' ')" "2"
-chk "fixture count"            "$(find tests/scenarios -name 's*.md' | wc -l | tr -d ' ')" "11"
-# Every fixture must be declared in expected.json, and every declaration must have a fixture. The
-# answers live outside the scenario text on purpose; a fixture with no expected answer is never scored
-# and a declaration with no fixture is never run, and neither shows up as a failure on its own.
-_fx=$(find tests/scenarios -name 's*.md' -exec basename {} \; | sort | tr '\n' ' ')
-_ex=$(python3 -c "import json;print(' '.join(sorted(json.load(open('tests/expected.json')))) + ' ')")
-chk "every fixture is declared in expected.json" "$_fx" "$_ex"
-# ...and that the RUNNER will actually run them. tests/run-scenarios.js is a Workflow script and has no
-# filesystem, so its fixture list is a literal. Adding a scenario file therefore does not add it to the
-# run, and the suite reports green over whatever subset the literal happens to name — which is how two
-# fixtures added on 2026-07-31 were silently not run while the suite still passed. Only the gate can see
-# both sides, so the gate is where they are compared.
-_rf=$(python3 -c "
-import re
-s = open('tests/run-scenarios.js').read()
-m = re.search(r\"input\.fixtures \|\| \[(.*?)\]\", s, re.S)
-print(' '.join(sorted(re.findall(r\"'([^']+)'\", m.group(1)))) + ' ' if m else 'UNPARSEABLE')")
-chk "the runner's fixture list matches the fixtures on disk" "$_rf" "$_ex"
-
 echo "== version agrees with the changelog, in both languages =="
 # Derived, not hardcoded: the old script carried a literal that had to be hand-edited every release,
 # which is one more place for the version to drift.
@@ -93,7 +74,7 @@ chk "SKILL.md frontmatter matches the newest CHANGELOG entry" "$v_skill" "$v_log
 chk "CHANGELOG-cn newest entry matches CHANGELOG"             "$v_log_cn" "$v_log"
 
 echo "== the shipped scripts parse, declare meta, and avoid the forbidden primitives =="
-for f in three-loop-workflow/scripts/phase.js tests/run-scenarios.js; do
+for f in three-loop-workflow/scripts/phase.js; do
   if bash three-loop-workflow/scripts/check-workflow-syntax.sh "$f" >/dev/null 2>&1; then
     ok "workflow-syntax $f"
   else
@@ -128,28 +109,6 @@ else
 fi
 rm -f /tmp/_sim.out
 
-echo "== the two-arm suite computes its own verdict =="
-if node scripts/sim-scenarios.js >/tmp/_scen.out 2>&1; then
-  ok "the scoring arithmetic is correct ($(grep -c '^  ok' /tmp/_scen.out | tr -d ' ') rules asserted)"
-else
-  bad "a scenario-scoring rule is broken:"; grep -A1 '^  FAIL' /tmp/_scen.out
-fi
-rm -f /tmp/_scen.out
-# Two token greps used to sit here, asserting that `suite_pass` is computed and absent from any agent
-# schema. Both were bypassable — `const suite_pass = reading.suite_pass && false &&` satisfies the first,
-# and a double-quoted schema entry evades the second — so they claimed more than they checked, against
-# this file's own rule at the top. Deleted rather than patched: sim-scenarios.js above catches the
-# semantic version of both, by execution, and negative-test.sh proves it can.
-
-# The runner's floor catches a reply that labels everything `guard`, but `kind` is agent-reported and a
-# Workflow script cannot read expected.json. This reads it here, deterministically.
-n_disc=$(python3 -c "import json;print(sum(1 for v in json.load(open('tests/expected.json')).values() if v.get('kind')=='discriminating'))")
-if [ "$n_disc" -ge 1 ]; then
-  ok "expected.json declares $n_disc discriminating fixture(s)"
-else
-  bad "expected.json declares no discriminating fixture — the suite could only measure regressions"
-fi
-
 echo "== and that harness can actually fail =="
 if bash scripts/negative-test.sh >/tmp/_neg.out 2>&1; then
   ok "every mutation detected ($(grep -c '^  detected' /tmp/_neg.out | tr -d ' ') of them)"
@@ -161,7 +120,7 @@ rm -f /tmp/_neg.out
 
 echo "== one plan directory per task =="
 for f in SKILL.md references/plan.md references/build.md references/close.md references/escalation.md \
-         references/orchestration.md; do
+         references/orchestration.md references/maintenance.md; do
   grep -qF '.agent/<task>' "three-loop-workflow/$f" \
     && ok "per-task plan path in $f" || bad "$f prescribes a shared plan path"
 done
@@ -306,40 +265,6 @@ h=$(grep -n 'all 20 v1\|20 v1 files\|20 个 v1 文件' $ALLMD 2>/dev/null)
 h=$(grep -rn '\.agent/accept\.sh' $ALLMD three-loop-workflow tests 2>/dev/null)
 [ -z "$h" ] && ok "no reference to the abolished shared .agent/accept.sh path" || bad "abolished path referenced: $h"
 chk "v1 Markdown + script split sums to the file count" "$((md1+sc1))" "$f_v1"
-h=$(grep -n '5 of 6\|5 of 7\|5 个 fixture\|7 个 fixture 里有 5' $ALLMD 2>/dev/null)
-[ -z "$h" ] && ok "control-arm result stated as 6 of 7 everywhere" || bad "inconsistent fixture result: $h"
-
-echo "== the suite's headline claim is stated accurately =="
-# Six of seven fixtures are guards, for which both arms answering correctly is GUARD-HELD — a pass.
-# An unqualified "a fixture both arms pass is INVALID" describes the suite that is not running.
-# Paragraph-scoped and bilingual. A line-scoped grep missed docs/why-v2.md, whose claim wraps across two
-# lines so that "both arms" and "INVALID" never share one, and it never inspected the four Chinese
-# documents at all. Demonstrated: reverting why-v2.md alone left the old check silent.
-if python3 - <<'PYCHK'
-import io, re, sys
-DOCS = ["README.md","README-cn.md","CLAUDE.md","tests/README.md",
-        "CHANGELOG.md","CHANGELOG-cn.md","docs/why-v2.md","docs/why-v2-cn.md",
-        "docs/announcement-v2.0.0.md","docs/announcement-v2.0.0-cn.md"]
-CLAIM = re.compile(r"both arms|两臂都答对|两条臂都答对")
-VERDICT = re.compile(r"INVALID|not evidence about the skill|fails on any fixture")
-QUALIFIER = re.compile(r"discriminating|区分性|guard|6 of 7|six of seven|七个 fixture 里有六个|六个是")
-bad = []
-for d in DOCS:
-    try: text = io.open(d, encoding="utf-8").read()
-    except FileNotFoundError: continue
-    for para in re.split(r"\n\s*\n", text):
-        flat = " ".join(para.split())
-        if CLAIM.search(flat) and VERDICT.search(flat) and not QUALIFIER.search(flat):
-            bad.append(f"{d}: {flat[:150]}")
-for b in bad: print(b)
-sys.exit(1 if bad else 0)
-PYCHK
-then
-  ok "every both-arms claim carries its qualifier, in both languages"
-else
-  bad "an unqualified both-arms-pass claim survives (listed above)"
-fi
-
 echo "== the install commands actually install =="
 for r in README.md README-cn.md; do
   line=$(grep -n 'cp -r three-loop-workflow' "$r" | head -1)
@@ -427,7 +352,7 @@ fi
 echo "== packaged .skill carries the skill and nothing else =="
 pkg=$(mktemp -d)/x.skill
 zip -qr "$pkg" three-loop-workflow/
-chk "archive entry count" "$(unzip -Z1 "$pkg" | grep -vc '/$')" "9"
+chk "archive entry count" "$(unzip -Z1 "$pkg" | grep -vc '/$')" "10"
 unzip -Z1 "$pkg" | grep -qE "$V1" && bad "a v1 file is inside the .skill" || ok "no v1 file in .skill"
 unzip -Z1 "$pkg" | grep -q 'three-loop-workflow/SKILL.md' && ok "SKILL.md in .skill" || bad "SKILL.md not in .skill"
 rm -rf "$(dirname "$pkg")"

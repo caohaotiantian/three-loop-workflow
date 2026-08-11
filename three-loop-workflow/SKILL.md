@@ -1,10 +1,10 @@
 ---
 name: three-loop-workflow
-description: Structured workflow for non-trivial code changes — features, behavior fixes, refactors, performance work, and edits to contract files (AGENTS.md, CLAUDE.md, this skill, OpenAPI specs, schemas, public APIs). Chooses a proportionate depth, records decisions and non-goals in a durable plan file, verifies with the project's own gates, and reviews the diff with a fresh reviewer. Use when a change needs more than a single obvious edit, or when it touches a published contract.
+description: Structured workflow for non-trivial code changes — features, behavior fixes, refactors, performance work, and edits to contract files (AGENTS.md, CLAUDE.md, this skill, OpenAPI specs, schemas, public APIs). Chooses a proportionate depth, records decisions and non-goals in a durable plan file, verifies with the project's own gates, and reviews the diff with a fresh reviewer. Use when a change needs more than a single obvious edit, or when it touches a published contract, or to refresh the project guide.
 license: MIT
 compatibility: Claude Code (subagents, Workflow). Codex/opencode run the manual path — see references/platforms.md
 metadata:
-  version: "2.3.0"
+  version: "2.4.0"
 ---
 
 # Three-Loop Workflow
@@ -35,7 +35,7 @@ Terse phrasing is not a depth signal. "Just quickly add X" describes urgency, no
 
 ## 2. Durable state — `.agent/<task>/plan.md`
 
-Every task gets **its own gitignored directory** under `.agent/`, named for the task: `.agent/rate-limit-headers/plan.md`. Scratch notes live beside it. An acceptance command that outlives the task belongs in the repository — nothing backs this directory up.
+Every task gets **its own gitignored directory** under `.agent/`, named for the task: `.agent/rate-limit-headers/plan.md`. Scratch notes and a journal live beside it. Nothing backs this up, so what must outlive the task has to reach the repository — an acceptance command now, a rule for the guide later.
 
 Never a shared path. Two tasks both writing `.agent/plan.md` overwrite each other, and a finished task leaves no record of what it decided.
 
@@ -93,6 +93,7 @@ Never substitute a silent default for a real decision. Record what the user deci
 | Escalate, or handle a round-cap deadlock | `references/escalation.md` |
 | Run on Codex or opencode | `references/platforms.md` |
 | Run writers in parallel, or the Build loop as a script | `references/orchestration.md` |
+| Fold a task's notes into the project guide | `references/maintenance.md` |
 
 Read the reference for the loop you are in. You do not need the others.
 

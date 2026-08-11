@@ -182,14 +182,15 @@ The skill never hard-codes a filename. It reads `AGENTS.md`, `CLAUDE.md`, or bot
 │   │   ├── build.md                  write → gates → review → triage → fix; diagnosis; flakes
 │   │   ├── orchestration.md          Worktrees for concurrent writers; the Build loop as a script
 │   │   ├── close.md                  Deep-tier closeout: orphans, blast radius, migrations
+│   │   ├── maintenance.md            Folding a task's journal back into the project guide
 │   │   ├── escalation.md             When and how to ask; deadlock reports
 │   │   └── platforms.md              Runtimes, and how the skill degrades off Claude Code
 │   └── scripts/
 │       ├── phase.js                  The Build loop as a deterministic Workflow script
 │       └── check-workflow-syntax.sh  Parses a Workflow script (node --check cannot)
-├── tests/                            Two-arm behavioral suite: every fixture runs with the skill
-│                                     loaded AND withheld. Six of seven fixtures are regression
-│                                     guards; a *discriminating* fixture both arms pass is INVALID
+├── tests/                            gate-fixtures/ for the syntax gate (deterministic, free), and
+│                                     probe.js — an on-demand control-arm instrument for asking
+│                                     whether a rule changes what a model does
 ├── docs/
 │   ├── announcement-v2.0.0.md        Release announcement
 │   ├── why-v2.md                     The long-form account of the rebuild
@@ -207,13 +208,17 @@ The skill never hard-codes a filename. It reads `AGENTS.md`, `CLAUDE.md`, or bot
 
 This skill is **load-bearing by its own definition**. Editing `SKILL.md` or any `references/*.md` changes a rule in a contract file, which is a **Deep** change under the skill's own depth gate: alternatives recorded before choosing, two independent reviewers, and a Close pass.
 
-If you change the discipline itself, run the two-arm suite:
+If you are adding a rule to the discipline — or wondering whether one still earns its tokens — run the probe:
 
 ```
-Workflow({ scriptPath: "tests/run-scenarios.js" })
+Workflow({ scriptPath: "tests/probe.js" })
 ```
 
-Each fixture declares its kind. A **discriminating** fixture both arms answer correctly is reported INVALID rather than green — it proves the rule is not carrying weight. A **guard** exists to catch the skill making a decision the model already gets right *worse*, so both arms answering it correctly is a pass; the serious result there is `GUARD-BROKEN`. Six of the seven current fixtures are guards, which the suite reports rather than hides. Read `tests/README.md` before writing one; most of the ways to write a scenario produce a test of reading comprehension instead of a test of the skill.
+It poses a situation to fresh agents that have never seen the skill, several times, and hands you the answers. Answered correctly unprompted means the rule is redundant with the model's own judgment. Answered wrong means it is load-bearing — the only positive result here. Answered *better* than the rule means the rule is wrong.
+
+It is an instrument, not a gate: nothing asserts it stays green and it is deliberately not in CI. Read the header of `probe.js` before writing a situation. A situation that names the rule measures reading comprehension, and that is how both of this project's earlier behavioural suites died — the second of them, an eleven-fixture two-arm suite costing 23 agents a run, was deleted on 2026-08-11 after returning one bit.
+
+The probe runs a control arm only, and that costs something worth naming: it cannot detect the skill making a capable model *worse* — a rule that pushes it away from a correct default. That was what the deleted suite's guards were for, and nothing replaces them. To ask that question you run both arms by hand and compare.
 
 ## License
 

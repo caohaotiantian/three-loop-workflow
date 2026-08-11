@@ -2,6 +2,121 @@
 
 Full version history for the three-loop-workflow skill. See [README.md](./README.md) for what the skill is, when it applies, and how to install it.
 
+## v2.4.0 — the guide gets a way back
+
+Every change this skill runs begins by reading the project guide. Nothing in it has ever said what
+happens to the guide afterwards, and the failure that follows is slow enough to be invisible: the guide
+keeps being read, keeps being believed, and keeps describing a repository that has moved. Audited
+against this repository on 2026-08-11 — one release after the guide was last touched, and eleven days
+after the runtime's own memory store was — the split
+was total and one-directional — every rule and every trap still verified exactly as written, and every
+count and every branch status was wrong, all in the same direction. One note claimed in its own summary
+line to describe the current state of the project, and did not.
+
+**`references/maintenance.md` is the pass that closes that loop**, and it is its own task rather than a
+step inside another one. Work leaves a journal in `.agent/<task>/journal.md`, beside the plan; the pass
+verifies what the guide already claims, promotes what the journals earned into the role that owns it,
+and prunes the rest. The order is load-bearing: verifying before promoting is what stops you appending
+to a document whose existing claims are already false.
+
+**The two rules the audit actually produced are narrower than "keep your docs current".** Do not write
+down a number a command prints — write the command; every stale count found had been recorded by someone
+who had just run the thing that prints it. And record the identifier rather than the status: a pull
+request number outlives "not merged yet".
+
+**Journals are not the archive this skill deleted, and the difference is stated so it can be checked.**
+v1 accumulated a per-task document archive that nobody read, and `close.md` still carries the finding.
+An entry here has an entry condition (a trap, a rejected idea, a decision with no other home, a guide
+claim the repo contradicted), an explicit prohibition on restating what the commits already say, and a
+pass that prunes it. The real difference is **cost on failure**, not a promise that somebody reads it:
+a committed, reviewed archive costs attention on every clone and in every review whether it is read or
+not, while a journal in a gitignored directory costs nothing if it is never folded — it is simply lost,
+which is the right outcome for a note that was not worth promoting. An earlier draft claimed a "defined
+consumer" instead, and plan review killed it: the trigger is "someone asks", which is exactly what let
+the last archive rot.
+
+**`SKILL.md`'s §2 generalises a rule — it does not buy back the words.** It said an acceptance command
+that outlives the task belongs in the repository, and said nothing about anything else that does,
+describing a directory that grows monotonically, holds the only copy of everything in it, and had a
+no-cleanup rule and no promotion rule. It now names the general case. Being precise about what that
+bought: the rewrite costs ten words of its own, so nothing here was displaced and all three edits are
+additions. What the generalisation earns is the argument for the addition, not the budget for it.
+
+**The always-loaded `description` gains a clause, and this is the part that was measured.** A routing row
+on its own is unreachable text: the description scoped this skill to code changes, so a request to
+refresh a project's context never loaded it, and nobody read the table pointing at the new reference.
+Nothing in this repository tests the description — the behavioural suite of the day read the body and
+followed the routing table — so it was measured directly instead. Fresh agents were given the old description and the
+new one independently, with maintenance-shaped requests that never name a guide file, and asked whether
+to load the skill. On two of the three phrasings the old description declined every time and the new one
+accepted every time; on the third both accepted, the old one reasoning from the contract-file clause. A
+typo request was declined under both, so the clause does not widen the skill's scope into changes it
+should stay out of.
+
+**What it cannot do is stated in the file.** Nothing fires this pass: a per-change workflow has no clock,
+and a cadence asserted here would be a rule with no mechanism behind it. What is real is being asked,
+noticing mid-change and recording it rather than detouring, and a recurring job outside the skill —
+which is the only arrangement where "periodic" is literally true. Running it at the close of a Deep
+change was considered and rejected in writing, so the next reader does not re-propose it: Close runs on
+the rarest tier, which makes the interval undefined, and it fires at the moment adjacent work is most
+dangerous.
+
+**The rule ships with no test that can fail on it, and that is stated rather than implied.** No
+discriminating fixture is possible — a model asked directly whether a lesson belongs in the project guide
+answers correctly without this skill, as three of the five demoted fixtures in the behavioural suite recorded before it was deleted —
+and there is no script here for an execution harness to drive. The gates that do apply still apply: the
+new reference is swept for statistics, for retired claims and for v1 vocabulary along with the rest of
+the package, and it is now named in the check that every reference prescribes a per-task plan path.
+
+**The behavioural suite is deleted, and the test layer is rebuilt from what only agents can answer.**
+Eleven fixtures ran every question with the skill loaded and withheld, at 23 agents a run, and returned
+one bit: one fixture discriminated. Four could not fail by construction — one of them tested whether a
+question gets asked, and a fixture's whole form is asking it. Two restated invariants `sim-phase.js`
+already proves by execution. It had not been run in the fourteen commits before it went, and it was not
+in CI, because CI cannot spawn agents.
+
+Keeping it green cost more than running it ever did. A claim about its fixture tally had propagated to
+eight sites, and a recomputation check, two exemption markers and a cross-file sweep existed to hold
+those eight in agreement — most of a day's work this week, spent on a sentence describing a suite nobody
+ran. All of that goes with it, along with `sim-scenarios.js` and a third of `accept-release.sh`.
+
+`tests/probe.js` replaces the one question worth 23 agents: **does a rule change what a model does, or
+does the model already do it?** It poses a situation to fresh agents that never saw the skill and hands
+back the answers for a person to score. It is an instrument, not a gate — nothing asserts it stays green
+and it is deliberately out of CI, which the file says rather than leaves to be discovered.
+
+What it does *not* replace is stated in the same breath: with a control arm only, nothing here detects
+the skill making a capable model **worse** — a rule that pushes it away from a correct default. That is
+what the deleted guards were for, and the class is now uncovered. Saying so is cheaper than a suite that
+was not run.
+
+**The invariant harness had holes, and the audit that found them is now part of it.** `sim-phase.js`
+printed that every invariant held while a fifth of an 88-mutation audit of `phase.js` survived it: a
+phase could close green with zero reviewers dispatched, a no-op fix round after an advancing round
+stopped being caught, the closed phase could hand the next one a sha only the implementer ever attested,
+and four of six agent roles had no death path asserted. Ten invariants close those, and the ten
+mutations that motivated them are now in `negative-test.sh`, so deleting an invariant shows up as a
+survivor rather than as a smaller number nobody reads.
+
+Adding them paid immediately: one mutation survived on arrival, because the invariant written for it
+asserted only that a field was truthy and the mutation pins that field to a truthy constant. A
+hand-verified assertion with no mutation behind it was already wrong, and only the mutation found it.
+
+**The harnesses print rates now, not counts.** "All N invariants hold" is a number that only goes up;
+it is what the harness printed on the day a fifth of the audit walked past it. `sim-phase` now says how
+many invariants it asserts and that this is not a measure of what would be caught; `negative-test` prints
+killed/tried and names its denominator's limit — it counts the defects someone thought to inject.
+
+**Repository housekeeping, found while verifying the guide.** `CLAUDE.md` described the fixture suite as
+it stood before four fixtures were added, said the acceptance script runs two execution harnesses when it
+runs three plus the experiment analyser, and enumerated four Chinese counterpart files when there are
+five. The fixture figure was corrected everywhere it described the suite and left alone
+everywhere it records a dated measurement — those are two different claims that share a phrasing, and the
+gate guards the second one. `CLAUDE.md` also now names `references/orchestration.md`, which had been
+added without ever appearing there, and records that adding or removing one file in the package is a
+several-place edit across the acceptance script and the release workflow — which keeps its own copy and
+fails later than everything else. The guide states that without carrying a count, which is the same rule.
+
 ## v2.3.0 — the common path gets lighter, and three limits get named
 
 An adversarial critic read the shipped package — `SKILL.md`, the references, `phase.js` — and asked what

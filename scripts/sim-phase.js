@@ -539,6 +539,119 @@ const INVARIANTS = [
       eq(r.res.status, 'closed'),
       ...r.promptsFor('review').map(p => ok(!/^Work in the repository/m.test(p),
         'with no repoPath the prompts must not gain a location line')))},
+  // ── holes found by mutation audit, 2026-08-11 ──────────────────────────────────────────
+  // 88 mutations were driven through phase.js; 21 survived while this harness printed
+  // "all 54 invariants hold". Each invariant below closes one demonstrated survivor: the mutation is
+  // named, and negative-test.sh reproduces it. They assert behaviour the script already has — nothing
+  // in phase.js changed for them — so a failure here means a real regression, not a new rule.
+
+  // Mutant: delete `if (reviewers < 1) …`. A phase closed green with zero reviewers dispatched.
+  { name: 'usage: a reviewer count below one is rejected before any agent is dispatched',
+    args: { ...base, depth: undefined, reviewers: 0 },
+    reply: () => write(),
+    expect: r => all(
+      eq(r.res.status, 'usage-error'),
+      eq(r.n('write'), 0, 'no agent may be spent on an unusable reviewer count'),
+      eq(r.n('review'), 0, 'a phase must never close having reviewed nothing')) },
+
+  // Mutant: delete `lastHead = gateHead`. A genuine no-op fix after an advancing round stopped being
+  // caught and ground to cap-exhausted instead — the exact defect the no-op guard exists to prevent.
+  { name: 'a no-op fix is caught even when an earlier round did advance HEAD',
+    args: base,
+    reply: (l, calls) => {
+      const g = calls.filter(c => c.label.startsWith('gates')).length
+      return l.startsWith('write') ? write()
+        : l.startsWith('gates') ? gates({ headSha: g === 1 ? B : hex(3) })
+        : l.startsWith('review') ? review(1)
+        : l.startsWith('triage') ? { confirmed: ['bug0'], rejected: [] }
+        : {}
+    },
+    expect: r => all(
+      eq(r.res.status, 'agent-error'), eq(r.res.stage, 'fix'),
+      eq(r.res.fixes, 2, 'the first fix advanced HEAD; the second did not')) },
+
+  // Mutant: return the implementer's `writeHead` instead of `gateHead`. The closed phase handed the
+  // next phase a base sha only one agent ever attested to.
+  { name: 'the closed phase chains from the head the gates agent saw, not the one the writer claimed',
+    args: base,
+    reply: l => l.startsWith('write') ? write({ headSha: hex(4) })
+      : l.startsWith('gates') ? gates({ headSha: hex(3) })
+      : review(0),
+    expect: r => all(eq(r.res.status, 'closed'), eq(r.res.headSha, hex(3))) },
+
+  // Mutant: delete `verifyRound++`. Termination survived via the fix cap, so every existing invariant
+  // passed — while every agent label collided and the escalation reported round 1 of a 4-round run.
+  { name: 'the verify round advances, so labels stay distinct and the escalation counts honestly',
+    args: { ...base, maxRounds: 3 },
+    reply: (l, calls) => l.startsWith('write') ? write()
+      : l.startsWith('gates') ? advancingGates(calls)
+      : l.startsWith('review') ? review(1)
+      : l.startsWith('triage') ? { confirmed: ['bug0'], rejected: [] }
+      : {},
+    expect: r => all(
+      eq(r.res.status, 'cap-exhausted'),
+      eq(r.res.round, 4, 'three fixes are verified four times'),
+      eq(new Set(r.calls.filter(c => c.label.startsWith('gates')).map(c => c.label)).size, 4,
+        'each verify round needs its own label — colliding labels hide which round failed')) },
+
+  // Mutant: delete each of the four dead-agent returns in turn. All four survived, and each turned a
+  // clean agent-error into a TypeError three lines downstream. Four of six agent roles had no death
+  // path asserted at all.
+  { name: 'a write agent that never returns is an agent-error, not a crash',
+    args: base,
+    reply: l => l.startsWith('write') ? null : gates(),
+    expect: r => all(eq(r.res && r.res.status, 'agent-error'), eq(r.res && r.res.stage, 'write'),
+      ok(!r.err, `it must not throw (threw: ${r.err})`)) },
+
+  { name: 'a gates agent that never returns is an agent-error, not a crash',
+    args: base,
+    reply: l => l.startsWith('write') ? write() : l.startsWith('gates') ? null : review(0),
+    expect: r => all(eq(r.res && r.res.status, 'agent-error'), eq(r.res && r.res.stage, 'gates'),
+      ok(!r.err, `it must not throw (threw: ${r.err})`)) },
+
+  { name: 'a triage agent that never returns is an agent-error, not a crash',
+    args: base,
+    reply: l => l.startsWith('write') ? write() : l.startsWith('gates') ? gates()
+      : l.startsWith('review') ? review(1) : l.startsWith('triage') ? null : {},
+    expect: r => all(eq(r.res && r.res.status, 'agent-error'), eq(r.res && r.res.stage, 'triage'),
+      ok(!r.err, `it must not throw (threw: ${r.err})`)) },
+
+  { name: 'a re-dispatched implementer that never returns is an agent-error, not a crash',
+    args: base,
+    reply: (l, calls) => {
+      const w = calls.filter(c => c.label.startsWith('write')).length
+      return l.startsWith('write') ? (w === 1 ? write({ blocked: true, concerns: ['no fixture exists'] }) : null)
+        : gates()
+    },
+    expect: r => all(eq(r.res && r.res.status, 'agent-error'),
+      ok(!r.err, `it must not throw (threw: ${r.err})`)) },
+
+  // Mutant: blank `unresolved` and pin `exhaustedBy` to a constant. escalation.md tells the reader to
+  // say which kind of failure spent the budget; these are the fields that say it.
+  { name: 'a cap-exhausted phase reports what is unresolved and which stage spent the budget',
+    args: { ...base, maxRounds: 1 },
+    reply: (l, calls) => l.startsWith('write') ? write()
+      : l.startsWith('gates') ? advancingGates(calls)
+      : l.startsWith('review') ? review(1)
+      : l.startsWith('triage') ? { confirmed: ['bug0'], rejected: [] }
+      : {},
+    expect: r => all(
+      eq(r.res.status, 'cap-exhausted'),
+      ok((r.res.unresolved || []).length > 0, 'the unresolved items must be reported verbatim'),
+      eq(r.res.exhaustedBy, 'review', 'a review-driven cap must name review, not a constant')) },
+
+  // The other direction, so no constant can satisfy both. `exhaustedBy: 'mixed'` passed the first
+  // version of this pair, which asserted only that the field was truthy — an assertion weak enough to
+  // be satisfied by the mutation it was written to catch.
+  { name: 'a gate-driven cap names gates, so exhaustedBy cannot be a constant',
+    args: { ...base, maxRounds: 1 },
+    reply: (l, calls) => l.startsWith('write') ? write()
+      : l.startsWith('gates') ? advancingGates(calls, { all_pass: false, failures: ['npm test: 1 failed'] })
+      : l.startsWith('review') ? review(0)
+      : {},
+    expect: r => all(
+      eq(r.res.status, 'cap-exhausted'),
+      eq(r.res.exhaustedBy, 'gates', 'a gate-driven cap must name gates')) },
 ]
 
 // ── assertion helpers ─────────────────────────────────────────
@@ -574,5 +687,11 @@ function all(...results) { const bad = results.filter(Boolean); return bad.lengt
     console.log(`sim-phase: ${problems.length} of ${INVARIANTS.length} invariants BROKEN`)
     process.exit(1)
   }
-  console.log(`sim-phase: all ${INVARIANTS.length} invariants hold`)
+  // Deliberately not "all N invariants hold". That sentence reads as coverage and is not: on
+  // 2026-08-11 it printed `all 54 invariants hold` while 21 of 88 mutations of phase.js survived it.
+  // A count of what is asserted is not a measure of what would be caught, and the only number that
+  // moves when this harness gets worse is the survival rate — which lives in negative-test.sh.
+  console.log(`sim-phase: ${INVARIANTS.length} invariants asserted, none broken`)
+  console.log('  (a count of what is asserted, not a measure of what would be caught —' +
+              ' run scripts/negative-test.sh for the kill rate)')
 })()

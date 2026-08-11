@@ -1,62 +1,50 @@
-# Behavioral scenarios
+# tests/
 
-A scenario tests whether **the skill** changes what an agent decides. It is only a test if an agent *without* the skill gets it **wrong**.
+Two things live here, and they answer different questions at wildly different prices.
 
-That is not a style preference. The v1 suite was measured: 6 fixtures, both arms, 12 runs. Skill-off passed 6/6, skill-on passed 6/6 — **0% discrimination**. All 12 runs self-reported that the answer was stated in the prompt, and 9 of 9 files inspected had the same defect. The suite had been green for 16 releases while carrying zero information.
+## `gate-fixtures/` — deterministic, free
 
-## Run it
+Eight files that assert `three-loop-workflow/scripts/check-workflow-syntax.sh` rejects what it claims to
+reject and accepts what is legal. `scripts/accept-release.sh` runs them in both directions on every
+push. No agents, no tokens, a few milliseconds.
 
-```bash
-# From the repo root, in Claude Code:
-Workflow({ scriptPath: "tests/run-scenarios.js" })
-```
+Every other deterministic check lives outside this directory: `scripts/sim-phase.js` drives the real
+`phase.js` with stub agents, `scripts/negative-test.sh` breaks it and requires the harness to notice,
+and `scripts/accept-release.sh` recomputes every published figure. Together they cost about two seconds
+of CPU and zero tokens, and they are the only things in this repository that have ever caught a
+regression.
 
-Every fixture runs twice — once with the skill loaded, once with an agent forbidden to read it. The runner reports per-fixture discrimination and fails a *discriminating* fixture whose arms agree. Guards are judged differently — see "Two kinds of fixture" below. The verdicts and the pass condition are computed in the runner, not asserted by the scoring agent.
+## `probe.js` — agents, on demand, not a gate
 
-## Writing one that works
+The one question no deterministic check can answer: **does a rule in the skill change what a model
+does, or does the model already do it?**
 
-The scenario supplies **facts**. The skill supplies the **rule**. If the fixture contains the rule, it is testing reading comprehension.
+Run it when you are deciding whether to write a rule, or auditing whether an existing one still earns
+its tokens. It poses a situation to fresh agents that have never seen the skill, several times, and
+hands you the answers. You score them. It is an instrument; nothing asserts it stays green, and it is
+deliberately not in CI.
 
-**Do not:**
+Read the header of `probe.js` before writing a situation. The leak rule is the whole game: a situation
+that names the rule measures reading comprehension, and both of this project's previous behavioural
+suites died of exactly that.
 
-- State the governing rule. *"But Deep changes take two independent reviewers…"* — the fixture just answered itself.
-- Label the pressures. A `Combined pressures: sunk cost, authority, minimization` list tells the reader the trap is a trap.
-- Apply the rule to the facts for the reader. *"But this touches an authentication contract"* is the whole decision.
-- Write self-incriminating distractors. *"(A) Run a silent round 4 — the cap is 'just a guideline'"* is not a choice anyone picks.
-- Let the correct option be the only one written in complete, procedural prose.
+## What used to be here
 
-**Do:**
+An eleven-fixture two-arm suite, deleted 2026-08-11. It ran every fixture with the skill loaded and
+withheld, cost 23 agents per run, and its own recorded result was that one fixture of eleven
+discriminated. Four could not fail by construction — one of them was testing whether a question gets
+asked, and a fixture's whole form is asking it. Two restated invariants that `sim-phase.js` already
+proves by execution and `negative-test.sh` already proves can fail. It had not been run in the fourteen
+commits before it was deleted, and it was not in CI, because CI cannot spawn agents.
 
-- Give the situation flatly, the way a real user would phrase it.
-- Write every option in the same register and at the same length. A reader who does not know the rule should find them genuinely comparable.
-- Include the facts the rule keys on — a cookie's `maxAge` is persisted, the endpoint is public — without naming which fact matters or why.
-- Put the pressure in the *situation* ("we need this in an hour"), never in a meta-commentary about the situation.
+Keeping it green cost more than running it ever did: a claim about the fixture tally had propagated to
+eight places across the repository, and a recomputation check, two exemption markers and a cross-file
+sweep existed to keep those eight in agreement. All of that went with the suite.
 
-**Test both directions.** A suite where the answer is always "escalate" or "go deeper" trains and measures nothing but caution — and caution is what makes a workflow too expensive to use. Roughly a third of fixtures should have "proceed directly" or "do not escalate" as the correct answer.
+The question its one discriminating fixture asked survives in `probe.js`, where it is asked when someone needs the answer.
 
-## Two kinds of fixture
-
-Measuring this suite produced an uncomfortable result: 6 of its 7 fixtures are answered correctly by the control arm. Not because they leaked — because a competent engineer reaches the right answer without any skill at all. "Run the gates before spending a reviewer", "don't mask a flake", "look up a value the repo already has" are baseline senior behavior in 2026, and writing them down changes nothing.
-
-Rather than pretend otherwise, each fixture declares what it is for, in `expected.json`:
-
-- **`discriminating`** — the skill's rule is supposed to change the decision. It passes only when skill-off is **wrong** and skill-on is **right**. These are the fixtures that justify a rule's existence. A `discriminating` fixture that both arms pass is telling you the rule is not carrying weight; delete the rule or delete the fixture.
-- **`guard`** — the model already gets this right. The fixture exists to catch the skill making it **worse**. It passes when skill-on is right, whatever the control did. A `GUARD-BROKEN` result — the skill flipping a correct default into a wrong answer — is the most serious thing this suite can report.
-
-Guards are not filler. A rule-heavy skill's characteristic failure is pushing a capable model *away* from good judgment — over-escalating, over-tiering, spawning reviewers nobody needed. Guards are how that gets caught.
-
-Expect the discriminating set to be small. Rules survive here by being **specific and counter-intuitive** — an exact reviewer count, a tie-break between two defensible tiers, "one risky corner does not upgrade the whole change". If you cannot say what a good engineer would plausibly do *differently* without the rule, you have learned something about the rule.
-
-## Format
-
-Fixture files are named `s01.md`, `s02.md`, … — **deliberately opaque**.
-
-A descriptive filename is an answer key. In the first measured run, files named `…-is-standard.md` and `flake-not-masked.md` were passed to both arms, and the control arm volunteered that it "could have produced 'Standard' from the filename alone without reading anything." Name them nothing.
-
-Correct answers live in `expected.json`, keyed by filename, in the form `{"answer": "B"}`. They are kept out of the scenario files so that neither arm can see them — an instruction to "ignore the expected line" is not a control.
-
-Each fixture: the situation, then lettered options. Distribute correct answers across A/B/C — five answers of "B" means a coin-flipper scores well.
-
-## When a fixture fails its control arm
-
-Fix the fixture, or redeclare it as a `guard` with a dated `demoted` note saying why. A scenario written to discriminate that both arms answer correctly is not evidence that the rule carries weight, and keeping it green *as a discriminating fixture* is worse than having no suite — it reads as coverage that does not exist. Demoting it honestly is not the same as deleting the result.
+Its guards do not, and that is a real subtraction rather than a wash. They existed for the opposite
+question — does the skill push a capable model *away* from a correct default — and a control arm alone
+cannot see it. Nothing in this repository detects that now. Stated here rather than left for someone to
+discover, because a replacement documented as covering what it does not is the failure this project has
+shipped twice.

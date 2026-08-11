@@ -13,12 +13,10 @@ jobs:
         with:
           fetch-depth: 0
       - name: Workflow-script syntax gate
-        run: bash three-loop-workflow/scripts/check-workflow-syntax.sh three-loop-workflow/scripts/phase.js tests/run-scenarios.js
+        run: bash three-loop-workflow/scripts/check-workflow-syntax.sh three-loop-workflow/scripts/phase.js
       - name: phase.js invariants, asserted by execution
         run: node scripts/sim-phase.js
       - name: Prove the invariant harness can fail
         run: bash scripts/negative-test.sh
-      - name: Two-arm suite scoring arithmetic
-        run: node scripts/sim-scenarios.js
       - name: Repository acceptance
         run: bash scripts/accept-release.sh
