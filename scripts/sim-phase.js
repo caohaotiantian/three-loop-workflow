@@ -638,7 +638,20 @@ const INVARIANTS = [
     expect: r => all(
       eq(r.res.status, 'cap-exhausted'),
       ok((r.res.unresolved || []).length > 0, 'the unresolved items must be reported verbatim'),
-      ok(!!r.res.exhaustedBy, 'the escalation must be able to say which stage spent the budget')) },
+      eq(r.res.exhaustedBy, 'review', 'a review-driven cap must name review, not a constant')) },
+
+  // The other direction, so no constant can satisfy both. `exhaustedBy: 'mixed'` passed the first
+  // version of this pair, which asserted only that the field was truthy — an assertion weak enough to
+  // be satisfied by the mutation it was written to catch.
+  { name: 'a gate-driven cap names gates, so exhaustedBy cannot be a constant',
+    args: { ...base, maxRounds: 1 },
+    reply: (l, calls) => l.startsWith('write') ? write()
+      : l.startsWith('gates') ? advancingGates(calls, { all_pass: false, failures: ['npm test: 1 failed'] })
+      : l.startsWith('review') ? review(0)
+      : {},
+    expect: r => all(
+      eq(r.res.status, 'cap-exhausted'),
+      eq(r.res.exhaustedBy, 'gates', 'a gate-driven cap must name gates')) },
 ]
 
 // ── assertion helpers ─────────────────────────────────────────
@@ -674,5 +687,11 @@ function all(...results) { const bad = results.filter(Boolean); return bad.lengt
     console.log(`sim-phase: ${problems.length} of ${INVARIANTS.length} invariants BROKEN`)
     process.exit(1)
   }
-  console.log(`sim-phase: all ${INVARIANTS.length} invariants hold`)
+  // Deliberately not "all N invariants hold". That sentence reads as coverage and is not: on
+  // 2026-08-11 it printed `all 54 invariants hold` while 21 of 88 mutations of phase.js survived it.
+  // A count of what is asserted is not a measure of what would be caught, and the only number that
+  // moves when this harness gets worse is the survival rate — which lives in negative-test.sh.
+  console.log(`sim-phase: ${INVARIANTS.length} invariants asserted, none broken`)
+  console.log('  (a count of what is asserted, not a measure of what would be caught —' +
+              ' run scripts/negative-test.sh for the kill rate)')
 })()
