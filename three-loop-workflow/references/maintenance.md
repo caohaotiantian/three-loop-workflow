@@ -54,6 +54,10 @@ It does not touch the historical record — dated audits, released changelog ent
 
 It does not run at the close of a change. That was considered and rejected: Close runs on Deep changes only, so the interval would be undefined, and it would fire at the point in the loop where the budget is most spent and adjacent work is most dangerous.
 
+**The boundary with Close is where the change stops.** `close.md` §5 reconciles what *this change* made stale — a command it renamed, a norm it changed — and scopes that tightly on purpose. This pass is for the drift no single change caused: the claim that was true when it was written, the count that moved while nobody was editing the sentence around it. *Did my change break this line?* is Close. *Is this document still true?* is here.
+
+Nor does `scripts/phase.js` run it. The script drives one phase of one change, so it would fire several times inside a single change, which is neither periodic nor cheap — and a Workflow script has `agent()`, `parallel()`, `phase()` and `log()` and no shell (`orchestration.md`), so it cannot inspect a directory to decide whether the pass is due.
+
 ## The limit, stated
 
 **Nothing here fires this pass.** A per-change workflow has no clock, and a cadence this file asserted would be a rule with no mechanism behind it — the failure this skill exists to avoid, not to commit. What is real:

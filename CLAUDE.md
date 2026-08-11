@@ -68,10 +68,11 @@ Protected by the full cycle:
 - `CLAUDE.md`
 
 `SKILL.md`'s routing table is the only index of the references — `ls three-loop-workflow/references/`
-is the other one, and nothing in the gate compares them, so a reference nobody routes to is invisible to
-every check here. Two are easy to miss when reading the table: `orchestration.md` (worktrees for
-concurrent writers, and the Build loop as a script — split out of `build.md` on 2026-08-04) and
-`maintenance.md` (folding a task's journal back into this file — added at v2.4.0).
+is the other one, and nothing compares them. Adding a reference is not invisible (the layout counts go
+red until they are updated); what is invisible is whether anything **routes** to it, which no check here
+inspects. Two are easy to miss when reading the table: `orchestration.md` (worktrees for concurrent
+writers, and the Build loop as a script — split out of `build.md` on 2026-08-04) and `maintenance.md`
+(folding a task's journal back into this file — added at v2.4.0).
 
 **Not** load-bearing — edited directly with one fresh-agent review: `tests/**`, `README.md` /
 `README-cn.md`, `CHANGELOG*.md`, every top-level `docs/*.md` (announcements, the rebuild article, the
@@ -115,15 +116,22 @@ pairs quotes a recomputed figure a different number of times; the fifth pair is 
   non-zero with each failure named. CI runs it on every push and pull request
   (`.github/workflows/check.yml`), and again on a tag before the archive is built. It is not a
   sub-second check: it exports two tags, builds a zip, and drives every harness. It needs a UTF-8
-  locale (it refuses to run without one), plus `python3`, `node`, `git`, `zip` and `unzip`, and a
-  checkout with full history **and tags** — CI pins `fetch-depth: 0` for exactly that reason, and
-  without the tags eleven published-figure checks fail at once.
+  locale (it refuses to run without one), plus `python3`, `node`, `git`, `tar`, `zip` and `unzip`, and a
+  checkout with full history **and tags** — CI pins `fetch-depth: 0` for exactly that reason. Without
+  the tags the run is worse than merely red: the published-figure checks split, roughly half failing
+  and the other half printing `ok` with an *empty* figure, because `want()` ends up grepping for the
+  empty string and it matches every line. Read the count of `FAIL` lines, never the `ok`s, on a
+  checkout you did not verify has tags.
 - **The shipped file set is pinned by literals in two files.** Adding or removing one file under
-  `three-loop-workflow/` means editing `scripts/accept-release.sh` (the layout counts, and the archive
-  count near the end) *and* `.github/workflows/release.yml`, which keeps its own independent copy of the
-  archive assertion and therefore fails on the tag build, after acceptance has already printed
-  `ACCEPT: all checks passed`. `grep -n "find three-loop-workflow -type f\|archive entry count\|entries" scripts/accept-release.sh .github/workflows/release.yml`
-  finds them; do not carry the count around in prose, it has already drifted once.
+  `three-loop-workflow/` means editing `scripts/accept-release.sh` — the three layout counts, the
+  archive count near the end, and the per-task-plan-path loop, which enumerates every reference by
+  name — *and* `.github/workflows/release.yml`, which keeps its own independent copy of the archive
+  assertion and therefore fails on the tag build, after acceptance has already printed
+  `ACCEPT: all checks passed`.
+  `grep -n 'skill file count\|reference count\|shipped script count\|archive entry count\|^for f in SKILL.md' scripts/accept-release.sh`
+  and `grep -n entries .github/workflows/release.yml` find all of them; do not carry the count around
+  in prose. The first version of this bullet did, and its grep missed two of the sites it claimed to
+  find — a contributor following it would have edited three and left the gate red.
 - **Round-cap experiment (2026-07-31):** `node scripts/exp-analyse.mjs --raw
   docs/measurements/2026-07-30-round-cap/raw --docs docs/2026-07-31-round-cap-experiment.md
   docs/2026-07-31-round-cap-experiment-cn.md` recomputes the listed figures, requires each to appear in
@@ -176,8 +184,10 @@ pairs quotes a recomputed figure a different number of times; the fifth pair is 
   prose goes stale the first time the file is edited. What matters is the rule: the slack under the
   backstop is
   not an allowance, and an addition that does not displace something has to argue for itself in review.
-  The v2.4.0 change is the worked example — it added a routing row and a `description` clause, and paid
-  for them by generalising the §2 sentence they sat next to. Rules live here; the measurements behind them live in the references,
+  v2.4.0 is the worked example, and it is an honest one rather than a flattering one: it added a routing
+  row, a `description` clause **and** ten words to §2, displacing nothing — the §2 rewrite generalises a
+  rule that named one artifact, which is why the addition was accepted, but it did not pay for itself in
+  words. Rules live here; the measurements behind them live in the references,
   because a statistic on the always-loaded surface costs tokens on every activation, changes no behavior,
   and drifts.
 - Workflow scripts are plain JavaScript — no TypeScript, no `Date.now()`, no `Math.random()`, no argless

@@ -7,7 +7,8 @@ Full version history for the three-loop-workflow skill. See [README.md](./README
 Every change this skill runs begins by reading the project guide. Nothing in it has ever said what
 happens to the guide afterwards, and the failure that follows is slow enough to be invisible: the guide
 keeps being read, keeps being believed, and keeps describing a repository that has moved. Audited
-against this repository on 2026-08-11, eleven days and one release after it was last written, the split
+against this repository on 2026-08-11 — one release after the guide was last touched, and eleven days
+after the runtime's own memory store was — the split
 was total and one-directional — every rule and every trap still verified exactly as written, and every
 count and every branch status was wrong, all in the same direction. One note claimed in its own summary
 line to describe the current state of the project, and did not.
@@ -55,19 +56,20 @@ dangerous.
 
 **The rule ships with no test that can fail on it, and that is stated rather than implied.** No
 discriminating fixture is possible — a model asked directly whether a lesson belongs in the project guide
-answers correctly without this skill, as two demoted fixtures in `tests/expected.json` already record —
+answers correctly without this skill, as three demoted fixtures in `tests/expected.json` already record —
 and there is no script here for an execution harness to drive. The gates that do apply still apply: the
 new reference is swept for statistics, for retired claims and for v1 vocabulary along with the rest of
 the package, and it is now named in the check that every reference prescribes a per-task plan path.
 
 **Repository housekeeping, found while verifying the guide.** `CLAUDE.md` described the fixture suite as
-it stood before two fixtures were added, said the acceptance script runs two execution harnesses when it
+it stood before four fixtures were added, said the acceptance script runs two execution harnesses when it
 runs three plus the experiment analyser, and enumerated four Chinese counterpart files when there are
 five. The fixture figure was corrected everywhere it describes the current suite and left alone
 everywhere it records a dated measurement — those are two different claims that share a phrasing, and the
 gate guards the second one. `CLAUDE.md` also now names `references/orchestration.md`, which had been
 added without ever appearing there, and records that adding or removing one file in the package is a
-four-literal edit across the acceptance script and the release workflow.
+several-place edit across the acceptance script and the release workflow — which keeps its own copy and
+fails later than everything else. The guide states that without carrying a count, which is the same rule.
 
 ## v2.3.0 — the common path gets lighter, and three limits get named
 

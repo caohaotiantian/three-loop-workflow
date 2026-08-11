@@ -84,6 +84,8 @@ Record rejections briefly — one line each, saying what the finding claimed and
 
 A rejection outlives the round; some of what you learn outlives the *task*. A trap that cost you an hour, an idea you rejected for a reason that will still hold next time, a claim in the project guide the repo contradicts — those go in `.agent/<task>/journal.md`, and `references/maintenance.md` is what folds them into the guide later. Do not detour to fix the guide now.
 
+**Never a summary of what you did.** The commits already carry that, and a journal that accumulates it becomes the per-task archive this skill deleted. Running through `scripts/phase.js`, the same applies: the script returns the rejections, and anything worth keeping past the change still has to be written down by you.
+
 ## Fix
 
 Fix confirmed blocking findings. Triage non-blocking ones the same way: fix the cheap and correct ones, and for the rest say plainly what you are not doing and why.
