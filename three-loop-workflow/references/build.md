@@ -24,15 +24,11 @@ If the plan conflicts with what you find in the code, stop and say so. Do not de
 
 ## Gates
 
-Run the project's mechanical checks from the project guide's _common-commands_: typecheck, lint, build, tests. Run them yourself, in this session, and paste the real output.
-
-- Do this **before** spawning a reviewer. Reviewing code that does not compile wastes a subagent on defects the compiler already found.
-- A recalled result is not a result. Re-run and paste this run's output.
-- Exit 0 with every test skipped is not a pass. Check the tally, not just the code.
+Run the project's mechanical checks from the project guide's _common-commands_, in this session, and paste the real output. A recalled result is not a result, and exit 0 with every test skipped is not a pass.
 
 Record the gate output as commit trailers. The work is already committed by the time these run, so put them on the next commit — or amend, which is safe by hand because nothing here is tracking the sha. A clean pass that ends with no further commit is exactly the case that needs the amend. `scripts/phase.js` cannot amend — an amend would change the sha it returns as the next phase's base — and it does not record trailers at all: its fix prompt tells the agent to commit and name the item, and says nothing about gate output. Driving the loop through the script, the trailers are yours to add afterwards, and a phase that closes with no fix round has no commit made *after* the gates ran to carry them (`references/orchestration.md`).
 
-**If you add a gate, write its failing case first and watch it fail.** A check that cannot fail when the behavior is wrong is worse than none. This skill's own v1 shipped one: a script that grepped for the words naming each rule, and passed cleanly after a rule had been replaced with its exact opposite. Presence of a word is not presence of a rule. If you cannot make a check fail, write a scenario instead.
+**If you add a gate, write its failing case first and watch it fail.** A check that cannot fail when the behavior is wrong is worse than none. This skill's own v1 shipped one: a script that grepped for the words naming each rule, and passed cleanly after a rule had been replaced with its exact opposite. Presence of a word is not presence of a rule. If you cannot make a check fail, do not write it. Reaching for an agent-run fixture to cover what a mutation cannot is how this project built two suites that measured nothing.
 
 **Check what kind of thing you are gating.** A pattern can hold *prose* — the presence of a sentence is the property you want, and a grep is the right instrument. It cannot hold a *claim*: nothing separates "the script detects X" from "the script does not detect X" without also rejecting the true sentences a writer is entitled to make about X. If you find yourself adding one more counter-example to a regex, stop. That check does not converge, and the rounds you spend on it come out of the budget for the change.
 
@@ -100,7 +96,7 @@ Then re-run the gates and re-review. The cycle ends when blocking count is zero 
 
 ## Commits
 
-**Derive the convention, don't impose one.** Before your first commit, read `git log --oneline -20` and match what is there — prefix style, capitalization, scope vocabulary, whether bodies are used. A repo whose history reads `[api] fix null deref` is not asking for `fix(api): …`, and an agent that "corrects" it has made the history worse while feeling helpful.
+**Derive the convention, don't impose one.** Read `git log --oneline -20` and match it. A repo whose history reads `[api] fix null deref` is not asking for `fix(api): …`, and an agent that "corrects" it has made the history worse while feeling helpful.
 
 With no discernible convention, default to Conventional Commits: `<type>(<scope>): <summary>`, with a body explaining *why* when the change is not self-evident.
 
@@ -108,8 +104,6 @@ Whatever the format, two things hold:
 
 - **The message names the phase and the item it addresses**, so it ties back to the plan. Under Conventional that is `fix(phase2): off-by-one in bucket refill`; under another convention, carry the same two facts in that convention's shape.
 - **Gate output goes in the trailers** (see Gates, above).
-
-**One logical change per commit.** The test: can this commit be reverted alone without taking something unrelated with it? That is what keeps `bisect` and `revert` usable.
 
 **If the change breaks a published contract, stop and check your depth.** That is a Deep-tier trigger, and escalating it is `escalation.md`'s first row. Discovering it mid-build is normal; committing past it is not. Mark it however your convention marks breakage — Conventional uses `!` or a `BREAKING CHANGE:` footer.
 
@@ -153,13 +147,7 @@ Anchoring on the first theory that fits is the most common debugging failure. If
 
 ## Flaky tests
 
-If a failure passes on re-run with no code change, it is **non-deterministic** — a flake, not a regression in this diff.
-
-Do not disable the test, loosen the assertion, add a retry, or raise a timeout to get a green bar. That fakes the signal and can bury a real intermittent bug.
-
-Say the cause is non-deterministic, leave the test alone, and raise the flake as its own piece of work. The intermittent reproduction is itself the discriminating observation — you do not need a deterministic repro to call it.
-
-A failure that reproduces every time stays a fix target.
+Raise the flake as its own work. The non-obvious part: the intermittent reproduction **is** the discriminating observation, so you do not owe a deterministic repro before calling it one.
 
 ## Round cap
 

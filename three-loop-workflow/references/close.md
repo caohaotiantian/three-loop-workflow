@@ -6,30 +6,19 @@ The Build loop verified each phase in isolation. Close asks the question no phas
 
 Run these against the whole change, not phase by phase — `git diff <baseSha>..HEAD` where `<baseSha>` is the base of **phase 1**, not the base of the phase you just finished. At Deep depth that value advanced with every phase (`build.md`), so use the one you captured first. If you did not keep it, do not guess at it: `git merge-base` gives the branch point, which is the wrong answer whenever the branch already carried earlier work, and gives `HEAD` itself when the change was committed on the base branch — and a range that resolves to nothing produces an empty diff, which reads exactly like a clean Close. Read the branch's `git log --oneline`, take the commit before this change's first one, and **confirm the range is non-empty and contains only this change's commits** before you trust anything below.
 
-## 1. Gates, repository-wide
+## Gates, repository-wide
 
 Run every validation gate the project declares — full test suite, typecheck, lint, build, and any project-specific consistency check. Not the phase subsets: the whole thing, from a clean state.
 
 Paste this run's output. A phase that passed in isolation can still break something three modules away.
 
-## 2. Orphans
+## Orphans and blast radius
 
-Your change may have stranded things:
+Remove what your change orphaned; read the call sites of every symbol whose behavior changed, including the ones you were sure were unaffected.
 
-- Imports, variables, helpers, or config keys whose only caller you deleted.
-- Tests asserting behavior that no longer exists.
-- Feature flags, env vars, or fixtures the change made permanent or dead.
-- Generated files that no longer match their source.
+Two lines that are not obvious. **Leave pre-existing dead code alone** — mention it, do not clean it up here; a closeout that grows is the second change inside the first. And the caller you are hunting is the one that **still compiles and now does the wrong thing**: no type checker finds it, because the signature did not move.
 
-Remove what your change orphaned. Leave pre-existing dead code alone — mention it, do not clean it up here.
-
-## 3. Blast radius
-
-Find the callers you did not touch. `grep` for the symbols whose behavior changed and read the call sites — including the ones you were confident were unaffected.
-
-The failure this catches is a caller that still compiles and now does the wrong thing. Types will not find it; a compiler cannot know the semantics changed underneath a signature that stayed the same.
-
-## 4. Migrations
+## Migrations
 
 If the change migrates persisted data, config, or storage layout, verify it against real data rather than reasoning about it:
 
@@ -39,13 +28,13 @@ If the change migrates persisted data, config, or storage layout, verify it agai
 
 An unverified migration is a blocking issue. It does not close on "the code looks right".
 
-## 5. Documentation
+## Documentation
 
 Reconcile only what this change actually made stale: the README if behavior it documents moved, the project guide if a command or norm changed, API docs if a contract changed.
 
 Scope this tightly. A closeout pass is not an invitation to rewrite the docs.
 
-## 6. Read the result as a product, not as a diff
+## Read the result as a product, not as a diff
 
 If the change's output is something a person will read or run as a whole — a document set, a CLI's
 help, a config schema, a public API surface — one reviewer reads the **finished files**, with no diff
@@ -61,7 +50,7 @@ claim survives in one file after being corrected in another.
 Ask: does this read as one coherent thing? Is anything stated here that the code does not do? Could
 someone follow these instructions and fail?
 
-## 7. Clean up
+## Clean up
 
 **Leave the task's `.agent/<task>/` directory.** It is gitignored, it costs nothing, and it is the only local record of what this task planned and decided once the branch is merged. Delete it when you no longer want that record, not as routine cleanup.
 
