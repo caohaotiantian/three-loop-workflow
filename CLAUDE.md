@@ -67,10 +67,11 @@ Protected by the full cycle:
   there, which is the defect this repo has now shipped twice, so relaxing one is never a Direct edit.
 - `CLAUDE.md`
 
-The six references are `plan.md`, `build.md`, `orchestration.md` (worktrees for concurrent writers, and
-the Build loop as a script — split out of `build.md` on 2026-08-04), `close.md`, `escalation.md` and
-`platforms.md`. `SKILL.md`'s routing table is the only index of them, and nothing in the gate checks
-that table, so a reference nobody routes to is invisible to every check here.
+`SKILL.md`'s routing table is the only index of the references — `ls three-loop-workflow/references/`
+is the other one, and nothing in the gate compares them, so a reference nobody routes to is invisible to
+every check here. Two are easy to miss when reading the table: `orchestration.md` (worktrees for
+concurrent writers, and the Build loop as a script — split out of `build.md` on 2026-08-04) and
+`maintenance.md` (folding a task's journal back into this file — added at v2.4.0).
 
 **Not** load-bearing — edited directly with one fresh-agent review: `tests/**`, `README.md` /
 `README-cn.md`, `CHANGELOG*.md`, every top-level `docs/*.md` (announcements, the rebuild article, the
