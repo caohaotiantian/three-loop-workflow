@@ -306,12 +306,12 @@ h=$(grep -n 'all 20 v1\|20 v1 files\|20 个 v1 文件' $ALLMD 2>/dev/null)
 h=$(grep -rn '\.agent/accept\.sh' $ALLMD three-loop-workflow tests 2>/dev/null)
 [ -z "$h" ] && ok "no reference to the abolished shared .agent/accept.sh path" || bad "abolished path referenced: $h"
 chk "v1 Markdown + script split sums to the file count" "$((md1+sc1))" "$f_v1"
-# The Chinese alternatives here used to be written with Arabic numerals (`5 个 fixture`,
-# `7 个 fixture 里有 5`) while every Chinese document in this repo writes the claim with Chinese
-# numerals — so neither could ever match the text it guarded. Both were demonstrated dead and are
-# rewritten below; each new pattern was watched to fire on a planted sentence before this shipped.
-h=$(grep -n '5 of 6\|5 of 7\|七个 fixture 里有五个\|六个 fixture 里有五个' $ALLMD 2>/dev/null)  # tally-exempt: matcher
-[ -z "$h" ] && ok "no '5 of 6'/'5 of 7' misstatement of the control-arm result, in either language" || bad "inconsistent fixture result: $h"
+# Both numeral forms, because this repo uses both. The CONTROL-ARM result is written in Chinese with
+# Arabic numerals (`7 个行为 fixture 里有 6 个`, `7 个 fixture 里,只有 1 个`), so the Arabic patterns are
+# the live ones here; the Chinese-numeral pair was added on the mistaken belief that they were dead,
+# which briefly REMOVED coverage. Every pattern below was planted and watched to fire before shipping.
+h=$(grep -n '5 of 6\|5 of 7\|5 个 fixture\|7 个 fixture 里有 5\|7 个行为 fixture 里有 5\|七个 fixture 里有五个\|六个 fixture 里有五个' $ALLMD 2>/dev/null)  # tally-exempt: matcher
+[ -z "$h" ] && ok "no '5 of 6'/'5 of 7' misstatement of the control-arm result, in either language" || bad "inconsistent fixture result: $h"  # tally-exempt: matcher message
 
 # The guards inventory, RECOMPUTED from expected.json rather than compared against a literal. It went
 # stale twice and silently: the suite grew on 2026-07-30 and again on 2026-07-31, and "six of the
@@ -346,12 +346,21 @@ case "$_en_g$_en_t$_cn_g$_cn_t" in
     # presence check is satisfied by one correct sentence while a second one in the same file says
     # something else — demonstrated on both READMEs, which carry the claim twice each, and it is the
     # "check that cannot fail" shape this repo has shipped twice.
-    _bad=$(EN_G="$_en_g" EN_T="$_en_t" CN_G="$_cn_g" CN_T="$_cn_t" python3 - <<'PYEOF'
+    # Gated on EXIT STATUS, not on empty output. Capturing stdout alone made this fail-open: any
+    # exception inside the heredoc printed nothing, and nothing read as "no disagreements". Verified by
+    # injecting `raise SystemExit(9)` alongside a wrong tally — the old form printed ok and exited 0.
+    if EN_G="$_en_g" EN_T="$_en_t" CN_G="$_cn_g" CN_T="$_cn_t" python3 - >/tmp/_tally.out 2>&1 <<'PYEOF'
 import io, os, re
 en_g, en_t = os.environ["EN_G"], os.environ["EN_T"]
 cn_g, cn_t = os.environ["CN_G"], os.environ["CN_T"]
 WORD = r"(?:one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty)"
-EN = re.compile(rf"\b({WORD}) of (?:the )?({WORD})\b", re.I)
+# Digits as well as words: this repo writes tallies both ways, and a word-only pattern let a site go
+# stale just by choosing the other form. Demonstrated: a digit-form tally passed while it was wrong.
+NUM = rf"(?:{WORD}|\d{{1,2}})"
+DIGIT = {"1":"one","2":"two","3":"three","4":"four","5":"five","6":"six","7":"seven","8":"eight",
+         "9":"nine","10":"ten","11":"eleven","12":"twelve","13":"thirteen","14":"fourteen",
+         "15":"fifteen","16":"sixteen","17":"seventeen","18":"eighteen","19":"nineteen","20":"twenty"}
+EN = re.compile(rf"\b({NUM}) of (?:the |its )?({NUM})\b", re.I)
 CN = re.compile(r"([〇零一二三四五六七八九十]+)个 fixture 里有([〇零一二三四五六七八九十]+)个")
 FILES = ["CLAUDE.md", "README.md", "README-cn.md", "tests/README.md",
          "tests/run-scenarios.js", "scripts/sim-scenarios.js", "scripts/accept-release.sh"]
@@ -359,30 +368,42 @@ DATED = {"tests/README.md"}   # records a measurement, not the inventory; must N
 out = []
 for f in FILES:
     try: lines = io.open(f, encoding="utf-8").read().splitlines()
-    except FileNotFoundError: out.append(f"{f}: missing"); continue
+    except FileNotFoundError: out.append(f"{f}: file missing"); continue
+    stated = False
     for i, ln in enumerate(lines, 1):
         if not re.search(r"fixture|guard", ln, re.I): continue
         if "tally-exempt" in ln: continue   # a matcher quoting the wrong forms on purpose
         for m in EN.finditer(ln):
             a, b = m.group(1).lower(), m.group(2).lower()
-            if (a, b) == (en_g, en_t): continue
+            a, b = DIGIT.get(a, a), DIGIT.get(b, b)
+            if (a, b) == (en_g, en_t): stated = True; continue
             if f in DATED: continue
             out.append(f"{f}:{i}: '{m.group(0)}' is not the recomputed {en_g} of {en_t}")
         for m in CN.finditer(ln):
-            if (m.group(1), m.group(2)) == (cn_t, cn_g): continue
+            if (m.group(1), m.group(2)) == (cn_t, cn_g): stated = True; continue
             out.append(f"{f}:{i}: '{m.group(0)}' is not the recomputed {cn_t}/{cn_g}")
-print("\n".join(out))
+    # The absence case. The presence checks this scan replaced caught a claim DELETED outright; the
+    # mismatch scan alone does not, because a file with no occurrence has nothing to disagree with.
+    # LIMIT, stated rather than implied: this is per FILE, not per site. A file that states the tally
+    # twice and loses one of them still passes. Catching that would need an expected site count, which
+    # is the hardcoded literal this whole check exists to remove.
+    if f not in DATED and not stated:
+        out.append(f"{f}: states the guards inventory nowhere — it did before, so this is a deletion")
+if out:
+    raise SystemExit("\n".join(out))
 PYEOF
-)
-    if [ -z "$_bad" ]; then
+    then
       ok "every stated guards inventory matches the recomputed tally ($_grd of $_tot)"
     else
-      bad "a stated guards inventory disagrees with expected.json:"; printf '%s\n' "$_bad" | sed 's/^/        /'
+      bad "the guards inventory disagrees with expected.json, or went missing:"
+      sed 's/^/        /' /tmp/_tally.out
     fi
+    rm -f /tmp/_tally.out
     # The control-arm measurement is a different claim and is deliberately NOT recomputed: it records
     # what one dated run observed on the suite as it stood, and rewriting it would publish a result
     # nobody has measured.
-    grep -qF "6 of its 7 fixtures are answered correctly by the control arm" tests/README.md \
+    _ctrl='6 of its 7 fixtures are answered correctly by the control arm'  # tally-exempt: quotes the dated sentence
+    grep -qF "$_ctrl" tests/README.md \
       && ok "the dated control-arm measurement is left as written" \
       || bad "tests/README.md's control-arm measurement was edited — it is a dated result, not an inventory"
     ;;

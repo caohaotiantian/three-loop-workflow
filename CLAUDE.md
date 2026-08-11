@@ -125,7 +125,7 @@ pairs quotes a recomputed figure a different number of times; the fifth pair is 
   `three-loop-workflow/` means editing `scripts/accept-release.sh` — the three layout counts and the
   archive count near the end — *and* `.github/workflows/release.yml`, which keeps its own independent
   copy of the archive assertion and therefore fails on the tag build, after acceptance has already
-  printed `ACCEPT: all checks passed`. There is a fifth site and it is the dangerous one: the
+  printed `ACCEPT: all checks passed`. One more site is the dangerous one: the
   per-task-plan-path loop, which names `SKILL.md` and the references that prescribe a task path
   (`platforms.md` is deliberately absent). **Nothing enforces it.** Leave a new reference out and the
   gate stays green — the file simply loses that check, silently. Verified by adding one and running
