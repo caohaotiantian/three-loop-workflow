@@ -41,4 +41,10 @@ Keeping it green cost more than running it ever did: a claim about the fixture t
 eight places across the repository, and a recomputation check, two exemption markers and a cross-file
 sweep existed to keep those eight in agreement. All of that went with the suite.
 
-The question it existed to ask survives in `probe.js`, where it is asked when someone needs the answer.
+The question its one discriminating fixture asked survives in `probe.js`, where it is asked when someone needs the answer.
+
+Its guards do not, and that is a real subtraction rather than a wash. They existed for the opposite
+question — does the skill push a capable model *away* from a correct default — and a control arm alone
+cannot see it. Nothing in this repository detects that now. Stated here rather than left for someone to
+discover, because a replacement documented as covering what it does not is the failure this project has
+shipped twice.

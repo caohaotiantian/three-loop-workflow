@@ -34,7 +34,7 @@ At **Deep** depth, record alternatives *before* choosing, not as post-hoc justif
 
 Look up what the repo settles; ask what it cannot. The part worth stating is the failure mode, which is not a competence gap but a temptation: **relabelling a real decision as "a fact the repo can answer" and resolving it quietly.** If you are choosing on the user's behalf, that is a decision, however obvious the choice looks from here.
 
-If the guide answers something *wrongly* — a command that no longer exists, a count that has moved — note it in `.agent/<task>/journal.md` and carry on with what the repo actually says. Fixing the guide here turns one change into two (`build.md`, "The journal").
+If the guide answers something *wrongly* — a command that no longer exists, a count that has moved — carry on with what the repo actually says, and correct the guide line in its own commit rather than folding it into this change (`build.md`, "The journal").
 
 ## Claims need their source
 

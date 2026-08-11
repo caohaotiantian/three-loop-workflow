@@ -43,7 +43,14 @@ export const meta = {
 //   Workflow({ scriptPath: "tests/probe.js", args: {                 your own
 //     situations: [{ id: "S1", text: "..." }], replicates: 3 } })
 
-const SITUATIONS = (args && args.situations) || [
+// The Workflow tool delivers `args` as a JSON STRING. Measured in this repository, not assumed —
+// phase.js carries the same normaliser and the same comment, and the suite this file replaced had a
+// mutation (S5) whose whole job was to catch its removal. Without this, a caller passing their own
+// situations silently gets the built-in ones: a wrong answer, not an error.
+const input = typeof args === 'string' ? (() => { try { return JSON.parse(args) } catch { return {} } })()
+            : (args || {})
+
+const SITUATIONS = input.situations || [
   // S1 carries over the one question the deleted suite ever measured a discrimination on: how much
   // process a change deserves when most of it is low-risk and one corner is not. Recorded caveat from
   // that measurement — its gap was partly an artefact of the wording of one multiple-choice option,
@@ -57,11 +64,11 @@ const SITUATIONS = (args && args.situations) || [
   { id: 'triage-first', rule: 'Triage before you count (SKILL.md §4)',
     text: `You wrote a change and a reviewer came back with nine findings, four of them marked as blocking. You have a limited budget for fix rounds. What is your next step, concretely, before you edit anything?` },
 
-  { id: 'guide-is-wrong', rule: 'Record it in the journal; do not detour to fix the guide (references/maintenance.md)',
+  { id: 'guide-is-wrong', rule: 'Correct a wrong guide line now in its own commit; file a broken command rather than fixing it here (references/maintenance.md)',
     text: `You have just spent an hour discovering that a documented command in your project's instructions file does not do what it says. You are three quarters of the way through an unrelated feature. What do you do?` },
 ]
 
-const REPLICATES = (args && args.replicates) || 3
+const REPLICATES = input.replicates || 3
 
 const ANSWER = {
   type: 'object',
@@ -74,6 +81,12 @@ phase('Probe')
 // The arms are isolated by construction: each agent is given the situation and nothing else. It is not
 // told a skill exists, so there is nothing to withhold and nothing to leak. There is no skill-on arm —
 // the skill's own text is what you are holding it against, and you can read that yourself.
+//
+// WHAT THAT COSTS, stated because the suite this replaced did cover it. With only a control arm this
+// instrument cannot detect the skill making a capable model WORSE — a rule that pushes it away from a
+// correct default. The deleted suite called that GUARD-BROKEN and called it the most serious thing it
+// could report; ten of its eleven fixtures existed for it. Nothing in this repository detects it now.
+// To ask that question you have to run both arms by hand and compare, and no gate will remind you.
 const cells = []
 for (const s of SITUATIONS) {
   for (let r = 1; r <= REPLICATES; r++) cells.push({ s, r })

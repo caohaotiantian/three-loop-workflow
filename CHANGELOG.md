@@ -45,8 +45,8 @@ additions. What the generalisation earns is the argument for the addition, not t
 **The always-loaded `description` gains a clause, and this is the part that was measured.** A routing row
 on its own is unreachable text: the description scoped this skill to code changes, so a request to
 refresh a project's context never loaded it, and nobody read the table pointing at the new reference.
-Nothing in this repository tests the description — the two-arm suite reads the body and follows the
-routing table — so it was measured directly instead. Fresh agents were given the old description and the
+Nothing in this repository tests the description — the behavioural suite of the day read the body and
+followed the routing table — so it was measured directly instead. Fresh agents were given the old description and the
 new one independently, with maintenance-shaped requests that never name a guide file, and asked whether
 to load the skill. On two of the three phrasings the old description declined every time and the new one
 accepted every time; on the third both accepted, the old one reasoning from the contract-file clause. A
@@ -63,16 +63,54 @@ dangerous.
 
 **The rule ships with no test that can fail on it, and that is stated rather than implied.** No
 discriminating fixture is possible — a model asked directly whether a lesson belongs in the project guide
-answers correctly without this skill, as three of the five demoted fixtures in `tests/expected.json`
-already record —
+answers correctly without this skill, as three of the five demoted fixtures in the behavioural suite recorded before it was deleted —
 and there is no script here for an execution harness to drive. The gates that do apply still apply: the
 new reference is swept for statistics, for retired claims and for v1 vocabulary along with the rest of
 the package, and it is now named in the check that every reference prescribes a per-task plan path.
 
+**The behavioural suite is deleted, and the test layer is rebuilt from what only agents can answer.**
+Eleven fixtures ran every question with the skill loaded and withheld, at 23 agents a run, and returned
+one bit: one fixture discriminated. Four could not fail by construction — one of them tested whether a
+question gets asked, and a fixture's whole form is asking it. Two restated invariants `sim-phase.js`
+already proves by execution. It had not been run in the fourteen commits before it went, and it was not
+in CI, because CI cannot spawn agents.
+
+Keeping it green cost more than running it ever did. A claim about its fixture tally had propagated to
+eight sites, and a recomputation check, two exemption markers and a cross-file sweep existed to hold
+those eight in agreement — most of a day's work this week, spent on a sentence describing a suite nobody
+ran. All of that goes with it, along with `sim-scenarios.js` and a third of `accept-release.sh`.
+
+`tests/probe.js` replaces the one question worth 23 agents: **does a rule change what a model does, or
+does the model already do it?** It poses a situation to fresh agents that never saw the skill and hands
+back the answers for a person to score. It is an instrument, not a gate — nothing asserts it stays green
+and it is deliberately out of CI, which the file says rather than leaves to be discovered.
+
+What it does *not* replace is stated in the same breath: with a control arm only, nothing here detects
+the skill making a capable model **worse** — a rule that pushes it away from a correct default. That is
+what the deleted guards were for, and the class is now uncovered. Saying so is cheaper than a suite that
+was not run.
+
+**The invariant harness had holes, and the audit that found them is now part of it.** `sim-phase.js`
+printed that every invariant held while a fifth of an 88-mutation audit of `phase.js` survived it: a
+phase could close green with zero reviewers dispatched, a no-op fix round after an advancing round
+stopped being caught, the closed phase could hand the next one a sha only the implementer ever attested,
+and four of six agent roles had no death path asserted. Ten invariants close those, and the ten
+mutations that motivated them are now in `negative-test.sh`, so deleting an invariant shows up as a
+survivor rather than as a smaller number nobody reads.
+
+Adding them paid immediately: one mutation survived on arrival, because the invariant written for it
+asserted only that a field was truthy and the mutation pins that field to a truthy constant. A
+hand-verified assertion with no mutation behind it was already wrong, and only the mutation found it.
+
+**The harnesses print rates now, not counts.** "All N invariants hold" is a number that only goes up;
+it is what the harness printed on the day a fifth of the audit walked past it. `sim-phase` now says how
+many invariants it asserts and that this is not a measure of what would be caught; `negative-test` prints
+killed/tried and names its denominator's limit — it counts the defects someone thought to inject.
+
 **Repository housekeeping, found while verifying the guide.** `CLAUDE.md` described the fixture suite as
 it stood before four fixtures were added, said the acceptance script runs two execution harnesses when it
 runs three plus the experiment analyser, and enumerated four Chinese counterpart files when there are
-five. The fixture figure was corrected everywhere it describes the current suite and left alone
+five. The fixture figure was corrected everywhere it described the suite and left alone
 everywhere it records a dated measurement — those are two different claims that share a phrasing, and the
 gate guards the second one. `CLAUDE.md` also now names `references/orchestration.md`, which had been
 added without ever appearing there, and records that adding or removing one file in the package is a

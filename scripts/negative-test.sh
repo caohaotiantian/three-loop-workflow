@@ -164,7 +164,7 @@ apply "M20 the acceptCmds shape guard reverted, so a non-array reaches .map" \
   'Array.isArray(acceptCmds)'
 
 echo
-echo "== mutation test: the two-arm runner's scoring =="
+echo "== mutation test: the survivors the 2026-08-11 audit found =="
 
 
 

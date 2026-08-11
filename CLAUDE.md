@@ -48,14 +48,19 @@ guards with `grep -q`: disabling both empty-diff guards with `false &&` left eve
 still printed `ok an uncommitted phase is rejected, not reviewed` and `ACCEPT: all checks passed`, exit 0.
 Deleting one guard outright also passed, because the rule's wording survived in the comment above it. Both
 were demonstrated in a fresh clone. Control flow is now asserted by **execution** — `scripts/sim-phase.js`
-drives the real script with stub agents — and `scripts/negative-test.sh` breaks the two scripts
-twenty-five ways and requires the harness to notice each one. The lesson generalises: to check a *rule*, run it; grep only for
+drives the real script with stub agents — and `scripts/negative-test.sh` breaks `phase.js` and the
+round-cap experiment's published figures and requires the harness to notice each one. Read the rate it
+prints, not the count: on 2026-08-11 `sim-phase` reported every invariant holding while a fifth of an
+88-mutation audit survived it. The lesson generalises: to check a *rule*, run it; grep only for
 *prose*, which is the one thing whose presence is the property you want.
 
 Nothing replaced the consistency gate as such. The two-arm runner that replaced the scenario suite was
 itself deleted on 2026-08-11, for the third instance of the same disease: 23 agents per run to return
 one bit, four of its eleven fixtures unable to fail by construction, and fourteen commits since it was
-last run. What survives is `tests/probe.js` — the same question, asked on demand, scored by a person.
+last run. What survives is `tests/probe.js`: the question that suite's one discriminating fixture asked, on
+demand, scored by a person. Not the same coverage — the probe runs a control arm only, so nothing here
+detects the skill pushing a capable model *away* from a correct default, which is what the ten guards
+existed for. That class is uncovered, deliberately, and saying so is cheaper than a suite nobody ran.
 
 ## Load-Bearing Documents
 

@@ -218,6 +218,8 @@ It poses a situation to fresh agents that have never seen the skill, several tim
 
 It is an instrument, not a gate: nothing asserts it stays green and it is deliberately not in CI. Read the header of `probe.js` before writing a situation. A situation that names the rule measures reading comprehension, and that is how both of this project's earlier behavioural suites died — the second of them, an eleven-fixture two-arm suite costing 23 agents a run, was deleted on 2026-08-11 after returning one bit.
 
+The probe runs a control arm only, and that costs something worth naming: it cannot detect the skill making a capable model *worse* — a rule that pushes it away from a correct default. That was what the deleted suite's guards were for, and nothing replaces them. To ask that question you run both arms by hand and compare.
+
 ## License
 
 MIT — see [LICENSE](./LICENSE).
