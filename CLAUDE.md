@@ -9,7 +9,9 @@
 
 This repo distributes the **three-loop-workflow** Claude skill, shipped from `three-loop-workflow/`.
 
-**v2.3.0 is current.** The v2 line is a ground-up rewrite, not an increment: v1's L1/L2/L3/F loops, Full/Light/None
+**v2.4.0 is current** — `sed -n 's/^  version: "\(.*\)"/\1/p' three-loop-workflow/SKILL.md` is the
+authority, and `accept-release.sh` fails unless it equals the newest `CHANGELOG.md` heading. The v2 line
+is a ground-up rewrite, not an increment: v1's L1/L2/L3/F loops, Full/Light/None
 tiers, five-voter panel, committed per-task document archive, and `check-consistency.sh` are all gone.
 v1.14.0 remains at tag `v1.14.0` for anyone who needs it. `docs/why-v2.md` is the full account of what
 changed and on what evidence.
@@ -168,8 +170,13 @@ pairs quotes a recomputed figure a different number of times; the fifth pair is 
 - Anti-bloat binds the always-loaded `SKILL.md` surface — push detail into references. Review is the
   mechanism, not a ceiling: v1 reached 2,915 words under a numeric cap, which is why the cap is not the
   mechanism. `accept-release.sh` fails above **1,500** words, and that is a backstop against silent drift
-  set above the reviewed size, not a budget to spend — the file is 1,468 words, and the slack above it is
-  not an allowance: an addition that does not displace something has to argue for itself in review. Rules live here; the measurements behind them live in the references,
+  set above the reviewed size, not a budget to spend. Do not quote the current count here — it is one
+  line of the gate's own output (`bash scripts/accept-release.sh | grep 'SKILL.md is'`), and a copy in
+  prose goes stale the first time the file is edited. What matters is the rule: the slack under the
+  backstop is
+  not an allowance, and an addition that does not displace something has to argue for itself in review.
+  The v2.4.0 change is the worked example — it added a routing row and a `description` clause, and paid
+  for them by generalising the §2 sentence they sat next to. Rules live here; the measurements behind them live in the references,
   because a statistic on the always-loaded surface costs tokens on every activation, changes no behavior,
   and drifts.
 - Workflow scripts are plain JavaScript — no TypeScript, no `Date.now()`, no `Math.random()`, no argless

@@ -182,6 +182,7 @@ The skill never hard-codes a filename. It reads `AGENTS.md`, `CLAUDE.md`, or bot
 │   │   ├── build.md                  write → gates → review → triage → fix; diagnosis; flakes
 │   │   ├── orchestration.md          Worktrees for concurrent writers; the Build loop as a script
 │   │   ├── close.md                  Deep-tier closeout: orphans, blast radius, migrations
+│   │   ├── maintenance.md            Folding a task's journal back into the project guide
 │   │   ├── escalation.md             When and how to ask; deadlock reports
 │   │   └── platforms.md              Runtimes, and how the skill degrades off Claude Code
 │   └── scripts/

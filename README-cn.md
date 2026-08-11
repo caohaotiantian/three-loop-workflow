@@ -179,6 +179,7 @@ skill 从不写死文件名。它会读取 `AGENTS.md`、`CLAUDE.md` 或两者 �
 │   │   ├── build.md                  编写 → 门禁 → 评审 → 分诊 → 修复;诊断;flaky
 │   │   ├── orchestration.md          并发写入者的 worktree;把 Build 循环当脚本运行
 │   │   ├── close.md                  Deep 档收尾:孤儿清理、影响半径、迁移验证
+│   │   ├── maintenance.md            把任务 journal 折回项目指南的维护 pass
 │   │   ├── escalation.md             何时以及如何上报;死锁报告
 │   │   └── platforms.md              各运行时,以及离开 Claude Code 后哪些能力降级
 │   └── scripts/

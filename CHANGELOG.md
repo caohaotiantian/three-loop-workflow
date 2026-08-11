@@ -2,6 +2,73 @@
 
 Full version history for the three-loop-workflow skill. See [README.md](./README.md) for what the skill is, when it applies, and how to install it.
 
+## v2.4.0 — the guide gets a way back
+
+Every change this skill runs begins by reading the project guide. Nothing in it has ever said what
+happens to the guide afterwards, and the failure that follows is slow enough to be invisible: the guide
+keeps being read, keeps being believed, and keeps describing a repository that has moved. Audited
+against this repository on 2026-08-11, eleven days and one release after it was last written, the split
+was total and one-directional — every rule and every trap still verified exactly as written, and every
+count and every branch status was wrong, all in the same direction. One note claimed in its own summary
+line to describe the current state of the project, and did not.
+
+**`references/maintenance.md` is the pass that closes that loop**, and it is its own task rather than a
+step inside another one. Work leaves a journal in `.agent/<task>/journal.md`, beside the plan; the pass
+verifies what the guide already claims, promotes what the journals earned into the role that owns it,
+and prunes the rest. The order is load-bearing: verifying before promoting is what stops you appending
+to a document whose existing claims are already false.
+
+**The two rules the audit actually produced are narrower than "keep your docs current".** Do not write
+down a number a command prints — write the command; every stale count found had been recorded by someone
+who had just run the thing that prints it. And record the identifier rather than the status: a pull
+request number outlives "not merged yet".
+
+**Journals are not the archive this skill deleted, and the difference is stated so it can be checked.**
+v1 accumulated a per-task document archive that nobody read, and `close.md` still carries the finding.
+An entry here has an entry condition (a trap, a rejected idea, a decision with no other home, a guide
+claim the repo contradicted), an explicit prohibition on restating what the commits already say, and a
+pass that prunes it. Without all three it is the same archive with a promise attached.
+
+**`SKILL.md`'s §2 generalises instead of growing.** It said an acceptance command that outlives the task
+belongs in the repository, and said nothing about anything else that does — describing a directory that
+grows monotonically, holds the only copy of everything in it, and had a no-cleanup rule and no promotion
+rule. It now names the general case, which is what pays for the routing row beside it.
+
+**The always-loaded `description` gains a clause, and this is the part that was measured.** A routing row
+on its own is unreachable text: the description scoped this skill to code changes, so a request to
+refresh a project's context never loaded it, and nobody read the table pointing at the new reference.
+Nothing in this repository tests the description — the two-arm suite reads the body and follows the
+routing table — so it was measured directly instead. Fresh agents were given the old description and the
+new one independently, with maintenance-shaped requests that never name a guide file, and asked whether
+to load the skill. On two of the three phrasings the old description declined every time and the new one
+accepted every time; on the third both accepted, the old one reasoning from the contract-file clause. A
+typo request was declined under both, so the clause does not widen the skill's scope into changes it
+should stay out of.
+
+**What it cannot do is stated in the file.** Nothing fires this pass: a per-change workflow has no clock,
+and a cadence asserted here would be a rule with no mechanism behind it. What is real is being asked,
+noticing mid-change and recording it rather than detouring, and a recurring job outside the skill —
+which is the only arrangement where "periodic" is literally true. Running it at the close of a Deep
+change was considered and rejected in writing, so the next reader does not re-propose it: Close runs on
+the rarest tier, which makes the interval undefined, and it fires at the moment adjacent work is most
+dangerous.
+
+**The rule ships with no test that can fail on it, and that is stated rather than implied.** No
+discriminating fixture is possible — a model asked directly whether a lesson belongs in the project guide
+answers correctly without this skill, as two demoted fixtures in `tests/expected.json` already record —
+and there is no script here for an execution harness to drive. The gates that do apply still apply: the
+new reference is swept for statistics, for retired claims and for v1 vocabulary along with the rest of
+the package, and it is now named in the check that every reference prescribes a per-task plan path.
+
+**Repository housekeeping, found while verifying the guide.** `CLAUDE.md` described the fixture suite as
+it stood before two fixtures were added, said the acceptance script runs two execution harnesses when it
+runs three plus the experiment analyser, and enumerated four Chinese counterpart files when there are
+five. The fixture figure was corrected everywhere it describes the current suite and left alone
+everywhere it records a dated measurement — those are two different claims that share a phrasing, and the
+gate guards the second one. `CLAUDE.md` also now names `references/orchestration.md`, which had been
+added without ever appearing there, and records that adding or removing one file in the package is a
+four-literal edit across the acceptance script and the release workflow.
+
 ## v2.3.0 — the common path gets lighter, and three limits get named
 
 An adversarial critic read the shipped package — `SKILL.md`, the references, `phase.js` — and asked what
