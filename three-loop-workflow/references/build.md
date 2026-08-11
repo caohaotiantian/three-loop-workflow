@@ -5,7 +5,9 @@ One cycle: **write → gates → review → fix**. At Deep depth, one cycle per 
 Capture `baseSha = git rev-parse HEAD` **before editing anything**. The reviewer needs it and you cannot reconstruct it later.
 
 **At Deep depth, `baseSha` advances with each phase.** Capture it once before phase 1, then before each
-later phase re-capture it from the previous phase's last commit. One fixed base for the whole change
+later phase re-capture it from the previous phase's last commit. **Keep the phase-1 value**, in the
+plan: Close diffs the whole change against it (`close.md`), and by then the live one points at the last
+phase only. One fixed base for the whole change
 means phase 3's reviewer also sees phases 1 and 2, correctly reports them as work outside this phase's
 Goal, and you spend a fix round arguing with a correct review. This holds whether you run the loop by
 hand or through `scripts/phase.js` (`references/orchestration.md`).
@@ -28,7 +30,7 @@ Run the project's mechanical checks from the project guide's _common-commands_: 
 - A recalled result is not a result. Re-run and paste this run's output.
 - Exit 0 with every test skipped is not a pass. Check the tally, not just the code.
 
-Record the gate output as commit trailers. The work is already committed by the time these run, so put them on the next commit — or amend, which is safe by hand because nothing here is tracking the sha. A clean pass that ends with no further commit is exactly the case that needs the amend. `scripts/phase.js` cannot amend, because its guards track that sha, so it records on the fix commits instead (`references/orchestration.md`).
+Record the gate output as commit trailers. The work is already committed by the time these run, so put them on the next commit — or amend, which is safe by hand because nothing here is tracking the sha. A clean pass that ends with no further commit is exactly the case that needs the amend. `scripts/phase.js` cannot amend, because its guards track that sha — and it does not record trailers at all: its fix prompt tells the agent to commit and name the item, and says nothing about gate output. Driving the loop through the script, the trailers are yours to add afterwards, and a phase that closes with no fix round has no commit of its own to carry them (`references/orchestration.md`).
 
 **If you add a gate, write its failing case first and watch it fail.** A check that cannot fail when the behavior is wrong is worse than none. This skill's own v1 shipped one: a script that grepped for the words naming each rule, and passed cleanly after a rule had been replaced with its exact opposite. Presence of a word is not presence of a rule. If you cannot make a check fail, write a scenario instead.
 

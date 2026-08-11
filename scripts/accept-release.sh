@@ -310,8 +310,8 @@ h=$(grep -n '5 of 6\|5 of 7\|5 个 fixture\|7 个 fixture 里有 5' $ALLMD 2>/de
 [ -z "$h" ] && ok "no '5 of 6'/'5 of 7' misstatement of the control-arm result" || bad "inconsistent fixture result: $h"
 
 # The guards inventory, RECOMPUTED from expected.json rather than compared against a literal. It went
-# stale silently once: two fixtures were added on 2026-07-31 and "six of the seven" survived in eight
-# places until 2026-08-11, three of them inside scripts/ and tests/. The deny-list above could not see
+# stale twice and silently: the suite grew on 2026-07-30 and again on 2026-07-31, and "six of the
+# seven" survived in eight places until 2026-08-11, three of them inside scripts/ and tests/. The deny-list above could not see
 # it, because it guards a different claim that happens to share a phrasing — the CONTROL-ARM result,
 # which is a dated measurement and must not be swept with this one.
 # Spelled out because that is how the documents say it; the lookup covers the range a fixture suite

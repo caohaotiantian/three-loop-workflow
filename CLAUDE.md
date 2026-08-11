@@ -67,8 +67,8 @@ Protected by the full cycle:
   there, which is the defect this repo has now shipped twice, so relaxing one is never a Direct edit.
 - `CLAUDE.md`
 
-`SKILL.md`'s routing table is the only index of the references — `ls three-loop-workflow/references/`
-is the other one, and nothing compares them. Adding a reference is not invisible (the layout counts go
+The references have two indexes — `SKILL.md`'s routing table and `ls three-loop-workflow/references/`
+— and nothing compares them. Adding a reference is not invisible (the layout counts go
 red until they are updated); what is invisible is whether anything **routes** to it, which no check here
 inspects. Two are easy to miss when reading the table: `orchestration.md` (worktrees for concurrent
 writers, and the Build loop as a script — split out of `build.md` on 2026-08-04) and `maintenance.md`
@@ -118,16 +118,18 @@ pairs quotes a recomputed figure a different number of times; the fifth pair is 
   sub-second check: it exports two tags, builds a zip, and drives every harness. It needs a UTF-8
   locale (it refuses to run without one), plus `python3`, `node`, `git`, `tar`, `zip` and `unzip`, and a
   checkout with full history **and tags** — CI pins `fetch-depth: 0` for exactly that reason. Without
-  the tags the run is worse than merely red: the published-figure checks split, roughly half failing
-  and the other half printing `ok` with an *empty* figure, because `want()` ends up grepping for the
-  empty string and it matches every line. Read the count of `FAIL` lines, never the `ok`s, on a
-  checkout you did not verify has tags.
+  the tags the run is worse than merely red: some published-figure checks fail while others print `ok`
+  carrying an **empty** figure, because `want()` ends up grepping for the empty string and that matches
+  every line. Read the `FAIL` lines, never the `ok`s, on a checkout you have not confirmed has tags.
 - **The shipped file set is pinned by literals in two files.** Adding or removing one file under
-  `three-loop-workflow/` means editing `scripts/accept-release.sh` — the three layout counts, the
-  archive count near the end, and the per-task-plan-path loop, which enumerates every reference by
-  name — *and* `.github/workflows/release.yml`, which keeps its own independent copy of the archive
-  assertion and therefore fails on the tag build, after acceptance has already printed
-  `ACCEPT: all checks passed`.
+  `three-loop-workflow/` means editing `scripts/accept-release.sh` — the three layout counts and the
+  archive count near the end — *and* `.github/workflows/release.yml`, which keeps its own independent
+  copy of the archive assertion and therefore fails on the tag build, after acceptance has already
+  printed `ACCEPT: all checks passed`. There is a fifth site and it is the dangerous one: the
+  per-task-plan-path loop, which names `SKILL.md` and the references that prescribe a task path
+  (`platforms.md` is deliberately absent). **Nothing enforces it.** Leave a new reference out and the
+  gate stays green — the file simply loses that check, silently. Verified by adding one and running
+  the gate with the loop untouched.
   `grep -n 'skill file count\|reference count\|shipped script count\|archive entry count\|^for f in SKILL.md' scripts/accept-release.sh`
   and `grep -n entries .github/workflows/release.yml` find all of them; do not carry the count around
   in prose. The first version of this bullet did, and its grep missed two of the sites it claimed to

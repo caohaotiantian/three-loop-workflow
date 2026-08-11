@@ -63,7 +63,8 @@ dangerous.
 
 **The rule ships with no test that can fail on it, and that is stated rather than implied.** No
 discriminating fixture is possible — a model asked directly whether a lesson belongs in the project guide
-answers correctly without this skill, as three demoted fixtures in `tests/expected.json` already record —
+answers correctly without this skill, as three of the five demoted fixtures in `tests/expected.json`
+already record —
 and there is no script here for an execution harness to drive. The gates that do apply still apply: the
 new reference is swept for statistics, for retired claims and for v1 vocabulary along with the rest of
 the package, and it is now named in the check that every reference prescribes a per-task plan path.

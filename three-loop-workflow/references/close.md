@@ -4,7 +4,7 @@ Deep changes only. Standard changes are closed by green gates and a clean review
 
 The Build loop verified each phase in isolation. Close asks the question no phase asked: **is the repository coherent now that all of this has landed?**
 
-Run these against the whole change (`git diff <baseSha>..HEAD`), not phase by phase.
+Run these against the whole change, not phase by phase — `git diff <baseSha>..HEAD` where `<baseSha>` is the base of **phase 1**, not the base of the phase you just finished. At Deep depth that value advanced with every phase (`build.md`), so use the one you captured first. If you did not keep it, recover it with `git merge-base HEAD <the ref you branched from>` — and note that is the ref you actually branched from, which is not always `main`.
 
 ## 1. Gates, repository-wide
 
