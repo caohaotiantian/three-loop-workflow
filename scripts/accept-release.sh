@@ -306,8 +306,12 @@ h=$(grep -n 'all 20 v1\|20 v1 files\|20 个 v1 文件' $ALLMD 2>/dev/null)
 h=$(grep -rn '\.agent/accept\.sh' $ALLMD three-loop-workflow tests 2>/dev/null)
 [ -z "$h" ] && ok "no reference to the abolished shared .agent/accept.sh path" || bad "abolished path referenced: $h"
 chk "v1 Markdown + script split sums to the file count" "$((md1+sc1))" "$f_v1"
-h=$(grep -n '5 of 6\|5 of 7\|5 个 fixture\|7 个 fixture 里有 5' $ALLMD 2>/dev/null)
-[ -z "$h" ] && ok "no '5 of 6'/'5 of 7' misstatement of the control-arm result" || bad "inconsistent fixture result: $h"
+# The Chinese alternatives here used to be written with Arabic numerals (`5 个 fixture`,
+# `7 个 fixture 里有 5`) while every Chinese document in this repo writes the claim with Chinese
+# numerals — so neither could ever match the text it guarded. Both were demonstrated dead and are
+# rewritten below; each new pattern was watched to fire on a planted sentence before this shipped.
+h=$(grep -n '5 of 6\|5 of 7\|七个 fixture 里有五个\|六个 fixture 里有五个' $ALLMD 2>/dev/null)  # tally-exempt: matcher
+[ -z "$h" ] && ok "no '5 of 6'/'5 of 7' misstatement of the control-arm result, in either language" || bad "inconsistent fixture result: $h"
 
 # The guards inventory, RECOMPUTED from expected.json rather than compared against a literal. It went
 # stale twice and silently: the suite grew on 2026-07-30 and again on 2026-07-31, and "six of the
@@ -332,14 +336,49 @@ _en_g=$(_num "$_grd"); _en_t=$(_num "$_tot"); _cn_g=$(_cnum "$_grd"); _cn_t=$(_c
 case "$_en_g$_en_t$_cn_g$_cn_t" in
   *OUT-OF-RANGE*) bad "the fixture tally ($_grd of $_tot) is outside the number lookup — extend _num/_cnum" ;;
   *)
-    for f in CLAUDE.md README.md; do
-      grep -qi "$_en_g of the $_en_t current fixtures are guards" "$f" \
-        && ok "$f states the recomputed guards inventory ($_grd of $_tot)" \
-        || bad "$f does not say '$_en_g of the $_en_t current fixtures are guards' — recomputed from expected.json"
-    done
-    grep -qF "当前${_cn_t}个 fixture 里有${_cn_g}个是 guard" README-cn.md \
-      && ok "README-cn.md states the recomputed guards inventory" \
-      || bad "README-cn.md does not state the recomputed guards inventory ($_grd of $_tot)"
+    # Every site the 2026-08-11 sweep corrected, not just the prose ones. The first version of this
+    # check covered three of eight; the other five — both README directory-tree lines, the comment in
+    # tests/run-scenarios.js, the assertion label in scripts/sim-scenarios.js and this script's own
+    # comment below — were each demonstrated to go stale again with the gate still green.
+    # Loose on the article so "ten of eleven" and "ten of the eleven" both satisfy it; the tally itself
+    # is what is pinned.
+    # Scans EVERY occurrence rather than asking whether the file mentions the tally somewhere. A
+    # presence check is satisfied by one correct sentence while a second one in the same file says
+    # something else — demonstrated on both READMEs, which carry the claim twice each, and it is the
+    # "check that cannot fail" shape this repo has shipped twice.
+    _bad=$(EN_G="$_en_g" EN_T="$_en_t" CN_G="$_cn_g" CN_T="$_cn_t" python3 - <<'PYEOF'
+import io, os, re
+en_g, en_t = os.environ["EN_G"], os.environ["EN_T"]
+cn_g, cn_t = os.environ["CN_G"], os.environ["CN_T"]
+WORD = r"(?:one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty)"
+EN = re.compile(rf"\b({WORD}) of (?:the )?({WORD})\b", re.I)
+CN = re.compile(r"([〇零一二三四五六七八九十]+)个 fixture 里有([〇零一二三四五六七八九十]+)个")
+FILES = ["CLAUDE.md", "README.md", "README-cn.md", "tests/README.md",
+         "tests/run-scenarios.js", "scripts/sim-scenarios.js", "scripts/accept-release.sh"]
+DATED = {"tests/README.md"}   # records a measurement, not the inventory; must NOT track the tally
+out = []
+for f in FILES:
+    try: lines = io.open(f, encoding="utf-8").read().splitlines()
+    except FileNotFoundError: out.append(f"{f}: missing"); continue
+    for i, ln in enumerate(lines, 1):
+        if not re.search(r"fixture|guard", ln, re.I): continue
+        if "tally-exempt" in ln: continue   # a matcher quoting the wrong forms on purpose
+        for m in EN.finditer(ln):
+            a, b = m.group(1).lower(), m.group(2).lower()
+            if (a, b) == (en_g, en_t): continue
+            if f in DATED: continue
+            out.append(f"{f}:{i}: '{m.group(0)}' is not the recomputed {en_g} of {en_t}")
+        for m in CN.finditer(ln):
+            if (m.group(1), m.group(2)) == (cn_t, cn_g): continue
+            out.append(f"{f}:{i}: '{m.group(0)}' is not the recomputed {cn_t}/{cn_g}")
+print("\n".join(out))
+PYEOF
+)
+    if [ -z "$_bad" ]; then
+      ok "every stated guards inventory matches the recomputed tally ($_grd of $_tot)"
+    else
+      bad "a stated guards inventory disagrees with expected.json:"; printf '%s\n' "$_bad" | sed 's/^/        /'
+    fi
     # The control-arm measurement is a different claim and is deliberately NOT recomputed: it records
     # what one dated run observed on the suite as it stood, and rewriting it would publish a result
     # nobody has measured.
@@ -362,7 +401,7 @@ DOCS = ["README.md","README-cn.md","CLAUDE.md","tests/README.md",
         "docs/announcement-v2.0.0.md","docs/announcement-v2.0.0-cn.md"]
 CLAIM = re.compile(r"both arms|两臂都答对|两条臂都答对")
 VERDICT = re.compile(r"INVALID|not evidence about the skill|fails on any fixture")
-QUALIFIER = re.compile(r"discriminating|区分性|guard|6 of 7|six of seven|七个 fixture 里有六个|六个是")
+QUALIFIER = re.compile(r"discriminating|区分性|guard|6 of 7|six of seven|七个 fixture 里有六个|六个是")  # tally-exempt: matcher
 bad = []
 for d in DOCS:
     try: text = io.open(d, encoding="utf-8").read()
