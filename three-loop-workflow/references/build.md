@@ -82,10 +82,6 @@ Record rejections briefly — one line each, saying what the finding claimed and
 
 **Put it where it outlives the round.** Running by hand, that is the task's `.agent/<task>/` directory, beside the plan; `scripts/phase.js` carries the rejections in the phase result instead. A rejection recorded only in the current turn's output is gone at the next compaction, and then the phantom returns to a reviewer with nothing to contradict it.
 
-A rejection outlives the round; some of what you learn outlives the *task*. A trap that cost you an hour, an idea you rejected for a reason that will still hold next time, a claim in the project guide the repo contradicts — those go in `.agent/<task>/journal.md`, and `references/maintenance.md` is what folds them into the guide later. Do not detour to fix the guide now.
-
-**Never a summary of what you did.** The commits already carry that, and a journal that accumulates it becomes the per-task archive this skill deleted. Running through `scripts/phase.js`, the same applies: the script returns the rejections, and anything worth keeping past the change still has to be written down by you.
-
 ## Fix
 
 Fix confirmed blocking findings. Triage non-blocking ones the same way: fix the cheap and correct ones, and for the rest say plainly what you are not doing and why.
@@ -122,6 +118,26 @@ Phases run sequentially and share one working tree; `scripts/phase.js` assumes e
 If you deviate from that and run writers concurrently — parallel phases, an agent team, two experiments at once — give each writer its own worktree, and run that writer's gates inside it. Gates are not read-only: they leave build output, caches and coverage data behind.
 
 Where to put a worktree, and the four things that bite: `references/orchestration.md`.
+
+## The journal — what outlives the task
+
+A triage rejection outlives the round. Some of what you learn outlives the *task*, and has no diff to
+attach it to. That goes in `.agent/<task>/journal.md`, beside the plan, and `references/maintenance.md`
+is the pass that folds it into the project guide later.
+
+Write an entry when — and only when — one of these is true:
+
+- Something cost you real time that a note would have saved: a platform quirk, a tool that reports success while doing nothing, a documented command whose behavior is not its behavior.
+- An idea was raised and deliberately **not** done, so nobody re-proposes it without new information.
+- The project guide claimed something the repo contradicted. Record it and keep going — do not detour to fix the guide now, and do not let it grow into a second change.
+
+**Never a summary of what you did.** The commits already carry that, and a journal that accumulates it
+becomes the per-task archive this skill deleted. The entry condition above and this prohibition are the
+only two things keeping it from becoming that archive again, which is why they are here rather than only
+in the reference: the agent writing a journal is mid-change, and mid-change you are reading this file.
+
+Running through `scripts/phase.js`, the same applies — the script returns the rejections, and anything
+worth keeping past the change still has to be written down by you.
 
 ## Diagnosis — when the cause is not obvious
 
