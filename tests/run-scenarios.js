@@ -196,7 +196,7 @@ for (const r of reading.rows) {
   if (r.kind === 'guard') {
     // A guard exists to catch the skill making a correct default worse, so both arms answering
     // correctly is GUARD-HELD — a pass. This is why "a fixture both arms pass is INVALID" needs its
-    // qualifier: it is true of a discriminating fixture, and six of the seven here are guards.
+    // qualifier: it is true of a discriminating fixture, and ten of the eleven here are guards.
     verdict = onRight ? 'GUARD-HELD' : 'GUARD-BROKEN'
   } else if (discriminates) {
     verdict = 'VALID'

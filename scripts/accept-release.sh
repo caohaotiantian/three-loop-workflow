@@ -307,10 +307,10 @@ h=$(grep -rn '\.agent/accept\.sh' $ALLMD three-loop-workflow tests 2>/dev/null)
 [ -z "$h" ] && ok "no reference to the abolished shared .agent/accept.sh path" || bad "abolished path referenced: $h"
 chk "v1 Markdown + script split sums to the file count" "$((md1+sc1))" "$f_v1"
 h=$(grep -n '5 of 6\|5 of 7\|5 个 fixture\|7 个 fixture 里有 5' $ALLMD 2>/dev/null)
-[ -z "$h" ] && ok "control-arm result stated as 6 of 7 everywhere" || bad "inconsistent fixture result: $h"
+[ -z "$h" ] && ok "no '5 of 6'/'5 of 7' misstatement of the control-arm result" || bad "inconsistent fixture result: $h"
 
 echo "== the suite's headline claim is stated accurately =="
-# Six of seven fixtures are guards, for which both arms answering correctly is GUARD-HELD — a pass.
+# Ten of the eleven fixtures are guards, for which both arms answering correctly is GUARD-HELD — a pass.
 # An unqualified "a fixture both arms pass is INVALID" describes the suite that is not running.
 # Paragraph-scoped and bilingual. A line-scoped grep missed docs/why-v2.md, whose claim wraps across two
 # lines so that "both arms" and "INVALID" never share one, and it never inspected the four Chinese

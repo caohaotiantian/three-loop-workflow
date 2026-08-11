@@ -65,9 +65,23 @@ Protected by the full cycle:
   there, which is the defect this repo has now shipped twice, so relaxing one is never a Direct edit.
 - `CLAUDE.md`
 
+The six references are `plan.md`, `build.md`, `orchestration.md` (worktrees for concurrent writers, and
+the Build loop as a script — split out of `build.md` on 2026-08-04), `close.md`, `escalation.md` and
+`platforms.md`. `SKILL.md`'s routing table is the only index of them, and nothing in the gate checks
+that table, so a reference nobody routes to is invisible to every check here.
+
 **Not** load-bearing — edited directly with one fresh-agent review: `tests/**`, `README.md` /
 `README-cn.md`, `CHANGELOG*.md`, every top-level `docs/*.md` (announcements, the rebuild article, the
 audit records), and the `docs/design/` + `docs/implementation/` archives.
+
+**`tests/**` stays off that list deliberately, and the reason is not that the tests are unimportant.**
+Agents asked to improve this skill have repeatedly redirected their effort into the test suite —
+elaborating fixtures and harnesses, spending a large share of the budget there, and leaving the skill
+itself no better. Classifying `tests/**` as load-bearing would route *more* attention there. So: do not
+spend a change's budget on the suite unless the change is about the suite. One procedural fact does
+apply, because the gate does not honour the classification — `tests/run-scenarios.js` is mutated five
+ways by `scripts/negative-test.sh`, syntax-gated in CI, and has its fixture list pinned by
+`accept-release.sh`, so touching it means re-running the three harnesses below before you commit.
 
 `docs/design/` and `docs/implementation/` are a **frozen v1 archive**, kept as the record of how v1 was
 built. v2 does not produce per-task documents; its plan lives in a gitignored `.agent/<task>/plan.md`, one directory per task. Do not add
@@ -83,16 +97,30 @@ appears throughout the historical record — the `CHANGELOG*.md` version tables,
 and `docs/implementation/` archives, and the dated audit and analysis files under `docs/` — all of which
 are records of what was true when written and must not be retro-edited into v2 terms.
 
-The exceptions to English are the `-cn.md` files — `README-cn.md`, `CHANGELOG-cn.md`,
-`docs/why-v2-cn.md`, `docs/announcement-v2.0.0-cn.md` — each a Chinese translation of its English
-counterpart. When one changes, change its pair — `scripts/accept-release.sh` fails when a pair quotes a
-recomputed figure a different number of times.
+The exceptions to English are the `-cn.md` files, of which there are five: `README-cn.md`,
+`CHANGELOG-cn.md`, `docs/why-v2-cn.md`, `docs/announcement-v2.0.0-cn.md` and
+`docs/2026-07-31-round-cap-experiment-cn.md` — each a Chinese translation of its English counterpart.
+When one changes, change its pair. `scripts/accept-release.sh` fails when one of the **first four**
+pairs quotes a recomputed figure a different number of times; the fifth pair is held by
+`scripts/exp-analyse.mjs` instead, so do not read the pairing rule as one check covering all five.
+`find . -name '*-cn.md' -not -path './.git/*'` lists them.
 
 ## Common Commands
 
 - `<TEST-CMD>`: `bash scripts/accept-release.sh` — the repository gate. Recomputes every published
-  figure, runs both execution harnesses, and exits non-zero with each failure named. CI runs it on every
-  push and pull request (`.github/workflows/check.yml`), and again on a tag before the archive is built.
+  figure, runs the three execution harnesses below **and** the round-cap figure check, and exits
+  non-zero with each failure named. CI runs it on every push and pull request
+  (`.github/workflows/check.yml`), and again on a tag before the archive is built. It is not a
+  sub-second check: it exports two tags, builds a zip, and drives every harness. It needs a UTF-8
+  locale (it refuses to run without one), plus `python3`, `node`, `git`, `zip` and `unzip`, and a
+  checkout with full history **and tags** — CI pins `fetch-depth: 0` for exactly that reason, and
+  without the tags eleven published-figure checks fail at once.
+- **The shipped file set is pinned by literals in two files.** Adding or removing one file under
+  `three-loop-workflow/` means editing `scripts/accept-release.sh` (the layout counts, and the archive
+  count near the end) *and* `.github/workflows/release.yml`, which keeps its own independent copy of the
+  archive assertion and therefore fails on the tag build, after acceptance has already printed
+  `ACCEPT: all checks passed`. `grep -n "find three-loop-workflow -type f\|archive entry count\|entries" scripts/accept-release.sh .github/workflows/release.yml`
+  finds them; do not carry the count around in prose, it has already drifted once.
 - **Round-cap experiment (2026-07-31):** `node scripts/exp-analyse.mjs --raw
   docs/measurements/2026-07-30-round-cap/raw --docs docs/2026-07-31-round-cap-experiment.md
   docs/2026-07-31-round-cap-experiment-cn.md` recomputes the listed figures, requires each to appear in
@@ -113,7 +141,7 @@ recomputed figure a different number of times.
 - **Two-arm scenario suite (slow, spawns agents):** `Workflow({ scriptPath: "tests/run-scenarios.js" })`.
   Runs every fixture with the skill loaded and withheld. A **discriminating** fixture both arms answer
   correctly proves nothing and is reported INVALID; a **guard** both arms answer correctly is GUARD-HELD, a
-  pass — six of the seven current fixtures are guards. `GUARD-BROKEN` is the most serious result it can
+  pass — ten of the eleven current fixtures are guards. `GUARD-BROKEN` is the most serious result it can
   return. The verdict and the pass condition are computed in the runner, never asserted by the scoring
   agent. Answers live in `tests/expected.json`, deliberately outside the fixtures. Paths resolve relative
   to the repo root; pass `args: {repo: "<path>"}` to run it against a checkout elsewhere.

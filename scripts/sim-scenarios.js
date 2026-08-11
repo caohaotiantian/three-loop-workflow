@@ -73,7 +73,7 @@ const CASES = [
     input: { fixtures: F, answers: { 's01.md': { off: 'A', on: 'A' }, 's04.md': { off: 'A', on: 'B' } },
              rows: { rows: [row('s01.md', 'guard', 'A', 'A', 'A'), row('s04.md', 'discriminating', 'B', 'A', 'B')] } },
     expect: r => all(eq(r.res.rows[0].verdict, 'GUARD-HELD'), eq(r.res.rows[0].discriminates, false),
-      eq(r.res.suite_pass, true, 'six of seven fixtures are guards; both arms passing one is the expected result')) },
+      eq(r.res.suite_pass, true, 'ten of eleven fixtures are guards; both arms passing one is the expected result')) },
 
   { name: 'a DISCRIMINATING fixture both arms answer correctly fails the suite',
     input: { fixtures: F, answers: { 's01.md': { off: 'A', on: 'A' }, 's04.md': { off: 'B', on: 'B' } },

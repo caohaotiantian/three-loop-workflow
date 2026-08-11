@@ -188,7 +188,7 @@ The skill never hard-codes a filename. It reads `AGENTS.md`, `CLAUDE.md`, or bot
 │       ├── phase.js                  The Build loop as a deterministic Workflow script
 │       └── check-workflow-syntax.sh  Parses a Workflow script (node --check cannot)
 ├── tests/                            Two-arm behavioral suite: every fixture runs with the skill
-│                                     loaded AND withheld. Six of seven fixtures are regression
+│                                     loaded AND withheld. Ten of eleven fixtures are regression
 │                                     guards; a *discriminating* fixture both arms pass is INVALID
 ├── docs/
 │   ├── announcement-v2.0.0.md        Release announcement
@@ -213,7 +213,7 @@ If you change the discipline itself, run the two-arm suite:
 Workflow({ scriptPath: "tests/run-scenarios.js" })
 ```
 
-Each fixture declares its kind. A **discriminating** fixture both arms answer correctly is reported INVALID rather than green — it proves the rule is not carrying weight. A **guard** exists to catch the skill making a decision the model already gets right *worse*, so both arms answering it correctly is a pass; the serious result there is `GUARD-BROKEN`. Six of the seven current fixtures are guards, which the suite reports rather than hides. Read `tests/README.md` before writing one; most of the ways to write a scenario produce a test of reading comprehension instead of a test of the skill.
+Each fixture declares its kind. A **discriminating** fixture both arms answer correctly is reported INVALID rather than green — it proves the rule is not carrying weight. A **guard** exists to catch the skill making a decision the model already gets right *worse*, so both arms answering it correctly is a pass; the serious result there is `GUARD-BROKEN`. Ten of the eleven current fixtures are guards, which the suite reports rather than hides. Read `tests/README.md` before writing one; most of the ways to write a scenario produce a test of reading comprehension instead of a test of the skill.
 
 ## License
 
