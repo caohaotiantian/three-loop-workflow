@@ -2,6 +2,136 @@
 
 Full version history for the three-loop-workflow skill. See [README.md](./README.md) for what the skill is, when it applies, and how to install it.
 
+## v2.5.0 — verify the product, not only the diff
+
+An external audit of v2.4.0 arrived from two directions and reached the same verdict from both: the
+skeleton is right, and the centre of gravity is wrong. Everything this skill did well validated
+*execution* — a plan, gates, a fresh reviewer, triage, closure arithmetic. Almost nothing validated
+*specification*. The expensive failure in agent-assisted work is not an unreviewed five-line fix; it is
+a justified, reviewed, green implementation of the wrong thing, and every mechanism here pointed away
+from it.
+
+**Acceptance now has two halves.** A command whose exit code decides success, as before — and, whenever
+a person will click, type or call the thing being built, the observable outcome: what they should be
+able to do afterwards, written so someone who has not read the code can go and do it. An exit code says
+the assertions the author wrote hold. It cannot say the job can be done. Plans that are all first half
+are how a change ships green and useless, and the second half is what `build.md`'s behavior check drives.
+
+**The behavior check stopped being overhead and became part of closing.** It existed in v2.4.0, at
+section twelve of thirteen in `build.md`, after the round cap, named once on the always-loaded surface
+in a list of things that cost extra — and absent from the scripted loop entirely. It now sits beside the
+review, on the same green build, and the termination rule names it: a change closes when the confirmed
+blocking count is zero, the gates are green, **and** someone who did not write it has driven the path
+Accept described. A check that could not be run is not a check that passed.
+
+**Reviewers are now asked about what is likely to be wrong.** Three of the four directed questions were
+scope bookkeeping, which aimed the one mechanism that catches defects at the class least likely to hold
+them. The list now opens with the inputs the change does not expect, then hostile input where the diff
+touches untrusted data or access control, then whether existing tests were weakened — and asks whether
+the *plan* is wrong, because a diff that conforms to a wrong plan passes every other question. The order
+is part of the rule: a directed question dominates a reviewer's attention and the top of the list gets
+most of it.
+
+**Security had no coverage at all, and now has the two cheapest kinds.** A change to who can reach what
+is never Direct, whatever its size; the reviewer is asked, in the prompt already being sent, what a
+hostile input can make the change do; and where a runtime ships a purpose-built reviewer, `build.md`
+says to run it in addition to the review rather than instead of it, with its findings still going
+through your triage. What was rejected was a section of advice about being careful, which changes no
+outcome and costs tokens on every read.
+
+### The defects, each reproduced before it was fixed
+
+`scripts/phase.js` read `all_pass` for truthiness. A gates agent that returned the string `"false"` —
+which is truthy — **closed a red build green**, dispatching a reviewer on a build that had already
+failed. It is now an identity test, and every list the script reads goes through a normaliser, because
+a schema is a request and what comes back is JSON a model typed.
+
+`scripts/check-workflow-syntax.sh` was wrong in both forbidden directions at once. It passed a script
+whose only `export const meta` sat inside a block comment, passed a banned primitive hidden after a `//`
+inside a string literal, passed the same primitive split across a line break, passed a bare `new Date`
+and a `Date.now` taken as a value — and **rejected a correct script** for naming a primitive inside
+prompt text, which is what `phase.js` is mostly made of. It now masks comments and literal text with a
+hand-written lexer, and then re-parses the masked copy as an oracle: blanking only the *contents* of a
+literal leaves source that still parses, so a masked copy that does not parse proves the mask lost its
+place. That oracle immediately caught the lexer reading `return /^…/` as a division and corrupting the
+shipped `phase.js` — which had been returning the right verdict by luck.
+
+The `tasks` guard tested truthiness, so an array of task objects stringified to `[object Object]`,
+passed, and dispatched a writer whose entire task list was that literal: the run that looks complete and
+implemented nothing, which is the sentence in the guard's own rejection message. `acceptCmds: [""]`
+satisfied "a phase with no runnable acceptance cannot close".
+
+Triage returned the confirmed findings as text, and whatever it returned became the Fix agent's work
+list — an agent with write access and no output schema. Confirmation is now a selection of **numbers**
+from the list it was given, so a paraphrase, a merge or an invention is unrepresentable rather than
+merely discouraged; a triage that ruled on nothing is an error, and findings nobody ruled on stop the
+phase instead of closing it.
+
+**There was a complete path to a false green through test weakening**, on a failure mode the skill names
+and forbids in exactly one place: the prompt sent to the only agent with an incentive to do it. A fix
+round could remove an assertion, gates would report green, and nothing compared the tally to the round
+before. The gates step now reports typed counts and the script does arithmetic on them across rounds; a
+suite that shrinks, or starts skipping, or stops being countable at all, raises a finding that goes
+through triage like any other — because deleting an obsolete test is legitimate work and a hard failure
+would be unusable. Where no round ever reported a tally, the result says the check never ran, rather
+than letting a silent absence read as a clean one.
+
+### Breaking, for callers driving the script
+
+**`behaviorCheck` is a required argument**, and `false` is how you declare that nothing this phase
+builds is user-visible. Optional was wrong for the same reason a defaulting reviewer count was wrong: a
+stage that silently does not run is the defect, and recording the omission in the result is one reader
+too late. Passing a description dispatches a fresh agent that drives the path beside the reviewers, at
+no wall-clock cost; what it observes that contradicts the plan becomes a finding, and a check that was
+asked for and could not be run returns `behavior-unverified` rather than closing.
+
+An explicit `reviewers` count now **wins** over what `depth` implies, instead of being an error. That is
+not the defect the old guard was built for — that was an argument silently defaulting — and the case it
+exists for is real: the measurement behind "two" was taken on plans, so on a reversible phase's diff the
+second reviewer is a choice rather than a result. The override is logged and the result reports both.
+
+### Depth, and the thing the checklist was suppressing
+
+The gate asked how much breaks and how hard it is to undo. Both are questions about the repository, and
+a change that is one commit to revert can still be unrecoverable for whoever already consumed it — so
+where the change is user-facing there is now a third: who relies on today's behavior, and how would they
+find out it changed. The Deep triggers moved out of a table cell and into a checklist, one of them
+generalised from "a migration" to any irreversible effect outside this repository, and the trigger list
+now says plainly that three of the four can be ticked by reading and the fourth is a judgement. A worked
+example follows, because the first and most consequential act in the whole workflow was the only
+judgement in the skill with nothing shown: the same feature graded three ways, and the nouns in the
+request predicting none of them.
+
+### Anti-bloat binds every prose surface now, not one file
+
+Only `SKILL.md` had a size backstop, so the reference set beside it — eight times larger, and the thing
+a Standard change actually loads — was held by nothing. During this very audit it grew by a sixth while
+the always-loaded file stayed green. `accept-release.sh` now carries a backstop for every prose file and
+one for their total, and prints each count. The objection to raising `SKILL.md`'s own number in the same
+pass that grew it is recorded in the gate beside the number, because it is a fair objection and the
+answer to it is not obvious: the additions are rules rather than prose, each argued for individually,
+and the old number had itself caused a defect — the rewrite that stripped the two-reviewer figures to
+fit under it left a paraphrase that misstated them in both directions. Shaving synonyms to land under a
+backstop is that same behaviour, and is now named as not being an answer.
+
+### Contradictions the whole-artifact read found
+
+Close's rule that a reader should meet the finished files with no diff and no change context earned its
+place again. Reviewing this release as a product rather than as a diff turned up, among others, an
+instruction to re-capture `baseSha` after amending that was simply **wrong** — an amend rewrites HEAD,
+not HEAD's parent, so the base is untouched and re-capturing it would hand the reviewer an empty diff —
+a reference documenting a reviewer prompt the script did not send, a driver snippet using the construct
+the comment above it forbade, a claim about `SKILL.md` that a grep falsified at the moment it was
+written, and a section telling you to skip the product read on exactly the kind of change that most
+needs it. None of those is visible in a diff. All of them are visible to someone reading the result.
+
+### What is still not measured
+
+Nothing here establishes that this skill improves an output. Its mechanisms match what the published
+guidance recommends, and the defects above were demonstrated rather than argued — but *does this pay for
+itself* still has a well-argued answer and not a measured one. The instrument for it exists and was not
+run. Saying so is cheaper than implying otherwise.
+
 ## v2.4.0 — the guide gets a way back
 
 Every change this skill runs begins by reading the project guide. Nothing in it has ever said what
