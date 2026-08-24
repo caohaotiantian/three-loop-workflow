@@ -112,21 +112,21 @@ apply "M11 the implementer's self-assessment re-injected into the review prompt"
   's = s.replace("      `\\nDo not modify code.`", "      (concerns.length ? `\\nThe implementer flagged low confidence in: ${concerns.join(\x27; \x27)} — look there first.\\n` : \x27\x27) +\n      `\\nDo not modify code.`")'
 
 apply "M12 depth no longer decides the reviewer count" \
-  's = s.replace("const reviewers = depth !== undefined ? (depth === \x27deep\x27 ? 2 : 1) : legacyReviewers", "const reviewers = 1")'
+  's = s.replace("const reviewers = legacyReviewers !== undefined ? legacyReviewers : (depth === \x27deep\x27 ? 2 : 1)", "const reviewers = 1")'
 
 # Found by a reviewer, who demonstrated that the union invariant passed under this mutation because the
 # assertion looked for the single letter "y", which occurs in the static triage prompt prose.
 apply "M16 the second reviewer's findings dropped entirely (not intersected — discarded)" \
-  's = s.replace("const reported = [...new Set(verdicts.flatMap(v => v.blocking || []))]", "const reported = [...new Set(verdicts[0].blocking || [])]")'
+  's = s.replace("      ...verdicts.flatMap(v => list(v.blocking)),", "      ...list(verdicts[0].blocking),")'
 
 apply "M13 non-blocking findings recomputed per round instead of accumulated" \
-  's = s.replace("    verdicts.flatMap(v => v.nonblocking || []).forEach(n => nonblockingSeen.add(n))", "    nonblockingSeen.clear(); verdicts.flatMap(v => v.nonblocking || []).forEach(n => nonblockingSeen.add(n))")'
+  's = s.replace("    verdicts.flatMap(v => list(v.nonblocking)).forEach(n => nonblockingSeen.add(n))", "    nonblockingSeen.clear(); verdicts.flatMap(v => list(v.nonblocking)).forEach(n => nonblockingSeen.add(n))")'
 
 apply "M14 a dead fix agent silently consumes a round" \
   's = s.replace("  if (!fixed) {", "  if (false) {")'
 
 apply "M15 the triage record is dropped instead of returned" \
-  's = s.replace("        rejected: rejectedSeen,\n        concerns,", "        rejected: [],\n        concerns,")'
+  's = s.replace("        rejected: rejectedSeen,\n        untriaged,", "        rejected: [],\n        untriaged,")'
 
 apply "M4 cap fires on the round about to run, not on fixes spent" \
   's = s.replace("if (fixes >= maxRounds) {", "if (round === maxRounds) {")'
@@ -147,10 +147,10 @@ apply "M17 the structural bound removed AND the fix counter broken (must not run
   's = s.replace("while (verifyRound <= maxRounds + 1) {", "while (true) {").replace("\n  fixes++\n", "\n")'
 
 apply "M6 reviewer findings intersected instead of unioned" \
-  's = s.replace("const reported = [...new Set(verdicts.flatMap(v => v.blocking || []))]", "const reported = (verdicts[0].blocking || []).filter(b => verdicts.every(v => (v.blocking || []).includes(b)))")'
+  's = s.replace("      ...verdicts.flatMap(v => list(v.blocking)),", "      ...list(verdicts[0].blocking).filter(b => verdicts.every(v => list(v.blocking).includes(b))),")'
 
 apply "M7 closure computed on the raw count, before triage" \
-  's = s.replace("      blocking = triage.confirmed || []", "      blocking = reported")'
+  's = s.replace("      blocking = reported.filter((_, i) => confirmedIdx.has(i + 1))", "      blocking = reported")'
 
 apply "M8 a dead reviewer treated as a pass" \
   's = s.replace("if (verdicts.length < reviewers) {", "if (false) {")'
@@ -162,6 +162,107 @@ apply "M8 a dead reviewer treated as a pass" \
 apply "M20 the acceptCmds shape guard reverted, so a non-array reaches .map" \
   's = s.replace("if (!Array.isArray(acceptCmds))", "if (false \x26\x26 !Array.isArray(acceptCmds))")' \
   'Array.isArray(acceptCmds)'
+
+echo
+echo "== mutation test: the guards added after the 2026-08-24 audit =="
+
+# The `tasks` guard was shape-blind: an array of task objects stringifies to "[object Object]", passed
+# `!String(tasks).trim()`, and the Write agent was dispatched with that as its whole task list. The
+# mutation restores the original test, so the old wording of the rule survives verbatim in the source.
+apply "M31 the task-list guard reverts to a truthiness test" \
+  's = s.replace("const taskText = taskList(tasks)", "const taskText = (!tasks || !String(tasks).trim()) ? null : String(tasks)")'
+
+apply "M32 acceptCmds entries are no longer required to be runnable" \
+  's = s.replace("if (acceptCmds.some(c => typeof c !== \x27string\x27 || !c.trim()))", "if (false)")' \
+  'a phase with no runnable acceptance cannot close'
+
+# Whatever triage confirms becomes the Fix agent's work list, and that agent has write access and no
+# output schema. Selecting by index is what makes an invented finding unrepresentable.
+apply "M33 triage confirmations are trusted without checking they name a reported finding" \
+  's = s.replace("      const confirmedIdx = new Set((triage.confirmed || []).filter(inRange))", "      const confirmedIdx = new Set(triage.confirmed || [])").replace("      blocking = reported.filter((_, i) => confirmedIdx.has(i + 1))", "      blocking = (triage.confirmed || []).map(n => reported[n - 1] || String(n))")'
+
+apply "M34 a triage that ruled on nothing closes the phase" \
+  's = s.replace("      if (!ruled.size) {", "      if (false) {")'
+
+apply "M35 findings nobody ruled on are dropped instead of returned" \
+  's = s.replace("        untriaged: unruled,", "        untriaged: [],")'
+
+# Reaching green by deleting an assertion or adding a skip moves HEAD and exits 0, so every other guard
+# in the file is satisfied. The tally is the only thing that moves.
+apply "M36 the suite-shrink check is disabled (a fix round may delete its way to green)" \
+  's = s.replace("    if (peakExecuted >= 0 && total < peakExecuted) {", "    if (false) {")' \
+  'Reaching green by deleting a test'
+
+apply "M46 a tally that vanishes between rounds silently disables the suite-shrink check" \
+  's = s.replace("  if (!tally && peakExecuted >= 0) {", "  if (false) {")'
+
+apply "M57 the tally is used without coercion, so a string tally concatenates past the shrink check" \
+  's = s.replace("    ? { passed: num(rawTally.passed), failed: num(rawTally.failed), skipped: num(rawTally.skipped) }", "    ? rawTally")'
+
+apply "M58 a phase whose gates never counted tests reports the check as though it ran" \
+  's = s.replace("  if (!tally && peakExecuted < 0) tallyEverCounted = false", "  void 0")'
+
+apply "M37 the new-skip check is disabled" \
+  's = s.replace("    if (leastSkipped >= 0 && skipped > leastSkipped) {", "    if (false) {")'
+
+apply "M38 the suite findings are computed and then not reported" \
+  's = s.replace("      ...suiteFindings,", "")'
+
+# A behavior check that was asked for and did not run is not a behavior check that passed.
+apply "M39 an unrunnable behavior check is downgraded to a note and the phase closes" \
+  's = s.replace("      if (!observation.ran) {", "      if (false) {")'
+
+apply "M40 observed mismatches are collected and then dropped before triage" \
+  's = s.replace("      ...behaviorFindings,", "")'
+
+apply "M41 the review prompt loses the questions about correctness, security and test integrity" \
+  's = s.replace("      questions +", "      `Check specifically:\\n- Does every changed line trace to the Goal?\\n` +")'
+
+apply "M45 an explicit reviewers count is ignored in favour of what depth implies" \
+  's = s.replace("const reviewers = legacyReviewers !== undefined ? legacyReviewers : (depth === \x27deep\x27 ? 2 : 1)", "const reviewers = depth !== undefined ? (depth === \x27deep\x27 ? 2 : 1) : legacyReviewers")'
+
+apply "M47 a phase closes on findings triage never ruled on" \
+  's = s.replace("      if (unruled.length) {", "      if (false) {")'
+
+apply "M48 an unrunnable behavior check discards the review round that ran beside it" \
+  's = s.replace("          reviewFindings: [...new Set(verdicts.flatMap(v => list(v.blocking)))],", "          reviewFindings: [],")'
+
+apply "M49 the branch is trusted after the write step and never re-checked" \
+  's = s.replace("  if (gates.branch !== undefined && gateBranch && gateBranch !== branch) {", "  if (false) {")'
+
+apply "M50 agent-supplied lists are indexed into without being normalised" \
+  's = s.replace("  const failures = green ? review.blocking : list(gates.failures)", "  const failures = green ? review.blocking : gates.failures")'
+
+apply "M51 a newline in a caller string reaches the prompt as its own instruction" \
+  's = s.replace("if (acceptCmds.some(c => !oneLine(c)))", "if (false)")' \
+  'becomes an extra instruction'
+
+apply "M52 the reviewer fan-out has no upper bound" \
+  's = s.replace("if (reviewers > 4)", "if (false)")'
+
+apply "M53 all_pass is read for truthiness, so a red build reported as the string false closes green" \
+  's = s.replace("  const green = gates.all_pass === true", "  const green = gates.all_pass")'
+
+apply "M56 behaviorCheck becomes optional again, so the step can be skipped by omission" \
+  's = s.replace("if (behaviorCheck === undefined) {", "if (false) {")'
+
+apply "M54 a phase that ran no behavior check reports nothing about it" \
+  's = s.replace("{ ran: false, reason: \x27behaviorCheck was false: this phase closed on gates and review alone\x27 }", "null")'
+
+apply "M43 exhaustedBy reports 'mixed' again when no fix round was ever spent" \
+  's = s.replace("exhaustedBy: fixes === 0 ? \x27none\x27 : gateFixes", "exhaustedBy: gateFixes")'
+
+apply "M44 the reviewer is asked a question it cannot answer from the diff and the plan" \
+  's = s.replace("that makes it pass. A test that passes with the change reverted is testing nothing.", "did that test ever fail?")'
+
+apply "M55 the reviewer is no longer asked whether the plan itself is wrong" \
+  's = s.replace("      `- Does the PLAN look wrong", "      `- SKIPPED (")'
+
+apply "M59 reviewer 2 loses the history read that build.md documents the script as sending" \
+  's = s.replace("run \\`git log -p -20\\` on the paths it touches and read how the code got here. ", "")'
+
+apply "M42 both Deep reviewers are sent the identical prompt again" \
+  's = s.replace("reviewPrompt + (reviewers > 1 ? emphasis[i % emphasis.length] : \x27\x27)", "reviewPrompt")'
 
 echo
 echo "== mutation test: the survivors the 2026-08-11 audit found =="

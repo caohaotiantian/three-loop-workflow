@@ -34,6 +34,14 @@ The user should be able to answer "B, because of Y" in ten seconds. If your ques
 
 Batch related questions into one round rather than interrogating one at a time — `AskUserQuestion` takes up to four.
 
+## When the user says the depth grade is too heavy
+
+They are usually right about the ceremony and rarely right about the checks, so separate the two before you answer.
+
+**Cut the ceremony without asking.** Phases collapse to one. Close becomes three questions instead of a pass. Alternatives get a sentence rather than a section. The plan becomes six lines rather than a page — but it keeps every field, because Non-goals and Decisions are two of the three lines, and they are what stops the change growing while you cut its ceremony. None of that is what the depth was for.
+
+**Do not quietly cut the two things that are.** Gates before any reviewer, and a reviewer who did not write the change: those are what the grade actually bought, and dropping them silently converts a disagreement about cost into a change nobody independent has read. If they are asked for anyway, say what stops being true — "then nothing independent has read this, and green means only that the tests the author wrote pass" — do it if they still want it, and record in the plan that it was their call. That is a decision, and decisions get written down like any other.
+
 ## Record the answer
 
 - Changes the Goal, a Decision, or Accept → the task's `.agent/<task>/plan.md`.
@@ -47,13 +55,9 @@ Three rounds without clearing blocking issues is a structural signal, not permis
 
 **On a document-shaped change, arriving here is the ordinary exit, not the failure path.** Where the
 artifact under review is prose — a reference, a contract file, a specification — a phase that never
-reaches zero is common, and it has usually been doing real work the whole way. Measured on this
-repository's own reference material — one document, a handful of runs — with the cap deliberately
-lifted so that convergence above three could be seen at all; the figures and their limits are published
-outside the skill. Two things follow.
-Spend the report on *why* rather than on whether the cap should have been higher — the same measurement
-found the confirmed count was not falling, and more rounds of a count that is not falling buy nothing.
-And do not read reaching the cap as a verdict on the author.
+reaches zero is common, and it has usually been doing real work the whole way. Spend the report on
+*why* rather than on whether the cap should have been higher: if the confirmed count is not falling,
+more rounds of it buy nothing. And do not read reaching the cap as a verdict on the author.
 
 Report:
 
@@ -69,19 +73,16 @@ reviewer ever ran, and the escalation is about the build.
 
 Then offer: **(a)** revise the plan to remove the conflict — the default when a *different* item failed each round, or when scope grew for a reason the fix step did not create, because that pattern means the defect is in the plan, not the code; **(b)** accept a documented compromise with the risk written down; **(c)** drop it from scope and file a follow-up; **(d)** split — keep the correction, and raise the machinery the fix rounds added as its own work with its own review.
 
-**Before you recommend (a), check whether the fix step is what grew the change.** A fix round that adds a check, a
-harness or a guard has started a second change inside the first, and the next round reviews *that*: the
-confirmed count stops falling while the diff keeps growing, and every round is honest work on something
-the plan never scoped. On the runs measured here it was the commonest way a document-shaped change
-reached this section, and the runs that avoided it were the ones whose fix step added nothing. Expect it
-wherever your project asks for a failing case before a new check — that norm is what turns a repair into
-a second change. Where it does not, this pattern is rarer and (a) is the better first guess. The remedy is not to remove a contradiction, because there may not be one — it is **(d)**.
-Adding the gate can be right; deciding to add it mid-fix is not.
+**Before you recommend (a), check whether the fix step is what grew the change** (`build.md`, Fix). A
+fix round that added a check, a harness or a guard started a second change inside the first, and the
+next round reviews *that*: the confirmed count stops falling while the diff grows, on a plan that may
+be perfectly sound. Expect it wherever your project asks for a failing case before a new check — that
+norm is what turns a repair into a second change. Where that is the cause, the remedy is **(d)** and
+not (a): there may be no contradiction to remove. Adding the gate can be right; deciding to add it
+mid-fix is not.
 
-Look hardest at what the new check is trying to hold. A pattern can hold *prose* — the presence of a
-sentence is the property you want. It cannot hold a *claim*: no pattern separates "the script detects X"
-from "the script does not detect X" without also rejecting the true sentences a writer is entitled to
-make about X. A fix round that sets out to write one will not finish, and the cap will fire on it.
+Look hardest at what the new check is trying to hold: a pattern can hold *prose*, never a *claim*
+(`build.md`, Gates). A fix round that sets out to write one will not finish, and the cap fires on it.
 
 Never a silent round four.
 
@@ -91,16 +92,9 @@ If `AskUserQuestion` is not available, write the question in your normal output 
 
 Work already in flight is discarded rather than waited on — it was produced under an assumption the user is about to overturn.
 
-## Excuses worth recognizing
+## The shape all five excuses share
 
-Five that reliably precede a bad outcome, and what to do instead:
+"This decision has an obvious winner." "The dev summary says it's done." "Quick patch now, find the
+cause later." "The first theory that fits is the cause." "It only fails sometimes — I'll retry it."
 
-| The thought | Instead |
-|---|---|
-| "This decision has an obvious winner" | If you are arguing the point, it is a real decision. Name both options and pick with reasons. |
-| "The dev summary says it's done" | Read the diff. The summary is the thing under review, not evidence about it. |
-| "Quick patch now, find the cause later" | Name the cause first. A symptom fix spends a round and forces another one anyway. |
-| "The first theory that fits is the cause" | Rank 3–5 falsifiable hypotheses and find the observation that separates them. |
-| "The test only fails sometimes — I'll retry it" | That is a flake. Say so, leave the test alone, raise it separately. |
-
-The pattern underneath all five: each converts a question into an assumption to save a step. The step was the point.
+Each converts a question into an assumption to save a step. The step was the point.

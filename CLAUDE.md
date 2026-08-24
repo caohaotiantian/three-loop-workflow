@@ -9,8 +9,10 @@
 
 This repo distributes the **three-loop-workflow** Claude skill, shipped from `three-loop-workflow/`.
 
-**v2.4.0 is current** — `sed -n 's/^  version: "\(.*\)"/\1/p' three-loop-workflow/SKILL.md` is the
-authority, and `accept-release.sh` fails unless it equals the newest `CHANGELOG.md` heading. The v2 line
+**The current version is whatever `sed -n 's/^  version: "\(.*\)"/\1/p' three-loop-workflow/SKILL.md`
+prints** — that is the authority, and `accept-release.sh` fails unless it equals the newest
+`CHANGELOG.md` heading. Do not copy the number here; this file's own maintenance rule is to record the
+command rather than what it prints, and the line that used to name a version went stale twice. The v2 line
 is a ground-up rewrite, not an increment: v1's L1/L2/L3/F loops, Full/Light/None
 tiers, five-voter panel, committed per-task document archive, and `check-consistency.sh` are all gone.
 v1.14.0 remains at tag `v1.14.0` for anyone who needs it. `docs/why-v2.md` is the full account of what
@@ -188,20 +190,20 @@ pairs quotes a recomputed figure a different number of times; the fifth pair is 
 - **Do not claim a script does something without testing that it does.** A v2 draft once shipped a claim
   that a bundled script rejected AI attribution in commit messages; the script contained no such check, and
   nobody had run it. State what you ran, not what you intended.
-- Anti-bloat binds the always-loaded `SKILL.md` surface — push detail into references. Review is the
-  mechanism, not a ceiling: v1 reached 2,915 words under a numeric cap, which is why the cap is not the
-  mechanism. `accept-release.sh` fails above **1,500** words, and that is a backstop against silent drift
-  set above the reviewed size, not a budget to spend. Do not quote the current count here — it is one
-  line of the gate's own output (`bash scripts/accept-release.sh | grep 'SKILL.md is'`), and a copy in
-  prose goes stale the first time the file is edited. What matters is the rule: the slack under the
-  backstop is
-  not an allowance, and an addition that does not displace something has to argue for itself in review.
-  v2.4.0 is the worked example, and it is an honest one rather than a flattering one: it added a routing
-  row, a `description` clause **and** ten words to §2, displacing nothing — the §2 rewrite generalises a
-  rule that named one artifact, which is why the addition was accepted, but it did not pay for itself in
-  words. Rules live here; the measurements behind them live in the references,
-  because a statistic on the always-loaded surface costs tokens on every activation, changes no behavior,
-  and drifts.
+- **Anti-bloat binds every prose surface, not only the always-loaded one.** Push detail into references,
+  but a reference is not free either: `accept-release.sh` now carries a per-file backstop for
+  `SKILL.md` and each of the seven references, plus one on their total, and prints each count. Before
+  2026-08-24 only `SKILL.md` had one, so the set beside it — eight times larger — was held by nothing,
+  and it grew 18% in a single pass. Review is the mechanism, not the number: v1 reached 2,915 words
+  under a numeric cap, which is why the cap is not the mechanism. Each backstop is set above the
+  reviewed size as a guard against drift nobody looked at, and the slack under it is not an allowance —
+  an addition that displaces nothing has to argue for itself in review. Do not quote a current count
+  here; it is one line of the gate's own output (`bash scripts/accept-release.sh | grep backstop`), and
+  a copy in prose goes stale the first time a file is edited. Two things are NOT answers to a red
+  backstop: shaving synonyms to land under it, which is how the drifted two-reviewer paraphrase was
+  produced, and raising it in the same commit as the growth. Re-review, then move the number in its own
+  commit with the reason written into the gate beside it — as the 1500 → 2300 raise on 2026-08-24 does,
+  including the objection to making it.
 - Workflow scripts are plain JavaScript — no TypeScript, no `Date.now()`, no `Math.random()`, no argless
   `new Date()`. `check-workflow-syntax.sh` now fails on all four and on a missing `export const meta`;
   `node --check` cannot gate these files at all. It checks nothing about the logic — that is what the
@@ -225,6 +227,11 @@ pairs quotes a recomputed figure a different number of times; the fifth pair is 
   invariant alone has been broken twice, and every regression this repo has shipped passed a gate that
   read the code instead of running it. Add the failing invariant to the harness before the fix, and watch
   it fail.
+- **A rule has one home.** A second file may point at it by name; it may not restate it. Two copies of a
+  rule are two things to keep in sync, and the drift is silent — the shipped two-reviewer justification
+  said "cut the misses by roughly half" for months against a record that said two-thirds, because the
+  sentence had been rewritten in one of its two homes. `SKILL.md` wins every tie: it is always loaded,
+  so a reference restating it is pure duplication.
 - Commit messages: conventional prefixes, no mention of AI involvement, model names, or tooling.
 - Do not add new CLAUDE.md roles without updating the anchor map above and every downstream file that reads
   those roles.

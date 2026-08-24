@@ -40,12 +40,10 @@ If the change's output is something a person will read or run as a whole — a d
 help, a config schema, a public API surface — one reviewer reads the **finished files**, with no diff
 and no change context, the way a new user meets them.
 
-This catches a different class of defect from diff review, and it is not a nice-to-have: on this
-skill's own release, round after round of diff review left the most serious defect in the release
-standing, and readers handed the finished files with no change context found it at once. A diff
-reviewer checks whether each line is justified. Only a reader of the whole thing notices that two
-sections now contradict each other, that a documented step cannot actually be performed, or that a
-claim survives in one file after being corrected in another.
+A diff reviewer checks whether each line is justified. Only a reader of the whole thing notices that
+two sections now contradict each other, that a documented step cannot actually be performed, or that a
+claim survives in one file after being corrected in another. That is a different defect class, and
+rounds of diff review do not reach it.
 
 Ask: does this read as one coherent thing? Is anything stated here that the code does not do? Could
 someone follow these instructions and fail?

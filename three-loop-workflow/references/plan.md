@@ -1,12 +1,25 @@
 # Plan
 
+**Understand the request → understand the code → write the fields → review it (Deep) → build.**
+Also here: facts vs. decisions · claims need their source · spikes · conflicts.
+
 Goal: the task's `.agent/<task>/plan.md` should let a fresh agent finish the work using only that file plus the repo. No session context required.
 
 One directory per task — see `SKILL.md` §2. Everything this task needs that is not source code goes in that directory, so a second task running beside it cannot overwrite any of it.
 
+**Gitignored means unprotected.** `git clean -xfd` deletes `.agent/` along with the build output, a fresh `git worktree add` does not contain it, and a clone never had it. If the plan is gone, do not reconstruct it from the diff — that recovers what you did, not what you meant. Say it is gone, re-derive the base from `git log` (`close.md` has the traps), and get the Goal re-confirmed before continuing.
+
 Write it, then start building. It is working state — keep it short and edit it as you learn.
 
-## Understand first (when the change touches existing code)
+## Understand the request first
+
+Before anything else, write one sentence saying what the user will be able to do that they cannot do now. If you cannot, you do not have a Goal yet — you have a topic.
+
+Then look for the second reading. Most requests admit more than one, and the expensive failure in agent-assisted work is not a defect in the diff: it is a well-built, well-reviewed, green implementation of the wrong thing. Two readings that lead to *different work* is a decision, and decisions get escalated (`SKILL.md` §5) — before the plan, not after the build. Two readings that converge on the same work cost nothing to notice.
+
+Say which reading you took, in the Goal. A reader who disagrees can then say so in one line; a Goal that hides the choice gives them nothing to disagree with.
+
+## Understand the code (when the change touches existing code)
 
 Design quality is bounded by understanding quality. Before writing the plan, map what you are about to touch: the current invariants, the immediate callers of the code you will change, and the closest existing pattern to follow.
 
@@ -24,11 +37,66 @@ For anything spanning more than one module, delegate this to read-only **Explore
 
 At **Deep** depth, record alternatives *before* choosing, not as post-hoc justification.
 
-**Accept.** A command with an exit code. `pytest tests/rate_limit -x`, `npm run typecheck`, `curl -sf localhost:8080/health`. If you cannot express success as a command, say so explicitly in the plan and name what a human must look at instead — but try hard first, because "I'll check it works" is how regressions ship.
+**Accept.** Two halves, and most plans only write the first.
+
+*The command* — one with an exit code. `pytest tests/rate_limit -x`, `npm run typecheck`, `curl -sf localhost:8080/health`. If you cannot express success as a command, say so explicitly and name what a human must look at instead — but try hard first, because "I'll check it works" is how regressions ship.
+
+*The observable outcome* — **whenever a person will click, type or call this**, what they should be able to do afterwards, written so someone who has not read the code can go and do it. "Send 61 requests in a minute; the 61st returns 429 with a `Retry-After` header, and the counter resets on the next window." That sentence is what `build.md`'s behavior check drives, and it is the half that catches building the wrong thing. An exit code says the assertions the author wrote hold. It cannot say the job can be completed.
+
+Write both, or say which one does not apply and why. A refactor has no second half; a feature almost always does.
 
 **Phases** *(Deep only).* Split by what can be independently verified, not by file. Each phase gets its own Accept command and lands as its own commit.
 
 **Rollback** *(Deep only).* How to undo this if it goes wrong in production. If you cannot describe the rollback, you do not yet understand the change.
+
+**baseSha.** The one line of bookkeeping the plan carries: `git rev-parse HEAD` from before you edited anything. The review's first tool call is a diff against it, and after a compaction this file is all a fresh agent has. At Deep depth keep the phase-1 value here as well as the live one — Close needs it (`close.md`).
+
+## What one looks like
+
+A Standard change, complete. It is short because it is working state, not a deliverable — and every
+line in it is load-bearing for either the build or the review.
+
+Standard, not Deep, and the reason is worth stating because the nouns look Deep: the endpoint is public,
+but nothing existing callers rely on changes. Adding a response header is not a new rejection, a new
+error code or a new limit. Ship the limiter that *enforces* those headers and box 1 fires.
+
+```markdown
+# Rate-limit headers on the public API
+
+baseSha: 4f2a9c1e8b3d5a7f0c2e6b9d1a4f7c3e5b8d0a2f
+
+## Goal
+Callers can see how much quota they have left without waiting for a 429. Every /v1/*
+response carries X-RateLimit-Limit, -Remaining and -Reset.
+(Read as: headers on every response. The other reading — headers only on the 429 —
+would be a smaller change; asked, and the user confirmed every response.)
+
+## Non-goals
+- Not changing the limits themselves, or where they are configured.
+- Not adding per-endpoint limits. Tempting while I am in here; separate task.
+- Not touching the internal /admin routes.
+
+## Decisions
+- Where the headers are written.
+  Options: (a) in the rate-limit middleware, which already holds the bucket state;
+  (b) in a response filter that re-reads the bucket.
+  Chose (a) — (b) reads Redis a second time per request, and the middleware already
+  has the numbers in hand. See middleware/ratelimit.go:82, where the remaining count
+  is already computed for the 429 path.
+- Reset as a unix timestamp, not seconds-remaining. Matches what our other public
+  API already emits (api/quota.go:41), and the draft IETF header spec allows both.
+
+## Accept
+- Command: `go test ./middleware/... -run RateLimit -count=1` and `make lint`
+  (checked that `-run RateLimit` selects 4 tests, not 0 — a filter that matches nothing exits 0)
+- Observable: start the server, `curl -i localhost:8080/v1/things` — the response
+  carries all three headers, Remaining decrements on each call, and the 61st call in
+  a minute returns 429 with Retry-After and Remaining: 0.
+```
+
+Things to notice: the Goal names the reading it took, so the user can overturn it in one line. Both
+Non-goals are things the author actually wanted to do. Each Decision has a loser and a reason, and
+the claims about existing behavior carry a `file:line`. Accept has both halves.
 
 ## Facts vs. decisions
 
@@ -56,7 +124,7 @@ A spike is bounded by three rules:
 
 ## Reviewing the plan
 
-At **Deep** depth, spawn **two fresh subagents in parallel** to read the plan before you build. Give each the plan and the relevant code, independently, with the same prompt. Take the union of their findings.
+At **Deep** depth, spawn **two fresh subagents in parallel** to read the plan before you build. Give each the plan and the relevant code, independently, with the same checklist and a different closing line (below). Take the union of their findings.
 
 Ask each to report everything and let you triage. Do not ask for "only the important issues".
 
@@ -69,15 +137,20 @@ What they should look for:
 - Missing rollback on something irreversible.
 - An internal contradiction between two sections — the single highest-yield defect class in practice, and the one a lone reviewer most often misses.
 
-**Why two.** Measured on this repo's own design documents, with every reported defect re-checked by independent adversarial adjudicators before it counted. A second independent reviewer cut what a single reviewer missed by roughly half, and surfaced a severe defect the first had missed entirely in *every* document.
+**Why two, and why different.** One reviewer finds a little over half the defects; a second takes the pair to roughly six in seven, because reviewers miss *different* things — half of what was found was found by exactly one reader. That is why findings are unioned rather than reconciled, and it held for severe defects too. Stopping at two is a **cost** decision, not a claim that a third finds nothing: raise it if your defects are expensive enough to justify one.
 
-Stopping at two is a **cost** decision, not a claim that a third finds nothing. Re-analysis of the same data disagreed with itself on that point, depending on the denominator used, and the underlying artifacts were never kept — so treat "two is enough" as where this project chose to stop paying, and raise it if your defects are expensive enough to justify the third.
+Give each a different closing instinct: one reading as an adversary hunting the case that breaks it, one as whoever maintains this next year. The measurement used byte-identical prompts, so all its decorrelation came from sampling noise — two different sentences cost the same as two identical ones.
 
-The reason is not thoroughness. Reviewers miss **different** things: most defects were seen by only one of the three, and few by all of them. That is what a second reader buys, and why their findings are unioned rather than reconciled.
+The corollary matters as much: **a clean first review is weak evidence that the plan is clean.** "Reviewer 1 found nothing" and "there is nothing to find" are very different statements. Do not close a Deep plan on one.
 
-The corollary matters as much: **a clean first review is weak evidence that the plan is clean.** One reviewer misses closer to half the defects than none of them, so "reviewer 1 found nothing" and "there is nothing to find" are very different statements. Do not close a Deep plan on one clean review.
+At **Standard** depth there is no plan reviewer, and that is an exposure rather than a saving. Read it back yourself once against the list above — but do not mistake that for review: §4's author-≠-reviewer rule binds to identity here too, and re-reading your own reasoning adds nothing.
 
-At **Standard** depth, skip plan review entirely. Re-read the plan yourself once against the list above and start building — that is where fresh eyes pay for themselves on a small change.
+The exposure is specific. The diff reviewer is sent the diff *and this plan*, and its blocking test is "outside the plan's Goal" — so a plan that is **wrong** does not fail review, it defines what passing means. The cover is structural rather than another agent, and both halves are free:
+
+- State in the Goal, in one sentence someone can overturn, **which reading of the request you took** — "`RateLimit-*` per RFC 9331, not `X-RateLimit-*`".
+- Write Accept's observable outcome as something a person can go and do, and ask the diff reviewer whether the plan itself looks wrong, not only whether the diff matches it.
+
+Those are the only independent checks a Standard change gets on whether it is the *right* change; everything downstream checks only whether it is a correct implementation of them. Where that is not enough, buy one plan reviewer — one more agent, and the intervention here with a measurement behind it.
 
 ## Conflicts
 

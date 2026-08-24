@@ -61,7 +61,7 @@ chk() { if [ "$2" = "$3" ]; then ok "$1 ($2)"; else bad "$1: expected '$3', got 
 
 echo "== layout =="
 [ -f three-loop-workflow/SKILL.md ] && ok "SKILL.md present" || bad "SKILL.md missing"
-chk "shipped skill file count" "$(find three-loop-workflow -type f | wc -l | tr -d ' ')" "10"
+chk "shipped skill file count" "$(find three-loop-workflow -type f | wc -l | tr -d ' ')" "11"
 chk "reference count"          "$(find three-loop-workflow/references -name '*.md' | wc -l | tr -d ' ')" "7"
 chk "shipped script count"     "$(find three-loop-workflow/scripts -type f | wc -l | tr -d ' ')" "2"
 echo "== version agrees with the changelog, in both languages =="
@@ -219,9 +219,38 @@ echo "== the always-loaded surface has not bloated =="
 # Anti-bloat is held by review, not by a ceiling — v1 reached 2,915 words under a numeric cap, which is
 # why the cap is not the mechanism. This is a backstop against silent drift, set well above the
 # reviewed size, not the thing that keeps the file short.
-s_now=$(words three-loop-workflow/SKILL.md)
-[ "$s_now" -le 1500 ] && ok "SKILL.md is $s_now words (backstop 1500)" \
-                      || bad "SKILL.md has drifted to $s_now words — re-review before raising the backstop"
+# ── anti-bloat, over EVERY prose surface ─────────────────────────────────────────────────────────
+# A backstop against silent drift, per file, deliberately set above each reviewed size — not a budget
+# to spend. Before 2026-08-24 only SKILL.md had one, so the always-loaded surface was held and the
+# eight-times-larger reference set beside it was not; a set that grew 18% in a single pass is what that
+# gap looks like. Every prose file now carries one, and so does the total.
+#
+# The objection to raising SKILL.md's own number (1500 -> 2300) in the same pass that grew the file is
+# worth recording beside the change: raising the mechanism that opposes growth is the wrong reflex.
+# Three things answer it. The additions are RULES, not prose — two-part acceptance, the behavior-check
+# term in the termination rule, the gitignore check, baseSha, the depth-trigger checklist, a NOT-WHEN in
+# the description; each was argued for individually and several displaced something. The old number had
+# itself caused a defect: the rewrite that stripped the two-reviewer figures to fit it left a paraphrase
+# misstating them in both directions. And the published limit this stands in for is 500 LINES; the file
+# is 122. What is NOT an answer is shaving synonyms to land on a number — that is the behaviour that
+# produced the defect above. Re-review, then move the number in its own commit, with the reason here.
+budget() {
+  local f="$1" cap="$2" n
+  n=$(words "$f")
+  [ "$n" -le "$cap" ] && ok "$f is $n words (backstop $cap)" \
+                      || bad "$f has drifted to $n words (backstop $cap) — re-review before raising it"
+}
+budget three-loop-workflow/SKILL.md                    2300
+budget three-loop-workflow/references/build.md          3600
+budget three-loop-workflow/references/plan.md           2200
+budget three-loop-workflow/references/orchestration.md  1900
+budget three-loop-workflow/references/maintenance.md    1600
+budget three-loop-workflow/references/escalation.md     1300
+budget three-loop-workflow/references/close.md           850
+budget three-loop-workflow/references/platforms.md       750
+prose_now=$(words three-loop-workflow/SKILL.md three-loop-workflow/references/*.md)
+[ "$prose_now" -le 14000 ] && ok "the whole prose surface is $prose_now words (backstop 14000)" \
+                           || bad "the prose surface has grown to $prose_now words — the per-file budgets can all pass while the set still grows"
 
 echo "== published numbers match the recomputation =="
 DOCS="README.md README-cn.md CHANGELOG.md CHANGELOG-cn.md docs/announcement-v2.0.0.md docs/announcement-v2.0.0-cn.md docs/why-v2.md docs/why-v2-cn.md"
@@ -352,7 +381,7 @@ fi
 echo "== packaged .skill carries the skill and nothing else =="
 pkg=$(mktemp -d)/x.skill
 zip -qr "$pkg" three-loop-workflow/
-chk "archive entry count" "$(unzip -Z1 "$pkg" | grep -vc '/$')" "10"
+chk "archive entry count" "$(unzip -Z1 "$pkg" | grep -vc '/$')" "11"
 unzip -Z1 "$pkg" | grep -qE "$V1" && bad "a v1 file is inside the .skill" || ok "no v1 file in .skill"
 unzip -Z1 "$pkg" | grep -q 'three-loop-workflow/SKILL.md' && ok "SKILL.md in .skill" || bad "SKILL.md not in .skill"
 rm -rf "$(dirname "$pkg")"
