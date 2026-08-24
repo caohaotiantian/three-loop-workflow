@@ -68,9 +68,9 @@ const A = 'a'.repeat(40)   // baseSha
 const B = 'b'.repeat(40)   // the write commit
 const hex = n => String(n).repeat(40).slice(0, 40).replace(/[^0-9a-f]/g, '1')
 
-const base = { phaseLabel: 'P1', planPath: '.agent/t/plan.md', tasks: 'do the thing', acceptCmds: ['npm test'], baseSha: A, depth: 'standard' }
+const base = { phaseLabel: 'P1', planPath: '.agent/t/plan.md', tasks: 'do the thing', acceptCmds: ['npm test'], baseSha: A, depth: 'standard', behaviorCheck: false }
 const write = (o = {}) => ({ branch: 'task', headSha: B, conflict: false, blocked: false, concerns: [], ...o })
-const gates = (o = {}) => ({ all_pass: true, headSha: B, results: ['npm test: exit 0, 12 passed'], failures: [], ...o })
+const gates = (o = {}) => ({ all_pass: true, headSha: B, branch: 'task', results: ['npm test: exit 0, 12 passed'], failures: [], tests: { counted: true, passed: 12, failed: 0, skipped: 0 }, ...o })
 const review = (n, o = {}) => ({
   blocking: Array.from({ length: n }, (_, i) => `bug${i}`),
   nonblocking: [], blocking_count: n, nonblocking_count: 0, ...o,
@@ -78,6 +78,24 @@ const review = (n, o = {}) => ({
 // A gates agent that reports a fresh HEAD each round, so the no-op-fix guard does not fire and the
 // scenario is genuinely exercising the round budget rather than tripping a different guard.
 const advancingGates = (calls, o = {}) => gates({ headSha: hex(calls.filter(c => c.label.startsWith('gates')).length + 1), ...o })
+
+// A triage stub that rules on the numbered list it was actually handed. The script confirms findings by
+// NUMBER now, so a stub returning text could not model it — which is the point of that contract: an
+// index cannot name a finding no reviewer raised. Anything not matched is rejected, so every fixture
+// rules on every item and none of them reach the untriaged path by accident.
+const triageFor = (calls, confirmIf) => {
+  const prompt = calls[calls.length - 1].prompt
+  const items = []
+  prompt.split('\n').forEach(line => {
+    const m = /^(\d+)\.\s+(.*)$/.exec(line)
+    if (m) items.push({ n: Number(m[1]), text: m[2] })
+  })
+  const keep = typeof confirmIf === 'function' ? confirmIf : t => confirmIf.some(x => t.includes(x))
+  return {
+    confirmed: items.filter(i => keep(i.text)).map(i => i.n),
+    rejected: items.filter(i => !keep(i.text)).map(i => ({ item: i.n, why: 'misreads the code' })),
+  }
+}
 
 // ── invariants ────────────────────────────────────────────────
 // Each: a name, the args, the scripted agent replies, and what must be true of the outcome.
@@ -87,7 +105,7 @@ const INVARIANTS = [
   // asserts the string form reaches the same place — otherwise the script works only under the harness.
   { name: 'args arriving as a JSON string behaves exactly like the object form',
     args: JSON.stringify(base),
-    reply: l => l.startsWith('write') ? write() : l.startsWith('gates') ? gates() : review(0),
+    reply: (l, calls) => l.startsWith('write') ? write() : l.startsWith('gates') ? gates() : review(0),
     expect: r => all(eq(r.res.status, 'closed'), eq(r.res.round, 1), eq(r.res.reviewers, 1)) },
 
   { name: 'a JSON string missing planPath still names planPath, not the args shape',
@@ -120,14 +138,17 @@ const INVARIANTS = [
 
   { name: 'a caller written against the old contract still works: reviewers: 2 runs two',
     args: { ...base, depth: undefined, reviewers: 2 },
-    reply: l => l.startsWith('write') ? write() : l.startsWith('gates') ? gates() : review(0),
+    reply: (l, calls) => l.startsWith('write') ? write() : l.startsWith('gates') ? gates() : review(0),
     expect: r => all(eq(r.n('review'), 2), eq(r.res.reviewers, 2),
       eq(r.res.depth, 'deep', 'the resolved depth is reported back')) },
 
-  { name: 'depth and reviewers disagreeing is a caller bug, not resolved by precedence',
+  // What the guard here is for is an argument SILENTLY defaulting, not a caller who wrote both. An
+  // explicit count wins and is reported; omitting both is still a usage-error, above.
+  { name: 'an explicit reviewers count raises a Standard phase to two, and the result reports it',
     args: { ...base, depth: 'standard', reviewers: 2 },
-    reply: () => write(),
-    expect: r => eq(r.res && r.res.status, 'usage-error') },
+    reply: (l, calls) => l.startsWith('write') ? write() : l.startsWith('gates') ? gates() : review(0),
+    expect: r => all(eq(r.res.status, 'closed'), eq(r.n('review:'), 2), eq(r.res.reviewers, 2),
+      ok(r.logs.some(m => /explicit reviewers=2 wins/.test(m)), 'the override must be logged, not silent')) },
 
   { name: 'usage: acceptCmds is required',
     args: { ...base, acceptCmds: [] },
@@ -164,12 +185,12 @@ const INVARIANTS = [
 
   { name: 'usage: a baseSha that is not a full 40-hex sha is rejected',
     args: { ...base, baseSha: 'abc1234' },
-    reply: l => l.startsWith('write') ? write() : gates(),
+    reply: (l, calls) => l.startsWith('write') ? write() : gates(),
     expect: r => eq(r.res && r.res.status, 'usage-error') },
 
   { name: 'a clean first review closes at round 1 having spent no fix',
     args: base,
-    reply: l => l.startsWith('write') ? write() : l.startsWith('gates') ? gates() : review(0),
+    reply: (l, calls) => l.startsWith('write') ? write() : l.startsWith('gates') ? gates() : review(0),
     expect: r => all(
       eq(r.res.status, 'closed'), eq(r.res.round, 1), eq(r.res.fixes, 0),
       eq(r.n('fix:'), 0, 'no fix agent may run'),
@@ -183,7 +204,7 @@ const INVARIANTS = [
     reply: (l, calls) => l.startsWith('write') ? write()
       : l.startsWith('gates') ? advancingGates(calls)
       : l.startsWith('review') ? review(1)
-      : l.startsWith('triage') ? { confirmed: ['bug0'], rejected: [] }
+      : l.startsWith('triage') ? triageFor(calls, ['bug0'])
       : {},
     expect: r => all(
       eq(r.res.status, 'cap-exhausted'), eq(r.res.fixes, mx),
@@ -196,7 +217,7 @@ const INVARIANTS = [
     reply: (l, calls) => l.startsWith('write') ? write()
       : l.startsWith('gates') ? advancingGates(calls)
       : l.startsWith('review') ? (calls.filter(c => c.label.startsWith('review')).length === 1 ? review(1) : review(0))
-      : l.startsWith('triage') ? { confirmed: ['bug0'], rejected: [] }
+      : l.startsWith('triage') ? triageFor(calls, ['bug0'])
       : {},
     expect: r => all(eq(r.res.status, 'closed'), eq(r.res.fixes, 1), eq(r.n('fix:'), 1)) },
 
@@ -212,10 +233,7 @@ const INVARIANTS = [
       : l.startsWith('gates') ? advancingGates(calls)
       : l.endsWith(':v1') ? { blocking: ['FINDING-ALPHA'], nonblocking: ['nit-1'], blocking_count: 1, nonblocking_count: 1 }
       : l.endsWith(':v2') ? { blocking: ['FINDING-BETA'], nonblocking: ['nit-1', 'nit-2'], blocking_count: 1, nonblocking_count: 2 }
-      : l.startsWith('triage') ? {
-          confirmed: ['FINDING-ALPHA', 'FINDING-BETA'].filter(f => calls[calls.length - 1].prompt.includes(f)),
-          rejected: [],
-        }
+      : l.startsWith('triage') ? triageFor(calls, ['FINDING-ALPHA', 'FINDING-BETA'])
       : {},
     expect: r => all(
       has(r.promptsFor('triage')[0], 'FINDING-ALPHA', 'reviewer 1\'s finding must reach triage'),
@@ -224,10 +242,10 @@ const INVARIANTS = [
 
   { name: 'triage runs before the closure count: rejecting every finding closes the phase',
     args: base,
-    reply: l => l.startsWith('write') ? write()
+    reply: (l, calls) => l.startsWith('write') ? write()
       : l.startsWith('gates') ? gates()
       : l.startsWith('review') ? review(3)
-      : l.startsWith('triage') ? { confirmed: [], rejected: ['bug0: misreads the code', 'bug1: n/a', 'bug2: n/a'] }
+      : l.startsWith('triage') ? triageFor(calls, [])
       : {},
     expect: r => all(
       eq(r.res.status, 'closed'), eq(r.res.fixes, 0),
@@ -239,13 +257,13 @@ const INVARIANTS = [
     reply: (l, calls) => l.startsWith('write') ? write()
       : l.startsWith('gates') ? advancingGates(calls)
       : l.startsWith('review') ? review(1, { verdict: 'pass', summary: 'looks good overall' })
-      : l.startsWith('triage') ? { confirmed: ['bug0'], rejected: [] }
+      : l.startsWith('triage') ? triageFor(calls, ['bug0'])
       : {},
     expect: r => eq(r.res.status, 'cap-exhausted') },
 
   { name: 'a reviewer that fails to return is an agent-error, never a pass',
     args: base,
-    reply: l => l.startsWith('write') ? write() : l.startsWith('gates') ? gates() : l.startsWith('review') ? null : {},
+    reply: (l, calls) => l.startsWith('write') ? write() : l.startsWith('gates') ? gates() : l.startsWith('review') ? null : {},
     expect: r => all(eq(r.res.status, 'agent-error'), eq(r.res.stage, 'review')) },
 
   { name: 'a dead reviewer gets one retry, so infrastructure failure is not a review round',
@@ -256,28 +274,28 @@ const INVARIANTS = [
 
   { name: 'one of two reviewers dying is an agent-error, not a single-reviewer pass',
     args: { ...base, depth: 'deep' },
-    reply: l => l.startsWith('write') ? write() : l.startsWith('gates') ? gates()
+    reply: (l, calls) => l.startsWith('write') ? write() : l.startsWith('gates') ? gates()
       : l === 'review:P1:r1:v2' ? null : l.startsWith('review') ? review(0) : {},
     expect: r => all(eq(r.res.status, 'agent-error'), eq(r.res.stage, 'review')) },
 
   { name: 'an uncommitted phase is rejected rather than reviewed',
     args: base,
-    reply: l => l.startsWith('write') ? write({ headSha: A }) : gates(),
+    reply: (l, calls) => l.startsWith('write') ? write({ headSha: A }) : gates(),
     expect: r => all(
       eq(r.res.status, 'agent-error'), eq(r.res.stage, 'write'),
       eq(r.n('review'), 0, 'no reviewer may be spawned on an empty diff')) },
 
   { name: 'a headSha that is not a full 40-hex sha is an agent-error',
     args: base,
-    reply: l => l.startsWith('write') ? write({ headSha: 'b1c2d3' }) : gates(),
+    reply: (l, calls) => l.startsWith('write') ? write({ headSha: 'b1c2d3' }) : gates(),
     expect: r => all(eq(r.res.status, 'agent-error'), eq(r.n('review'), 0)) },
 
   { name: 'a fix round that commits nothing is caught, not ground to cap-exhausted',
     args: base,
-    reply: l => l.startsWith('write') ? write()
+    reply: (l, calls) => l.startsWith('write') ? write()
       : l.startsWith('gates') ? gates({ headSha: B })
       : l.startsWith('review') ? review(1)
-      : l.startsWith('triage') ? { confirmed: ['bug0'], rejected: [] }
+      : l.startsWith('triage') ? triageFor(calls, ['bug0'])
       : {},
     expect: r => all(
       eq(r.res.status, 'agent-error'), eq(r.res.stage, 'fix'),
@@ -285,17 +303,17 @@ const INVARIANTS = [
 
   { name: 'a gate failure naming nothing cannot dispatch a fix agent',
     args: base,
-    reply: l => l.startsWith('write') ? write() : l.startsWith('gates') ? gates({ all_pass: false, failures: [] }) : {},
+    reply: (l, calls) => l.startsWith('write') ? write() : l.startsWith('gates') ? gates({ all_pass: false, failures: [] }) : {},
     expect: r => all(eq(r.res.status, 'agent-error'), eq(r.res.stage, 'gates'), eq(r.n('fix:'), 0)) },
 
   { name: 'a plan that contradicts the code stops the phase instead of being decided',
     args: base,
-    reply: l => l.startsWith('write') ? write({ conflict: true }) : gates(),
+    reply: (l, calls) => l.startsWith('write') ? write({ conflict: true }) : gates(),
     expect: r => all(eq(r.res.status, 'plan-conflict'), eq(r.n('gates'), 0)) },
 
   { name: 'a blocked implementer gets exactly one re-dispatch, then escalates',
     args: base,
-    reply: l => l.startsWith('write') ? write({ blocked: true, concerns: ['no fixture exists'] }) : gates(),
+    reply: (l, calls) => l.startsWith('write') ? write({ blocked: true, concerns: ['no fixture exists'] }) : gates(),
     expect: r => all(
       eq(r.res.status, 'write-escalation'),
       eq(r.n('write'), 2, 'one re-dispatch, and only one'),
@@ -303,7 +321,7 @@ const INVARIANTS = [
 
   { name: 'gates run before any reviewer is spawned, every round',
     args: base,
-    reply: l => l.startsWith('write') ? write() : l.startsWith('gates') ? gates() : review(0),
+    reply: (l, calls) => l.startsWith('write') ? write() : l.startsWith('gates') ? gates() : review(0),
     expect: r => {
       const g = r.calls.findIndex(c => c.label.startsWith('gates'))
       const v = r.calls.findIndex(c => c.label.startsWith('review'))
@@ -317,7 +335,7 @@ const INVARIANTS = [
   // by any well-formed sha — stale, cross-branch, or invented.
   { name: 'a fabricated but well-formed headSha cannot close a phase on an empty diff',
     args: base,
-    reply: l => l.startsWith('write') ? write({ headSha: 'd'.repeat(40) })
+    reply: (l, calls) => l.startsWith('write') ? write({ headSha: 'd'.repeat(40) })
       : l.startsWith('gates') ? gates({ headSha: A })   // the real HEAD is still baseSha
       : review(0),
     expect: r => all(
@@ -326,10 +344,10 @@ const INVARIANTS = [
 
   { name: 'an unparseable gates headSha fails closed instead of disabling the no-op-fix guard',
     args: base,
-    reply: l => l.startsWith('write') ? write()
+    reply: (l, calls) => l.startsWith('write') ? write()
       : l.startsWith('gates') ? gates({ headSha: 'HEAD' })
       : l.startsWith('review') ? review(1)
-      : l.startsWith('triage') ? { confirmed: ['bug0'], rejected: [] }
+      : l.startsWith('triage') ? triageFor(calls, ['bug0'])
       : {},
     expect: r => all(
       eq(r.res.status, 'agent-error'), eq(r.res.stage, 'gates'),
@@ -343,7 +361,7 @@ const INVARIANTS = [
       // round 1 commits normally; the fix round then drops the phase's work, landing HEAD on the base
       if (l.startsWith('gates')) return gates({ headSha: round === 1 ? B : A })
       if (l.startsWith('review')) return review(1)
-      if (l.startsWith('triage')) return { confirmed: ['bug0'], rejected: [] }
+      if (l.startsWith('triage')) return triageFor(calls, ['bug0'])
       return {}
     },
     expect: r => all(
@@ -353,17 +371,17 @@ const INVARIANTS = [
 
   { name: 'a branch name that is not a plausible git ref is rejected',
     args: base,
-    reply: l => l.startsWith('write') ? write({ branch: 'task; rm -rf /' }) : gates(),
+    reply: (l, calls) => l.startsWith('write') ? write({ branch: 'task; rm -rf /' }) : gates(),
     expect: r => all(eq(r.res.status, 'agent-error'), eq(r.n('review'), 0)) },
 
   { name: 'a caller-supplied branch is authoritative over the write agent\'s self-report',
     args: { ...base, branch: 'task' },
-    reply: l => l.startsWith('write') ? write({ branch: 'phase-1-side' }) : gates(),
+    reply: (l, calls) => l.startsWith('write') ? write({ branch: 'phase-1-side' }) : gates(),
     expect: r => all(eq(r.res.status, 'agent-error'), eq(r.n('review'), 0)) },
 
   { name: 'the validated baseSha, not the raw argument, is interpolated into the diff commands',
     args: { ...base, baseSha: '  ' + 'C'.repeat(40) + '\n' },
-    reply: l => l.startsWith('write') ? write({ headSha: B })
+    reply: (l, calls) => l.startsWith('write') ? write({ headSha: B })
       : l.startsWith('gates') ? gates() : review(0),
     expect: r => all(
       eq(r.res.status, 'closed'),
@@ -388,7 +406,7 @@ const INVARIANTS = [
   // independence the two-reviewer rule depends on.
   { name: 'no reviewer receives the implementer\'s self-assessment',
     args: { ...base, depth: 'deep' },
-    reply: l => l.startsWith('write') ? write({ concerns: ['the refill maths in bucket.js'] })
+    reply: (l, calls) => l.startsWith('write') ? write({ concerns: ['the refill maths in bucket.js'] })
       : l.startsWith('gates') ? gates() : review(0),
     expect: r => all(
       eq(r.res.status, 'closed'),
@@ -398,14 +416,14 @@ const INVARIANTS = [
 
   { name: 'depth deep runs two reviewers without the caller restating the count',
     args: { ...base, depth: 'deep' },
-    reply: l => l.startsWith('write') ? write() : l.startsWith('gates') ? gates() : review(0),
+    reply: (l, calls) => l.startsWith('write') ? write() : l.startsWith('gates') ? gates() : review(0),
     expect: r => all(
       eq(r.n('review'), 2, 'two reviewers'),
       eq(r.res.reviewers, 2, 'the return states how many reviewed, so a forgotten flag is visible')) },
 
   { name: 'depth standard runs one reviewer and says so',
     args: { ...base, depth: 'standard' },
-    reply: l => l.startsWith('write') ? write() : l.startsWith('gates') ? gates() : review(0),
+    reply: (l, calls) => l.startsWith('write') ? write() : l.startsWith('gates') ? gates() : review(0),
     expect: r => all(eq(r.n('review'), 1), eq(r.res.reviewers, 1)) },
 
   { name: 'an unknown depth is a usage-error rather than a silent Standard review',
@@ -416,10 +434,10 @@ const INVARIANTS = [
   // ── the triage record ───────────────────────────────────────
   { name: 'triage rejections are returned, not just logged',
     args: base,
-    reply: l => l.startsWith('write') ? write()
+    reply: (l, calls) => l.startsWith('write') ? write()
       : l.startsWith('gates') ? gates()
       : l.startsWith('review') ? review(2)
-      : l.startsWith('triage') ? { confirmed: [], rejected: ['bug0: cites a line that does not exist', 'bug1: describes a real property that is not a problem'] }
+      : l.startsWith('triage') ? triageFor(calls, [])
       : {},
     expect: r => all(
       eq(r.res.status, 'closed'),
@@ -432,16 +450,14 @@ const INVARIANTS = [
       const round = calls.filter(c => c.label.startsWith('gates')).length
       if (l.startsWith('write')) return write()
       if (l.startsWith('gates')) return advancingGates(calls)
-      if (l.startsWith('review')) return review(1)
-      if (l.startsWith('triage')) return round === 1
-        ? { confirmed: ['bug0'], rejected: ['ghost0: misreads the guard'] }
-        : { confirmed: ['bug0'], rejected: [] }
+      if (l.startsWith('review')) return review(round === 1 ? 2 : 1)
+      if (l.startsWith('triage')) return triageFor(calls, ['bug0'])
       return {}
     },
     expect: r => {
       const later = r.promptsFor('triage')[1]
       return all(ok(!!later, 'a second triage must happen'),
-        has(later || '', 'ghost0', 'the prior rejection must be carried into the next round\'s triage')) } },
+        has(later || '', 'bug1', 'the prior rejection must be carried into the next round\'s triage')) } },
 
   // ── accumulation and attribution ────────────────────────────
   { name: 'non-blocking findings accumulate across rounds instead of being overwritten',
@@ -453,7 +469,7 @@ const INVARIANTS = [
       if (l.startsWith('review')) return round === 1
         ? { blocking: ['bug0'], nonblocking: ['nit-from-round-1'], blocking_count: 1, nonblocking_count: 1 }
         : { blocking: [], nonblocking: ['nit-from-round-2'], blocking_count: 0, nonblocking_count: 1 }
-      if (l.startsWith('triage')) return { confirmed: ['bug0'], rejected: [] }
+      if (l.startsWith('triage')) return triageFor(calls, ['bug0'])
       return {}
     },
     expect: r => all(
@@ -478,7 +494,7 @@ const INVARIANTS = [
     reply: (l, calls) => l.startsWith('write') ? write()
       : l.startsWith('gates') ? advancingGates(calls)
       : l.startsWith('review') ? review(1)
-      : l.startsWith('triage') ? { confirmed: ['bug0'], rejected: [] }
+      : l.startsWith('triage') ? triageFor(calls, ['bug0'])
       : l.startsWith('fix') ? null : {},
     expect: r => all(
       eq(r.res.status, 'agent-error'), eq(r.res.stage, 'fix'),
@@ -501,7 +517,7 @@ const INVARIANTS = [
     reply: (l, calls) => l.startsWith('write') ? write()
       : l.startsWith('gates') ? advancingGates(calls)
       : l.startsWith('review') ? review(1)
-      : l.startsWith('triage') ? { confirmed: ['bug0'], rejected: [] }
+      : l.startsWith('triage') ? triageFor(calls, ['bug0'])
       : {},
     expect: r => all(
       ...['write', 'gates', 'review', 'triage', 'fix'].flatMap(stage =>
@@ -522,10 +538,10 @@ const INVARIANTS = [
   // reports the symptom. The error has to name the likely cause, or the next person re-derives it.
   { name: 'a no-op fix round names repoPath as the likely cause when it was omitted',
     args: base,
-    reply: l => l.startsWith('write') ? write()
+    reply: (l, calls) => l.startsWith('write') ? write()
       : l.startsWith('gates') ? gates({ headSha: B })
       : l.startsWith('review') ? review(1)
-      : l.startsWith('triage') ? { confirmed: ['bug0'], rejected: [] }
+      : l.startsWith('triage') ? triageFor(calls, ['bug0'])
       : {},
     expect: r => all(
       eq(r.res.status, 'agent-error'), eq(r.res.stage, 'fix'),
@@ -563,7 +579,7 @@ const INVARIANTS = [
       return l.startsWith('write') ? write()
         : l.startsWith('gates') ? gates({ headSha: g === 1 ? B : hex(3) })
         : l.startsWith('review') ? review(1)
-        : l.startsWith('triage') ? { confirmed: ['bug0'], rejected: [] }
+        : l.startsWith('triage') ? triageFor(calls, ['bug0'])
         : {}
     },
     expect: r => all(
@@ -574,7 +590,7 @@ const INVARIANTS = [
   // next phase a base sha only one agent ever attested to.
   { name: 'the closed phase chains from the head the gates agent saw, not the one the writer claimed',
     args: base,
-    reply: l => l.startsWith('write') ? write({ headSha: hex(4) })
+    reply: (l, calls) => l.startsWith('write') ? write({ headSha: hex(4) })
       : l.startsWith('gates') ? gates({ headSha: hex(3) })
       : review(0),
     expect: r => all(eq(r.res.status, 'closed'), eq(r.res.headSha, hex(3))) },
@@ -586,7 +602,7 @@ const INVARIANTS = [
     reply: (l, calls) => l.startsWith('write') ? write()
       : l.startsWith('gates') ? advancingGates(calls)
       : l.startsWith('review') ? review(1)
-      : l.startsWith('triage') ? { confirmed: ['bug0'], rejected: [] }
+      : l.startsWith('triage') ? triageFor(calls, ['bug0'])
       : {},
     expect: r => all(
       eq(r.res.status, 'cap-exhausted'),
@@ -599,19 +615,19 @@ const INVARIANTS = [
   // path asserted at all.
   { name: 'a write agent that never returns is an agent-error, not a crash',
     args: base,
-    reply: l => l.startsWith('write') ? null : gates(),
+    reply: (l, calls) => l.startsWith('write') ? null : gates(),
     expect: r => all(eq(r.res && r.res.status, 'agent-error'), eq(r.res && r.res.stage, 'write'),
       ok(!r.err, `it must not throw (threw: ${r.err})`)) },
 
   { name: 'a gates agent that never returns is an agent-error, not a crash',
     args: base,
-    reply: l => l.startsWith('write') ? write() : l.startsWith('gates') ? null : review(0),
+    reply: (l, calls) => l.startsWith('write') ? write() : l.startsWith('gates') ? null : review(0),
     expect: r => all(eq(r.res && r.res.status, 'agent-error'), eq(r.res && r.res.stage, 'gates'),
       ok(!r.err, `it must not throw (threw: ${r.err})`)) },
 
   { name: 'a triage agent that never returns is an agent-error, not a crash',
     args: base,
-    reply: l => l.startsWith('write') ? write() : l.startsWith('gates') ? gates()
+    reply: (l, calls) => l.startsWith('write') ? write() : l.startsWith('gates') ? gates()
       : l.startsWith('review') ? review(1) : l.startsWith('triage') ? null : {},
     expect: r => all(eq(r.res && r.res.status, 'agent-error'), eq(r.res && r.res.stage, 'triage'),
       ok(!r.err, `it must not throw (threw: ${r.err})`)) },
@@ -633,7 +649,7 @@ const INVARIANTS = [
     reply: (l, calls) => l.startsWith('write') ? write()
       : l.startsWith('gates') ? advancingGates(calls)
       : l.startsWith('review') ? review(1)
-      : l.startsWith('triage') ? { confirmed: ['bug0'], rejected: [] }
+      : l.startsWith('triage') ? triageFor(calls, ['bug0'])
       : {},
     expect: r => all(
       eq(r.res.status, 'cap-exhausted'),
@@ -652,6 +668,335 @@ const INVARIANTS = [
     expect: r => all(
       eq(r.res.status, 'cap-exhausted'),
       eq(r.res.exhaustedBy, 'gates', 'a gate-driven cap must name gates')) },
+
+  // ── the task list is a shape, not a truthy value ────────────
+  // `!tasks || !String(tasks).trim()` passed anything with a stringification, and an array of task
+  // objects — the shape orchestration.md's own driver snippet produces, since it spreads a plan phase —
+  // stringifies to "[object Object]". The Write agent was dispatched with that as its entire task list.
+  { name: 'usage: a task list of objects is rejected before any agent is dispatched',
+    args: { ...base, tasks: [{ id: 1, text: 'do the thing' }] },
+    reply: () => write(),
+    expect: r => all(eq(r.res.status, 'usage-error'),
+      eq(r.calls.length, 0, 'nothing may be dispatched on an unreadable task list'),
+      ok(!/\[object Object\]/.test(JSON.stringify(r.calls)), 'no prompt may carry [object Object]')) },
+
+  { name: 'usage: a task list that is a bare truthy value is rejected',
+    args: { ...base, tasks: true },
+    reply: () => write(),
+    expect: r => all(eq(r.res.status, 'usage-error'), eq(r.calls.length, 0)) },
+
+  { name: 'a task list given as an array of strings reaches the writer as a list',
+    args: { ...base, tasks: ['add the header', 'cover the 429 path'] },
+    reply: (l, calls) => l.startsWith('write') ? write() : l.startsWith('gates') ? gates() : review(0),
+    expect: r => all(eq(r.res.status, 'closed'),
+      has(r.promptsFor('write')[0], '- add the header', 'each task must reach the writer'),
+      has(r.promptsFor('write')[0], '- cover the 429 path', 'each task must reach the writer')) },
+
+  { name: 'usage: an acceptance command that is an empty string is rejected',
+    args: { ...base, acceptCmds: [''] },
+    reply: () => write(),
+    expect: r => all(eq(r.res.status, 'usage-error'),
+      eq(r.calls.length, 0, 'an unrunnable acceptance must not dispatch a writer')) },
+
+  // ── triage selects from the list; it does not write one ─────
+  // Whatever triage confirms becomes the Fix agent's work list, and the Fix agent has write access and
+  // no output schema. Confirmation by index makes an invented finding unrepresentable.
+  { name: 'triage cannot confirm a finding no reviewer raised',
+    args: base,
+    reply: (l, calls) => l.startsWith('write') ? write()
+      : l.startsWith('gates') ? gates()
+      : l.startsWith('review') ? review(1)
+      : l.startsWith('triage') ? { confirmed: [99], rejected: [{ item: 1, why: 'misreads the code' }] }
+      : {},
+    expect: r => all(eq(r.res.status, 'closed', 'an out-of-range confirmation is not a finding'),
+      eq(r.n('fix:'), 0, 'no fix round may run on a finding nobody reported')) },
+
+  { name: 'a triage that rules on nothing is an agent-error, not a clean close',
+    args: base,
+    reply: (l, calls) => l.startsWith('write') ? write()
+      : l.startsWith('gates') ? gates()
+      : l.startsWith('review') ? review(2)
+      : l.startsWith('triage') ? { confirmed: [], rejected: [] }
+      : {},
+    expect: r => all(eq(r.res.status, 'agent-error'), eq(r.res.stage, 'triage')) },
+
+  // Closing on a finding nobody looked at would be a false green produced by the one step whose job is
+  // to prevent them; confirming it by default would spend a fix round on a possible phantom. Neither.
+  { name: 'a finding nobody ruled on stops the phase, named, rather than closing it or blocking on it',
+    args: base,
+    reply: (l, calls) => l.startsWith('write') ? write()
+      : l.startsWith('gates') ? gates()
+      : l.startsWith('review') ? review(2)
+      : l.startsWith('triage') ? { confirmed: [], rejected: [{ item: 1, why: 'misreads the code' }] }
+      : {},
+    expect: r => all(eq(r.res.status, 'triage-incomplete'),
+      deep(r.res.untriaged, ['bug1'], 'the unruled finding must be named'),
+      eq(r.n('fix:'), 0, 'an unexamined finding is not a defect to fix')) },
+
+  { name: 'a behavior check that could not run still returns the review that ran beside it',
+    args: { ...base, behaviorCheck: 'call the endpoint' },
+    reply: (l, calls) => l.startsWith('write') ? write()
+      : l.startsWith('gates') ? gates()
+      : l.startsWith('behavior') ? { ran: false, blockedReason: 'no credentials', observed: [], mismatches: [] }
+      : l.startsWith('review') ? review(2)
+      : {},
+    expect: r => all(eq(r.res.status, 'behavior-unverified'),
+      deep(r.res.reviewFindings, ['bug0', 'bug1'], 'the round was paid for; its findings must come back')) },
+
+  { name: 'a fix round that strays onto another branch is caught in the round it happens',
+    args: base,
+    reply: (l, calls) => {
+      const round = calls.filter(c => c.label.startsWith('gates')).length
+      if (l.startsWith('write')) return write()
+      if (l.startsWith('gates')) return advancingGates(calls, round === 1 ? {} : { branch: 'somewhere-else' })
+      if (l.startsWith('review')) return review(1)
+      if (l.startsWith('triage')) return triageFor(calls, ['bug0'])
+      return {}
+    },
+    expect: r => all(eq(r.res.status, 'agent-error'), eq(r.res.stage, 'fix'),
+      ok(/somewhere-else/.test(r.res.reason || ''), 'the error must name the branch that was actually checked out')) },
+
+  { name: 'a gates reply missing its failures list is a clean error, not a crash',
+    args: base,
+    reply: (l, calls) => l.startsWith('write') ? write()
+      : l.startsWith('gates') ? { all_pass: false, headSha: hex(2), branch: 'task', results: ['npm test: exit 1'], tests: { counted: true, passed: 11, failed: 1, skipped: 0 } }
+      : {},
+    expect: r => all(ok(!r.err, 'the script must not throw'), eq(r.res.status, 'agent-error'), eq(r.res.stage, 'gates')) },
+
+  { name: 'usage: a newline in an acceptance command is rejected before any agent is dispatched',
+    args: { ...base, acceptCmds: ['npm test\nrm -rf /'] },
+    reply: () => write(),
+    expect: r => all(eq(r.res.status, 'usage-error'), eq(r.calls.length, 0)) },
+
+  { name: 'usage: an absurd reviewer count is rejected rather than dispatched',
+    args: { ...base, depth: undefined, reviewers: 50 },
+    reply: () => write(),
+    expect: r => all(eq(r.res.status, 'usage-error'), eq(r.calls.length, 0)) },
+
+  // ── the suite may not shrink its way to green ───────────────
+  // Removing an assertion, skipping a case or narrowing a selector moves HEAD and exits 0, so every
+  // other guard here is satisfied. Only the tally moves — and only if something remembers the last one.
+  { name: 'a suite that collects fewer tests after a fix round raises a finding',
+    args: base,
+    reply: (l, calls) => {
+      const round = calls.filter(c => c.label.startsWith('gates')).length
+      if (l.startsWith('write')) return write()
+      if (l.startsWith('gates')) return advancingGates(calls, round === 1
+        ? { all_pass: false, failures: ['npm test: 1 failed'], tests: { counted: true, passed: 11, failed: 1, skipped: 0 } }
+        : { tests: { counted: true, passed: 11, failed: 0, skipped: 0 } })
+      if (l.startsWith('review')) return review(0)
+      if (l.startsWith('triage')) return triageFor(calls, [])
+      return {}
+    },
+    expect: r => all(
+      ok(r.n('triage:') === 1, 'the shrink must reach triage as a finding'),
+      has(r.promptsFor('triage')[0] || '', 'fewer test', 'the finding must name the shrink')) },
+
+  { name: 'a suite that starts skipping tests after a fix round raises a finding',
+    args: base,
+    reply: (l, calls) => {
+      const round = calls.filter(c => c.label.startsWith('gates')).length
+      if (l.startsWith('write')) return write()
+      if (l.startsWith('gates')) return advancingGates(calls, round === 1
+        ? { all_pass: false, failures: ['npm test: 1 failed'], tests: { counted: true, passed: 11, failed: 1, skipped: 0 } }
+        : { tests: { counted: true, passed: 11, failed: 0, skipped: 1 } })
+      if (l.startsWith('review')) return review(0)
+      if (l.startsWith('triage')) return triageFor(calls, [])
+      return {}
+    },
+    expect: r => all(
+      ok(r.n('triage:') === 1, 'the new skip must reach triage as a finding'),
+      has(r.promptsFor('triage')[0] || '', 'being skipped', 'the finding must name the skip')) },
+
+  { name: 'a tally that disappears between rounds raises a finding rather than silently disabling the check',
+    args: base,
+    reply: (l, calls) => {
+      const round = calls.filter(c => c.label.startsWith('gates')).length
+      if (l.startsWith('write')) return write()
+      if (l.startsWith('gates')) return advancingGates(calls, round === 1
+        ? { all_pass: false, failures: ['npm test: 1 failed'], tests: { counted: true, passed: 11, failed: 1, skipped: 0 } }
+        : { tests: { counted: false, passed: 0, failed: 0, skipped: 0 } })
+      if (l.startsWith('review')) return review(0)
+      if (l.startsWith('triage')) return triageFor(calls, [])
+      return {}
+    },
+    expect: r => all(eq(r.n('triage:'), 1, 'a vanished tally must reach triage'),
+      has(r.promptsFor('triage')[0] || '', 'no tally at all', 'the finding must name what disappeared')) },
+
+  // A tally that arrives as strings must be counted, not concatenated. Both directions are asserted,
+  // and the second is the discriminating one: "2"+"0" is "20" and "1"+"1" is "11", so a suite that did
+  // not shrink at all looks to `<` as though it lost most of itself.
+  { name: 'a real shrink is still seen when the tally arrives as strings',
+    args: base,
+    reply: (l, calls) => {
+      const round = calls.filter(c => c.label.startsWith('gates')).length
+      if (l.startsWith('write')) return write()
+      if (l.startsWith('gates')) return advancingGates(calls, round === 1
+        ? { all_pass: false, failures: ['npm test: 1 failed'], tests: { counted: true, passed: '11', failed: '1', skipped: '0' } }
+        : { tests: { counted: true, passed: '9', failed: '0', skipped: '0' } })
+      if (l.startsWith('review')) return review(0)
+      if (l.startsWith('triage')) return triageFor(calls, [])
+      return {}
+    },
+    expect: r => all(eq(r.n('triage:'), 1, 'the shrink must still be seen through the wrong type'),
+      has(r.promptsFor('triage')[0] || '', 'fewer test', 'the finding must name the shrink')) },
+
+  { name: 'a string tally that did not shrink raises nothing, so concatenation cannot invent one',
+    args: base,
+    reply: (l, calls) => {
+      const round = calls.filter(c => c.label.startsWith('gates')).length
+      if (l.startsWith('write')) return write()
+      if (l.startsWith('gates')) return advancingGates(calls, round === 1
+        ? { all_pass: false, failures: ['npm test: 1 failed'], tests: { counted: true, passed: '2', failed: '0', skipped: '0' } }
+        : { tests: { counted: true, passed: '1', failed: '1', skipped: '0' } })
+      if (l.startsWith('review')) return review(0)
+      return {}
+    },
+    expect: r => all(eq(r.res.status, 'closed'),
+      eq(r.n('triage:'), 0, 'two tests before and two after is not a shrink, whatever type they arrived as')) },
+
+  { name: 'a phase whose gates never counted tests says the shrink check never ran',
+    args: base,
+    reply: (l, calls) => l.startsWith('write') ? write()
+      : l.startsWith('gates') ? gates({ tests: { counted: false, passed: 0, failed: 0, skipped: 0 } })
+      : review(0),
+    expect: r => all(eq(r.res.status, 'closed'),
+      ok(r.res.tests && r.res.tests.counted === false && /never ran/.test(r.res.tests.note || ''),
+        'a guard that never had a baseline is off, not passed')) },
+
+  { name: 'an unchanged tally raises nothing, so an honest fix round is not taxed',
+    args: base,
+    reply: (l, calls) => {
+      const round = calls.filter(c => c.label.startsWith('gates')).length
+      if (l.startsWith('write')) return write()
+      if (l.startsWith('gates')) return advancingGates(calls, round === 1
+        ? { all_pass: false, failures: ['npm test: 1 failed'], tests: { counted: true, passed: 11, failed: 1, skipped: 0 } }
+        : { tests: { counted: true, passed: 12, failed: 0, skipped: 0 } })
+      if (l.startsWith('review')) return review(0)
+      return {}
+    },
+    expect: r => all(eq(r.res.status, 'closed'), eq(r.n('triage:'), 0, 'nothing to triage')) },
+
+  // ── the behavior check ──────────────────────────────────────
+  { name: 'no behaviorCheck means no behavior agent, so nothing changes for callers that do not use it',
+    args: base,
+    reply: (l, calls) => l.startsWith('write') ? write() : l.startsWith('gates') ? gates() : review(0),
+    expect: r => all(eq(r.res.status, 'closed'), eq(r.n('behavior:'), 0),
+      ok(r.res.behavior && r.res.behavior.ran === false, 'no agent is spawned, but the omission is still recorded')) },
+
+  { name: 'a behaviorCheck dispatches an agent that drives the path, beside the reviewers',
+    args: { ...base, behaviorCheck: 'curl -i localhost:8080/v1/things and read the rate-limit headers' },
+    reply: (l, calls) => l.startsWith('write') ? write()
+      : l.startsWith('gates') ? gates()
+      : l.startsWith('behavior') ? { ran: true, blockedReason: '', observed: ['X-RateLimit-Remaining: 59'], mismatches: [] }
+      : review(0),
+    expect: r => all(eq(r.res.status, 'closed'), eq(r.n('behavior:'), 1),
+      has(r.promptsFor('behavior')[0], 'curl -i localhost:8080', 'the path to drive must reach the agent'),
+      ok(!/git diff/.test(r.promptsFor('behavior')[0]), 'the behavior agent reads the product, not the diff'),
+      ok(r.res.behavior && r.res.behavior.ran === true, 'the observation must leave the phase')) },
+
+  { name: 'observed behavior that contradicts the plan is a finding, and goes through triage',
+    args: { ...base, behaviorCheck: 'call the endpoint' },
+    reply: (l, calls) => l.startsWith('write') ? write()
+      : l.startsWith('gates') ? gates()
+      : l.startsWith('behavior') ? { ran: true, blockedReason: '', observed: ['500'], mismatches: ['the endpoint returns 500, the plan says 429'] }
+      : l.startsWith('review') ? review(0)
+      : l.startsWith('triage') ? triageFor(calls, []) : {},
+    expect: r => all(
+      eq(r.n('triage:'), 1, 'a mismatch must be triaged like any other finding'),
+      has(r.promptsFor('triage')[0] || '', 'the plan says 429', 'the mismatch must reach triage verbatim')) },
+
+  { name: 'a behavior check that could not run stops the phase instead of closing it',
+    args: { ...base, behaviorCheck: 'call the endpoint' },
+    reply: (l, calls) => l.startsWith('write') ? write()
+      : l.startsWith('gates') ? gates()
+      : l.startsWith('behavior') ? { ran: false, blockedReason: 'no service credentials', observed: [], mismatches: [] }
+      : review(0),
+    expect: r => all(eq(r.res.status, 'behavior-unverified'),
+      has(r.res.reason || '', 'no service credentials', 'the reason must say what stopped it'),
+      eq(r.n('fix:'), 0, 'an unverifiable acceptance is not a defect to fix')) },
+
+  // Required, with `false` as the way to say "nothing observable here". Omitting it silently skips the
+  // one check green gates cannot cover, and recording that in the result is one reader too late.
+  { name: 'usage: omitting behaviorCheck is an error, not a silent skip',
+    args: { ...base, behaviorCheck: undefined },
+    reply: () => write(),
+    expect: r => all(eq(r.res.status, 'usage-error'), eq(r.calls.length, 0),
+      ok(/behaviorCheck is required/.test(r.res.reason || ''), 'the reason must name the argument')) },
+
+  { name: 'behaviorCheck false is the explicit way to say nothing here is user-visible',
+    args: { ...base, behaviorCheck: false },
+    reply: (l, calls) => l.startsWith('write') ? write() : l.startsWith('gates') ? gates() : review(0),
+    expect: r => all(eq(r.res.status, 'closed'), eq(r.n('behavior:'), 0),
+      ok(r.res.behavior && r.res.behavior.ran === false, 'the declared omission is recorded')) },
+
+  { name: 'usage: a behaviorCheck that is not a usable description is rejected before any agent',
+    args: { ...base, behaviorCheck: '   ' },
+    reply: () => write(),
+    expect: r => all(eq(r.res.status, 'usage-error'), eq(r.calls.length, 0)) },
+
+  // ── what the reviewers are asked ────────────────────────────
+  { name: 'a cap exhausted with no fixes spent says so, rather than reporting both kinds',
+    args: { ...base, maxRounds: 0 },
+    reply: (l, calls) => l.startsWith('write') ? write()
+      : l.startsWith('gates') ? gates()
+      : l.startsWith('review') ? review(1)
+      : l.startsWith('triage') ? triageFor(calls, ['bug0']) : {},
+    expect: r => all(eq(r.res.status, 'cap-exhausted'), eq(r.res.fixes, 0),
+      eq(r.res.exhaustedBy, 'none', "'mixed' reads as 'the budget went on both kinds' when nothing was spent")) },
+
+  { name: 'an explicit reviewer count overrides what depth implies, and the result says so',
+    args: { ...base, depth: 'deep', reviewers: 1 },
+    reply: (l, calls) => l.startsWith('write') ? write() : l.startsWith('gates') ? gates() : review(0),
+    expect: r => all(eq(r.res.status, 'closed'), eq(r.n('review:'), 1, 'the explicit count wins'),
+      eq(r.res.reviewers, 1), eq(r.res.depth, 'deep', 'the phase is still part of a Deep change')) },
+
+  { name: 'a gates agent that reports the STRING "false" does not close the phase',
+    args: base,
+    reply: (l, calls) => l.startsWith('write') ? write()
+      : l.startsWith('gates') ? gates({ all_pass: 'false', failures: ['npm test: 3 failing'], tests: { counted: true, passed: 9, failed: 3, skipped: 0 } })
+      : l.startsWith('review') ? review(0) : {},
+    expect: r => all(ok(r.res.status !== 'closed', 'a red build must not close, whatever shape the boolean arrived in'),
+      eq(r.n('review:'), 0, 'no reviewer may be dispatched on a red build')) },
+
+  { name: 'a phase that declared no behavior check records that, and reports what it cost',
+    args: base,
+    reply: (l, calls) => l.startsWith('write') ? write() : l.startsWith('gates') ? gates() : review(0),
+    expect: r => all(eq(r.res.status, 'closed'),
+      ok(r.res.behavior && r.res.behavior.ran === false, 'the declared omission must be recorded, not absent'),
+      ok(r.logs.some(m => /behaviorCheck false/.test(m)), 'and said at dispatch, before anything fails'),
+      ok(Number.isInteger(r.res.agentsDispatched) && r.res.agentsDispatched > 0, 'the phase reports what it cost in agents')) },
+
+  { name: 'a configuration that can run away says how many agents it may dispatch',
+    args: { ...base, depth: undefined, reviewers: 4, maxRounds: 10 },
+    reply: (l, calls) => l.startsWith('write') ? write() : l.startsWith('gates') ? gates() : review(0),
+    expect: r => all(eq(r.res.status, 'closed'),
+      ok(r.logs.some(m => /can dispatch up to \d+ agents/.test(m)), 'the bill must be stated where the caller can read it')) },
+
+  { name: 'the review prompt asks about the classes most likely to be wrong',
+    args: base,
+    reply: (l, calls) => l.startsWith('write') ? write() : l.startsWith('gates') ? gates() : review(0),
+    expect: r => {
+      const p = r.promptsFor('review')[0] || ''
+      return all(
+        has(p, 'inputs it does not expect', 'edge cases must be asked for'),
+        has(p, 'hostile input', 'the security question must be asked'),
+        has(p, 'weaken the existing tests', 'test integrity must be asked about'),
+        has(p, 'Non-goals', 'scope must still be asked about'),
+        has(p, 'Does the PLAN look wrong', 'a diff conforming to a wrong plan passes every other question'),
+        ok(!/did that test ever fail/.test(p), 'a reviewer holding only the diff and the plan cannot answer whether a test was watched failing')) } },
+
+  { name: 'two reviewers are sent decorrelated prompts that still carry every question',
+    args: { ...base, depth: 'deep' },
+    reply: (l, calls) => l.startsWith('write') ? write() : l.startsWith('gates') ? gates() : review(0),
+    expect: r => {
+      const ps = r.promptsFor('review')
+      return all(eq(ps.length, 2, 'a Deep phase runs two reviewers'),
+        ok(ps[0] !== ps[1], 'identical prompts correlate the two readings a second reader is bought for'),
+        ok(ps.every(p => p.includes('hostile input') && p.includes('weaken the existing tests')),
+          'decorrelation may not cost either reviewer a directed question'),
+        ok(ps.some(p => p.includes('git log -p -20')),
+          'one reviewer reads the code\'s history, which is the decorrelation build.md documents')) } },
 ]
 
 // ── assertion helpers ─────────────────────────────────────────

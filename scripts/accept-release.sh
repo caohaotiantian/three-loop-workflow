@@ -61,7 +61,7 @@ chk() { if [ "$2" = "$3" ]; then ok "$1 ($2)"; else bad "$1: expected '$3', got 
 
 echo "== layout =="
 [ -f three-loop-workflow/SKILL.md ] && ok "SKILL.md present" || bad "SKILL.md missing"
-chk "shipped skill file count" "$(find three-loop-workflow -type f | wc -l | tr -d ' ')" "10"
+chk "shipped skill file count" "$(find three-loop-workflow -type f | wc -l | tr -d ' ')" "11"
 chk "reference count"          "$(find three-loop-workflow/references -name '*.md' | wc -l | tr -d ' ')" "7"
 chk "shipped script count"     "$(find three-loop-workflow/scripts -type f | wc -l | tr -d ' ')" "2"
 echo "== version agrees with the changelog, in both languages =="
@@ -352,7 +352,7 @@ fi
 echo "== packaged .skill carries the skill and nothing else =="
 pkg=$(mktemp -d)/x.skill
 zip -qr "$pkg" three-loop-workflow/
-chk "archive entry count" "$(unzip -Z1 "$pkg" | grep -vc '/$')" "10"
+chk "archive entry count" "$(unzip -Z1 "$pkg" | grep -vc '/$')" "11"
 unzip -Z1 "$pkg" | grep -qE "$V1" && bad "a v1 file is inside the .skill" || ok "no v1 file in .skill"
 unzip -Z1 "$pkg" | grep -q 'three-loop-workflow/SKILL.md' && ok "SKILL.md in .skill" || bad "SKILL.md not in .skill"
 rm -rf "$(dirname "$pkg")"

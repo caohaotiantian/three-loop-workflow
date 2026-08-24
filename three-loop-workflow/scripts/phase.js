@@ -11,22 +11,37 @@ export const meta = {
 }
 
 // Invoke with args:
-//   { phaseLabel?, planPath, tasks, acceptCmds: [...], baseSha, depth,
-//     branch?, reviewers?, repoPath?, maxRounds?, models?: {write,gates,review,triage,fix} }
+//   { phaseLabel?, planPath, tasks, acceptCmds: [...], baseSha, depth, behaviorCheck,
+//     branch?, reviewers?, repoPath?, maxRounds?,
+//     models?: {write,gates,review,behavior,triage,fix} }
 //
 //   phaseLabel  label for this phase, used in agent labels and logs.
 //   planPath    path to the task's plan — `.agent/<task>/plan.md`. No default: a shared path would
 //               let two tasks overwrite each other.
-//   tasks       the phase's task list, verbatim from the plan. Required — a phase dispatched with an
-//               empty task list produces a meaningless run that still looks like a run.
-//   acceptCmds  an ARRAY of the commands whose exit codes decide the phase. A bare string is rejected.
+//   tasks       the phase's task list, verbatim from the plan — a string, or an array of strings.
+//               Required, and checked for SHAPE: an array of task objects stringifies to
+//               "[object Object]", which the old truthiness test accepted and the Write agent then
+//               received as its entire task list.
+//   acceptCmds  an ARRAY of non-empty command strings whose exit codes decide the phase. A bare
+//               string is rejected, and so is an empty entry: `[""]` is an acceptance nobody can run.
+//   behaviorCheck
+//               REQUIRED, and `false` is the way to say "nothing here is observable". The user-visible
+//               path this phase produces, described well enough for an agent that has not read the code
+//               to drive it: "start the server, POST /v1/things twice, confirm the second response
+//               carries X-RateLimit-Remaining: 0 and a 429". An exit code says the author's assertions
+//               hold, not that the job can be done. A fresh agent runs that path beside the reviewers;
+//               what it observes that contradicts the plan becomes a finding and goes through triage
+//               like any other. Asked for and not runnable returns `behavior-unverified` rather than
+//               closing. Required rather than optional for the reason `depth` is: a stage that silently
+//               does not run is the defect, and a result that records the omission is one reader late.
 //   baseSha     `git rev-parse HEAD` captured BEFORE editing. At Deep depth this is *this phase's*
 //               base, not the base of the whole change.
 //   depth       'standard' (one reviewer) or 'deep' (two, in parallel, unioned). Named in the skill's
 //               own vocabulary rather than as a raw count. `reviewers: 1 | 2` is still accepted for
 //               callers written against the earlier contract; what is rejected is passing NEITHER,
 //               because a count that defaulted to 1 let a Deep phase silently run the Standard review.
-//   phaseLabel  optional, defaults to 'phase' — it only labels agents and logs.
+//   phaseLabel  optional, defaults to 'phase'. It labels agents and logs, and it is named to the Write
+//               and Fix agents in their prompts, so it should match what the plan calls this phase.
 //   models      optional per-stage model overrides.
 //   branch      optional, and authoritative when given. The review diffs baseSha..branch, so whoever
 //               owns the branch should say which one rather than trusting the implementer's report.
@@ -40,8 +55,11 @@ export const meta = {
 // instead of instructions an agent can rationalize past. The main agent cannot accidentally
 // grant itself a fourth round, and cannot close a phase on a reviewer's encouraging prose.
 //
-// Every invariant below is asserted by execution in this repository's scripts/sim-phase.js, and that
-// harness is itself mutation-tested. Change the control flow here and re-run both.
+// Every invariant below is asserted by execution, in the three-loop-workflow repository rather than in
+// this folder: scripts/sim-phase.js drives this file with stub agents, and scripts/negative-test.sh
+// breaks each invariant in turn and requires the harness to notice. Neither ships with the skill —
+// if you are reading this from an install, they are at github.com/caohaotiantian/three-loop-workflow.
+// Change the control flow here and re-run both.
 
 // The Workflow tool delivers `args` to a script as a JSON **string**, not an object. Measured with a
 // probe script, not assumed: `typeof args === 'string'`, `Object.keys` unavailable, and the string
@@ -55,6 +73,7 @@ function inputs(v) {
   if (typeof v === 'string') {
     try {
       const parsed = JSON.parse(v)
+      if (Array.isArray(parsed)) return { __argsError: 'args parsed to an array; this script takes named arguments, not positional ones — pass {planPath, tasks, ...}' }
       if (parsed && typeof parsed === 'object') return parsed
       return { __argsError: `args parsed to a ${typeof parsed}, not an object` }
     } catch (e) {
@@ -77,6 +96,7 @@ const {
   repoPath,
   maxRounds = 3,
   models = {},
+  behaviorCheck,
 } = input
 
 // A sha reported by an agent is a string it typed, not a fact. Normalise before comparing: the
@@ -94,9 +114,12 @@ function ref(v) {
   return /^[A-Za-z0-9][A-Za-z0-9._\/-]*$/.test(t) && !t.includes('..') ? t : null
 }
 
-// Where the repository is. Absolute only, and no character an agent could paste into a shell and get
-// substitution from. Optional: without it every agent works wherever it starts, which is right when
-// that IS the repository and is how the script is normally driven.
+// Where the repository is. Absolute only, and no command substitution or separator — `$( )`, backticks,
+// `;`, `|`, `&`, redirects. It does NOT exclude glob characters, brace expansion, `~` or spaces: `/tmp/*`
+// and `/tmp/a b` are both accepted and a shell expands both, which is why the prompt built from it tells
+// the agent to quote the path. A guard against a malformed argument, not a security boundary —
+// `acceptCmds` reaches an agent verbatim, so whoever sets these arguments already has execution.
+// Optional: without it every agent works wherever it starts, which is right when that IS the repository.
 function dir(v) {
   const t = String(v == null ? '' : v).trim()
   return /^\/[^\n\r`$"';|&<>]*$/.test(t) ? t.replace(/\/+$/, '') || '/' : null
@@ -104,8 +127,30 @@ function dir(v) {
 
 if (input.__argsError) return { status: 'usage-error', reason: input.__argsError }
 if (!planPath) return { status: 'usage-error', reason: 'planPath is required — plans live at .agent/<task>/plan.md, one directory per task, so there is no default to fall back to' }
+// Every caller string below is interpolated into a prompt an agent will act on. A newline in one of
+// them stops being an argument and becomes a paragraph of its own — an instruction the caller did not
+// mean to give and the reader of the call cannot see. Single-line only, everywhere.
+const oneLine = v => typeof v === 'string' && v.length <= 4096 && !/[\n\r]/.test(v)
+if (!oneLine(planPath)) return { status: 'usage-error', reason: 'planPath must be a single-line path — a newline in it becomes a free-standing instruction in every prompt built below' }
+if (!oneLine(phaseLabel)) return { status: 'usage-error', reason: 'phaseLabel must be a single-line string' }
 if (!baseSha) return { status: 'usage-error', reason: 'baseSha is required and must be captured BEFORE editing' }
-if (!tasks || !String(tasks).trim()) return { status: 'usage-error', reason: 'tasks is required — a phase dispatched with an empty task list produces a run that looks complete and implemented nothing' }
+// Shape before presence here too, and for the same reason as `acceptCmds` below. `String(tasks)` on an
+// array of task objects — the shape you get by spreading a phase straight out of a plan, which is why
+// `orchestration.md`'s driver snippet names every argument instead — yields "[object Object]", which is
+// truthy and non-blank. The old guard passed, the Write agent was dispatched with
+// `Tasks:\n[object Object]`, and it improvised from the plan path and committed: exactly the "run that
+// looks complete and implemented nothing" this message names.
+function taskList(v) {
+  if (typeof v === 'string') return v.trim() || null
+  if (Array.isArray(v)) {
+    const items = v.map(x => (typeof x === 'string' ? x.trim() : ''))
+    if (!items.length || items.some(t => !t)) return null
+    return items.map(t => `- ${t}`).join('\n')
+  }
+  return null
+}
+const taskText = taskList(tasks)
+if (!taskText) return { status: 'usage-error', reason: `tasks must be a non-empty string, or an array of non-empty strings (got ${Array.isArray(tasks) ? 'an array carrying something other than non-empty strings' : tasks === null ? 'null' : typeof tasks}) — a phase dispatched with an unreadable task list produces a run that looks complete and implemented nothing` }
 // Shape before presence, because the presence test reads `.length` and that is the crash: a string or
 // any other length-bearing value passes it and dies at the `.map` further down, once the Write agent has
 // already run and committed. `null` never reached a check at all — the `= []` default only fires on
@@ -115,7 +160,29 @@ if (!tasks || !String(tasks).trim()) return { status: 'usage-error', reason: 'ta
 // the crash back on the line that exists to remove it.
 if (!Array.isArray(acceptCmds)) return { status: 'usage-error', reason: `acceptCmds must be an array of commands (got ${acceptCmds === null ? 'null' : typeof acceptCmds}) — pass ["npm test"], not "npm test"` }
 if (!acceptCmds.length) return { status: 'usage-error', reason: 'acceptCmds is required — a phase with no runnable acceptance cannot close' }
+// Element shape, for the same reason the argument's own shape is checked: `[""]` and `[null]` are arrays
+// of length 1, so they satisfied "a phase with no runnable acceptance cannot close" while carrying no
+// runnable acceptance at all.
+if (acceptCmds.some(c => typeof c !== 'string' || !c.trim())) return { status: 'usage-error', reason: 'every entry in acceptCmds must be a non-empty command string — an empty entry is a phase closing on an acceptance nobody can run' }
+if (acceptCmds.some(c => !oneLine(c))) return { status: 'usage-error', reason: 'an acceptance command must be a single line — the gates prompt lists them one per line, so a newline inside one becomes an extra instruction' }
 if (!Number.isInteger(maxRounds) || maxRounds < 0) return { status: 'usage-error', reason: `maxRounds must be a non-negative integer (got ${JSON.stringify(maxRounds)})` }
+
+// The user-visible path this phase is supposed to produce, in enough detail for someone who has not
+// read the code to drive it. Optional, and it should be present whenever a person will click, type or
+// call the thing being built: an exit code says the author's assertions hold, not that the job can be
+// completed. Passing it makes an unrunnable check stop the phase, so pass it when you mean it.
+// Required, and `false` is how you say "nothing here is observable". Omitting it is a usage-error for
+// the same reason omitting `depth` is: a stage that silently does not run is the defect, and recording
+// the omission in the RESULT is one reader too late — by then the phase has closed. A phase closing
+// without a behavior check has asserted that nobody will click, type or call what it built; that
+// assertion belongs in the call, where whoever reads the call can challenge it.
+if (behaviorCheck === undefined) {
+  return { status: 'usage-error', reason: 'behaviorCheck is required — pass the user-visible path for a fresh agent to drive, or `false` if this phase changes nothing a person can click, type or call. Omitted, it silently skips the one check green gates cannot cover' }
+}
+const behavior = behaviorCheck === false || behaviorCheck === null ? null : String(behaviorCheck).trim()
+if (behaviorCheck !== false && behaviorCheck !== null && (typeof behaviorCheck !== 'string' || !behavior)) {
+  return { status: 'usage-error', reason: 'behaviorCheck must be a non-empty string describing the path to drive — "POST /v1/things twice and confirm the second returns 429 with Retry-After", not "check it works"' }
+}
 
 // `depth` is the preferred spelling because it is the skill's own vocabulary; a numeric `reviewers`
 // is still accepted for callers written against the earlier contract. What is NOT accepted is omitting
@@ -130,11 +197,20 @@ if (depth !== undefined && depth !== 'standard' && depth !== 'deep') {
 if (legacyReviewers !== undefined && !Number.isInteger(legacyReviewers)) {
   return { status: 'usage-error', reason: `reviewers must be an integer (got ${JSON.stringify(legacyReviewers)})` }
 }
-const reviewers = depth !== undefined ? (depth === 'deep' ? 2 : 1) : legacyReviewers
+// An explicit `reviewers` wins over what `depth` implies. That is not the defect the guard above was
+// built for: the defect was an argument SILENTLY DEFAULTING to 1, so a Deep phase ran the Standard
+// review with nothing in the result to show it. A caller who writes both has said what they mean, and
+// the returned object reports both — which is what makes it reviewable. The case this exists for is a
+// Deep change whose phases are not equally risky: the measurement behind "two" was taken on plans, and
+// on a reversible phase diff the second reviewer is a choice rather than a result (`build.md`, Review).
+const reviewers = legacyReviewers !== undefined ? legacyReviewers : (depth === 'deep' ? 2 : 1)
 if (reviewers < 1) return { status: 'usage-error', reason: `reviewers must be at least 1 (got ${JSON.stringify(reviewers)})` }
-// Both spellings given and disagreeing is a caller bug, not something to resolve by precedence.
-if (depth !== undefined && legacyReviewers !== undefined && legacyReviewers !== reviewers) {
-  return { status: 'usage-error', reason: `depth '${depth}' implies ${reviewers} reviewer(s) but reviewers=${legacyReviewers} was also passed — pass one or the other` }
+// An upper bound because nothing else here has one: the skill's own answer is one or two, and a typo in
+// the caller would otherwise dispatch that many agents per round with no warning.
+if (reviewers > 4) return { status: 'usage-error', reason: `reviewers is capped at 4 (got ${reviewers}) — the measurement behind this skill stops at three, and beyond that you are paying for agents that mostly agree` }
+if (maxRounds > 10) return { status: 'usage-error', reason: `maxRounds is capped at 10 (got ${maxRounds}) — the documented cap is three, and a budget this size is a plan problem rather than a fix-round problem` }
+if (depth !== undefined && legacyReviewers !== undefined && legacyReviewers !== (depth === 'deep' ? 2 : 1)) {
+  log(`${phaseLabel}: depth '${depth}' implies ${depth === 'deep' ? 2 : 1} reviewer(s); the explicit reviewers=${legacyReviewers} wins and is reported in the result`)
 }
 const resolvedDepth = depth !== undefined ? depth : (reviewers >= 2 ? 'deep' : 'standard')
 
@@ -159,11 +235,16 @@ const repoRoot = repoPath === undefined ? null : dir(repoPath)
 if (repoPath !== undefined && !repoRoot) {
   return { status: 'usage-error', reason: `repoPath must be an absolute path with no shell metacharacters (got ${JSON.stringify(repoPath)})` }
 }
-const where = repoRoot ? `Work in the repository at ${repoRoot}. \`cd\` there first; every path and every git command below resolves there.\n\n` : ''
+const where = repoRoot ? `Work in the repository at "${repoRoot}". \`cd\` there first — quote it, it may contain spaces — and every path and every git command below resolves there.\n\n` : ''
 // Said once, at dispatch, so the choice is visible before anything fails rather than only after.
 // Without repoPath every agent works wherever it happens to start, which is right when that is the
 // repository and silently wrong when it is not — and the way it fails is three steps downstream.
 const noRepoHint = repoRoot ? '' : ' No repoPath was given, so the agents worked in whatever directory they started in; if that is not this repository, that is the cause and not the symptom.'
+if (!behavior) log(`${phaseLabel}: behaviorCheck false — this phase closes on gates and review alone, which asserts nothing here is user-visible`)
+// The bill, where whoever reads the call can see it, since the caps above are typo-guards rather than
+// the rule: SKILL.md's answer is two reviewers and three rounds, and the arithmetic runs away quietly.
+const worst = 1 + (maxRounds + 1) * (1 + reviewers + (behavior ? 1 : 0) + 1) + maxRounds
+if (worst > 20) log(`${phaseLabel}: this configuration can dispatch up to ${worst} agents before it returns`)
 if (!repoRoot) log(`${phaseLabel}: no repoPath — agents will work in their own starting directory, which is only correct if that is the repository under test`)
 
 const WRITE_SCHEMA = {
@@ -182,22 +263,63 @@ const WRITE_SCHEMA = {
 const GATE_SCHEMA = {
   type: 'object',
   additionalProperties: false,
-  required: ['all_pass', 'results', 'failures', 'headSha'],
+  required: ['all_pass', 'results', 'failures', 'headSha', 'branch', 'tests'],
   properties: {
     all_pass: { type: 'boolean' },
     headSha: { type: 'string', description: 'Output of `git rev-parse HEAD`, exactly 40 hex characters. Captured here because gates run immediately before review, so this is the commit the reviewer will actually see.' },
+    branch: { type: 'string', description: 'Output of `git rev-parse --abbrev-ref HEAD`. Reported here every round because the review diffs against a named branch, and work committed somewhere else is invisible to it.' },
     results: { type: 'array', items: { type: 'string' }, description: 'One line per command: the command, its exit code, and the pass/fail/skip tally' },
     failures: { type: 'array', items: { type: 'string' } },
+    // Counted, not narrated. `results` already carries the tally in prose, and prose cannot be compared
+    // across rounds — which is what a shrinking suite requires. See the suite-shrink check below.
+    tests: {
+      type: 'object',
+      additionalProperties: false,
+      required: ['counted', 'passed', 'failed', 'skipped'],
+      properties: {
+        counted: { type: 'boolean', description: 'False if no command reported a test tally at all. Set the three numbers to 0 in that case; do not estimate them.' },
+        passed: { type: 'integer' },
+        failed: { type: 'integer' },
+        skipped: { type: 'integer', description: 'Includes skipped, xfailed, deselected and filtered-out tests.' },
+      },
+    },
   },
 }
 
+// Findings are confirmed by NUMBER, not by repeating the text. A triage agent asked to echo strings
+// verbatim can paraphrase, merge, or add one no reviewer raised — and whatever it returns becomes the
+// Fix agent's work list, and the Fix agent has write access and no schema. Indices make an invented
+// finding unrepresentable rather than merely discouraged.
 const TRIAGE_SCHEMA = {
   type: 'object',
   additionalProperties: false,
   required: ['confirmed', 'rejected'],
   properties: {
-    confirmed: { type: 'array', items: { type: 'string' }, description: 'Claims you checked and found real, verbatim as given' },
-    rejected: { type: 'array', items: { type: 'string' }, description: 'Claim, then one line on what the code actually does' },
+    confirmed: { type: 'array', items: { type: 'integer' }, description: 'The numbers of the claims you checked and found real. Numbers from the list given, nothing else.' },
+    rejected: {
+      type: 'array',
+      items: {
+        type: 'object',
+        additionalProperties: false,
+        required: ['item', 'why'],
+        properties: {
+          item: { type: 'integer', description: 'The number of the claim you are rejecting' },
+          why: { type: 'string', description: 'One line on what the code actually does' },
+        },
+      },
+    },
+  },
+}
+
+const BEHAVIOR_SCHEMA = {
+  type: 'object',
+  additionalProperties: false,
+  required: ['ran', 'blockedReason', 'observed', 'mismatches'],
+  properties: {
+    ran: { type: 'boolean', description: 'True only if you actually executed the path and watched what it did.' },
+    blockedReason: { type: 'string', description: 'Empty when ran is true. Otherwise what stopped you — a missing service, no credentials, no way to reach the surface.' },
+    observed: { type: 'array', items: { type: 'string' }, description: 'What you did and what you saw, step by step. Actual output, not a summary of it.' },
+    mismatches: { type: 'array', items: { type: 'string' }, description: 'Each place the observed behavior differs from what the plan says should happen.' },
   },
 }
 
@@ -213,11 +335,30 @@ const REVIEW_SCHEMA = {
   },
 }
 
+// A schema is a request, not a guarantee: what comes back is JSON a model typed. Every list this script
+// reads goes through here first, so a missing one becomes empty and a wrong-typed entry becomes readable
+// text instead of something the script indexes into. The script already hedges most of these with
+// `|| []`; the two that were not hedged — `gates.failures` and `review.blocking` — both crash the run
+// with a TypeError after every agent has already been paid for.
+// Findings are agent-written text of unbounded length, pasted whole into the next agent's prompt. One
+// runaway entry would push the instructions around it out of attention, which is the failure this
+// truncation exists to prevent — not a size limit for its own sake.
+const clip = t => (t.length > 1200 ? t.slice(0, 1200) + ' […truncated]' : t)
+
+function list(v) {
+  if (!Array.isArray(v)) return []
+  return v.map(x => (typeof x === 'string' ? x : JSON.stringify(x))).filter(x => x && x.trim())
+}
+
 // One retry on a dead agent, so an infrastructure failure is not counted as a review round.
+let agentsDispatched = 0
+
 async function tryAgent(prompt, opts) {
+  agentsDispatched++
   const r = await agent(prompt, opts)
   if (r !== null && r !== undefined) return r
   log(`${phaseLabel}: ${opts.label} returned nothing; retrying once`)
+  agentsDispatched++
   return await agent(prompt, opts)
 }
 
@@ -231,11 +372,12 @@ const branchInstruction = callerBranch
 let work = await tryAgent(
   where +
   `You are implementing ${phaseLabel}. Read the plan at ${planPath}.\n\n` +
-  `Tasks:\n${tasks}\n\n` +
+  `Tasks:\n${taskText}\n\n` +
   branchInstruction +
   `phases are sequential commits on one branch, and branching per phase makes the next phase's review ` +
-  `show this phase's work again. Where you add new behavior, write the test first and watch it fail ` +
-  `before making it pass.\n` +
+  `show this phase's work again. Where the project practises test-first — check its history and the ` +
+  `existing suite rather than assuming — write the test first and watch it fail before making it pass. ` +
+  `Either way, new behavior needs a test that fails without your change.\n` +
   `**Commit your work before returning**, matching the convention in \`git log --oneline -20\`, then ` +
   `report \`git rev-parse HEAD\` as headSha. Review diffs ref-to-ref: anything left uncommitted is ` +
   `invisible to it and will be reviewed as though you had changed nothing.\n` +
@@ -258,7 +400,7 @@ if (work.blocked) {
     `You are implementing ${phaseLabel}. A previous attempt stopped, reporting:\n` +
     `${(work.concerns || []).join('; ') || 'no detail given'}\n\n` +
     `Read the plan at ${planPath} and the tasks below, resolve what blocked the previous attempt if you can, ` +
-    `and implement.\n\nTasks:\n${tasks}\n\n` +
+    `and implement.\n\nTasks:\n${taskText}\n\n` +
     `If you are blocked for the same reason, set blocked=true again with a specific explanation — do not guess.`,
     { label: `write:${phaseLabel}:redispatch`, phase: 'Write', schema: WRITE_SCHEMA, model: models.write }
   )
@@ -319,6 +461,17 @@ let lastHead = writeHead
 // for the same reason, and because build.md requires the record to survive the phase.
 const nonblockingSeen = new Set()
 const rejectedSeen = []
+const untriaged = []
+// The largest suite this phase has seen run, and the fewest tests it has seen skipped. Reaching green
+// by deleting an assertion, skipping a case or filtering one out is the best-documented way an agent
+// forces a fix round to close, and it is invisible to every guard above: the tree changed, HEAD moved,
+// the gates exit 0. Only the tally moves, and only if something remembers the previous one.
+let peakExecuted = -1
+let leastSkipped = -1
+let tallyEverCounted = true
+// The last round's unresolved list, so the structural-bound return at the very bottom is not
+// empty-handed about work that was real either way.
+let lastFailures = []
 
 // Bounded by the verifications a full budget needs: maxRounds fixes plus one final check. The bound is
 // deliberately structural and independent of `fixes`, so the loop terminates even if the fix counter
@@ -341,7 +494,11 @@ while (verifyRound <= maxRounds + 1) {
     `For each: the command, its exit code, and the pass/fail/skip counts if it is a test command. ` +
     `A command that exits 0 with every test skipped is NOT a pass — report the tally so that is visible. ` +
     `Set all_pass only if every command exited 0 and none of them skipped everything.\n` +
-    `Also run \`git rev-parse HEAD\` and report it as headSha, all 40 characters, exactly as printed.`,
+    `Fill \`tests\` with the totals summed across every test command: how many passed, how many failed, ` +
+    `and how many were skipped, xfailed, deselected or filtered out. Copy the numbers the runner printed. ` +
+    `If no command reported a tally, set counted=false and leave the three at 0 rather than estimating.\n` +
+    `Also run \`git rev-parse HEAD\` and report it as headSha, all 40 characters, exactly as printed, ` +
+    `and \`git rev-parse --abbrev-ref HEAD\` as branch.`,
     { label: `gates:${phaseLabel}:r${round}`, phase: 'Gates', schema: GATE_SCHEMA, model: models.gates }
   )
   if (!gates) return { status: 'agent-error', phaseLabel, round, stage: 'gates' }
@@ -368,14 +525,93 @@ while (verifyRound <= maxRounds + 1) {
   }
   lastHead = gateHead
 
+  // Checked every round, not only at the write step. A fix agent that strays onto another branch leaves
+  // this one unchanged, so the review sees the same diff, the same findings come back, and the phase
+  // grinds to cap-exhausted with nothing in the result to say why.
+  const gateBranch = ref(gates.branch)
+  if (gates.branch !== undefined && gateBranch && gateBranch !== branch) {
+    return { status: 'agent-error', phaseLabel, round, fixes, stage: fixes === 0 ? 'write' : 'fix', branch, reason: `the working tree is on "${gateBranch}" but this phase runs on "${branch}" — the review diffs ${base}..${branch}, so anything committed elsewhere is invisible to it` }
+  }
+
+  // ── Did the suite shrink? ───────────────────────────────────
+  // Arithmetic on the tally, by the same reasoning that makes closure arithmetic on the finding count:
+  // the script already stores the previous HEAD to catch a fix round that committed nothing, and storing
+  // the previous tally catches a fix round that reached green by removing a test, at no extra agent.
+  //
+  // Deliberately a FINDING and not an error. Deleting an obsolete test is legitimate work, and a phase
+  // that hard-failed on it would be unusable. Routing it through triage is the point: if the deletion
+  // was right, triage rejects the finding and it costs one paragraph; if it was a fix round buying green,
+  // triage confirms it and the fix round is spent putting the test back.
+  const suiteFindings = []
+  let behaviorFindings = []
+  let behaviorObserved = []
+  // Coerced, because a model asked for an integer can return "11": `"11" + "1"` is "111", which is
+  // larger than any real suite and so never trips the shrink test. The same schema-is-a-request
+  // reasoning as `list()` and the `all_pass === true` identity test above.
+  const num = v => (Number.isFinite(Number(v)) && Number(v) >= 0 ? Math.floor(Number(v)) : null)
+  const rawTally = gates.tests && gates.tests.counted === true ? gates.tests : null
+  const tally = rawTally && [rawTally.passed, rawTally.failed, rawTally.skipped].every(v => num(v) !== null)
+    ? { passed: num(rawTally.passed), failed: num(rawTally.failed), skipped: num(rawTally.skipped) }
+    : null
+  // A tally that stops being reported between rounds is indistinguishable from a suite that was
+  // deleted, and it silently disables every comparison below. Say so rather than skipping it.
+  if (!tally && peakExecuted >= 0) {
+    suiteFindings.push(`An earlier round in this phase counted ${peakExecuted} test(s); this round reported no tally at all. A suite that stops being countable between rounds cannot be told apart from one that was deleted — name the command whose tally disappeared and say what it collects now.`)
+  }
+  // Never counted, on any round. The shrink test then has no baseline and can never fire, which is a
+  // guard that is off rather than a guard that passed — so say it once, in the result, rather than
+  // letting a silent absence read as a clean check.
+  if (!tally && peakExecuted < 0) tallyEverCounted = false
+  if (tally) {
+    const executed = (tally.passed || 0) + (tally.failed || 0)
+    const skipped = tally.skipped || 0
+    const total = executed + skipped
+    if (peakExecuted >= 0 && total < peakExecuted) {
+      suiteFindings.push(`The test suite collected ${peakExecuted - total} fewer test(s) this round than earlier in this phase (${peakExecuted} then, ${total} now). Reaching green by deleting a test or narrowing a selector is not a fix — identify which tests disappeared from the diff and say whether removing them was the planned work or a way past a failure.`)
+    }
+    if (leastSkipped >= 0 && skipped > leastSkipped) {
+      suiteFindings.push(`${skipped - leastSkipped} more test(s) are being skipped than earlier in this phase (${leastSkipped} then, ${skipped} now). A skip added during a fix round is a defect hidden, not fixed — name the tests and say why each is skipped.`)
+    }
+    peakExecuted = peakExecuted < 0 ? total : Math.max(peakExecuted, total)
+    leastSkipped = leastSkipped < 0 ? skipped : Math.min(leastSkipped, skipped)
+  }
+
   let review = null
-  if (gates.all_pass) {
+  // Read as an identity, never for truthiness. A model asked for a boolean can return the STRING
+  // "false", which is truthy — and read that way this line closes the phase on a red build, which is
+  // precisely the rationalisation the script exists to make impossible. Every other reply field here is
+  // shape-checked; this is the one the control flow actually branches on.
+  const green = gates.all_pass === true
+  if (green) {
     phase('Review')
     // The diff and the plan, and nothing else. Not the implementer's summary, not its list of
     // low-confidence areas, not an instruction about where to look: the value of a second reviewer is
     // that it never saw the reasoning that produced the change, and a shared attention directive
     // correlates the two readings it is there to keep independent. The concerns are returned to the
     // caller instead, where they inform the human without steering the review.
+    // The directed questions are ordered by consequence, because a directed question dominates a
+    // reviewer's attention and the ones at the top get the most of it. The first three ask whether the
+    // code is WRONG; the last three are scope bookkeeping. The earlier set was bookkeeping only, which
+    // aimed the one mechanism that catches defects at the class least likely to contain them.
+    const questions =
+      `Check specifically, in this order:\n` +
+      `- What does this do on the inputs it does not expect — absent, empty, malformed, at the boundary, ` +
+      `out of order, concurrent, or far larger than the happy path? Name the case and what happens.\n` +
+      `- If the diff touches untrusted input, authentication, authorization, secrets, file paths, ` +
+      `subprocess or shell invocation, query construction, deserialization, or anything sent to a third ` +
+      `party: what is the worst a hostile input can make it do? Skip this line if it touches none of them.\n` +
+      `- Does the diff weaken the existing tests — an assertion removed or loosened, a case skipped or ` +
+      `marked expected-to-fail, a selector narrowed, a timeout raised, a retry added? Quote the removed ` +
+      `lines. Deleting a test can be correct; doing it in the same change that had to pass is the case to flag.\n` +
+      `- Does new behavior have a test that would fail without this change? Name the line of the diff ` +
+      `that makes it pass. A test that passes with the change reverted is testing nothing.\n` +
+      `- Does every changed line trace to the Goal or a recorded Decision, and does anything land in the ` +
+      `plan's Non-goals?\n` +
+      `- Does the PLAN look wrong — an acceptance that cannot fail, a Goal that does not match what was ` +
+      `asked for, a Decision with only one option? A diff that conforms to a wrong plan passes every ` +
+      `other question here.\n` +
+      `- Any comment narrating process rather than explaining code?\n`
+
     const reviewPrompt =
       where +
       `Review the diff at \`git diff ${base}..${branch}\` against the plan at ${planPath}. ` +
@@ -383,38 +619,106 @@ while (verifyRound <= maxRounds + 1) {
       `Report everything you find, at any severity; the caller triages. Cite file:line from the diff for ` +
       `each finding. Mark a finding blocking only if it is wrong behavior, a broken contract, or work ` +
       `outside the plan's Goal.\n\n` +
-      `Check specifically:\n` +
-      `- Does every changed line trace to the Goal or a recorded Decision?\n` +
-      `- Does anything land in the plan's Non-goals?\n` +
-      `- Does new behavior have a test, and did that test ever fail?\n` +
-      `- Any comment narrating process rather than explaining code?\n` +
+      questions +
       `\nDo not modify code.`
 
     // Reviewers run independently and in parallel, and their findings are UNIONed.
-    // Measured on this repo's own design docs, with every finding re-checked adversarially: a second
+    // Measured on the design docs of the project that produced this skill, every finding re-checked
+    // adversarially: a second
     // reviewer finds much of what the first missed, and the three overlap little. Low overlap is the
     // reason a second reviewer pays; it is also why the union must never be filtered down to
     // what they agree on — agreement would discard most of the real findings.
-    const verdicts = (await parallel(
-      Array.from({ length: reviewers }, (_, i) => () =>
-        tryAgent(reviewPrompt, {
-          label: reviewers > 1 ? `review:${phaseLabel}:r${round}:v${i + 1}` : `review:${phaseLabel}:r${round}`,
-          phase: 'Review',
-          schema: REVIEW_SCHEMA,
-          model: models.review,
-        })
-      )
-    )).filter(Boolean)
+    //
+    // That measurement used byte-identical prompts, so the low overlap it recorded came from sampling
+    // noise alone. The closing line below adds a second, structural source of it: both reviewers still
+    // answer every question above, so nothing the measurement relied on is given up, but each is sent in
+    // with a different first instinct about where to look hardest. Decorrelation is what a second reader
+    // is bought for, and two different closing sentences cost exactly what two identical ones cost.
+    // Reviewer 2's extra read is the REPOSITORY, not the author: the isolation rule bars the
+    // implementer's summary and its session, not the code's own history. It buys a class a diff cannot
+    // show — an approach that was already tried here and reverted.
+    const emphasis = [
+      `\nRead as an adversary hunting a case that breaks it: assume the change is wrong somewhere and find where.`,
+      `\nAfter that diff, run \`git log -p -20\` on the paths it touches and read how the code got here. ` +
+      `Then read as the person who maintains it next year: assume the change works today, and find what it will cost.`,
+    ]
+    // The behavior check runs beside the reviewers, not after them: it reads the running product where
+    // they read the diff, so it costs no wall-clock and it catches the class no diff review can. Green
+    // gates say the code the author wrote does what the author's tests assert. Only driving the path
+    // says the user can complete the job.
+    // Tagged, not positional. `parallel()` is documented to return results for the thunks it was given;
+    // nothing in its contract promises the order survives, and telling a reviewer's verdict from a
+    // behavior observation by array index would fail silently and in the worst possible way if it did not.
+    const jobs = Array.from({ length: reviewers }, (_, i) => () =>
+      tryAgent(reviewPrompt + (reviewers > 1 ? emphasis[i % emphasis.length] : ''), {
+        label: reviewers > 1 ? `review:${phaseLabel}:r${round}:v${i + 1}` : `review:${phaseLabel}:r${round}`,
+        phase: 'Review',
+        schema: REVIEW_SCHEMA,
+        model: models.review,
+      }).then(r => ({ kind: 'review', r }))
+    )
+    if (behavior) {
+      jobs.push(() => tryAgent(
+        where +
+        `Drive this change the way a user meets it and report what you observe. Do not read the diff, ` +
+        `and do not read the implementer's account of the work — you are here to find out what the ` +
+        `software actually does.\n\n` +
+        `The path to exercise:\n${behavior}\n\n` +
+        `The plan at ${planPath} states what should happen; read its Goal and Accept. Then run the path ` +
+        `for real — start the service, call the endpoint, run the command, load the page. Record the ` +
+        `actual output, not a summary of it.\n` +
+        `Try the edges as well as the happy path: the empty case, the error case, the unauthorized case, ` +
+        `and whatever a user would plausibly do wrong.\n` +
+        `List every place what you saw differs from what the plan says should happen. If the plan is ` +
+        `silent on something you observed and it looks wrong, say so — silence is not permission.\n` +
+        `If you genuinely cannot run it, set ran=false and say exactly what stopped you. Do not report ` +
+        `an inspection of the source as though it were a run.\n` +
+        `Do not modify code.`,
+        { label: `behavior:${phaseLabel}:r${round}`, phase: 'Review', schema: BEHAVIOR_SCHEMA, model: models.behavior }
+      ).then(r => ({ kind: 'behavior', r })))
+    }
+    const results = (await parallel(jobs)).filter(x => x && x.r)
+    const verdicts = results.filter(x => x.kind === 'review').map(x => x.r)
+    const observation = results.filter(x => x.kind === 'behavior').map(x => x.r)[0] || null
 
     // A reviewer that dies is not a reviewer that passed.
     if (verdicts.length < reviewers) {
       return { status: 'agent-error', phaseLabel, round, stage: 'review', reason: `${verdicts.length}/${reviewers} reviewers returned` }
     }
 
-    const reported = [...new Set(verdicts.flatMap(v => v.blocking || []))]
-    verdicts.flatMap(v => v.nonblocking || []).forEach(n => nonblockingSeen.add(n))
+    // A behavior check that was asked for and did not happen is not a behavior check that passed. This
+    // stops the phase rather than recording a note, because the note is exactly what gets skimmed past:
+    // the caller passed `behaviorCheck` to say the acceptance is not fully expressible as an exit code,
+    // and closing green without it would put back the gap the argument exists to close.
+    if (behavior) {
+      if (!observation) return { status: 'agent-error', phaseLabel, round, stage: 'behavior', reason: 'the behavior check did not return' }
+      if (!observation.ran) {
+        // The reviewers ran, and their findings are the expensive part of this round. Returning without
+        // them would make the caller pay for the round twice.
+        return {
+          status: 'behavior-unverified',
+          phaseLabel, round, fixes, gateFixes, reviewFixes, branch, depth: resolvedDepth, reviewers,
+          headSha: gateHead,
+          reason: `the behavior check could not be run: ${observation.blockedReason || 'no reason given'}`,
+          gates: list(gates.results),
+          reviewFindings: [...new Set(verdicts.flatMap(v => list(v.blocking)))],
+          nonblocking: [...new Set([...nonblockingSeen, ...verdicts.flatMap(v => list(v.nonblocking))])],
+          rejected: rejectedSeen,
+          concerns,
+        }
+      }
+      behaviorObserved = list(observation.observed)
+      behaviorFindings = list(observation.mismatches).map(m => `Observed behavior does not match the plan: ${m}`)
+    }
 
-    // Triage before counting. Measured on this repo's own review output, blind adversarial
+    const reported = [...new Set([
+      ...suiteFindings,
+      ...verdicts.flatMap(v => list(v.blocking)),
+      ...behaviorFindings,
+    ])]
+    verdicts.flatMap(v => list(v.nonblocking)).forEach(n => nonblockingSeen.add(n))
+
+    // Triage before counting. Measured on that project's own review output, blind adversarial
     // checking rejected a large share of blocking-graded findings. Closing on the RAW count lets a
     // phantom defect consume a fix round and exhaust the cap on already-correct code, so the
     // arithmetic below runs on confirmed findings only.
@@ -424,7 +728,7 @@ while (verifyRound <= maxRounds + 1) {
       const triage = await tryAgent(
         where +
         `Check each claimed defect below against the actual code in \`git diff ${base}..${branch}\`. ` +
-        `Decide which are real.\n\n${reported.map((f, i) => `${i + 1}. ${f}`).join('\n')}\n\n` +
+        `Decide which are real.\n\n${reported.map((f, i) => `${i + 1}. ${clip(f)}`).join('\n')}\n\n` +
         (rejectedSeen.length
           ? `An earlier round already checked these claims and rejected them, with the reason. If one ` +
             `reappears above, it is very likely the same phantom — say so rather than re-deriving it:\n` +
@@ -434,16 +738,55 @@ while (verifyRound <= maxRounds + 1) {
         `real property that is not a problem, or dissolves once you read the surrounding lines. ` +
         `Confirm one only after you have looked at the cited code and the defect is really there. ` +
         `When torn, look again rather than confirming defensively.\n` +
-        `Return confirmed (verbatim, as given) and rejected (each with one line on what the code actually does). ` +
+        `Rule on every claim: put its NUMBER in confirmed or in rejected. Do not restate the claims, ` +
+        `do not merge two into one, and do not add a claim of your own — anything you confirm becomes ` +
+        `an instruction to an agent with write access, so the list has to be theirs and not yours.\n` +
         `Do not modify code.`,
         { label: `triage:${phaseLabel}:r${round}`, phase: 'Triage', schema: TRIAGE_SCHEMA, model: models.triage }
       )
       if (!triage) return { status: 'agent-error', phaseLabel, round, stage: 'triage' }
-      blocking = triage.confirmed || []
-      if (triage.rejected && triage.rejected.length) {
-        triage.rejected.forEach(x => { if (!rejectedSeen.includes(x)) rejectedSeen.push(x) })
-        log(`${phaseLabel}: triage rejected ${triage.rejected.length}/${reported.length} blocking findings`)
+
+      // Confirmation is a selection from the list, not a list the triage agent writes. The previous
+      // contract asked for the strings back "verbatim, as given" and then used whatever came back: an
+      // agent that paraphrased, merged two findings, or added one no reviewer raised set the Fix
+      // agent's work list to it. Indices make that unrepresentable rather than merely discouraged, and
+      // the arithmetic below is the whole reason this script exists.
+      const inRange = n => Number.isInteger(n) && n >= 1 && n <= reported.length
+      const confirmedIdx = new Set((triage.confirmed || []).filter(inRange))
+      const rejectedIdx = (triage.rejected || []).filter(r => r && inRange(r.item) && !confirmedIdx.has(r.item))
+      const ruled = new Set([...confirmedIdx, ...rejectedIdx.map(r => r.item)])
+      // Ruling on NOTHING and ruling on SOME are both stops, and they are deliberately different ones.
+      // Nothing at all is an agent that did not do its job — retry it. A partial ruling below is a real
+      // result that is merely incomplete, and the caller needs the part that was ruled on.
+      if (!ruled.size) {
+        return { status: 'agent-error', phaseLabel, round, fixes, stage: 'triage', branch, reason: `triage ruled on none of the ${reported.length} finding(s) — nothing confirmed and nothing rejected is an agent that did not run, not a review that came back clean` }
       }
+      blocking = reported.filter((_, i) => confirmedIdx.has(i + 1))
+      rejectedIdx.forEach(r => {
+        const line = `${reported[r.item - 1]} — rejected: ${r.why}`
+        if (!rejectedSeen.includes(line)) rejectedSeen.push(line)
+      })
+      // Neither confirmed nor rejected. Not counted as blocking — confirming by default is how a phantom
+      // spends a fix round — but not dropped either: a phase that closed on findings nobody looked at
+      // would be a false green produced by the one step whose job is to prevent them.
+      const unruled = reported.filter((_, i) => !ruled.has(i + 1))
+      unruled.forEach(f => { if (!untriaged.includes(f)) untriaged.push(f) })
+      if (unruled.length) {
+        return {
+          status: 'triage-incomplete',
+          phaseLabel, round, fixes, gateFixes, reviewFixes, branch, depth: resolvedDepth, reviewers,
+          headSha: gateHead,
+          reason: `triage ruled on ${ruled.size} of ${reported.length} findings; the rest are neither confirmed nor rejected, so the phase cannot close and cannot honestly spend a fix round on them`,
+          untriaged: unruled,
+          blocking,
+          rejected: rejectedSeen,
+          nonblocking: [...nonblockingSeen],
+          gates: list(gates.results),
+          concerns,
+        }
+      }
+      if (rejectedIdx.length) log(`${phaseLabel}: triage rejected ${rejectedIdx.length}/${reported.length} blocking findings`)
+      if (ruled.size < reported.length) log(`${phaseLabel}: triage did not rule on ${reported.length - ruled.size}/${reported.length} findings — treated as unconfirmed and returned as untriaged`)
       phase('Review')
     }
 
@@ -471,13 +814,22 @@ while (verifyRound <= maxRounds + 1) {
         // line: it is what stops the same phantom coming back, and what a reader needs to see whether
         // triage was doing its job or waving findings through.
         rejected: rejectedSeen,
+        untriaged,
+        // The only cost this script can honestly report. Tokens and dollars are not observable from
+        // inside a Workflow script, so a budget stated in those units would be a rule with no mechanism.
+        agentsDispatched,
+        // What the behavior check saw, when one was asked for. The phase cannot close without it
+        // having run, so this is a record of the observation the closure rests on, not a note.
+        behavior: behavior ? { ran: true, observed: behaviorObserved } : { ran: false, reason: 'behaviorCheck was false: this phase closed on gates and review alone' },
+        tests: tallyEverCounted ? gates.tests : { counted: false, note: 'no round of this phase reported a test tally, so the suite-shrink check never had a baseline and never ran' },
         concerns,
       }
     }
   }
 
-  const failures = gates.all_pass ? review.blocking : gates.failures
-  const stage = gates.all_pass ? 'review' : 'gates'
+  const failures = green ? review.blocking : list(gates.failures)
+  lastFailures = failures
+  const stage = green ? 'review' : 'gates'
 
   // A gate run that fails without naming what failed cannot be fixed: the Fix agent would get an
   // empty list, edit something arbitrary, and spend a round on a null instruction.
@@ -494,9 +846,14 @@ while (verifyRound <= maxRounds + 1) {
       unresolved: failures,
       nonblocking: [...nonblockingSeen],
       rejected: rejectedSeen,
+      untriaged,
+      agentsDispatched,
       // Which kind of failure consumed the budget changes what the escalation should say: three
       // rounds lost to a red build is not the planning deadlock escalation.md describes.
-      exhaustedBy: gateFixes > 0 && reviewFixes === 0 ? 'gates' : reviewFixes > 0 && gateFixes === 0 ? 'review' : 'mixed',
+      // 'none' is a distinct state from 'mixed' and reads oppositely: with maxRounds 0 the phase is
+      // exhausted having spent nothing, and an escalation told the budget went on 'both kinds' would
+      // send its reader looking for rounds that never ran.
+      exhaustedBy: fixes === 0 ? 'none' : gateFixes > 0 && reviewFixes === 0 ? 'gates' : reviewFixes > 0 && gateFixes === 0 ? 'review' : 'mixed',
     }
   }
 
@@ -505,7 +862,7 @@ while (verifyRound <= maxRounds + 1) {
   const fixed = await tryAgent(
     where +
     `Fix these ${stage} failures on branch "${branch}". Inspect the diff with ` +
-    `\`git diff ${base}..${branch}\`.\n\n${failures.map(f => `- ${f}`).join('\n')}\n\n` +
+    `\`git diff ${base}..${branch}\`.\n\n${failures.map(f => `- ${clip(f)}`).join('\n')}\n\n` +
     `State the root cause of each item ("X is caused by Y") before editing, and change that cause — ` +
     `one at a time, smallest change that addresses it.\n` +
     `If a cause is not obvious, rank 3-5 falsifiable hypotheses and find the observation that ` +
@@ -538,5 +895,13 @@ return {
   status: 'agent-error',
   phaseLabel, round: verifyRound, fixes, gateFixes, reviewFixes, branch, depth: resolvedDepth, reviewers,
   stage: 'loop-exit',
-  reason: 'the verify loop hit its structural bound without returning a verdict — the fix counter did not advance',
+  // Deliberately not a diagnosis. The earlier wording asserted the fix counter had not advanced, which
+  // is only one way to arrive here: changing the cap test to `fixes > maxRounds` reaches it with the
+  // counter working perfectly and sends the reader to the wrong place. State what was observed.
+  reason: `the verify loop hit its structural bound after ${verifyRound - 1} verification(s) and ${fixes} fix(es) against a budget of ${maxRounds}, without returning a verdict — the loop and its counters disagree`,
+  unresolved: lastFailures,
+  nonblocking: [...nonblockingSeen],
+  rejected: rejectedSeen,
+  untriaged,
+  concerns,
 }
