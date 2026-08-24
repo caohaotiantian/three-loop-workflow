@@ -219,9 +219,38 @@ echo "== the always-loaded surface has not bloated =="
 # Anti-bloat is held by review, not by a ceiling — v1 reached 2,915 words under a numeric cap, which is
 # why the cap is not the mechanism. This is a backstop against silent drift, set well above the
 # reviewed size, not the thing that keeps the file short.
-s_now=$(words three-loop-workflow/SKILL.md)
-[ "$s_now" -le 1500 ] && ok "SKILL.md is $s_now words (backstop 1500)" \
-                      || bad "SKILL.md has drifted to $s_now words — re-review before raising the backstop"
+# ── anti-bloat, over EVERY prose surface ─────────────────────────────────────────────────────────
+# A backstop against silent drift, per file, deliberately set above each reviewed size — not a budget
+# to spend. Before 2026-08-24 only SKILL.md had one, so the always-loaded surface was held and the
+# eight-times-larger reference set beside it was not; a set that grew 18% in a single pass is what that
+# gap looks like. Every prose file now carries one, and so does the total.
+#
+# The objection to raising SKILL.md's own number (1500 -> 2300) in the same pass that grew the file is
+# worth recording beside the change: raising the mechanism that opposes growth is the wrong reflex.
+# Three things answer it. The additions are RULES, not prose — two-part acceptance, the behavior-check
+# term in the termination rule, the gitignore check, baseSha, the depth-trigger checklist, a NOT-WHEN in
+# the description; each was argued for individually and several displaced something. The old number had
+# itself caused a defect: the rewrite that stripped the two-reviewer figures to fit it left a paraphrase
+# misstating them in both directions. And the published limit this stands in for is 500 LINES; the file
+# is 122. What is NOT an answer is shaving synonyms to land on a number — that is the behaviour that
+# produced the defect above. Re-review, then move the number in its own commit, with the reason here.
+budget() {
+  local f="$1" cap="$2" n
+  n=$(words "$f")
+  [ "$n" -le "$cap" ] && ok "$f is $n words (backstop $cap)" \
+                      || bad "$f has drifted to $n words (backstop $cap) — re-review before raising it"
+}
+budget three-loop-workflow/SKILL.md                    2300
+budget three-loop-workflow/references/build.md          3600
+budget three-loop-workflow/references/plan.md           2200
+budget three-loop-workflow/references/orchestration.md  1900
+budget three-loop-workflow/references/maintenance.md    1600
+budget three-loop-workflow/references/escalation.md     1300
+budget three-loop-workflow/references/close.md           850
+budget three-loop-workflow/references/platforms.md       750
+prose_now=$(words three-loop-workflow/SKILL.md three-loop-workflow/references/*.md)
+[ "$prose_now" -le 14000 ] && ok "the whole prose surface is $prose_now words (backstop 14000)" \
+                           || bad "the prose surface has grown to $prose_now words — the per-file budgets can all pass while the set still grows"
 
 echo "== published numbers match the recomputation =="
 DOCS="README.md README-cn.md CHANGELOG.md CHANGELOG-cn.md docs/announcement-v2.0.0.md docs/announcement-v2.0.0-cn.md docs/why-v2.md docs/why-v2-cn.md"

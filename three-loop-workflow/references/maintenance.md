@@ -12,18 +12,18 @@ Write an entry when — and only when — one of these is true:
 
 - Something cost you real time that a note would have saved: a platform quirk, a tool that reports success while doing nothing, a documented command whose behavior is not its behavior.
 - An idea was raised and deliberately **not** done, so nobody re-proposes it without new information.
-- The guide claimed something the repo contradicted. Two cases, and they part company: if the **guide** is wrong, correct that line now, in its own commit, and go back to what you were doing — a wrong instruction left standing costs every later reader more than the two minutes. If the **command** is broken, do not fix it here; state in the guide what it currently does, and file the repair.
+- The guide claimed something the repo contradicted. Two cases, and they part company: if the **guide** is wrong, correct that line now, in its own commit, and go back to what you were doing — a wrong instruction left standing costs every later reader more than the two minutes. That exemption is for correcting a *claim* — a command that has been renamed, a count that has moved. Changing a **rule** in the guide is a Deep change like any other, and it waits for its own task. If the **command** is broken, do not fix it here; state in the guide what it currently does, and file the repair.
 - Something was settled that has no other home. Anything that changes the Goal, a Decision or Accept goes in `plan.md`, and anything tactical goes in the commit body (`escalation.md`, "Record the answer") — this is for what belongs to neither, because it is not about this diff at all.
 
 An entry is a few lines: what happened, and the rule that generalises from it. "Test things" generalises nothing. "A patch that no longer applies must count as a failure, not a skip" is the level that pays.
 
 **Do not journal what you did.** The commits and the PR describe the change. A record that restates them is exhaust, and the archive it accumulates into is read by nobody — this skill deleted one for exactly that reason (`close.md`, "What Close does not do").
 
-**What makes this different is its cost when nobody folds it, not a promise that somebody will.** A committed archive costs attention on every clone and in every review whether it is read or not — that is what made the last one worth deleting. A gitignored journal costs nothing if it is never folded; it is simply lost, which is the right outcome for a note not worth promoting. The entry condition and the prohibition above are what keep it that way; a journal that grows past them is the archive again under a new name.
+A gitignored journal costs nothing if nobody ever folds it; it is simply lost, which is the right outcome for a note not worth promoting. That is what makes it different from the committed archive this skill deleted, which cost attention on every clone whether it was read or not — and the entry condition and the prohibition above are the only two things keeping it from becoming that archive under a new name.
 
-It does not travel, either: run this pass in a fresh clone and you read an empty journal, which is indistinguishable from a clean project. Fold on the machine the work happened on.
+It does not travel, either: run this pass in a fresh clone and you read an empty journal, indistinguishable from a clean project. Fold on the machine the work happened on.
 
-All of that rests on `.agent/` being in the repository's `.gitignore`, which the skill asserts everywhere and establishes nowhere. Check it once per repo. If it is not ignored, the journal is committed, every reviewer reads it alongside the diff, and the argument above inverts: it becomes the archive this skill deleted, at full price.
+All of that rests on `.agent/` being in the repository's `.gitignore` — `SKILL.md` §2 has you check that the first time you use it here. If it is not ignored, the journal is committed, every reviewer reads it alongside the diff, and the argument above inverts: it becomes the archive this skill deleted, at full price.
 
 ## The pass
 
@@ -36,11 +36,8 @@ Expect the damage to fall unevenly, because it does: **rules and traps age well,
 - **Do not write down a number a command prints. Write the command.**
 - **Record the identifier, not the status** — a pull request number outlives "not merged yet".
 
-Asked directly, most agents state both rules unprompted; they are not counter-intuitive. They are here
-because *doing* is not *answering*. On the day this file was written its author put four hand-counted
-figures into project documents — a word delta, a commit count, a file count falsified by the next
-commit of the same change, and a failure count that was wrong by one — while writing the rule against
-it. Every one was caught by someone re-running the thing rather than re-reading the sentence.
+Both rules are easy to agree with and easy to skip, because *doing* is not *answering*: the author of
+this file broke both, four times, in the documents written the same day as the rule.
 
 **2. Promote what the journals earned.** An entry belongs in the guide when a future agent would do the wrong thing without it: a norm, a trap, a command, a decision now settled. It does not belong there when it is a fact about the code (the code says it better), a record of what happened (the commit says it better), or a rule a capable model already follows.
 
@@ -62,11 +59,9 @@ It produces no report: the output is a corrected guide and a shorter journal.
 
 It does not touch the historical record — dated audits, released changelog entries, frozen archives. Correcting those retroactively destroys the only evidence of what was believed at the time; add a dated note beside the claim instead.
 
-It does not run at the close of a change. Considered and rejected: Close runs on Deep changes only, so the interval would be undefined, and it fires where the budget is most spent and adjacent work is most dangerous.
+It does not run at the close of a change: Close runs on Deep changes only, so the interval would be undefined, and it fires where the budget is most spent.
 
-**The boundary with Close is where the change stops.** `close.md`'s Documentation step reconciles what *this change* made stale — a command it renamed, a norm it changed — and scopes that tightly on purpose. This pass is for the drift no single change caused: the claim that was true when it was written, the count that moved while nobody was editing the sentence around it. *Did my change break this line?* is Close. *Is this document still true?* is here.
-
-Nor does `scripts/phase.js` run it. The script drives one phase of one change, so it would fire several times inside a single change, which is neither periodic nor cheap — and a Workflow script has `agent()`, `parallel()`, `phase()` and `log()` and no shell (`orchestration.md`), so it cannot inspect a directory to decide whether the pass is due.
+**The boundary with Close is where the change stops.** `close.md`'s Documentation step reconciles what *this change* made stale, and scopes that tightly on purpose. This pass is for the drift no single change caused. *Did my change break this line?* is Close. *Is this document still true?* is here.
 
 ## The limit, stated
 
