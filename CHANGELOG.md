@@ -2,6 +2,154 @@
 
 Full version history for the three-loop-workflow skill. See [README.md](./README.md) for what the skill is, when it applies, and how to install it.
 
+## v2.6.0 — aimed at the person, and at what is likely wrong
+
+Four independent reviews read v2.5.0 — the always-loaded surface, the Build loop with `phase.js`
+beside it, this repository's own prior audits against published practice, and a red-team walk-through
+of six concrete requests — and were merged into one plan before anything was edited. Two findings
+recurred across all four. Every mechanism here checks the diff against the plan, and nothing checks
+the plan against the person who asked. And the ceremony a Deep grade buys is priced identically
+whatever tripped it, so the cheapest thing the skill could do for a small change caught by one trigger
+was the thing it never did.
+
+**Confirm the reading before you build.** Where the Goal names a reading of the request that could
+have gone the other way, that sentence and Accept's observable outcome go in front of whoever asked,
+and you wait. One exchange against a whole build spent on the wrong thing — and on a Standard change,
+where there is no plan reviewer, it is the only independent check on whether this is the *right*
+change rather than a correct implementation of a wrong one. Where nothing was ambiguous it costs
+nothing: say what you are about to do and carry on. Where nobody is reachable, the Goal records that
+the reading was unconfirmed, so the diff reviewer knows to question it.
+
+**The description advertised two modes the skill did not serve.** v2.5.0 dropped the guide-refresh
+clause — the one trigger phrasing this repo has ever measured — and with it the only route to
+`maintenance.md`, which became unreachable text again. The clause is restored, in a form the NOT-WHEN
+list cannot swallow; the restoration is a wording change and was not re-measured, which is a task of
+its own. The other advertised mode, reviewing a change before it lands, routed a reader into a
+workflow whose every step assumes you are the author: no plan, no `baseSha` of yours, five reviewer
+questions that cannot be answered, and no exit that reads "hand the findings over". §4 now implements
+that path rather than withdrawing the claim — base from `git merge-base`, the existing reviewer
+prompt with two substitutions, gates run rather than trusted from a badge, triage as always, findings
+handed to the author, and no fixing.
+
+**The anchor map is no longer written as the normal case.** The longest sentence on the always-loaded
+surface described a convention essentially no repository outside this one has, and the fallback
+covering nearly every real repository got one line. That is inverted: unstructured prose is the normal
+guide, you read it and take the gate commands, the contract files and the norms; the role-anchored form
+is the special case that makes role citations resolve directly. Where a role has no home, derive it
+from the repository and say in one line what you inferred and from where — a missing role never means
+the rule it feeds is skipped. Offering to restructure someone's guide mid-change is gone: it edits a
+contract file, so it is a Deep change of its own, proposed after this one lands. And where a repo has
+no gates at all, that is now stated before building rather than absorbed silently, because writing a
+project's first test infrastructure is a scope decision.
+
+**Deep scales to the trigger that fired.** The instruction to "run the parts that catch the risk, not
+the ceremony" handed back exactly the judgement the checklist had just removed, and in half the
+red-team scenarios that was the cost driver. Each trigger now names the mechanisms that catch *its*
+risk and the ones to drop without asking: a contract break keeps the escalation, the compatibility
+decision, the deprecation artefacts and `close.md`'s blast-radius read and rollback re-read, and drops
+phases unless the surface is large; an irreversible outside effect keeps Rollback, migration
+verification and a behavior check on real-shaped data; a contract-file rule edit drops phases and
+migration steps, and the Close section carrying its weight is the read-as-a-product pass — both plan
+readers and a Close pass are universal at Deep, and what the table scales is the phasing and which
+Close sections carry the weight; structural alternatives keep the alternatives
+and a spike, and nothing else until the choice is made. A one-line rule edit that trips a trigger runs
+that trigger's row and nothing else.
+
+Four smaller edits to the same surface. The first grade is **provisional** — a build that turns up a
+contract, a migration or a load-bearing rule you did not see stops before the next commit and
+re-grades, upward on your own judgement and downward only on the user's. When the contract trigger
+fires, the first Decision in the plan is **whether the break is necessary at all** — an alias, a
+defaulted field, a new surface beside the old one, a deprecation window — because "we could avoid
+breaking this" is not a detail the user can supply later. Direct admits a **patch or minor** dependency
+bump, never a major one; the old wording let unbounded blast radius through on the absence of an
+advisory. And a defect whose cause is unknown is now routed to Diagnosis *before* the plan, as its own
+task with the cause as its Goal and a reproduction as its Accept, because you cannot write an
+acceptance command for a fix you have not diagnosed.
+
+### In the references
+
+Triage answers two questions in order — **is it true, and is it this change's problem?** The five-point
+scale answers only the first, and a finding that names a declared Non-goal scored 75-plus and then got
+fixed. The skill *manufactures* these, because the reviewer is aimed at the Non-goals; they are now
+rejected by name, with one line saying which Non-goal and that it is worth its own task.
+
+The behavior check gains a **read** mode, for something read rather than run: the reader is handed the
+finished files in the order a new user meets them, with no diff and no account of what changed, and
+answers whether every step can be performed as written and whether any two sections contradict. This
+repository's own load-bearing-document changes are that case, and the only expressible answer before
+was `false` — the assertion that nobody will read it.
+
+The reviewer questions now lead with the two classes gates catch least: what happens when something
+the change calls **fails**, and which facts about code **outside the diff** the change assumes. A
+process-comment question was cut to make the slot, and the prompt now says that a diff of generated
+artefacts — notebooks, lockfiles, snapshots, minified output — must be read in its source form,
+because a diff you cannot read is not a diff you reviewed. A fix round may never edit the plan: the
+plan is gitignored and therefore invisible to every reviewer that follows, which makes widening the
+Goal the cheapest way to clear a finding. Close re-reads **Rollback against what actually landed** —
+a recorded rollback that no longer works is a blocking finding, not a note — and its prohibition on
+closure documents gained the positive half it never had: what the person merging this receives, in
+the PR body, in five lines. Escalation gained a first row for the defect that is still doing damage,
+where you say what you are stopping and stop it before diagnosing rather than asking permission, and
+its contract row now names an exported symbol callers import. `platforms.md` gained the degradation
+row for driving the user-visible path, a row for purpose-built diff reviewers, and the personal Codex
+install path.
+
+### For callers driving `scripts/phase.js`
+
+**The gates step must now report `diffLines`** — what `git diff --numstat <base>..HEAD | wc -l` prints
+— and it is required in the schema. Every empty-diff guard until now was an equality test on shas, and
+sha inequality is not diff emptiness: a fix round that reverts the phase's own work moves HEAD, passes
+both guards, produces an empty diff, and earns green gates and a clean review from a reviewer that was
+shown nothing. An unparseable `diffLines` fails closed.
+
+**Two new result shapes callers may switch on.** A review-driven round that changes the code but not
+the confirmed findings returns **`no-progress`** — checked after the cap, so the cap still wins — with
+the deadlock report, rather than spending the remaining rounds proving the same thing more expensively.
+And `behaviorCheck` accepts **`{ read: '<the files, in the order a new user meets them>' }`** beside
+the string and `false`, with the same schema and the same refusal to close on a check that could not
+be run.
+
+Green is no longer believed against the script's own contradicting data: `all_pass: true` beside a
+tally with failing tests, or with nothing passed and everything skipped, stops the phase instead of
+dispatching reviewers onto a red build. Triage receives the scope test and the score bands, and the
+precedent block no longer pre-judges — a reappearing claim is either the same phantom or a real defect
+the earlier rejection got wrong, and the two look identical from there. The fix prompt carries the
+repair-only rule the round-cap experiment exists to enforce, names new machinery instead of building
+it, and is forbidden the plan. The reviewer prompt is byte-identical to `build.md`'s, which is a
+mechanism duplicated by necessity and has drifted once already. Four one-line guard repairs: an
+unparseable branch is an error rather than a silently disabled check, the closed result normalises its
+gate list like every other path, `agentsDispatched` is reported on every return and not only the two
+that succeed, and reviewers three and four stop receiving prompts byte-identical to one and two.
+
+Every control-flow change landed behind a harness case watched failing first. `sim-phase` asserts 125
+invariants and `negative-test` kills 79/79 mutations — which is a count of what someone thought to
+inject, and bounds nothing above it.
+
+### Rejected, on the record
+
+Showing Goal and Accept before *every* build, which is the confirmation turn priced at zero on an
+unambiguous request. Widening Direct to any behavior fix with a pasted check — the Direct row's
+exclusions are the highest-value lines in the file and widening the tier is where they leak. A session
+or token budget in the plan: a rule with no mechanism, and `no-progress` attacks the same cost with
+one. A `resumeFrom` argument, real and the largest new control-flow surface proposed, deferred to its
+own change with its own harness cases. Flipping Deep's reviewer default from two to one: it silently
+reduces verification for every existing caller, so the call site logs the cost instead and says where
+one is the documented choice. Deleting `maintenance.md` as unreachable, when the actual fix was the
+description clause that stopped routing to it. And the two-arm eval and the model-variance sweep,
+which are the right next task and deliberately not this one, because budget draining into the suite is
+this repository's oldest failure mode.
+
+### The backstops moved, after a re-review and in their own commit
+
+The additions exceeded the cuts and six per-file backstops went red, including the total. The repo's
+own norm says a red backstop is answered by neither shaving synonyms nor raising the number in the
+commit that grew the file — so the growth was re-reviewed by two fresh diff reviewers and a
+read-as-a-product pass, the duplicates that review found were cut, the counts were taken after that,
+and the numbers moved in a separate commit with the reason written beside them. The objection is on
+the record there too, because it is a fair one: the always-loaded surface grew by about a third in a
+single pass, and a tighten pass afterwards recovered little of it. The next addition to `SKILL.md`
+displaces something; it does not get another raise.
+
 ## v2.5.0 — verify the product, not only the diff
 
 An external audit of v2.4.0 arrived from two directions and reached the same verdict from both: the
