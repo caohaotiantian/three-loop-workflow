@@ -240,16 +240,26 @@ budget() {
   [ "$n" -le "$cap" ] && ok "$f is $n words (backstop $cap)" \
                       || bad "$f has drifted to $n words (backstop $cap) — re-review before raising it"
 }
-budget three-loop-workflow/SKILL.md                    2300
-budget three-loop-workflow/references/build.md          3600
+# 2026-09-06: raised after a re-review (two fresh diff reviewers plus a read-as-a-product pass) grew
+# the prose across the board — SKILL.md 2128->2833, build.md 3505->3909, orchestration.md 1877->2201,
+# escalation.md 1219->1353, close.md 751->962, platforms.md 642->773; plan.md (2157->2173) and
+# maintenance.md (1470->1523) moved only slightly and keep their existing caps. Each raised cap is
+# roughly the new count plus ~5% slack, rounded to a round number; the duplicates the re-review found
+# were cut before this count was taken, so this is the reviewed substance, not drift. The largest
+# single piece of the growth is on the always-loaded surface itself: SKILL.md's trigger table and
+# three new paragraphs. Objection, on the record: the always-loaded surface (SKILL.md) grew by about a
+# third in this one pass, and a tighten pass afterward recovered only a little of that. The next
+# addition to SKILL.md must displace something already there — it does not get another raise for free.
+budget three-loop-workflow/SKILL.md                    3000
+budget three-loop-workflow/references/build.md          4100
 budget three-loop-workflow/references/plan.md           2200
-budget three-loop-workflow/references/orchestration.md  1900
+budget three-loop-workflow/references/orchestration.md  2300
 budget three-loop-workflow/references/maintenance.md    1600
-budget three-loop-workflow/references/escalation.md     1300
-budget three-loop-workflow/references/close.md           850
-budget three-loop-workflow/references/platforms.md       750
+budget three-loop-workflow/references/escalation.md     1450
+budget three-loop-workflow/references/close.md          1000
+budget three-loop-workflow/references/platforms.md       800
 prose_now=$(words three-loop-workflow/SKILL.md three-loop-workflow/references/*.md)
-[ "$prose_now" -le 14000 ] && ok "the whole prose surface is $prose_now words (backstop 14000)" \
+[ "$prose_now" -le 16500 ] && ok "the whole prose surface is $prose_now words (backstop 16500)" \
                            || bad "the prose surface has grown to $prose_now words — the per-file budgets can all pass while the set still grows"
 
 echo "== published numbers match the recomputation =="
