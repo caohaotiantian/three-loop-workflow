@@ -15,7 +15,7 @@ was the thing it never did.
 **Confirm the reading before you build.** Where the Goal names a reading of the request that could
 have gone the other way, that sentence and Accept's observable outcome go in front of whoever asked,
 and you wait. One exchange against a whole build spent on the wrong thing — and on a Standard change,
-where there is no plan reviewer, it is the only independent check on whether this is the *right*
+where there is no plan reviewer, it is the cheapest independent check on whether this is the *right*
 change rather than a correct implementation of a wrong one. Where nothing was ambiguous it costs
 nothing: say what you are about to do and carry on. Where nobody is reachable, the Goal records that
 the reading was unconfirmed, so the diff reviewer knows to question it.
@@ -79,8 +79,9 @@ answers whether every step can be performed as written and whether any two secti
 repository's own load-bearing-document changes are that case, and the only expressible answer before
 was `false` — the assertion that nobody will read it.
 
-The reviewer questions now lead with the two classes gates catch least: what happens when something
-the change calls **fails**, and which facts about code **outside the diff** the change assumes. A
+The reviewer questions now put two classes gates rarely catch directly after the unexpected-input
+question: what happens when something the change calls **fails**, and which facts about code
+**outside the diff** the change assumes. A
 process-comment question was cut to make the slot, and the prompt now says that a diff of generated
 artefacts — notebooks, lockfiles, snapshots, minified output — must be read in its source form,
 because a diff you cannot read is not a diff you reviewed. A fix round may never edit the plan: the
@@ -93,6 +94,20 @@ where you say what you are stopping and stop it before diagnosing rather than as
 its contract row now names an exported symbol callers import. `platforms.md` gained the degradation
 row for driving the user-visible path, a row for purpose-built diff reviewers, and the personal Codex
 install path.
+
+Four smaller reference rules a user meets directly. Close's *read the result as a product* pass is now
+**depth-independent**: a Standard change whose output is read or run as a whole — a document set, a
+CLI's help, a config schema, a public API surface — runs that one section for the cost of an agent,
+and the rest of Close stays Deep. The behavior check on a surface you must not drive — production
+payments, a live third party, an hours-long job — is **not waived**, and `behaviorCheck: false` is the
+wrong answer there, because a person does call it: drive it somewhere safe and cheap instead, a
+sandbox credential, a test card, a toy dataset, and name in the plan where it ran and what that
+environment does not cover. `false` asserts one thing only — that nothing this phase builds is ever
+clicked, typed or called. Accept's observable outcome is written to be **cheap to observe**, a few
+requests rather than a soak, because the check that runs beside every review is the one that must not
+cost hours. And Decisions gain the option the model rarely generates unasked: name **the smaller one**
+— the version that does less, reuses something that exists, or does nothing — with what it fails to
+give the user. It usually loses, and writing why is cheap.
 
 ### For callers driving `scripts/phase.js`
 
@@ -107,7 +122,8 @@ the confirmed findings returns **`no-progress`** — checked after the cap, so t
 the deadlock report, rather than spending the remaining rounds proving the same thing more expensively.
 And `behaviorCheck` accepts **`{ read: '<the files, in the order a new user meets them>' }`** beside
 the string and `false`, with the same schema and the same refusal to close on a check that could not
-be run.
+be run. `orchestration.md` now tabulates every `status` the script can return and what a caller does
+with each, `closed` being the only one that continues the run.
 
 Green is no longer believed against the script's own contradicting data: `all_pass: true` beside a
 tally with failing tests, or with nothing passed and everything skipped, stops the phase instead of
