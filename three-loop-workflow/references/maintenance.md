@@ -17,7 +17,7 @@ Write an entry when — and only when — one of these is true:
 
 An entry is a few lines: what happened, and the rule that generalises from it. "Test things" generalises nothing. "A patch that no longer applies must count as a failure, not a skip" is the level that pays.
 
-**Do not journal what you did.** The commits and the PR describe the change. A record that restates them is exhaust, and the archive it accumulates into is read by nobody — this skill deleted one for exactly that reason (`close.md`, "What Close does not do").
+**Do not journal what you did.** The commits and the PR describe the change. A record that restates them is exhaust, and the archive it accumulates into is read by nobody — this skill deleted one for exactly that reason (`close.md`, "What Close hands over").
 
 A gitignored journal costs nothing if nobody ever folds it; it is simply lost, which is the right outcome for a note not worth promoting. That is what makes it different from the committed archive this skill deleted, which cost attention on every clone whether it was read or not — and the entry condition and the prohibition above are the only two things keeping it from becoming that archive under a new name.
 
@@ -42,6 +42,8 @@ this file broke both, four times, in the documents written the same day as the r
 **2. Promote what the journals earned.** An entry belongs in the guide when a future agent would do the wrong thing without it: a norm, a trap, a command, a decision now settled. It does not belong there when it is a fact about the code (the code says it better), a record of what happened (the commit says it better), or a rule a capable model already follows.
 
 Put each promoted item under the role it belongs to, per the guide's anchor map — a norm under _engineering-norms_, a command under _common-commands_, a file that became a contract under _load-bearing-docs_. If an item belongs to no role, that is a signal about the item. Adding a role obliges every file that reads roles to change with it, so it is a decision to escalate, not a naming choice.
+
+A guide with no anchor map has no roles to route to, and promoting into an unstructured guide is where the next reader's lookup fails — so write one here. `SKILL.md` defers the anchor map to its own task; this pass **is** that task, and the deferral is about a change already in flight.
 
 **3. Prune.** Delete the entries that were promoted, and the ones that turned out not to matter. Correct or delete guide text that step 1 falsified — a wrong claim is worse than a missing one, because the missing one sends the reader to the repo and the wrong one stops them looking.
 

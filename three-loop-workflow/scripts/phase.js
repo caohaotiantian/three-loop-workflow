@@ -61,9 +61,9 @@ export const meta = {
 // if you are reading this from an install, they are at github.com/caohaotiantian/three-loop-workflow.
 // Change the control flow here and re-run both.
 
-// The Workflow tool delivers `args` to a script as a JSON **string**, not an object. Measured with a
-// probe script, not assumed: `typeof args === 'string'`, `Object.keys` unavailable, and the string
-// parses cleanly back to the object the caller passed. Destructuring a string yields all-undefined, so
+// The Workflow tool has delivered `args` as a JSON **string** on one probe and as an object on a
+// later one; the shape is not something to rely on, which is why both are accepted below.
+// Destructuring a string yields all-undefined, so
 // before this every invocation through the tool returned `usage-error: planPath is required` however
 // complete the arguments were — which is why this script had never once run end to end. The nested
 // `workflow(ref, args)` form may differ; both shapes are accepted so it does not matter which you use.
@@ -179,9 +179,17 @@ if (!Number.isInteger(maxRounds) || maxRounds < 0) return { status: 'usage-error
 if (behaviorCheck === undefined) {
   return { status: 'usage-error', reason: 'behaviorCheck is required — pass the user-visible path for a fresh agent to drive, or `false` if this phase changes nothing a person can click, type or call. Omitted, it silently skips the one check green gates cannot cover' }
 }
-const behavior = behaviorCheck === false || behaviorCheck === null ? null : String(behaviorCheck).trim()
-if (behaviorCheck !== false && behaviorCheck !== null && (typeof behaviorCheck !== 'string' || !behavior)) {
-  return { status: 'usage-error', reason: 'behaviorCheck must be a non-empty string describing the path to drive — "POST /v1/things twice and confirm the second returns 429 with Retry-After", not "check it works"' }
+// `{ read: … }` is the variant build.md prescribes for something read rather than run — a reference,
+// a CLI's help text, an error-message set. Same agent, same schema, same refusal to close on
+// `ran: false`: a reader that could not open the files is as unverified as a driver that could not
+// start the service. Without it the only expressible answer for a document change is
+// `behaviorCheck: false`, which asserts nobody will read it.
+const readMode = !!behaviorCheck && typeof behaviorCheck === 'object' && typeof behaviorCheck.read === 'string' && behaviorCheck.read.trim() !== ''
+const behavior = behaviorCheck === false || behaviorCheck === null ? null
+  : readMode ? String(behaviorCheck.read).trim()
+  : String(behaviorCheck).trim()
+if (behaviorCheck !== false && behaviorCheck !== null && !readMode && (typeof behaviorCheck !== 'string' || !behavior)) {
+  return { status: 'usage-error', reason: 'behaviorCheck must be a non-empty string describing the path to drive — "POST /v1/things twice and confirm the second returns 429 with Retry-After", not "check it works" — or { read: "the files, in the order a new user meets them" } for something read rather than run' }
 }
 
 // `depth` is the preferred spelling because it is the skill's own vocabulary; a numeric `reviewers`
@@ -211,6 +219,12 @@ if (reviewers > 4) return { status: 'usage-error', reason: `reviewers is capped 
 if (maxRounds > 10) return { status: 'usage-error', reason: `maxRounds is capped at 10 (got ${maxRounds}) — the documented cap is three, and a budget this size is a plan problem rather than a fix-round problem` }
 if (depth !== undefined && legacyReviewers !== undefined && legacyReviewers !== (depth === 'deep' ? 2 : 1)) {
   log(`${phaseLabel}: depth '${depth}' implies ${depth === 'deep' ? 2 : 1} reviewer(s); the explicit reviewers=${legacyReviewers} wins and is reported in the result`)
+}
+// Not a flip of the default: reducing verification for every existing caller is the unsafe direction,
+// and build.md's rule ("two where the phase is hard to undo, one elsewhere") is a judgement the caller
+// makes, not one this script can make for them. Said at the call site so the bill is visible.
+if (depth === 'deep' && legacyReviewers === undefined) {
+  log(`${phaseLabel}: depth 'deep' is running ${reviewers} diff reviewers; build.md buys the second one where the phase is hard to undo — pass reviewers: 1 on a reversible phase`)
 }
 const resolvedDepth = depth !== undefined ? depth : (reviewers >= 2 ? 'deep' : 'standard')
 
@@ -263,11 +277,12 @@ const WRITE_SCHEMA = {
 const GATE_SCHEMA = {
   type: 'object',
   additionalProperties: false,
-  required: ['all_pass', 'results', 'failures', 'headSha', 'branch', 'tests'],
+  required: ['all_pass', 'results', 'failures', 'headSha', 'branch', 'tests', 'diffLines'],
   properties: {
     all_pass: { type: 'boolean' },
     headSha: { type: 'string', description: 'Output of `git rev-parse HEAD`, exactly 40 hex characters. Captured here because gates run immediately before review, so this is the commit the reviewer will actually see.' },
     branch: { type: 'string', description: 'Output of `git rev-parse --abbrev-ref HEAD`. Reported here every round because the review diffs against a named branch, and work committed somewhere else is invisible to it.' },
+    diffLines: { type: 'integer', description: 'The number `git diff --numstat <base>..HEAD | wc -l` prints. 0 means the tree is identical to the base commit, however many commits sit between them.' },
     results: { type: 'array', items: { type: 'string' }, description: 'One line per command: the command, its exit code, and the pass/fail/skip tally' },
     failures: { type: 'array', items: { type: 'string' } },
     // Counted, not narrated. `results` already carries the tally in prose, and prose cannot be compared
@@ -382,14 +397,14 @@ let work = await tryAgent(
   `report \`git rev-parse HEAD\` as headSha. Review diffs ref-to-ref: anything left uncommitted is ` +
   `invisible to it and will be reviewed as though you had changed nothing.\n` +
   `Before returning, read your own diff and remove anything that does not trace to the plan's Goal or a ` +
-  `recorded Decision, plus any comment that narrates process rather than explaining code.\n` +
+  `recorded Decision.\n` +
   `If the plan contradicts what you find in the code, set conflict=true and stop — do not decide it yourself.\n` +
   `Report honestly: set blocked=true if you could not finish, and list anything you are unsure about in concerns.`,
   { label: `write:${phaseLabel}`, phase: 'Write', schema: WRITE_SCHEMA, model: models.write }
 )
 
-if (!work) return { status: 'agent-error', phaseLabel, round: 0, stage: 'write' }
-if (work.conflict) return { status: 'plan-conflict', phaseLabel, round: 0 }
+if (!work) return { agentsDispatched, status: 'agent-error', phaseLabel, round: 0, stage: 'write' }
+if (work.conflict) return { agentsDispatched, status: 'plan-conflict', phaseLabel, round: 0 }
 
 // A blocked implementer gets exactly one re-dispatch carrying its own concerns forward.
 // Bounded so it cannot become an uncounted retry loop.
@@ -404,11 +419,12 @@ if (work.blocked) {
     `If you are blocked for the same reason, set blocked=true again with a specific explanation — do not guess.`,
     { label: `write:${phaseLabel}:redispatch`, phase: 'Write', schema: WRITE_SCHEMA, model: models.write }
   )
-  if (!retry) return { status: 'agent-error', phaseLabel, round: 0, stage: 'write-redispatch' }
-  if (retry.conflict) return { status: 'plan-conflict', phaseLabel, round: 0 }
+  if (!retry) return { agentsDispatched, status: 'agent-error', phaseLabel, round: 0, stage: 'write-redispatch' }
+  if (retry.conflict) return { agentsDispatched, status: 'plan-conflict', phaseLabel, round: 0 }
   if (retry.blocked) {
     return {
       status: 'write-escalation',
+      agentsDispatched,
       phaseLabel,
       round: 0,
       concerns: (retry.concerns && retry.concerns.length) ? retry.concerns : (work.concerns || []),
@@ -429,18 +445,18 @@ if (work.blocked) {
 // resolved in the repository, which this script cannot do — it has no shell.
 const writeHead = sha(work.headSha)
 if (!writeHead) {
-  return { status: 'agent-error', phaseLabel, round: 0, stage: 'write', reason: `headSha is not a full 40-hex sha (${JSON.stringify(work.headSha)}) — cannot confirm the work was committed` }
+  return { agentsDispatched, status: 'agent-error', phaseLabel, round: 0, stage: 'write', reason: `headSha is not a full 40-hex sha (${JSON.stringify(work.headSha)}) — cannot confirm the work was committed` }
 }
 if (writeHead === base) {
-  return { status: 'agent-error', phaseLabel, round: 0, stage: 'write', reason: `nothing committed on ${work.branch}: HEAD is still baseSha, so the review would see an empty diff.${noRepoHint}` }
+  return { agentsDispatched, status: 'agent-error', phaseLabel, round: 0, stage: 'write', reason: `nothing committed on ${work.branch}: HEAD is still baseSha, so the review would see an empty diff.${noRepoHint}` }
 }
 
 const reportedBranch = ref(work.branch)
 if (!reportedBranch) {
-  return { status: 'agent-error', phaseLabel, round: 0, stage: 'write', reason: `the reported branch is not a usable git ref (${JSON.stringify(work.branch)})` }
+  return { agentsDispatched, status: 'agent-error', phaseLabel, round: 0, stage: 'write', reason: `the reported branch is not a usable git ref (${JSON.stringify(work.branch)})` }
 }
 if (callerBranch && reportedBranch !== callerBranch) {
-  return { status: 'agent-error', phaseLabel, round: 0, stage: 'write', reason: `the implementer committed to "${reportedBranch}" but this phase runs on "${callerBranch}" — phases are sequential commits on one branch, and a side branch makes the next phase's review show this phase's work again` }
+  return { agentsDispatched, status: 'agent-error', phaseLabel, round: 0, stage: 'write', reason: `the implementer committed to "${reportedBranch}" but this phase runs on "${callerBranch}" — phases are sequential commits on one branch, and a side branch makes the next phase's review show this phase's work again` }
 }
 const branch = callerBranch || reportedBranch
 const concerns = work.concerns || []
@@ -472,6 +488,9 @@ let tallyEverCounted = true
 // The last round's unresolved list, so the structural-bound return at the very bottom is not
 // empty-handed about work that was real either way.
 let lastFailures = []
+// The previous round's confirmed set, as a signature. Two rounds that confirm exactly the same findings
+// is a phase that has stopped converging, and escalation.md's own test for a deadlock.
+let lastConfirmed = null
 
 // Bounded by the verifications a full budget needs: maxRounds fixes plus one final check. The bound is
 // deliberately structural and independent of `fixes`, so the loop terminates even if the fix counter
@@ -498,17 +517,18 @@ while (verifyRound <= maxRounds + 1) {
     `and how many were skipped, xfailed, deselected or filtered out. Copy the numbers the runner printed. ` +
     `If no command reported a tally, set counted=false and leave the three at 0 rather than estimating.\n` +
     `Also run \`git rev-parse HEAD\` and report it as headSha, all 40 characters, exactly as printed, ` +
-    `and \`git rev-parse --abbrev-ref HEAD\` as branch.`,
+    `and \`git rev-parse --abbrev-ref HEAD\` as branch.\n` +
+    `Finally run \`git diff --numstat ${base}..HEAD | wc -l\` and report the number as diffLines.`,
     { label: `gates:${phaseLabel}:r${round}`, phase: 'Gates', schema: GATE_SCHEMA, model: models.gates }
   )
-  if (!gates) return { status: 'agent-error', phaseLabel, round, stage: 'gates' }
+  if (!gates) return { agentsDispatched, status: 'agent-error', phaseLabel, round, stage: 'gates' }
 
   // Fail closed. An unparseable head means the script cannot tell whether anything was committed, and
   // every guard below is an equality test against it. Treating it as "unknown, carry on" is what let a
   // no-op fix round grind to cap-exhausted against an unchanged tree.
   const gateHead = sha(gates.headSha)
   if (!gateHead) {
-    return { status: 'agent-error', phaseLabel, round, fixes, stage: 'gates', branch, reason: `the gates step did not report a usable HEAD (${JSON.stringify(gates.headSha)}), so neither the empty-diff nor the no-op-fix guard can be evaluated` }
+    return { agentsDispatched, status: 'agent-error', phaseLabel, round, fixes, stage: 'gates', branch, reason: `the gates step did not report a usable HEAD (${JSON.stringify(gates.headSha)}), so neither the empty-diff nor the no-op-fix guard can be evaluated` }
   }
   // The other half of the empty-diff guard: this is the real HEAD, not a self-report. If it is the
   // base, nothing from this phase is committed, however well-formed the implementer's claim looked.
@@ -516,12 +536,29 @@ while (verifyRound <= maxRounds + 1) {
   // commits also lands HEAD back on the base, and `gateHead === lastHead` does not catch that because
   // lastHead is the previous round's non-base head. HEAD equal to the base is never legitimate here.
   if (gateHead === base) {
-    return { status: 'agent-error', phaseLabel, round, fixes, stage: fixes === 0 ? 'write' : 'fix', branch, reason: `HEAD is baseSha on ${branch}: nothing from this phase is committed, so the review would see an empty diff` }
+    return { agentsDispatched, status: 'agent-error', phaseLabel, round, fixes, stage: fixes === 0 ? 'write' : 'fix', branch, reason: `HEAD is baseSha on ${branch}: nothing from this phase is committed, so the review would see an empty diff` }
+  }
+  // Sha equality is not diff emptiness: a revert, or a reset plus an empty commit, moves HEAD and
+  // leaves the tree identical to the base. The reviewer would get an empty range and report nothing,
+  // which reads exactly like a clean review.
+  // Parsed strictly, and unreadable is an error rather than a skip. `Number()` maps an omitted field
+  // and a chatty one ("0 lines") to NaN, which fails the comparison below and switches the guard off
+  // silently — and maps null, "", [] and false to 0, which fires it on a phase that is fine. An
+  // integer or a string of digits is the only thing this can be read from; anything else fails closed,
+  // as the unparseable head above does.
+  const diffLines = Number.isInteger(gates.diffLines) ? gates.diffLines
+    : (typeof gates.diffLines === 'string' && /^\s*\d+\s*$/.test(gates.diffLines)) ? Number(gates.diffLines)
+    : null
+  if (diffLines === null) {
+    return { agentsDispatched, status: 'agent-error', phaseLabel, round, fixes, stage: 'gates', branch, reason: `the gates step did not report a usable diffLines (${JSON.stringify(gates.diffLines)}), so the empty-tree check cannot be evaluated` }
+  }
+  if (diffLines === 0) {
+    return { status: 'agent-error', phaseLabel, round, fixes, stage: fixes === 0 ? 'write' : 'fix', branch, agentsDispatched, reason: `\`git diff ${base}..HEAD\` is empty on ${branch} though HEAD has moved — the tree is identical to the base, so the review would see nothing. A fix round that reverted or reset the phase's own commits looks exactly like this.` }
   }
   // A fix round that committed nothing leaves the tree identical: the reviewer will report the same
   // findings, and the phase grinds to cap-exhausted without anyone noticing the fix never landed.
   if (fixes > 0 && gateHead === lastHead) {
-    return { status: 'agent-error', phaseLabel, round, fixes, stage: 'fix', branch, reason: `the last fix round committed nothing — HEAD is unchanged, so the next review would be identical.${noRepoHint}` }
+    return { agentsDispatched, status: 'agent-error', phaseLabel, round, fixes, stage: 'fix', branch, reason: `the last fix round committed nothing — HEAD is unchanged, so the next review would be identical.${noRepoHint}` }
   }
   lastHead = gateHead
 
@@ -529,8 +566,13 @@ while (verifyRound <= maxRounds + 1) {
   // this one unchanged, so the review sees the same diff, the same findings come back, and the phase
   // grinds to cap-exhausted with nothing in the result to say why.
   const gateBranch = ref(gates.branch)
+  // Fail closed, for the reason the sha above does: `&& gateBranch` silently disabled the wrong-branch
+  // check on any string git would not accept, which is a guard that is off rather than one that passed.
+  if (gates.branch !== undefined && !gateBranch) {
+    return { status: 'agent-error', phaseLabel, round, fixes, stage: fixes === 0 ? 'write' : 'fix', branch, agentsDispatched, reason: `the gates step reported a branch that is not a usable git ref (${JSON.stringify(gates.branch)}), so the wrong-branch check cannot be evaluated` }
+  }
   if (gates.branch !== undefined && gateBranch && gateBranch !== branch) {
-    return { status: 'agent-error', phaseLabel, round, fixes, stage: fixes === 0 ? 'write' : 'fix', branch, reason: `the working tree is on "${gateBranch}" but this phase runs on "${branch}" — the review diffs ${base}..${branch}, so anything committed elsewhere is invisible to it` }
+    return { agentsDispatched, status: 'agent-error', phaseLabel, round, fixes, stage: fixes === 0 ? 'write' : 'fix', branch, reason: `the working tree is on "${gateBranch}" but this phase runs on "${branch}" — the review diffs ${base}..${branch}, so anything committed elsewhere is invisible to it` }
   }
 
   // ── Did the suite shrink? ───────────────────────────────────
@@ -582,6 +624,14 @@ while (verifyRound <= maxRounds + 1) {
   // precisely the rationalisation the script exists to make impossible. Every other reply field here is
   // shape-checked; this is the one the control flow actually branches on.
   const green = gates.all_pass === true
+  // all_pass is a judgement; the tally beside it is data. Where they disagree, believe the data — the
+  // same reasoning that makes closure arithmetic rather than a reviewer's verdict.
+  if (green && tally && tally.failed > 0) {
+    return { status: 'agent-error', phaseLabel, round, fixes, stage: 'gates', branch, agentsDispatched, reason: `the gates step reported all_pass with ${tally.failed} failing test(s) in its own tally — a red build was about to be handed to a reviewer` }
+  }
+  if (green && tally && tally.passed === 0 && tally.skipped > 0) {
+    return { status: 'agent-error', phaseLabel, round, fixes, stage: 'gates', branch, agentsDispatched, reason: `the gates step reported all_pass with 0 tests passed and ${tally.skipped} skipped — exit 0 with everything skipped is not a pass` }
+  }
   if (green) {
     phase('Review')
     // The diff and the plan, and nothing else. Not the implementer's summary, not its list of
@@ -597,20 +647,28 @@ while (verifyRound <= maxRounds + 1) {
       `Check specifically, in this order:\n` +
       `- What does this do on the inputs it does not expect — absent, empty, malformed, at the boundary, ` +
       `out of order, concurrent, or far larger than the happy path? Name the case and what happens.\n` +
+      `- What happens when something this change calls FAILS — a raised exception, a non-2xx, a ` +
+      `timeout, a null return? Name each error path and say what the caller observes. Flag any error ` +
+      `swallowed, logged-and-continued, or returned as a success shape.\n` +
+      `- Which facts about code OUTSIDE this diff does the change assume — a method that exists, a ` +
+      `config key, a parameter's meaning, a return shape, an ordering guarantee? Name each and say ` +
+      `whether you confirmed it in the repository or could not.\n` +
       `- If the diff touches untrusted input, authentication, authorization, secrets, file paths, ` +
       `subprocess or shell invocation, query construction, deserialization, or anything sent to a third ` +
       `party: what is the worst a hostile input can make it do? Skip this line if it touches none of them.\n` +
       `- Does the diff weaken the existing tests — an assertion removed or loosened, a case skipped or ` +
       `marked expected-to-fail, a selector narrowed, a timeout raised, a retry added? Quote the removed ` +
       `lines. Deleting a test can be correct; doing it in the same change that had to pass is the case to flag.\n` +
-      `- Does new behavior have a test that would fail without this change? Name the line of the diff ` +
-      `that makes it pass. A test that passes with the change reverted is testing nothing.\n` +
+      `- Does new behavior have a test that would fail without this change? Name the line ` +
+      `of the diff that makes it pass. A test that passes with the change reverted is testing nothing.\n` +
       `- Does every changed line trace to the Goal or a recorded Decision, and does anything land in the ` +
-      `plan's Non-goals?\n` +
-      `- Does the PLAN look wrong — an acceptance that cannot fail, a Goal that does not match what was ` +
-      `asked for, a Decision with only one option? A diff that conforms to a wrong plan passes every ` +
+      `Non-goals?\n` +
+      `- Does the PLAN look wrong — an Accept that cannot fail, a Goal that does not match what was ` +
+      `asked, a Decision with one option? A diff that conforms to a wrong plan passes every ` +
       `other question here.\n` +
-      `- Any comment narrating process rather than explaining code?\n`
+      `\nIf the diff contains generated or non-text artefacts — notebooks, lockfiles, snapshots, ` +
+      `minified output — say so and read the source form instead (a notebook's cells, the manifest the ` +
+      `lockfile was generated from). A diff you cannot read is not a diff you reviewed.\n`
 
     const reviewPrompt =
       where +
@@ -649,8 +707,13 @@ while (verifyRound <= maxRounds + 1) {
     // Tagged, not positional. `parallel()` is documented to return results for the thunks it was given;
     // nothing in its contract promises the order survives, and telling a reviewer's verdict from a
     // behavior observation by array index would fail silently and in the worst possible way if it did not.
+    // Reviewers 3 and 4 were byte-identical copies of 1 and 2, which is the correlation the closing
+    // lines exist to break. Give them a third starting point rather than a second copy of one.
+    const closing = i => reviewers < 2 ? '' : i < emphasis.length ? emphasis[i]
+      : `\nYou are reviewer ${i + 1} of ${reviewers}; where the others start from the diff, start from ` +
+        `the file the diff touches most and read it whole.`
     const jobs = Array.from({ length: reviewers }, (_, i) => () =>
-      tryAgent(reviewPrompt + (reviewers > 1 ? emphasis[i % emphasis.length] : ''), {
+      tryAgent(reviewPrompt + closing(i), {
         label: reviewers > 1 ? `review:${phaseLabel}:r${round}:v${i + 1}` : `review:${phaseLabel}:r${round}`,
         phase: 'Review',
         schema: REVIEW_SCHEMA,
@@ -660,19 +723,30 @@ while (verifyRound <= maxRounds + 1) {
     if (behavior) {
       jobs.push(() => tryAgent(
         where +
-        `Drive this change the way a user meets it and report what you observe. Do not read the diff, ` +
-        `and do not read the implementer's account of the work — you are here to find out what the ` +
-        `software actually does.\n\n` +
-        `The path to exercise:\n${behavior}\n\n` +
-        `The plan at ${planPath} states what should happen; read its Goal and Accept. Then run the path ` +
-        `for real — start the service, call the endpoint, run the command, load the page. Record the ` +
-        `actual output, not a summary of it.\n` +
-        `Try the edges as well as the happy path: the empty case, the error case, the unauthorized case, ` +
-        `and whatever a user would plausibly do wrong.\n` +
-        `List every place what you saw differs from what the plan says should happen. If the plan is ` +
-        `silent on something you observed and it looks wrong, say so — silence is not permission.\n` +
-        `If you genuinely cannot run it, set ran=false and say exactly what stopped you. Do not report ` +
-        `an inspection of the source as though it were a run.\n` +
+        (readMode
+          ? `Read these finished files the way a new user meets them — no diff, no account of what ` +
+            `changed:\n${behavior}\n\n` +
+            `The plan at ${planPath} states what should happen; read its Goal and Accept.\n` +
+            `You are not reviewing an edit. Answer: can every step described here actually be performed ` +
+            `as written? Do any two sections now contradict each other? Is anything named that does not ` +
+            `exist, or does anything exist that is never named? Quote the text and say what it made you ` +
+            `expect.\n` +
+            `Record what you read and what it told you, verbatim, not a summary.\n` +
+            `List every place what you read differs from what the plan says should happen.\n` +
+            `If you genuinely cannot read them, set ran=false and say exactly what stopped you.\n`
+          : `Drive this change the way a user meets it and report what you observe. Do not read the diff, ` +
+            `and do not read the implementer's account of the work — you are here to find out what the ` +
+            `software actually does.\n\n` +
+            `The path to exercise:\n${behavior}\n\n` +
+            `The plan at ${planPath} states what should happen; read its Goal and Accept. Then run the path ` +
+            `for real — start the service, call the endpoint, run the command, load the page. Record the ` +
+            `actual output, not a summary of it.\n` +
+            `Try the edges as well as the happy path: the empty case, the error case, the unauthorized case, ` +
+            `and whatever a user would plausibly do wrong.\n` +
+            `List every place what you saw differs from what the plan says should happen. If the plan is ` +
+            `silent on something you observed and it looks wrong, say so — silence is not permission.\n` +
+            `If you genuinely cannot run it, set ran=false and say exactly what stopped you. Do not report ` +
+            `an inspection of the source as though it were a run.\n`) +
         `Do not modify code.`,
         { label: `behavior:${phaseLabel}:r${round}`, phase: 'Review', schema: BEHAVIOR_SCHEMA, model: models.behavior }
       ).then(r => ({ kind: 'behavior', r })))
@@ -683,7 +757,7 @@ while (verifyRound <= maxRounds + 1) {
 
     // A reviewer that dies is not a reviewer that passed.
     if (verdicts.length < reviewers) {
-      return { status: 'agent-error', phaseLabel, round, stage: 'review', reason: `${verdicts.length}/${reviewers} reviewers returned` }
+      return { agentsDispatched, status: 'agent-error', phaseLabel, round, stage: 'review', reason: `${verdicts.length}/${reviewers} reviewers returned` }
     }
 
     // A behavior check that was asked for and did not happen is not a behavior check that passed. This
@@ -691,12 +765,13 @@ while (verifyRound <= maxRounds + 1) {
     // the caller passed `behaviorCheck` to say the acceptance is not fully expressible as an exit code,
     // and closing green without it would put back the gap the argument exists to close.
     if (behavior) {
-      if (!observation) return { status: 'agent-error', phaseLabel, round, stage: 'behavior', reason: 'the behavior check did not return' }
+      if (!observation) return { agentsDispatched, status: 'agent-error', phaseLabel, round, stage: 'behavior', reason: 'the behavior check did not return' }
       if (!observation.ran) {
         // The reviewers ran, and their findings are the expensive part of this round. Returning without
         // them would make the caller pay for the round twice.
         return {
           status: 'behavior-unverified',
+          agentsDispatched,
           phaseLabel, round, fixes, gateFixes, reviewFixes, branch, depth: resolvedDepth, reviewers,
           headSha: gateHead,
           reason: `the behavior check could not be run: ${observation.blockedReason || 'no reason given'}`,
@@ -730,21 +805,28 @@ while (verifyRound <= maxRounds + 1) {
         `Check each claimed defect below against the actual code in \`git diff ${base}..${branch}\`. ` +
         `Decide which are real.\n\n${reported.map((f, i) => `${i + 1}. ${clip(f)}`).join('\n')}\n\n` +
         (rejectedSeen.length
-          ? `An earlier round already checked these claims and rejected them, with the reason. If one ` +
-            `reappears above, it is very likely the same phantom — say so rather than re-deriving it:\n` +
-            `${rejectedSeen.map(x => `- ${x}`).join('\n')}\n\n`
+          ? `An earlier round checked these claims and rejected them, with the reason given. A claim ` +
+            `that reappears is EITHER the same phantom OR a real defect the earlier rejection got ` +
+            `wrong — the two look identical from here, so re-check it against the code rather than ` +
+            `inheriting the verdict, and say which it is:\n${rejectedSeen.map(x => `- ${x}`).join('\n')}\n\n`
           : '') +
         `Reject a claim when it misreads the code, attacks something the code does not do, describes a ` +
         `real property that is not a problem, or dissolves once you read the surrounding lines. ` +
         `Confirm one only after you have looked at the cited code and the defect is really there. ` +
         `When torn, look again rather than confirming defensively.\n` +
+        `First: if a claim names something the plan lists as a Non-goal, or something this diff did ` +
+        `not create, REJECT it and say which Non-goal — true is not the same as this change's problem.\n` +
+        `Otherwise score it: 0 false · 25 unverifiable against the code · 50 real but a nitpick or too ` +
+        `rare to matter here · 75 verified and likely to be hit · 100 confirmed and it will happen. ` +
+        `Confirm 75 and above; reject below it, and let the reason say what the code actually does ` +
+        `rather than implying the claim was false.\n` +
         `Rule on every claim: put its NUMBER in confirmed or in rejected. Do not restate the claims, ` +
         `do not merge two into one, and do not add a claim of your own — anything you confirm becomes ` +
         `an instruction to an agent with write access, so the list has to be theirs and not yours.\n` +
         `Do not modify code.`,
         { label: `triage:${phaseLabel}:r${round}`, phase: 'Triage', schema: TRIAGE_SCHEMA, model: models.triage }
       )
-      if (!triage) return { status: 'agent-error', phaseLabel, round, stage: 'triage' }
+      if (!triage) return { agentsDispatched, status: 'agent-error', phaseLabel, round, stage: 'triage' }
 
       // Confirmation is a selection from the list, not a list the triage agent writes. The previous
       // contract asked for the strings back "verbatim, as given" and then used whatever came back: an
@@ -759,7 +841,7 @@ while (verifyRound <= maxRounds + 1) {
       // Nothing at all is an agent that did not do its job — retry it. A partial ruling below is a real
       // result that is merely incomplete, and the caller needs the part that was ruled on.
       if (!ruled.size) {
-        return { status: 'agent-error', phaseLabel, round, fixes, stage: 'triage', branch, reason: `triage ruled on none of the ${reported.length} finding(s) — nothing confirmed and nothing rejected is an agent that did not run, not a review that came back clean` }
+        return { agentsDispatched, status: 'agent-error', phaseLabel, round, fixes, stage: 'triage', branch, reason: `triage ruled on none of the ${reported.length} finding(s) — nothing confirmed and nothing rejected is an agent that did not run, not a review that came back clean` }
       }
       blocking = reported.filter((_, i) => confirmedIdx.has(i + 1))
       rejectedIdx.forEach(r => {
@@ -774,6 +856,7 @@ while (verifyRound <= maxRounds + 1) {
       if (unruled.length) {
         return {
           status: 'triage-incomplete',
+          agentsDispatched,
           phaseLabel, round, fixes, gateFixes, reviewFixes, branch, depth: resolvedDepth, reviewers,
           headSha: gateHead,
           reason: `triage ruled on ${ruled.size} of ${reported.length} findings; the rest are neither confirmed nor rejected, so the phase cannot close and cannot honestly spend a fix round on them`,
@@ -808,7 +891,7 @@ while (verifyRound <= maxRounds + 1) {
         // Pass this back in as the NEXT phase's baseSha. Without it a multi-phase run reviews every
         // earlier phase again, and phase N's reviewer flags phases 1..N-1 as work outside the Goal.
         headSha: gateHead,
-        gates: gates.results,
+        gates: list(gates.results),
         nonblocking: [...nonblockingSeen],
         // The rejection record build.md asks for, carried out of the phase rather than left in a log
         // line: it is what stops the same phantom coming back, and what a reader needs to see whether
@@ -834,8 +917,31 @@ while (verifyRound <= maxRounds + 1) {
   // A gate run that fails without naming what failed cannot be fixed: the Fix agent would get an
   // empty list, edit something arbitrary, and spend a round on a null instruction.
   if (!failures.length) {
-    return { status: 'agent-error', phaseLabel, round, fixes, stage, branch, reason: `${stage} reported failure with nothing listed` }
+    return { agentsDispatched, status: 'agent-error', phaseLabel, round, fixes, stage, branch, reason: `${stage} reported failure with nothing listed` }
   }
+
+  // Two rounds that confirm exactly the same findings is a phase that has stopped converging. Spending
+  // the rest of the budget buys nothing the escalation does not already have — escalation.md's own test.
+  //
+  // The review path only. On a red build `failures` is the GATE failure list, whose entries are
+  // command-level strings — "npm test: 1 failed" is byte-identical whether three tests fail or one, so
+  // a phase converging through its build errors looked like a deadlock and lost the rest of its budget.
+  // A gate failure that really is stuck still hits the cap one round later; a review finding that comes
+  // back word for word is the case this stop was measured on.
+  //
+  // Behind the cap, not in front of it. On the last round both are true and they say opposite things:
+  // this one reports "remaining 0 round(s)" and carries no exhaustedBy, so the escalation cannot tell
+  // which stage spent the budget. Whichever is more informative should be the one that returns.
+  const signature = failures.slice().sort().join(' ')
+  if (green && fixes > 0 && fixes < maxRounds && signature === lastConfirmed) {
+    return {
+      status: 'no-progress',
+      phaseLabel, round, fixes, gateFixes, reviewFixes, stage, branch, depth: resolvedDepth, reviewers,
+      unresolved: failures, nonblocking: [...nonblockingSeen], rejected: rejectedSeen, untriaged, agentsDispatched,
+      reason: `fix round ${fixes} changed the code but not the findings: ${failures.length} confirmed finding(s) came back identical. Escalate with the deadlock report rather than spending the remaining ${maxRounds - fixes} round(s).`,
+    }
+  }
+  lastConfirmed = signature
 
   // Cap on fixes SPENT, not on the round about to start: the Nth fix is allowed to run, and its
   // result is verified on the next trip. Only then is the budget genuinely exhausted.
@@ -865,6 +971,12 @@ while (verifyRound <= maxRounds + 1) {
     `\`git diff ${base}..${branch}\`.\n\n${failures.map(f => `- ${clip(f)}`).join('\n')}\n\n` +
     `State the root cause of each item ("X is caused by Y") before editing, and change that cause — ` +
     `one at a time, smallest change that addresses it.\n` +
+    `Repair only. A fix round repairs what the review found; new machinery is new work. If the repair ` +
+    `suggests a check, a harness, a helper module or a guard that does not exist yet, NAME it in your ` +
+    `summary and do not build it — machinery added here arrives unreviewed, so the next round reviews ` +
+    `it instead of the change and the cap fires on scaffolding nobody planned.\n` +
+    `Do not edit ${planPath}. A finding that the diff does not match the plan is answered in the code ` +
+    `or escalated, never by rewriting the plan.\n` +
     `If a cause is not obvious, rank 3-5 falsifiable hypotheses and find the observation that ` +
     `discriminates between the top two. Do not anchor on the first theory that fits.\n` +
     `If an item is a correctness bug, write a failing test that reproduces it first, then fix to green.\n` +
@@ -879,7 +991,7 @@ while (verifyRound <= maxRounds + 1) {
   // infrastructure failure as a deadlock, which escalation.md tells the reader to treat as a defect
   // in the plan.
   if (!fixed) {
-    return { status: 'agent-error', phaseLabel, round, fixes, stage: 'fix', branch, reason: 'the fix agent did not return, so this round changed nothing' }
+    return { agentsDispatched, status: 'agent-error', phaseLabel, round, fixes, stage: 'fix', branch, reason: 'the fix agent did not return, so this round changed nothing' }
   }
 
   fixes++
@@ -894,6 +1006,7 @@ while (verifyRound <= maxRounds + 1) {
 return {
   status: 'agent-error',
   phaseLabel, round: verifyRound, fixes, gateFixes, reviewFixes, branch, depth: resolvedDepth, reviewers,
+  agentsDispatched,
   stage: 'loop-exit',
   // Deliberately not a diagnosis. The earlier wording asserted the fix counter had not advanced, which
   // is only one way to arrive here: changing the cap test to `fixes > maxRounds` reaches it with the

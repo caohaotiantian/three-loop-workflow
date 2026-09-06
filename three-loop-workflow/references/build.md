@@ -2,8 +2,14 @@
 
 One cycle: **write → gates → review → triage → fix**, at Deep depth one cycle per phase. The behavior
 check runs **beside the review**, on the same green build, and its observations are triaged with the
-reviewers' findings. Then Commits. Reference material after that: Parallel work · The journal ·
-Diagnosis · Flaky tests · Round cap · Running this loop as a script.
+reviewers' findings.
+
+## Contents
+Before you start · Write · Gates · Review (+ Purpose-built reviewers) · Behavior check · Triage · Fix ·
+Commits · Parallel work · The journal · Diagnosis · Flaky tests · Round cap · Running this loop as a
+script
+
+## Before you start
 
 Capture `baseSha = git rev-parse HEAD` **before editing anything**, and write it into the plan. The reviewer's first tool call needs it, and after a compaction the plan is all you have. Recovering it later is possible but fiddly and easy to get silently wrong — `close.md` has the procedure and the traps; capturing it costs one command.
 
@@ -37,8 +43,6 @@ Record the gate output as commit trailers. The work is already committed by the 
 
 **If you add a gate, write its failing case first and watch it fail.** A check that cannot fail when the behavior is wrong is worse than none, because it reads as coverage that is not there — presence of a word is not presence of a rule. If you cannot make a check fail, do not write it, and do not reach for an agent-run fixture to cover what a mutation cannot.
 
-**If gates-before-reviewers is the rule that keeps getting skipped, stop restating it and enforce it.** Where the runtime has hooks, a pre-spawn hook can refuse to dispatch a reviewer while the gate command is red. That turns an instruction into something the loop cannot get past. Two limits decide how to raise it: it is a change to the **repository's** settings, not to this skill — propose the wording and let the owner make it — and it is one runtime's mechanism, so the loop must still close on a machine that has none.
-
 **Check what kind of thing you are gating.** A pattern can hold *prose* — the presence of a sentence is the property you want, and a grep is the right instrument. It cannot hold a *claim*: nothing separates "the script detects X" from "the script does not detect X" without also rejecting the true sentences a writer is entitled to make about X. If you find yourself adding one more counter-example to a regex, stop. That check does not converge, and the rounds you spend on it come out of the budget for the change.
 
 ## Review
@@ -47,7 +51,7 @@ Record the gate output as commit trailers. The work is already committed by the 
 
 Each gets the diff and the plan — not your summary of the change, and not the whole skill. Do not let them see each other's output; the value comes from their independence.
 
-The measurement behind "two" was taken on **plans** (`plan.md`, "Why two"), and a Deep *plan* always gets two. A diff is a friendlier target — the gates have already removed a whole class of defect before a reviewer looks — so the second reader buys less here, and is worth paying for where the phase itself is a migration, a contract, or anything that reaches production before the next phase lands. Say in the plan which phases got two.
+The case for two was made on **plans** (`plan.md`, "Why two"), and a Deep *plan* always gets two. A diff is a friendlier target — the gates have already removed a whole class of defect before a reviewer looks — so the second reader buys less here, and is worth paying for where the phase itself is a migration, a contract, or anything that reaches production before the next phase lands. Say in the plan which phases got two.
 
 ```
 Review the diff at `git diff <baseSha>..HEAD` against the plan at .agent/<task>/plan.md.
@@ -62,6 +66,14 @@ Check specifically, in this order:
 - What does this do on the inputs it does not expect — absent, empty, malformed,
   at the boundary, out of order, concurrent, or far larger than the happy path?
   Name the case and what happens.
+- What happens when something this change calls FAILS — a raised exception, a
+  non-2xx, a timeout, a null return? Name each error path and say what the caller
+  observes. Flag any error swallowed, logged-and-continued, or returned as a
+  success shape.
+- Which facts about code OUTSIDE this diff does the change assume — a method that
+  exists, a config key, a parameter's meaning, a return shape, an ordering
+  guarantee? Name each and say whether you confirmed it in the repository or
+  could not.
 - If the diff touches untrusted input, authentication, authorization, secrets,
   file paths, subprocess or shell invocation, query construction, deserialization,
   or anything sent to a third party: what is the worst a hostile input can make it
@@ -71,26 +83,31 @@ Check specifically, in this order:
   a retry added? Quote the removed lines. Deleting a test can be correct; doing it
   in the same change that had to pass is the case to flag.
 - Does new behavior have a test that would fail without this change? Name the line
-  of the diff that makes it pass.
+  of the diff that makes it pass. A test that passes with the change reverted is
+  testing nothing.
 - Does every changed line trace to the Goal or a recorded Decision, and does
   anything land in the Non-goals?
 - Does the PLAN look wrong — an Accept that cannot fail, a Goal that does not
   match what was asked, a Decision with one option? A diff that conforms to a
   wrong plan passes every other question here.
-- Any comment narrating process (round numbers, review history, plan references)?
+
+If the diff contains generated or non-text artefacts — notebooks, lockfiles,
+snapshots, minified output — say so and read the source form instead (a notebook's
+cells, the manifest the lockfile was generated from). A diff you cannot read is not
+a diff you reviewed.
 
 Return: {blocking: [...], nonblocking: [...], blocking_count, nonblocking_count}
 Do not modify code.
 ```
 
-**The order is the point.** A directed question dominates a reviewer's attention, and the top of the list gets most of it — so the questions that ask whether the code is *wrong* come before the ones that ask whether it is *in scope*. The earlier version of this block was scope bookkeeping in three of its four lines, which aimed the one mechanism that catches defects at the class least likely to hold them.
+**The order is the point.** A directed question dominates a reviewer's attention, and the top of the list gets most of it — so the questions that ask whether the code is *wrong* come before the ones that ask whether it is *in scope*.
 
 At Deep depth, give the two reviewers the same list and a **different closing line**:
 
 - *Reviewer 1* — "Read as an adversary hunting a case that breaks it: assume the change is wrong somewhere and find where."
 - *Reviewer 2* — "After that diff, run `git log -p -20` on the paths it touches and read how the code got here. Then read as the person who maintains it next year: assume the change works today, and find what it will cost."
 
-Identical prompts leave decorrelation to sampling noise; two different sentences cost what two identical ones cost. Reviewer 2's extra read is the **repository**, not the author — §4's isolation rule bars your summary and your session, not git history — and it buys a class a diff cannot show: an approach that was already tried here and reverted. `scripts/phase.js` sends both closing lines verbatim.
+Reviewer 2's extra read is the **repository**, not the author — §4's isolation rule bars your summary and your session, not git history — and it buys a class a diff cannot show: an approach that was already tried here and reverted. `scripts/phase.js` sends this block and both closing lines verbatim; the two copies are one mechanism, so edit them together.
 
 Closure comes from `blocking_count`, never the reviewer's prose (`SKILL.md` §4): "looks good overall" alongside a listed blocking item is not a pass.
 
@@ -108,18 +125,33 @@ If your runtime has no such pass, say so in the change rather than implying one 
 
 A **fresh subagent that did not write the change** drives the new path and reports what it observed: the actual output, not a summary of it. Give it the plan and the path to exercise, and nothing else — not the diff, not your account of the work. It is there to find out what the software does, and reading the diff tells it what the author meant instead.
 
+What comes back should read like this, not like a verdict:
+
+```
+Ran: server on :8080, then `curl -i localhost:8080/v1/things` ×62.
+Calls 1-60: 200, X-RateLimit-Remaining counts 59→0.
+Call 61: 429, Retry-After: 34, Remaining: 0.  ✓ matches Accept.
+Empty path /v1/: 404 with an HTML body, not the JSON error shape the
+  other 4xx use. Plan is silent on it. Flagging.
+```
+
+The second observation is why the example is here: silence is not permission, and a report that only confirmed the happy path would have passed while missing it.
+
+**Do not rediscover how to run the thing.** Where your runtime ships a pass that builds and drives the app and records the launch recipe it found, use that recipe as the *how* and still send a fresh agent to do the driving: a pass that runs in your own turn is not an independent observer, and the recipe is the expensive half to rediscover each phase (`references/platforms.md`).
+
 Have it try the edges as well as the happy path: the empty case, the error case, the unauthorized case, and whatever a user would plausibly do wrong. Those are where a change that passes its own tests stops matching the plan.
 
 **Observed behavior that contradicts the plan is a blocking finding**, and it goes through triage like any other. Two things follow that are easy to get wrong:
 
 - If the check **could not be run** — no service, no credentials, no way to reach the surface — the phase is not verified. Say so plainly and stop; do not record it as a note and close on the gates. `scripts/phase.js` returns `behavior-unverified` for exactly this and refuses to close.
-- If the plan is **silent** on something you observed and it looks wrong, that is still a finding. Silence is not permission.
+- If the real surface is one you must not touch — production payments, a live third party, an hours-long job — the check is **not** waived, and `behaviorCheck: false` is the wrong answer, because a person does call this. Drive it somewhere safe and cheap instead: a sandbox or staging credential, a test card, a toy dataset, `--max-steps 500`. Name in the plan where it was driven and what that environment does not cover. `false` asserts one thing only: nothing this phase builds is ever clicked, typed or called.
+- If the plan is **silent** on something you observed and it looks wrong, that is still a finding.
 
 **If what you built is read rather than run** — a reference, a CLI's help text, a config schema, an error-message set — the equivalent is a reader handed the **finished files** with no diff and no change context, the way a new user meets them. That catches what diff review structurally cannot: two sections that now contradict each other, a documented step that cannot be performed. `close.md` ("Read the result as a product") has the questions; it is worth doing at Standard depth too, and it costs one agent.
 
 Skip both only where the change puts nothing new in front of anyone: an internal refactor, a test-only change, a doc edit that reconciles stale wording with behavior that did not move. **Writing or rewriting something a reader will meet is not one of those** — that is the case above, and the reader is what drives it.
 
-Running the loop as a script, `behaviorCheck` is a required argument and `false` is how you declare that nothing here is observable (`references/orchestration.md`). The check runs beside the reviewers, so it costs an agent and no wall-clock.
+Running the loop as a script, `behaviorCheck` is a required argument, `false` is how you declare that nothing here is observable, and `{ read: "..." }` is how you ask for the reader above where what the phase produces is read rather than run (`references/orchestration.md`). The check runs beside the reviewers, so it costs an agent and no wall-clock.
 
 ## Triage
 
@@ -127,17 +159,19 @@ Running the loop as a script, `behaviorCheck` is a required argument and `false`
 
 Reject a finding when it misreads the code, attacks something the code does not do, describes a real property that is not a problem, or dissolves once you read the surrounding lines. When you are torn, look again rather than fixing defensively — a fix applied to a non-defect is a change with no reason behind it, and the next reviewer will ask why it exists.
 
-Scoring each one aloud makes the line visible, which is most of the work:
+Two questions, in this order. **Is it true?** and **is it this change's problem?** A finding can be perfectly true and still not belong here, and the scale below answers only the first:
 
-- **0** — false under any scrutiny, or a pre-existing issue this diff did not create.
-- **25** — might be real; you could not verify it against the code.
-- **50** — real, but a nitpick, or too rare to matter here.
-- **75** — verified, and likely to be hit in practice.
-- **100** — confirmed, and it will happen.
+- The finding names something the plan lists as a **Non-goal**, or something the diff did not create → **reject, and say which Non-goal**. One line. It is not a defect in this change, however real; if it is worth doing it is worth its own task, so say that too. Expect several — a reviewer directed at the Non-goals producing them is the prompt working, not a backlog.
+- Otherwise, score it:
+  - **0** — false under any scrutiny.
+  - **25** — might be real; you could not verify it against the code.
+  - **50** — real, but a nitpick, or too rare to matter here.
+  - **75** — verified, and likely to be hit in practice.
+  - **100** — confirmed, and it will happen.
 
 Fix 75 and above. Below that, say in one line what the code actually does and move on.
 
-This step is not optional bookkeeping. A reviewer asked to report everything will report things that are not there — a large share of them, including a substantial fraction of what it graded *blocking*, which are the ones you are most tempted to fix on sight. That is the trade you made to get its recall up, and triage is where you pay it back.
+This step is not optional bookkeeping. A reviewer asked to report everything will report things that are not there — a large share of them, including a substantial fraction of what it graded *blocking*, which are the ones you are most tempted to fix on sight.
 
 **The confirmed count is what closes the phase**, not the reported one. Skipping triage means a phantom finding consumes a fix round and can exhaust the round cap on code that was already correct.
 
@@ -152,6 +186,8 @@ Fix confirmed blocking findings. Triage non-blocking ones the same way: fix the 
 Name the root cause before you edit — `item X is caused by Y` — and change that cause. One at a time.
 
 **A fix round repairs what the review found. New machinery is new work.** If the repair suggests a check, a harness or a guard that does not exist yet, name it and raise it — do not build it here. Machinery added mid-fix arrives unreviewed, so the next round reviews *it* rather than the change: the confirmed count stops falling, the diff keeps growing, and the cap fires on scaffolding nobody planned. Adding the gate can be right. Deciding to add it mid-fix is not. This is the same judgment the Gates step asks for, arriving at the worst moment to make it — under budget pressure, on a defect you have just been shown.
+
+**A fix round never edits the plan either.** If a finding says the diff does not match the plan, either the code is wrong — fix it — or the plan is, and that is a conflict to raise (`plan.md`, Conflicts), not a paragraph to rewrite. The plan is gitignored, so an edit to it is invisible to every reviewer that follows.
 
 For a correctness bug, write the failing test first, then fix to green. For style, scope, or comment findings, no test is needed.
 
@@ -176,11 +212,9 @@ Phases run sequentially and share one working tree; `scripts/phase.js` assumes e
 ## The journal — what outlives the task
 
 A triage rejection outlives the round; some of what you learn outlives the **task** and has no diff to
-attach it to. That goes in `.agent/<task>/journal.md`, beside the plan. The entry conditions, and the
-prohibition on summarising what you did, are in `references/maintenance.md` — read them before writing
-an entry, because a journal that grows past them is the per-task archive this skill deleted. Under
-`scripts/phase.js` the same applies: the script returns the rejections, and anything worth keeping past
-the change is still yours to write down.
+attach it to. That goes in `.agent/<task>/journal.md`, beside the plan — read the entry conditions in
+`references/maintenance.md` first, because a journal that grows past them is the per-task archive this
+skill deleted.
 
 ## Diagnosis — when the cause is not obvious
 
@@ -206,3 +240,5 @@ If the **fix kept growing**, look at the fix step before you blame the plan (see
 ## Running this loop as a script
 
 Where the runtime can run it, `scripts/phase.js` runs the whole cycle deterministically — round counting, closure arithmetic and role isolation become code instead of instructions. Its arguments, the chaining loop, and what it does and does not guarantee: `references/orchestration.md`. Use it when a Deep change has several phases; for a single Standard change, running the loop by hand is cheaper than orchestrating it.
+
+**Route the stages** by cost, as `SKILL.md` §1 says. Running by hand, that is which subagent you pick for each stage; under the script it is `models`.
