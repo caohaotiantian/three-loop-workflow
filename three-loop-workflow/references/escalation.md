@@ -6,8 +6,9 @@ A silent default is a decision nobody made and no later reviewer can challenge. 
 
 | Situation | What to say |
 |---|---|
+| The defect is causing harm right now — money moving, data being corrupted, a job still running | What you are stopping and how, done **before** you diagnose. Say it, do not ask permission to stop the bleeding; ask before anything itself irreversible (refunds, deletes) |
 | The request admits more than one reading, and they lead to different work | The readings, with your recommendation |
-| A breaking change to a published contract — schema, exit code, CLI, wire protocol, storage layout | The change, plus what migration costs |
+| A breaking change to a published contract — schema, exit code, CLI, wire protocol, storage layout, or an exported symbol callers import | The non-breaking alternative if one exists, the change, and what migration costs |
 | A threshold or magic number with no source | Cite an existing constant if one exists; otherwise ask |
 | Legacy fields on a schema: keep, migrate, or drop | The options, plus the surface each one touches |
 | Deleting a file listed under the project guide's _load-bearing-docs_ | Which contract it fulfills, what replaces it, and every file that references it — **ask before deleting** |
@@ -83,6 +84,12 @@ mid-fix is not.
 
 Look hardest at what the new check is trying to hold: a pattern can hold *prose*, never a *claim*
 (`build.md`, Gates). A fix round that sets out to write one will not finish, and the cap fires on it.
+
+**A round that changed the code and not the findings is the same signal, arriving cheaper.** If the
+confirmed set comes back identical, the loop has stopped converging: escalate there rather than
+spending the remaining rounds to reach the cap. Under `scripts/phase.js` the confirmed set is what
+each fix round is handed — compare it with the last one and stop on a repeat. Where the script returns
+`no-progress`, that is this test made automatic.
 
 Never a silent round four.
 

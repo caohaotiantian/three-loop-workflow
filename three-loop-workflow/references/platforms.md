@@ -5,12 +5,12 @@
 | Runtime | Discovery path |
 |---|---|
 | Claude Code | `~/.claude/skills/three-loop-workflow/` (user) or `.claude/skills/` (project) |
-| Codex | `.agents/skills/three-loop-workflow/` |
+| Codex | `.agents/skills/three-loop-workflow/` (repo) or `~/.agents/skills/` (personal) |
 | opencode | either of the above |
 
 One canonical folder; copy or symlink it. The layout conforms to the open Agent Skills structure. `SKILL.md` names Claude Code in exactly one place — the `compatibility` field — and every rule in it is runtime-neutral, phrased as "where the runtime can run it". What actually needs a runtime is the table below.
 
-Sources, checked 2026-07-30: OpenAI Codex "Build skills"; opencode.ai/docs/skills; agentskills.io/specification, which requires `name` to equal the directory name — which is why the folder cannot be renamed on its own.
+Sources, checked 2026-07-30 and the Codex paths again on 2026-09-06: OpenAI Codex "Build skills"; opencode.ai/docs/skills; agentskills.io/specification, which requires `name` to equal the directory name — which is why the folder cannot be renamed on its own.
 
 ## The project guide
 
@@ -29,6 +29,8 @@ This skill never names a fixed instruction file. It reads **`AGENTS.md`, `CLAUDE
 | A persistent store outside the repo, for `maintenance.md` to verify | One per project, under `~/.claude/projects/` | Runtime- and version-dependent — look before concluding there is none; where there is none, the project guide is the only durable context |
 | A security-specific review pass | The built-in `security-review` skill: fresh sub-tasks to hunt, then a parallel pass that drops false positives (`build.md`, Purpose-built reviewers) | Nothing equivalent — the security line in the reviewer prompt is all there is. Say in the change that no security-specific pass ran |
 | A reviewer sharing no context at all | An off-machine review of the branch or PR, where the runtime offers one, so author-≠-reviewer holds by construction rather than by discipline | Clear context and re-read the diff, and say that is what happened |
+| Driving the user-visible path (`build.md`, Behavior check) | A bundled verify/run pass works out how to build and start the app and saves the recipe it found under `.claude/skills/`; a fresh subagent then drives it | No recipe store — write the launch steps into the plan beside Accept's observable outcome, so the next phase does not rediscover them |
+| A purpose-built diff reviewer | A bundled `code-review` pass hunts correctness bugs in the current diff, alongside the review in `build.md`. It runs in the invoking session's own context, so it adds a second reading, not an independent one — author-≠-reviewer still needs a fresh agent | Run `build.md`'s review prompt by hand in a second session |
 
 **Look for the store rather than assuming.** Whether a runtime keeps notes between sessions changes release to release, so this table names no runtime as having none: check the runtime's own state directory before deciding the target does not exist. An earlier version of this row asserted two runtimes kept none, and one of them did.
 

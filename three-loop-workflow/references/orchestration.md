@@ -32,7 +32,7 @@ git -C "$root" worktree add -b phase-2-ratelimit \
   "$root/../.$(basename "$root")-worktrees/phase-2-ratelimit"
 ```
 
-Outside the repository is the property that matters: a worktree inside one lands in the index as an embedded-repo entry, and a worktree nested in a worktree confuses tooling. The leading dot is tidiness, not safety. For a throwaway spike, `$TMPDIR` is simpler still.
+For a throwaway spike, `$TMPDIR` is simpler still.
 
 **What actually bites:**
 
@@ -57,16 +57,16 @@ Six arguments are required — `planPath`, `tasks`, `acceptCmds`, `baseSha`, `be
 | `tasks` | **required** — the phase's task list, verbatim from the plan: a string, or an array of strings. Checked for shape, because an array of task *objects* stringifies to `[object Object]` and the writer then receives that as its whole task list |
 | `acceptCmds` | **required** — an **array** of non-empty command strings whose exit codes decide the phase: `["npm test", "npm run lint"]`. A bare string is a `usage-error`, and so is `[""]` |
 | `baseSha` | **required** — `git rev-parse HEAD` from before editing; *this phase's* base at Deep depth. `build.md` explains why one fixed base for the whole change costs a fix round |
-| `depth` | `'standard'` (one reviewer) or `'deep'` (two, parallel, unioned). **One of `depth` or `reviewers` must be present** |
-| `reviewers` | an explicit count, which **wins** over what `depth` implies — pass `depth: 'deep', reviewers: 1` to run one reviewer on a reversible phase of a Deep change. The override is logged and the result reports both |
+| `depth` | `'standard'` or `'deep'` — it selects the reviewer prompts and what the result reports, and `'deep'` runs two diff reviewers. **One of `depth` or `reviewers` must be present** |
+| `reviewers` | an explicit count, which **wins** over what `depth` implies. `depth: 'deep', reviewers: 1` is the documented choice on a **reversible** Deep phase — `build.md` buys the second reviewer where the phase is hard to undo — and the script logs the cost of the default so it is visible at the call site. The override is logged too, and the result reports both |
 | `branch` | optional, authoritative when given — the branch the phase commits on |
 | `repoPath` | absolute path to the repository under test. Omittable **only** when the agents already start there |
 | `maxRounds` | optional, default 3 — bounds fixes **spent**, not verifications. Raising it raises the cap the rest of the skill states as three, so record why in the plan |
-| `behaviorCheck` | **required** — the user-visible path to drive, in enough detail for an agent that has not read the code, or `false` if a person will never click, type or call what this phase builds. A fresh agent runs it beside the reviewers; observations that contradict the plan become findings and go through triage, and asked-for-but-not-runnable returns `behavior-unverified` rather than closing. Required rather than optional for the reason `depth` is: a stage that silently does not run is the defect |
+| `behaviorCheck` | **required** — the user-visible path to drive, in enough detail for an agent that has not read the code, or `{ read: "the files, in the order a new user meets them" }` where what this phase produces is **read** rather than run, or `false` if a person will never click, type or call it. A fresh agent drives or reads it beside the reviewers; observations that contradict the plan become findings and go through triage, and asked-for-but-not-runnable returns `behavior-unverified` rather than closing. Required rather than optional for the reason `depth` is: a stage that silently does not run is the defect |
 | `phaseLabel` | optional, default `'phase'`. It labels agents and logs **and** is interpolated into the Write agent's instructions (`You are implementing <phaseLabel>`), so it is caller text an agent reads: a short name that matches the plan, single-line, or it is a `usage-error` |
 | `models` | optional per-stage model overrides: `{write, gates, review, behavior, triage, fix}`. The largest unused cost lever here — gates is a shell proxy that judges nothing and runs happily on the cheapest model available, while review and triage are where capability pays |
 
-Omitting both `depth` and `reviewers` is a `usage-error`: a count that defaulted to 1 let a Deep phase run the Standard review with nothing in the result to show it. Passing both is an explicit override — use it to run one reviewer on a reversible phase of a Deep change — and the returned object states the `depth` and `reviewers` it actually used.
+Omitting both `depth` and `reviewers` is a `usage-error`: a count that defaulted to 1 let a Deep phase run the Standard review with nothing in the result to show it. The returned object states the `depth` and `reviewers` it actually used.
 
 **Chain multi-phase runs on the returned `headSha`.** Put yourself on one task branch before the first call; every phase commits to it in sequence, and passing `branch` makes that explicit rather than trusting the implementer's self-report. A closed phase returns the commit its review actually saw, and that becomes the next phase's `baseSha`:
 
@@ -103,12 +103,30 @@ branch name and a sha and nothing else, so without it an agent standing elsewher
 filesystem, commits nothing, and the phase dies on the no-op-fix guard — a correct error three steps
 downstream of its cause. Measured, not inferred.
 
-**What the script does that the manual path cannot.** It fails closed on an empty review: the gates step reports its own `git rev-parse HEAD` and its own branch, and a head equal to the base — on any round, including a fix round that reset or dropped the phase's commits — stops the phase rather than handing a reviewer an empty range. A gates step that cannot report a usable head stops it too, rather than silently disabling every guard downstream.
+**What the script does that the manual path cannot.** It fails closed on an empty review. The gates step reports its own `git rev-parse HEAD`, its own branch, and `git diff --numstat <base>..HEAD | wc -l`, and the phase stops on any round where the head equals the base *or* the diff is empty — the second is the one that catches a fix round that reverted or reset the phase's own commits, because that moves HEAD and sha equality sees nothing wrong. A gates step that cannot report a usable head, or a branch that is not a usable ref, stops it too, rather than silently disabling the guards downstream.
 
 Note what that does **not** do: it does not detect a fabricated sha. If the implementer reports a well-formed sha it never created, the reported value is discarded in favour of the real head and the phase reviews the real diff — the fabrication is made harmless, not visible. Resolving a sha in the repository needs a shell, which a Workflow script does not have.
 
-**The gates are run by an agent, and `all_pass` is the one report nothing cross-checks.** Same cause: a Workflow script can dispatch agents and shape control flow — `agent()`, `parallel()`, `pipeline()`, `phase()`, `log()`, `workflow()` — and it has no shell, so it cannot run your test command itself. It sends an agent to run the commands and report exit codes and tallies. That still buys the ordering the loop needs — gates precede every reviewer, and a red build never spends a review — and the agent judges nothing. But note the asymmetry with the sha beside it: `headSha` is checked against the base and against the previous round's head, so a wrong one stops the phase, whereas a gates agent that reports green on a red build is believed. If that matters more than the orchestration does, run the gates yourself and pass the phase a command that has already gone green.
+**The gates are run by an agent.** Same cause: a Workflow script can dispatch agents and shape control flow — `agent()`, `parallel()`, `pipeline()`, `phase()`, `log()`, `workflow()` — and it has no shell, so it cannot run your test command itself. It sends an agent to run the commands and report exit codes and tallies. That still buys the ordering the loop needs — gates precede every reviewer, and a red build never spends a review — and the agent judges nothing.
+
+`all_pass` is a judgement; the tally reported beside it is data, and where they disagree the script believes the data: green with a failing test in its own tally, or with nothing passed and everything skipped, stops the phase instead of dispatching reviewers. What remains uncheckable is a gates agent that reports green on a red build **and fabricates the tally to match**. If that matters more than the orchestration does, run the gates yourself and pass the phase a command that has already gone green.
 
 **What it does not do, by decision rather than by omission.** The implementer commits before the gates run, so gate output cannot land in *that* commit's trailers — record them yourself, or on the fix commits; moving the commit after the gates would mean amending, which changes the sha every guard here is tracking. Non-blocking findings are accumulated and returned, not triaged: "fix the cheap and correct ones" is a scope judgment, and handing it to an agent is how scope creep gets automated. Gate-driven and review-driven fix rounds share one budget, because the cap is per phase and splitting it would change a documented rule — they are reported separately (`gateFixes`, `reviewFixes`, `exhaustedBy`) so an escalation can say which one spent it.
+
+## What comes back, and what to do with it
+
+Switch on `status`. Only `closed` continues the run; every other value is a stop, and each returns what the round already paid for — findings, rejections, `agentsDispatched`.
+
+| `status` | What it means | Next |
+|---|---|---|
+| `closed` | gates green, no confirmed blocking finding, behavior check ran | Chain `headSha` into the next phase's `baseSha` |
+| `cap-exhausted` | the fix budget is spent and findings remain | Escalate with `unresolved` and `exhaustedBy` (`references/escalation.md`) |
+| `no-progress` | a review-driven fix round changed the code and not the confirmed findings, with budget left | Escalate now — the remaining rounds buy nothing the deadlock report does not already have |
+| `behavior-unverified` | the check was asked for and could not be run or read | Drive it somewhere safe and cheap, or fix what blocked it; do not close on the gates |
+| `triage-incomplete` | triage ruled on some findings and not others | Rule on `untriaged` yourself, then re-run the phase |
+| `usage-error` | an argument is missing or the wrong shape | Fix the call. Nothing was dispatched |
+| `agent-error` | a stage did not return, or a guard fired — an empty diff, a wrong branch, a no-op fix round | Read `stage` and `reason`; it is an infrastructure or environment fault, not a verdict on the change |
+| `plan-conflict` | the implementer found the plan contradicting the code | Resolve it in the plan (`references/plan.md`, Conflicts), then re-run |
+| `write-escalation` | the implementer was blocked twice | Its `concerns` say what is in the way |
 
 Use it when a Deep change has several phases — the scope this file's opening states.

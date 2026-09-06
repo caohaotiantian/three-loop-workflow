@@ -70,7 +70,7 @@ const hex = n => String(n).repeat(40).slice(0, 40).replace(/[^0-9a-f]/g, '1')
 
 const base = { phaseLabel: 'P1', planPath: '.agent/t/plan.md', tasks: 'do the thing', acceptCmds: ['npm test'], baseSha: A, depth: 'standard', behaviorCheck: false }
 const write = (o = {}) => ({ branch: 'task', headSha: B, conflict: false, blocked: false, concerns: [], ...o })
-const gates = (o = {}) => ({ all_pass: true, headSha: B, branch: 'task', results: ['npm test: exit 0, 12 passed'], failures: [], tests: { counted: true, passed: 12, failed: 0, skipped: 0 }, ...o })
+const gates = (o = {}) => ({ all_pass: true, headSha: B, branch: 'task', diffLines: 40, results: ['npm test: exit 0, 12 passed'], failures: [], tests: { counted: true, passed: 12, failed: 0, skipped: 0 }, ...o })
 const review = (n, o = {}) => ({
   blocking: Array.from({ length: n }, (_, i) => `bug${i}`),
   nonblocking: [], blocking_count: n, nonblocking_count: 0, ...o,
@@ -78,6 +78,17 @@ const review = (n, o = {}) => ({
 // A gates agent that reports a fresh HEAD each round, so the no-op-fix guard does not fire and the
 // scenario is genuinely exercising the round budget rather than tripping a different guard.
 const advancingGates = (calls, o = {}) => gates({ headSha: hex(calls.filter(c => c.label.startsWith('gates')).length + 1), ...o })
+
+// The verify round a reply is being made for. Gates run exactly once per round, so counting gates calls
+// dates every other reply in the same round.
+const roundOf = calls => calls.filter(c => c.label.startsWith('gates')).length
+// A finding that MOVES between rounds. A confirmed set that comes back identical is now its own stop
+// (no-progress), so a fixture whose subject is the ROUND BUDGET has to produce fresh findings — one
+// that repeats is testing the other rule.
+const movingReview = (calls, n = 1, o = {}) => review(n, {
+  blocking: Array.from({ length: n }, (_, i) => `bug${i}-r${roundOf(calls)}`), ...o,
+})
+const movingGateFailures = calls => [`npm test: 1 failed (round ${roundOf(calls)})`]
 
 // A triage stub that rules on the numbered list it was actually handed. The script confirms findings by
 // NUMBER now, so a stub returning text could not model it — which is the point of that contract: an
@@ -203,8 +214,8 @@ const INVARIANTS = [
     args: { ...base, maxRounds: mx },
     reply: (l, calls) => l.startsWith('write') ? write()
       : l.startsWith('gates') ? advancingGates(calls)
-      : l.startsWith('review') ? review(1)
-      : l.startsWith('triage') ? triageFor(calls, ['bug0'])
+      : l.startsWith('review') ? movingReview(calls)
+      : l.startsWith('triage') ? triageFor(calls, ['bug'])
       : {},
     expect: r => all(
       eq(r.res.status, 'cap-exhausted'), eq(r.res.fixes, mx),
@@ -231,8 +242,8 @@ const INVARIANTS = [
     args: { ...base, depth: 'deep' },
     reply: (l, calls) => l.startsWith('write') ? write()
       : l.startsWith('gates') ? advancingGates(calls)
-      : l.endsWith(':v1') ? { blocking: ['FINDING-ALPHA'], nonblocking: ['nit-1'], blocking_count: 1, nonblocking_count: 1 }
-      : l.endsWith(':v2') ? { blocking: ['FINDING-BETA'], nonblocking: ['nit-1', 'nit-2'], blocking_count: 1, nonblocking_count: 2 }
+      : l.endsWith(':v1') ? { blocking: [`FINDING-ALPHA-r${roundOf(calls)}`], nonblocking: ['nit-1'], blocking_count: 1, nonblocking_count: 1 }
+      : l.endsWith(':v2') ? { blocking: [`FINDING-BETA-r${roundOf(calls)}`], nonblocking: ['nit-1', 'nit-2'], blocking_count: 1, nonblocking_count: 2 }
       : l.startsWith('triage') ? triageFor(calls, ['FINDING-ALPHA', 'FINDING-BETA'])
       : {},
     expect: r => all(
@@ -256,8 +267,11 @@ const INVARIANTS = [
     args: base,
     reply: (l, calls) => l.startsWith('write') ? write()
       : l.startsWith('gates') ? advancingGates(calls)
-      : l.startsWith('review') ? review(1, { verdict: 'pass', summary: 'looks good overall' })
-      : l.startsWith('triage') ? triageFor(calls, ['bug0'])
+      // The prose is the subject here, so the reviewer supplies one: a pass verdict and a cheerful
+      // summary beside a blocking finding. The finding MOVES between rounds because a set that repeats
+      // is the no-progress stop's business, and the budget is what this invariant reads.
+      : l.startsWith('review') ? movingReview(calls, 1, { verdict: 'pass', summary: 'looks good overall' })
+      : l.startsWith('triage') ? triageFor(calls, ['bug'])
       : {},
     expect: r => eq(r.res.status, 'cap-exhausted') },
 
@@ -481,7 +495,7 @@ const INVARIANTS = [
   { name: 'gate-driven and review-driven fix rounds are attributed separately',
     args: base,
     reply: (l, calls) => l.startsWith('write') ? write()
-      : l.startsWith('gates') ? advancingGates(calls, { all_pass: false, failures: ['npm test: 1 failed'] })
+      : l.startsWith('gates') ? advancingGates(calls, { all_pass: false, failures: movingGateFailures(calls) })
       : {},
     expect: r => all(
       eq(r.res.status, 'cap-exhausted'),
@@ -578,8 +592,8 @@ const INVARIANTS = [
       const g = calls.filter(c => c.label.startsWith('gates')).length
       return l.startsWith('write') ? write()
         : l.startsWith('gates') ? gates({ headSha: g === 1 ? B : hex(3) })
-        : l.startsWith('review') ? review(1)
-        : l.startsWith('triage') ? triageFor(calls, ['bug0'])
+        : l.startsWith('review') ? movingReview(calls)
+        : l.startsWith('triage') ? triageFor(calls, ['bug'])
         : {}
     },
     expect: r => all(
@@ -601,8 +615,8 @@ const INVARIANTS = [
     args: { ...base, maxRounds: 3 },
     reply: (l, calls) => l.startsWith('write') ? write()
       : l.startsWith('gates') ? advancingGates(calls)
-      : l.startsWith('review') ? review(1)
-      : l.startsWith('triage') ? triageFor(calls, ['bug0'])
+      : l.startsWith('review') ? movingReview(calls)
+      : l.startsWith('triage') ? triageFor(calls, ['bug'])
       : {},
     expect: r => all(
       eq(r.res.status, 'cap-exhausted'),
@@ -648,8 +662,8 @@ const INVARIANTS = [
     args: { ...base, maxRounds: 1 },
     reply: (l, calls) => l.startsWith('write') ? write()
       : l.startsWith('gates') ? advancingGates(calls)
-      : l.startsWith('review') ? review(1)
-      : l.startsWith('triage') ? triageFor(calls, ['bug0'])
+      : l.startsWith('review') ? movingReview(calls)
+      : l.startsWith('triage') ? triageFor(calls, ['bug'])
       : {},
     expect: r => all(
       eq(r.res.status, 'cap-exhausted'),
@@ -662,7 +676,7 @@ const INVARIANTS = [
   { name: 'a gate-driven cap names gates, so exhaustedBy cannot be a constant',
     args: { ...base, maxRounds: 1 },
     reply: (l, calls) => l.startsWith('write') ? write()
-      : l.startsWith('gates') ? advancingGates(calls, { all_pass: false, failures: ['npm test: 1 failed'] })
+      : l.startsWith('gates') ? advancingGates(calls, { all_pass: false, failures: movingGateFailures(calls) })
       : l.startsWith('review') ? review(0)
       : {},
     expect: r => all(
@@ -759,7 +773,7 @@ const INVARIANTS = [
   { name: 'a gates reply missing its failures list is a clean error, not a crash',
     args: base,
     reply: (l, calls) => l.startsWith('write') ? write()
-      : l.startsWith('gates') ? { all_pass: false, headSha: hex(2), branch: 'task', results: ['npm test: exit 1'], tests: { counted: true, passed: 11, failed: 1, skipped: 0 } }
+      : l.startsWith('gates') ? { all_pass: false, headSha: hex(2), branch: 'task', diffLines: 40, results: ['npm test: exit 1'], tests: { counted: true, passed: 11, failed: 1, skipped: 0 } }
       : {},
     expect: r => all(ok(!r.err, 'the script must not throw'), eq(r.res.status, 'agent-error'), eq(r.res.stage, 'gates')) },
 
@@ -841,19 +855,23 @@ const INVARIANTS = [
     expect: r => all(eq(r.n('triage:'), 1, 'the shrink must still be seen through the wrong type'),
       has(r.promptsFor('triage')[0] || '', 'fewer test', 'the finding must name the shrink')) },
 
+  // The tallies are chosen so the two readings disagree in the direction that matters: 12 collected
+  // before and 12 after is no shrink, while concatenating the same strings gives "2010" then "1200",
+  // which reads as a suite that lost most of itself. What forced the tallies to change was round 2:
+  // its old `failed: '1'` sat beside a defaulted all_pass true, which is now its own stop.
   { name: 'a string tally that did not shrink raises nothing, so concatenation cannot invent one',
     args: base,
     reply: (l, calls) => {
       const round = calls.filter(c => c.label.startsWith('gates')).length
       if (l.startsWith('write')) return write()
       if (l.startsWith('gates')) return advancingGates(calls, round === 1
-        ? { all_pass: false, failures: ['npm test: 1 failed'], tests: { counted: true, passed: '2', failed: '0', skipped: '0' } }
-        : { tests: { counted: true, passed: '1', failed: '1', skipped: '0' } })
+        ? { all_pass: false, failures: ['npm run lint: exit 1'], tests: { counted: true, passed: '2', failed: '0', skipped: '10' } }
+        : { tests: { counted: true, passed: '12', failed: '0', skipped: '0' } })
       if (l.startsWith('review')) return review(0)
       return {}
     },
     expect: r => all(eq(r.res.status, 'closed'),
-      eq(r.n('triage:'), 0, 'two tests before and two after is not a shrink, whatever type they arrived as')) },
+      eq(r.n('triage:'), 0, '12 tests before and 12 after is not a shrink, whatever type they arrived as')) },
 
   { name: 'a phase whose gates never counted tests says the shrink check never ran',
     args: base,
@@ -959,6 +977,18 @@ const INVARIANTS = [
     expect: r => all(ok(r.res.status !== 'closed', 'a red build must not close, whatever shape the boolean arrived in'),
       eq(r.n('review:'), 0, 'no reviewer may be dispatched on a red build')) },
 
+  // The tally is clean here on purpose: with a failing test in it, the cross-check above catches the
+  // same mutation and this assertion stops saying anything about how the boolean is read. A red lint
+  // command beside a green suite isolates the identity test.
+  { name: 'a gates agent that reports the STRING "false" beside a clean tally still does not close',
+    args: base,
+    reply: (l, calls) => l.startsWith('write') ? write()
+      : l.startsWith('gates') ? advancingGates(calls, { all_pass: 'false', failures: ['npm run lint: exit 1'], tests: { counted: true, passed: 12, failed: 0, skipped: 0 } })
+      : l.startsWith('review') ? review(0) : {},
+    expect: r => all(ok(r.res.status !== 'closed', 'a red build must not close, whatever shape the boolean arrived in'),
+      eq(r.n('review:'), 0, 'no reviewer may be dispatched on a red build'),
+      ok(r.n('fix:') > 0, 'the lint failure must reach a fix round')) },
+
   { name: 'a phase that declared no behavior check records that, and reports what it cost',
     args: base,
     reply: (l, calls) => l.startsWith('write') ? write() : l.startsWith('gates') ? gates() : review(0),
@@ -997,6 +1027,299 @@ const INVARIANTS = [
           'decorrelation may not cost either reviewer a directed question'),
         ok(ps.some(p => p.includes('git log -p -20')),
           'one reviewer reads the code\'s history, which is the decorrelation build.md documents')) } },
+
+  // ── sha equality is not diff emptiness ──────────────────────
+  // Every empty-diff guard here is an equality test on shas. A revert of the phase's own work, or a
+  // reset plus an empty commit, MOVES head and leaves the tree identical to the base: both guards pass,
+  // the reviewer gets an empty range, and reporting nothing is what a clean review looks like.
+  { name: 'a fix round whose tree returns to the base is stopped, not reviewed',
+    args: base,
+    reply: (l, calls) => {
+      const round = roundOf(calls)
+      if (l.startsWith('write')) return write()
+      if (l.startsWith('gates')) return round === 1 ? gates({ diffLines: 40 }) : gates({ headSha: hex(2), diffLines: 0 })
+      if (l.startsWith('review')) return movingReview(calls)
+      if (l.startsWith('triage')) return triageFor(calls, ['bug'])
+      return {}
+    },
+    expect: r => all(
+      eq(r.res.status, 'agent-error'), eq(r.res.stage, 'fix'),
+      eq(r.n('review'), 1, 'the second review must not be dispatched against an empty range'),
+      has(r.res.reason || '', 'identical to the base',
+        'the error must name the tree, not the head — the head did move')) },
+
+  { name: 'the gates step is asked to measure the diff, so emptiness is not inferred from shas',
+    args: base,
+    reply: (l, calls) => l.startsWith('write') ? write() : l.startsWith('gates') ? gates({ diffLines: 40 }) : review(0),
+    expect: r => all(eq(r.res.status, 'closed'),
+      has(r.promptsFor('gates')[0] || '', 'git diff --numstat', 'the gates prompt must ask for the diff size'),
+      has(r.promptsFor('gates')[0] || '', 'diffLines', 'and name the field it wants it back in')) },
+
+  // A guard whose input is unreadable is a guard that is OFF, and `Number(undefined)` is the quietest
+  // way to switch one off: NaN fails every comparison below it and the phase carries on as though the
+  // diff had been measured. Fail closed, the way the unparseable head above does.
+  { name: 'a gates step that omits diffLines is an agent-error, not a guard quietly switched off',
+    args: base,
+    reply: (l, calls) => {
+      if (l.startsWith('write')) return write()
+      if (l.startsWith('gates')) { const g = gates(); delete g.diffLines; return g }
+      return review(0)
+    },
+    expect: r => all(eq(r.res.status, 'agent-error'), eq(r.res.stage, 'gates'),
+      has(r.res.reason || '', 'usable diffLines', 'the error must name the field it could not read'),
+      eq(r.n('review'), 0, 'no reviewer may be spawned on a diff whose size was never measured')) },
+
+  { name: 'a chatty diffLines is an agent-error, not a silently skipped empty-tree check',
+    args: base,
+    reply: (l, calls) => l.startsWith('write') ? write() : l.startsWith('gates') ? gates({ diffLines: '0 lines' }) : review(0),
+    expect: r => all(eq(r.res.status, 'agent-error'), eq(r.res.stage, 'gates'),
+      has(r.res.reason || '', 'usable diffLines', 'the error must name the field it could not read'),
+      eq(r.n('review'), 0, '"0 lines" is the empty tree the guard exists for, read as NaN')) },
+
+  // The empty tree is not only a fix-round shape: a write step that commits a revert, or an empty
+  // commit, moves HEAD off the base and leaves nothing to review.
+  { name: 'a write step whose tree is identical to the base is stopped at stage write',
+    args: base,
+    reply: (l, calls) => l.startsWith('write') ? write() : l.startsWith('gates') ? gates({ diffLines: 0 }) : review(0),
+    expect: r => all(eq(r.res.status, 'agent-error'), eq(r.res.stage, 'write'),
+      has(r.res.reason || '', 'identical to the base', 'the error must name the tree, not the head'),
+      eq(r.n('review'), 0, 'no reviewer may be spawned on an empty range')) },
+
+  // ── all_pass is a judgement; the tally beside it is data ────
+  { name: 'all_pass beside failing tests in its own tally never reaches a reviewer',
+    args: base,
+    reply: (l, calls) => l.startsWith('write') ? write()
+      : l.startsWith('gates') ? gates({ tests: { counted: true, passed: 0, failed: 3, skipped: 0 } })
+      : review(0),
+    expect: r => all(eq(r.res.status, 'agent-error'), eq(r.res.stage, 'gates'),
+      eq(r.n('review'), 0, 'a red build must never be handed to a reviewer'),
+      eq(r.n('fix:'), 0, 'and must not spend a fix round either')) },
+
+  { name: 'all_pass with nothing executed and everything skipped is not a pass',
+    args: base,
+    reply: (l, calls) => l.startsWith('write') ? write()
+      : l.startsWith('gates') ? gates({ tests: { counted: true, passed: 0, failed: 0, skipped: 214 } })
+      : review(0),
+    expect: r => all(eq(r.res.status, 'agent-error'), eq(r.res.stage, 'gates'),
+      eq(r.n('review'), 0, 'exit 0 with every test skipped must not buy a review')) },
+
+  // ── a phase that has stopped converging ─────────────────────
+  { name: 'a round that changed the code and not the findings stops as no-progress',
+    args: { ...base, maxRounds: 3 },
+    reply: (l, calls) => l.startsWith('write') ? write()
+      : l.startsWith('gates') ? advancingGates(calls)
+      : l.startsWith('review') ? review(1)
+      : l.startsWith('triage') ? triageFor(calls, ['bug0'])
+      : {},
+    expect: r => all(
+      eq(r.res.status, 'no-progress'),
+      eq(r.res.fixes, 1, 'it stops on the first fix that moved nothing, not at the cap'),
+      eq(r.n('fix:'), 1, 'the rest of the budget is not spent'),
+      ok((r.res.unresolved || []).length > 0, 'the deadlock report carries what is unresolved'),
+      ok(Number.isInteger(r.res.agentsDispatched), 'and what the phase cost')) },
+
+  { name: 'findings that move between rounds still spend the budget, so no-progress is not a cheaper cap',
+    args: { ...base, maxRounds: 3 },
+    reply: (l, calls) => l.startsWith('write') ? write()
+      : l.startsWith('gates') ? advancingGates(calls)
+      : l.startsWith('review') ? movingReview(calls)
+      : l.startsWith('triage') ? triageFor(calls, ['bug'])
+      : {},
+    expect: r => all(eq(r.res.status, 'cap-exhausted'), eq(r.res.fixes, 3),
+      eq(r.n('fix:'), 3, 'a phase that is still converging keeps its rounds')) },
+
+  // The signature is built from whatever list drove the round, and on a red build that list is the
+  // GATE failures — command-level strings like "npm test: 1 failed", which stay byte-identical while
+  // the tally underneath them moves from 3 failures to 1. Stopping there cuts off a phase that is
+  // converging. The stalled-review question is only answerable on the review path.
+  { name: 'two red rounds with identical gate failure strings keep their budget',
+    args: { ...base, maxRounds: 3 },
+    reply: (l, calls) => {
+      const round = roundOf(calls)
+      if (l.startsWith('write')) return write()
+      if (l.startsWith('gates')) return round <= 2
+        ? advancingGates(calls, { all_pass: false, failures: ['npm test: 1 failed'], tests: { counted: true, passed: 9 + round, failed: 4 - round, skipped: 0 } })
+        : advancingGates(calls, { tests: { counted: true, passed: 13, failed: 0, skipped: 0 } })
+      if (l.startsWith('review')) return review(0)
+      return {}
+    },
+    expect: r => all(eq(r.res.status, 'closed'), eq(r.res.fixes, 2),
+      eq(r.n('fix:'), 2, 'a red build whose tally is improving has not stopped converging')) },
+
+  // Both stops are true on the last round, and they say opposite things to the caller: no-progress
+  // reports "remaining 0 round(s)" and carries no exhaustedBy, so an escalation reading it cannot tell
+  // which stage spent the budget. The cap is the more informative verdict, and it wins.
+  { name: 'the last round is cap-exhausted with exhaustedBy, not no-progress',
+    args: { ...base, maxRounds: 1 },
+    reply: (l, calls) => l.startsWith('write') ? write()
+      : l.startsWith('gates') ? advancingGates(calls)
+      : l.startsWith('review') ? review(1)
+      : l.startsWith('triage') ? triageFor(calls, ['bug0'])
+      : {},
+    expect: r => all(eq(r.res.status, 'cap-exhausted'), eq(r.res.fixes, 1),
+      eq(r.res.exhaustedBy, 'review', 'the escalation needs to know which stage spent the budget')) },
+
+  // ── triage is told how to weigh a finding, not only whether it is true ──
+  { name: 'triage is given the scope test and the score bands, not a binary verdict',
+    args: base,
+    reply: (l, calls) => l.startsWith('write') ? write() : l.startsWith('gates') ? gates()
+      : l.startsWith('review') ? review(2) : l.startsWith('triage') ? triageFor(calls, []) : {},
+    expect: r => {
+      const p = r.promptsFor('triage')[0] || ''
+      return all(eq(r.res.status, 'closed'),
+        has(p, 'lists as a Non-goal', 'true is not the same as this change\'s problem'),
+        has(p, 'verified and likely to be hit', 'the score bands must reach the agent that applies them'),
+        has(p, 'Confirm 75 and above', 'and the threshold with them')) } },
+
+  { name: 'a reappearing claim is re-checked against the code, not inherited from the earlier verdict',
+    args: base,
+    reply: (l, calls) => {
+      const round = roundOf(calls)
+      if (l.startsWith('write')) return write()
+      if (l.startsWith('gates')) return advancingGates(calls)
+      if (l.startsWith('review')) return round === 1 ? review(2) : movingReview(calls)
+      if (l.startsWith('triage')) return triageFor(calls, t => /bug0/.test(t))
+      return {}
+    },
+    expect: r => {
+      const later = r.promptsFor('triage')[1] || ''
+      return all(ok(!!r.promptsFor('triage')[1], 'a second triage must happen'),
+        has(later, 're-check it against the code', 'the earlier verdict must be re-derived, not inherited'),
+        ok(!/very likely the same phantom/.test(later),
+          'a wrongly rejected finding looks identical from here, so the prompt may not pre-judge it')) } },
+
+  // ── the fix round repairs; it does not build ────────────────
+  { name: 'the fix prompt forbids new machinery and forbids editing the plan',
+    args: base,
+    reply: (l, calls) => l.startsWith('write') ? write()
+      : l.startsWith('gates') ? advancingGates(calls)
+      : l.startsWith('review') ? movingReview(calls)
+      : l.startsWith('triage') ? triageFor(calls, ['bug'])
+      : {},
+    expect: r => {
+      const p = r.promptsFor('fix')[0] || ''
+      return all(ok(!!r.promptsFor('fix')[0], 'this scenario must reach a fix round'),
+        has(p, 'new machinery is new work', 'scope growth in the fix step is what exhausts the cap'),
+        has(p, 'Do not edit .agent/t/plan.md',
+          'the plan is gitignored, so an edit to it is invisible to every reviewer that follows')) } },
+
+  // ── read mode: what is read rather than run ─────────────────
+  { name: 'a read-mode behavior check dispatches a reader, not a driver',
+    args: { ...base, behaviorCheck: { read: 'references/build.md, then SKILL.md' } },
+    reply: (l, calls) => l.startsWith('write') ? write() : l.startsWith('gates') ? gates()
+      : l.startsWith('behavior') ? { ran: true, blockedReason: '', observed: ['the routing table names a file that is not there'], mismatches: [] }
+      : review(0),
+    expect: r => all(eq(r.res.status, 'closed'), eq(r.n('behavior:'), 1),
+      has(r.promptsFor('behavior')[0] || '', 'no diff, no account of what changed',
+        'a reader meets the finished files, not the edit'),
+      has(r.promptsFor('behavior')[0] || '', 'references/build.md, then SKILL.md',
+        'the files to read must reach the reader'),
+      ok(r.res.behavior && r.res.behavior.ran === true, 'the observation must leave the phase')) },
+
+  { name: 'a read-mode check that did not happen is as unverified as a driver that could not start',
+    args: { ...base, behaviorCheck: { read: 'the four reference files' } },
+    reply: (l, calls) => l.startsWith('write') ? write() : l.startsWith('gates') ? gates()
+      : l.startsWith('behavior') ? { ran: false, blockedReason: 'the files are not on disk', observed: [], mismatches: [] }
+      : review(0),
+    expect: r => all(eq(r.res.status, 'behavior-unverified'),
+      has(r.res.reason || '', 'the files are not on disk', 'the reason must say what stopped it')) },
+
+  { name: 'usage: an object behaviorCheck naming nothing to read is still rejected',
+    args: { ...base, behaviorCheck: { read: '   ' } },
+    reply: () => write(),
+    expect: r => all(eq(r.res.status, 'usage-error'), eq(r.calls.length, 0)) },
+
+  // ── guards that failed open, and payloads that went missing ──
+  { name: 'an unparseable branch from the gates step fails closed, like the sha beside it',
+    args: base,
+    reply: (l, calls) => l.startsWith('write') ? write() : l.startsWith('gates') ? gates({ branch: 'not a ref!!' }) : review(0),
+    expect: r => all(eq(r.res.status, 'agent-error'),
+      eq(r.n('review'), 0, 'the wrong-branch check may not be disabled by an unusable string'),
+      has(r.res.reason || '', 'not a usable git ref', 'the error must name what it could not read')) },
+
+  { name: 'the closed phase returns its gate results normalised, like every other path',
+    args: base,
+    reply: (l, calls) => l.startsWith('write') ? write()
+      : l.startsWith('gates') ? gates({ results: ['npm test: exit 0', { cmd: 'lint', code: 0 }] })
+      : review(0),
+    expect: r => all(eq(r.res.status, 'closed'),
+      deep(r.res.gates, ['npm test: exit 0', '{"cmd":"lint","code":0}'],
+        'a non-string entry must arrive as readable text, not as something the caller indexes into')) },
+
+  // The phase that died at round 3 is the one whose cost the caller most needs.
+  { name: 'a cap-exhausted phase reports what it cost in agents',
+    args: { ...base, maxRounds: 1 },
+    reply: (l, calls) => l.startsWith('write') ? write()
+      : l.startsWith('gates') ? advancingGates(calls)
+      : l.startsWith('review') ? movingReview(calls)
+      : l.startsWith('triage') ? triageFor(calls, ['bug'])
+      : {},
+    expect: r => all(eq(r.res.status, 'cap-exhausted'),
+      ok(Number.isInteger(r.res.agentsDispatched) && r.res.agentsDispatched > 0,
+        'the cost must be reported on the paths that did not close, not only on the one that did')) },
+
+  { name: 'a phase stopped by an incomplete triage reports what it cost in agents',
+    args: base,
+    reply: (l, calls) => l.startsWith('write') ? write() : l.startsWith('gates') ? gates()
+      : l.startsWith('review') ? review(2)
+      : l.startsWith('triage') ? { confirmed: [], rejected: [{ item: 1, why: 'misreads the code' }] }
+      : {},
+    expect: r => all(eq(r.res.status, 'triage-incomplete'),
+      ok(Number.isInteger(r.res.agentsDispatched) && r.res.agentsDispatched > 0, 'the cost must come back')) },
+
+  { name: 'a phase stopped by an unverified behavior check reports what it cost in agents',
+    args: { ...base, behaviorCheck: 'call the endpoint' },
+    reply: (l, calls) => l.startsWith('write') ? write() : l.startsWith('gates') ? gates()
+      : l.startsWith('behavior') ? { ran: false, blockedReason: 'no credentials', observed: [], mismatches: [] }
+      : review(0),
+    expect: r => all(eq(r.res.status, 'behavior-unverified'),
+      ok(Number.isInteger(r.res.agentsDispatched) && r.res.agentsDispatched > 0, 'the cost must come back')) },
+
+  { name: 'an agent-error reports what it cost in agents',
+    args: base,
+    reply: (l, calls) => l.startsWith('write') ? write() : l.startsWith('gates') ? gates({ headSha: 'HEAD' }) : review(0),
+    expect: r => all(eq(r.res.status, 'agent-error'),
+      ok(Number.isInteger(r.res.agentsDispatched) && r.res.agentsDispatched > 0, 'the cost must come back')) },
+
+  { name: 'reviewers beyond the second are not sent a byte-identical copy of an earlier prompt',
+    args: { ...base, depth: undefined, reviewers: 4 },
+    reply: (l, calls) => l.startsWith('write') ? write() : l.startsWith('gates') ? gates() : review(0),
+    expect: r => {
+      const ps = r.promptsFor('review')
+      return all(eq(ps.length, 4, 'four reviewers were asked for'),
+        eq(new Set(ps).size, 4, 'identical prompts correlate the readings the extra reviewers are bought for'),
+        ok(ps.every(p => p.includes('hostile input') && p.includes('weaken the existing tests')),
+          'decorrelation may not cost any reviewer a directed question')) } },
+
+  // ── what the reviewers are asked, after B4 ──────────────────
+  { name: 'the review prompt asks about failure paths and about facts assumed outside the diff',
+    args: base,
+    reply: (l, calls) => l.startsWith('write') ? write() : l.startsWith('gates') ? gates() : review(0),
+    expect: r => {
+      const p = r.promptsFor('review')[0] || ''
+      return all(
+        has(p, 'when something this change calls FAILS', 'the error-path question must be asked'),
+        has(p, 'OUTSIDE this diff', 'the assumed-facts question must be asked'),
+        has(p, 'generated or non-text artefacts', 'a diff you cannot read is not a diff you reviewed'),
+        has(p, 'passes with the change reverted is testing nothing',
+          'the test-integrity question is worth nothing without the standard it is judged against'),
+        ok(!/narrating process/.test(p),
+          'the process-comment question was cut to make room; two copies of a prompt drift')) } },
+
+  // ── the cost of the second reviewer, said where the caller reads it ──
+  { name: "depth 'deep' says what the second reviewer costs, without changing the count",
+    args: { ...base, depth: 'deep' },
+    reply: (l, calls) => l.startsWith('write') ? write() : l.startsWith('gates') ? gates() : review(0),
+    expect: r => all(eq(r.n('review'), 2, 'the default is not flipped'),
+      ok(r.logs.some(m => /reviewers: 1 on a reversible phase/.test(m)),
+        'the cost of the default must be visible at the call site')) },
+
+  { name: 'a caller who wrote the count themselves is not lectured about it',
+    args: { ...base, depth: undefined, reviewers: 2 },
+    reply: (l, calls) => l.startsWith('write') ? write() : l.startsWith('gates') ? gates() : review(0),
+    expect: r => all(eq(r.n('review'), 2),
+      ok(!r.logs.some(m => /reversible phase/.test(m)),
+        'the note is about what depth implied, not about a count the caller chose')) },
 ]
 
 // ── assertion helpers ─────────────────────────────────────────

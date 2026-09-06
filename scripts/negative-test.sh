@@ -253,7 +253,7 @@ apply "M43 exhaustedBy reports 'mixed' again when no fix round was ever spent" \
   's = s.replace("exhaustedBy: fixes === 0 ? \x27none\x27 : gateFixes", "exhaustedBy: gateFixes")'
 
 apply "M44 the reviewer is asked a question it cannot answer from the diff and the plan" \
-  's = s.replace("that makes it pass. A test that passes with the change reverted is testing nothing.", "did that test ever fail?")'
+  's = s.replace("of the diff that makes it pass.", "did that test ever fail?")'
 
 apply "M55 the reviewer is no longer asked whether the plan itself is wrong" \
   's = s.replace("      `- Does the PLAN look wrong", "      `- SKIPPED (")'
@@ -262,7 +262,7 @@ apply "M59 reviewer 2 loses the history read that build.md documents the script 
   's = s.replace("run \\`git log -p -20\\` on the paths it touches and read how the code got here. ", "")'
 
 apply "M42 both Deep reviewers are sent the identical prompt again" \
-  's = s.replace("reviewPrompt + (reviewers > 1 ? emphasis[i % emphasis.length] : \x27\x27)", "reviewPrompt")'
+  's = s.replace("tryAgent(reviewPrompt + closing(i), {", "tryAgent(reviewPrompt, {")'
 
 echo
 echo "== mutation test: the survivors the 2026-08-11 audit found =="
@@ -317,22 +317,92 @@ apply "M24 verifyRound frozen (every round labelled r1; a 4-round escalation rep
   's = s.replace("verifyRound++", "verifyRound")'
 
 apply "M25 the dead-write-agent return deleted (TypeError instead of agent-error)" \
-  "s = s.replace(\"if (!work) return { status: 'agent-error', phaseLabel, round: 0, stage: 'write' }\", '')"
+  "s = s.replace(\"if (!work) return { agentsDispatched, status: 'agent-error', phaseLabel, round: 0, stage: 'write' }\", '')"
 
 apply "M26 the dead-redispatch return deleted" \
-  "s = s.replace(\"if (!retry) return { status: 'agent-error', phaseLabel, round: 0, stage: 'write-redispatch' }\", '')"
+  "s = s.replace(\"if (!retry) return { agentsDispatched, status: 'agent-error', phaseLabel, round: 0, stage: 'write-redispatch' }\", '')"
 
 apply "M27 the dead-gates-agent return deleted" \
-  "s = s.replace(\"if (!gates) return { status: 'agent-error', phaseLabel, round, stage: 'gates' }\", '')"
+  "s = s.replace(\"if (!gates) return { agentsDispatched, status: 'agent-error', phaseLabel, round, stage: 'gates' }\", '')"
 
 apply "M28 the dead-triage-agent return deleted" \
-  "s = s.replace(\"if (!triage) return { status: 'agent-error', phaseLabel, round, stage: 'triage' }\", '')"
+  "s = s.replace(\"if (!triage) return { agentsDispatched, status: 'agent-error', phaseLabel, round, stage: 'triage' }\", '')"
 
 apply "M29 the cap-exhausted payload blanks what is unresolved" \
   "import re; s = re.sub(r'unresolved: [^,\\n]+', 'unresolved: []', s, count=1)"
 
 apply "M30 exhaustedBy pinned to a constant (the escalation cannot say which stage spent the budget)" \
   "import re; s = re.sub(r'exhaustedBy: [^,\\n}]+', \"exhaustedBy: 'mixed'\", s, count=1)"
+
+echo
+echo "== mutation test: the guards added in the 2026-09 review pass =="
+
+# Sha equality is not diff emptiness. A revert of the phase's own work moves HEAD, survives both
+# equality guards, and hands the reviewer an empty range — which reads exactly like a clean review.
+apply "M60 the empty-tree guard disabled (a revert-shaped fix round is reviewed as clean)" \
+  's = s.replace("  if (diffLines === 0) {", "  if (false) {")' \
+  "diffLines"
+
+# The guard's input is what switched it off before: `Number(undefined)` is NaN, NaN === 0 is false, and
+# a gates step that omitted the field or answered "0 lines" walked past the check with nothing logged.
+# The mutation restores exactly that reading, so the guard is present, named, and off.
+apply "M73 an unreadable diffLines fails open again (NaN skips the empty-tree check)" \
+  's = s.replace("  if (diffLines === null) {", "  if (false) {").replace("    : null\n", "    : NaN\n")' \
+  "diffLines === 0"
+
+# The no-progress signature is built from whatever list drove the round. On a red build that is the
+# GATE failure list, whose strings do not move while the tally under them does — so a converging phase
+# was cut off. The mutation widens it back to every round.
+apply "M74 the no-progress stop fires on gate failures again (a converging red phase is cut off)" \
+  's = s.replace("if (green && fixes > 0 && fixes < maxRounds && signature === lastConfirmed) {", "if (fixes > 0 && signature === lastConfirmed) {")'
+
+# Both stops are true on the last round, and only one of them carries exhaustedBy.
+apply "M75 no-progress is tested before the cap, so the last round loses exhaustedBy" \
+  's = s.replace("fixes > 0 && fixes < maxRounds && signature === lastConfirmed", "fixes > 0 && signature === lastConfirmed")'
+
+apply "M76 the reviewer keeps the test question but loses the standard it is judged against" \
+  's = s.replace(" A test that passes with the change reverted is testing nothing.", "")'
+
+# all_pass is a judgement; the tally beside it is data. Both cross-checks are disabled together, so
+# neither can cover for the other, and the rule's wording survives verbatim for the token grep.
+apply "M61 all_pass is believed over the script's own contradicting tally" \
+  's = s.replace("if (green && tally && tally.failed > 0) {", "if (false && tally.failed > 0) {").replace("if (green && tally && tally.passed === 0 && tally.skipped > 0) {", "if (false && tally.skipped > 0) {")' \
+  "all_pass"
+
+apply "M62 the no-progress stop never fires (a deadlocked phase pays the full cap)" \
+  's = s.replace("signature === lastConfirmed", "false")'
+
+# The other direction, so no constant satisfies both: a phase that IS converging must keep its rounds.
+apply "M63 the no-progress stop always fires (a converging phase is cut off at the first fix)" \
+  's = s.replace("signature === lastConfirmed", "true")'
+
+apply "M64 the triage precedent pre-judges a reappearing claim again" \
+  's = s.replace("that reappears is EITHER the same phantom OR a real defect the earlier rejection got ", "that reappears is very likely the same phantom, so say so rather than ")'
+
+apply "M65 the triage rubric is dropped, leaving a binary confirm/reject" \
+  "import re; s = re.sub(r\"        \`First: if a claim names.*?rather than implying the claim was false.\\\\n\` \\+\\n\", '', s, flags=re.S)"
+
+apply "M66 the fix prompt loses the repair-only rule and the plan is writable again" \
+  "import re; s = re.sub(r\"    \`Repair only\\. A fix round repairs.*?never by rewriting the plan\\.\\\\n\` \\+\\n\", '', s, flags=re.S)"
+
+apply "M67 read mode disabled, so a change that is read has only behaviorCheck: false to say" \
+  's = s.replace("const readMode = !!behaviorCheck", "const readMode = false && !!behaviorCheck")' \
+  "read: "
+
+apply "M68 an unparseable branch from the gates step fails open again" \
+  's = s.replace("  if (gates.branch !== undefined && !gateBranch) {", "  if (false) {")'
+
+apply "M69 the cost is reported only on the paths that closed" \
+  's = s.replace("agentsDispatched, status: ", "status: ").replace("          agentsDispatched,\n          status: \x27behavior-unverified\x27,", "          status: \x27behavior-unverified\x27,").replace("          agentsDispatched,\n          status: \x27triage-incomplete\x27,", "          status: \x27triage-incomplete\x27,").replace("      agentsDispatched, unresolved: failures,", "      unresolved: failures,")'
+
+apply "M70 the closed phase returns its gate results raw" \
+  's = s.replace("        gates: list(gates.results),\n        nonblocking:", "        gates: gates.results,\n        nonblocking:")'
+
+apply "M71 reviewers three and four are byte-identical copies of one and two" \
+  's = s.replace("i < emphasis.length ? emphasis[i]", "true ? emphasis[i % emphasis.length]")'
+
+apply "M72 the reviewer loses the error-path and assumed-facts questions" \
+  "import re; s = re.sub(r\"      \`- What happens when something this change calls FAILS.*?confirmed it in the repository or could not.\\\\n\` \\+\\n\", '', s, flags=re.S)"
 
 echo
 echo "== mutation test: the round-cap experiment's published figures =="

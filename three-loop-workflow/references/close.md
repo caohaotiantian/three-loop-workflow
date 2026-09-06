@@ -1,6 +1,6 @@
 # Close
 
-Deep changes only. Standard changes are closed by green gates and a clean review.
+Every Deep change closes here — `SKILL.md` §1's trigger table says which of the sections below carry the weight for the trigger that fired. A **Standard** change is closed by green gates and a clean review, with one exception: where what it produced is read or run as a whole — a document set, a CLI's help, a config schema, a public API surface — run *Read the result as a product*, below. That section is depth-independent and costs one agent; the rest of this file is Deep.
 
 The Build loop verified each phase in isolation. Close asks the question no phase asked: **is the repository coherent now that all of this has landed?**
 
@@ -27,6 +27,10 @@ If the change migrates persisted data, config, or storage layout, verify it agai
 - Confirm old and new readers behave correctly during the window when both exist.
 
 An unverified migration is a blocking issue. It does not close on "the code looks right".
+
+## Rollback, re-read against what landed
+
+Read the plan's Rollback next to `git log --oneline <baseSha>..HEAD`. Say concretely what undoing this now requires, and what it does *not* undo — data already written, a message already sent, a client already upgraded. A recorded rollback that no longer works is a blocking finding of Close, not a note: fix the change so it does, or write the real procedure and say it is worse than the plan claimed.
 
 ## Documentation
 
@@ -56,8 +60,14 @@ Its `journal.md`, if the task wrote one, is waiting for a reader: `references/ma
 
 Remove scratch worktrees, spike directories, and temporary artifacts the work created — those are not the record.
 
-## What Close does not do
+## What Close hands over
 
-It does not produce a document. The change is described by its commits and its PR; a closure record that restates them is exhaust, and the archive it accumulates into is read by nobody.
+No closure document — the archive of them is read by nobody. What the person merging this needs goes in the PR body, where it stays attached to the diff it explains:
 
-If something is worth saying to a future reader, put it in the commit message or the PR body, where it stays attached to the diff it explains.
+- What a user can now do that they could not, in the Goal's words.
+- What was deliberately not done — the Non-goals, so nobody reopens them as omissions.
+- What the behavior check observed, or that it could not be run and why.
+- Non-blocking findings you did not fix, one line each, and whether each is worth a follow-up.
+- What remains risky, and the rollback as it stands now that the change has landed.
+
+Anything longer belongs in the commit messages, one fact per commit it explains.

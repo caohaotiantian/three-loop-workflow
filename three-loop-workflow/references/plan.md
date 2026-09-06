@@ -7,9 +7,9 @@ Goal: the task's `.agent/<task>/plan.md` should let a fresh agent finish the wor
 
 One directory per task — see `SKILL.md` §2. Everything this task needs that is not source code goes in that directory, so a second task running beside it cannot overwrite any of it.
 
-**Gitignored means unprotected.** `git clean -xfd` deletes `.agent/` along with the build output, a fresh `git worktree add` does not contain it, and a clone never had it. If the plan is gone, do not reconstruct it from the diff — that recovers what you did, not what you meant. Say it is gone, re-derive the base from `git log` (`close.md` has the traps), and get the Goal re-confirmed before continuing.
+Nothing backs that directory up — `SKILL.md` §2 has the rule and the one durable copy to take. If the plan is gone, do not reconstruct it from the diff: that recovers what you did, not what you meant. Say it is gone, re-derive the base from `git log` (`close.md` has the traps), and get the Goal re-confirmed before continuing.
 
-Write it, then start building. It is working state — keep it short and edit it as you learn.
+Write it, confirm the reading if there was one (`SKILL.md` §5), then start building. It is working state — keep it short and edit it as you learn.
 
 ## Understand the request first
 
@@ -35,13 +35,15 @@ For anything spanning more than one module, delegate this to read-only **Explore
 
 **Decisions.** Only real ones. Each: `problem → options considered → choice → why`, including why the alternatives lost. A decision with one option is not a decision; if you can only name one approach, you have not looked for a second.
 
+**One option worth naming in most plans is the smaller one** — the version that does less, reuses something that already exists, or does nothing — with what it fails to give the user. It usually loses, and writing why is cheap. The cheapest change is the one that turned out not to be needed, and it is the option that never gets generated unless the field asks for it.
+
 At **Deep** depth, record alternatives *before* choosing, not as post-hoc justification.
 
 **Accept.** Two halves, and most plans only write the first.
 
 *The command* — one with an exit code. `pytest tests/rate_limit -x`, `npm run typecheck`, `curl -sf localhost:8080/health`. If you cannot express success as a command, say so explicitly and name what a human must look at instead — but try hard first, because "I'll check it works" is how regressions ship.
 
-*The observable outcome* — **whenever a person will click, type or call this**, what they should be able to do afterwards, written so someone who has not read the code can go and do it. "Send 61 requests in a minute; the 61st returns 429 with a `Retry-After` header, and the counter resets on the next window." That sentence is what `build.md`'s behavior check drives, and it is the half that catches building the wrong thing. An exit code says the assertions the author wrote hold. It cannot say the job can be completed.
+*The observable outcome* — **whenever a person will click, type or call this**, what they should be able to do afterwards, written so someone who has not read the code can go and do it. "Send 61 requests in a minute; the 61st returns 429 with a `Retry-After` header, and the counter resets on the next window." That sentence is what `build.md`'s behavior check drives, and it is the half that catches building the wrong thing. An exit code says the assertions the author wrote hold. It cannot say the job can be completed. Write it so it is **cheap to observe** — three requests rather than a soak, and `build.md`'s behavior check for the surfaces you must not drive directly. That is a property of the plan, not a concession made later: the check that has to run beside every review is the one that must not cost hours.
 
 Write both, or say which one does not apply and why. A refactor has no second half; a feature almost always does.
 
@@ -100,7 +102,7 @@ the claims about existing behavior carry a `file:line`. Accept has both halves.
 
 ## Facts vs. decisions
 
-Look up what the repo settles; ask what it cannot. The part worth stating is the failure mode, which is not a competence gap but a temptation: **relabelling a real decision as "a fact the repo can answer" and resolving it quietly.** If you are choosing on the user's behalf, that is a decision, however obvious the choice looks from here.
+The line between them is `SKILL.md` §5's. The part worth stating here is the failure mode, which is not a competence gap but a temptation: **relabelling a real decision as "a fact the repo can answer" and resolving it quietly.** If you are choosing on the user's behalf, that is a decision, however obvious the choice looks from here.
 
 If the guide answers something *wrongly* — a command that no longer exists, a count that has moved — carry on with what the repo actually says, and correct the guide line in its own commit rather than folding it into this change (`build.md`, "The journal").
 
@@ -137,20 +139,17 @@ What they should look for:
 - Missing rollback on something irreversible.
 - An internal contradiction between two sections — the single highest-yield defect class in practice, and the one a lone reviewer most often misses.
 
-**Why two, and why different.** One reviewer finds a little over half the defects; a second takes the pair to roughly six in seven, because reviewers miss *different* things — half of what was found was found by exactly one reader. That is why findings are unioned rather than reconciled, and it held for severe defects too. Stopping at two is a **cost** decision, not a claim that a third finds nothing: raise it if your defects are expensive enough to justify one.
-
-Give each a different closing instinct: one reading as an adversary hunting the case that breaks it, one as whoever maintains this next year. The measurement used byte-identical prompts, so all its decorrelation came from sampling noise — two different sentences cost the same as two identical ones.
+**Why two, and why different.** A single reviewer misses a substantial share of what is there, and a second finds much of what the first missed — they miss *different* things, which is why findings are unioned rather than reconciled, and why the union must never be narrowed to what they agree on. Stopping at two is a **cost** decision, not a claim that a third finds nothing. Give each a different closing instinct: one an adversary hunting the case that breaks it, one whoever maintains this next year.
 
 The corollary matters as much: **a clean first review is weak evidence that the plan is clean.** "Reviewer 1 found nothing" and "there is nothing to find" are very different statements. Do not close a Deep plan on one.
 
-At **Standard** depth there is no plan reviewer, and that is an exposure rather than a saving. Read it back yourself once against the list above — but do not mistake that for review: §4's author-≠-reviewer rule binds to identity here too, and re-reading your own reasoning adds nothing.
-
-The exposure is specific. The diff reviewer is sent the diff *and this plan*, and its blocking test is "outside the plan's Goal" — so a plan that is **wrong** does not fail review, it defines what passing means. The cover is structural rather than another agent, and both halves are free:
+At **Standard** depth there is no plan reviewer, and §4's author-≠-reviewer rule means re-reading your own plan is not a substitute. The diff reviewer is sent the diff *and this plan*, and its blocking test is "outside the plan's Goal" — so a plan that is **wrong** does not fail review, it defines what passing means. Three covers, and the first two are free:
 
 - State in the Goal, in one sentence someone can overturn, **which reading of the request you took** — "`RateLimit-*` per RFC 9331, not `X-RateLimit-*`".
-- Write Accept's observable outcome as something a person can go and do, and ask the diff reviewer whether the plan itself looks wrong, not only whether the diff matches it.
+- Put that sentence and Accept in front of whoever asked, before you build (`SKILL.md` §5).
+- Write Accept's observable outcome as something a person can go and do, and ask the diff reviewer whether the **plan** looks wrong, not only whether the diff matches it.
 
-Those are the only independent checks a Standard change gets on whether it is the *right* change; everything downstream checks only whether it is a correct implementation of them. Where that is not enough, buy one plan reviewer — one more agent, and the intervention here with a measurement behind it.
+Where that is not enough, buy one plan reviewer.
 
 ## Conflicts
 
