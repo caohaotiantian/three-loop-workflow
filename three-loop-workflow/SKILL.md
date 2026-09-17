@@ -54,7 +54,7 @@ Where the loop is delegated, route the stages by cost: running the gate commands
 
 ## 2. Durable state — `.agent/<task>/plan.md`
 
-Every task gets **its own directory** under `.agent/`, named for the task: `.agent/rate-limit-headers/plan.md`. Scratch notes and a journal live beside it. Never a shared path — two tasks both writing `.agent/plan.md` overwrite each other. Nothing backs it up — `git clean -xfd`, a fresh worktree and a clone all lack it (`references/plan.md`). Take one durable copy as soon as the branch has somewhere to put it: Goal, Non-goals and Accept in the PR description. What must outlive the task has to reach the repository.
+Every task gets **its own directory** under `.agent/`, named for the task: `.agent/rate-limit-headers/plan.md`. Scratch notes and a journal live beside it. Never a shared path — two tasks both writing `.agent/plan.md` overwrite each other. Nothing backs it up — `git clean -xfd`, a fresh worktree and a clone all lack it (`references/orchestration.md`). Take one durable copy as soon as the branch has somewhere to put it: Goal, Non-goals and Accept in the PR description. What must outlive the task has to reach the repository.
 
 **Check `.agent/` is in the repo's `.gitignore` the first time you use it here**, and add it if not: untracked, a `git add -A` commits the plan into the very diff the reviewer reads it against.
 
@@ -122,7 +122,7 @@ Never substitute a silent default for a real decision. Record what the user deci
 | Escalate, or handle a round-cap deadlock | `references/escalation.md` |
 | Run on Codex or opencode | `references/platforms.md` |
 | Run the Build loop deterministically rather than by hand | `references/orchestration.md` (`scripts/phase.js`) |
-| Run more than one writer at once | `references/orchestration.md` (Worktrees) |
+| Hand work to another agent, or run more than one writer at once | `references/orchestration.md` |
 | Fold a task's notes into the project guide | `references/maintenance.md` |
 
 Read the reference for the loop you are in. Two crossings are real: a fix that contradicts the plan sends you back to `references/plan.md` (Conflicts) before you edit, and a defect whose cause is unknown starts in `references/build.md` (Diagnosis), before the plan (§2).

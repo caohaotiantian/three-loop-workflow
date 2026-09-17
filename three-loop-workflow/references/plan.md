@@ -126,7 +126,7 @@ A spike is bounded by three rules:
 
 ## Reviewing the plan
 
-At **Deep** depth, spawn **two fresh subagents in parallel** to read the plan before you build. Give each the plan and the relevant code, independently, with the same checklist and a different closing line (below). Take the union of their findings.
+At **Deep** depth the plan gets fresh readers before you build — `SKILL.md` §4 has the count. Give each the plan and the relevant code, independently, with the same checklist and a different closing line (below). Take the union of their findings.
 
 Ask each to report everything and let you triage. Do not ask for "only the important issues".
 

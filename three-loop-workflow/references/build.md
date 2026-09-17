@@ -47,7 +47,7 @@ Record the gate output as commit trailers. The work is already committed by the 
 
 ## Review
 
-**Standard: one reviewer. A Deep phase: two where that phase is hard to undo, one elsewhere — in parallel, independent, findings unioned.**
+**How many reviewers run here is `SKILL.md` §4's rule.** In parallel, independent, findings unioned.
 
 Each gets the diff and the plan — not your summary of the change, and not the whole skill. Do not let them see each other's output; the value comes from their independence.
 
@@ -151,7 +151,7 @@ Have it try the edges as well as the happy path: the empty case, the error case,
 
 Skip both only where the change puts nothing new in front of anyone: an internal refactor, a test-only change, a doc edit that reconciles stale wording with behavior that did not move. **Writing or rewriting something a reader will meet is not one of those** — that is the case above, and the reader is what drives it.
 
-Running the loop as a script, `behaviorCheck` is a required argument, `false` is how you declare that nothing here is observable, and `{ read: "..." }` is how you ask for the reader above where what the phase produces is read rather than run (`references/orchestration.md`). The check runs beside the reviewers, so it costs an agent and no wall-clock.
+Running the loop as a script, this check is a required argument rather than an optional one — `references/orchestration.md` has its shapes, including how you ask for the reader above. It runs beside the reviewers, so it costs an agent and no wall-clock.
 
 ## Triage
 
@@ -207,7 +207,7 @@ Whatever the format: **the message names the phase and the item it addresses**, 
 
 ## Parallel work
 
-Phases run sequentially and share one working tree; `scripts/phase.js` assumes exactly that. **A branch name is not isolation** — two writers in one checkout overwrite each other's files, and the second one's diff contains the first one's work. Running writers concurrently is `references/orchestration.md`, which owns that rule and its traps.
+Running writers concurrently is `references/orchestration.md`, which owns that rule and its traps.
 
 ## The journal — what outlives the task
 
