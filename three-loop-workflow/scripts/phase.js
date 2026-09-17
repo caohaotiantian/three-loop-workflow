@@ -1,6 +1,6 @@
 export const meta = {
   name: 'three-loop-phase',
-  description: 'Runs one Build phase: write -> gates -> review -> fix, with round counting as code',
+  description: 'Runs one Build phase: write -> gates -> review (diff reviewers plus the behavior check) -> triage -> fix, with round counting as code',
   phases: [
     { title: 'Write' },
     { title: 'Gates' },
