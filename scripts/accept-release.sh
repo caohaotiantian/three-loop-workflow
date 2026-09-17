@@ -250,10 +250,26 @@ budget() {
 # three new paragraphs. Objection, on the record: the always-loaded surface (SKILL.md) grew by about a
 # third in this one pass, and a tighten pass afterward recovered only a little of that. The next
 # addition to SKILL.md must displace something already there — it does not get another raise for free.
+# 2026-09-17: orchestration.md 2201->3092, raised 2300 -> 3250 (the count plus ~5%, rounded) after the
+# re-review this repo's norm requires — two fresh diff reviewers per phase, two fix rounds, a
+# verification review, and a read-as-a-product pass over the whole skill; the duplicates those reviews
+# found were cut before this count was taken. What grew: the file now owns DELEGATION, not only
+# worktrees — briefing a writer (the brief is the agent's only context, and the three things a writer
+# gets wrong unprompted), verifying a delegated "done" against the repository instead of the report,
+# partitioning two writers by file ownership and landing their branches through an integrator, and the
+# task directory not travelling to a worktree, clone or container — plus the script facts the file
+# understated: the argument caps, the guards that run every round, and what triage returns. Every added
+# sentence traces to a reviewer finding or to a rule that had no home; four rules stated twice were
+# collapsed to a pointer in build.md, plan.md and this file in the same pass, so the growth is net of
+# those cuts.
+# Objection, on the record, and it is the stronger one here: the file landed above its own plan's aim
+# (~2900) twice, in both directions of the re-review. It is now the largest reference in the set, and it
+# carries two subjects — hand delegation, and the phase.js script API. The next growth in
+# this file is a SPLIT, not another raise.
 budget three-loop-workflow/SKILL.md                    3000
 budget three-loop-workflow/references/build.md          4100
 budget three-loop-workflow/references/plan.md           2200
-budget three-loop-workflow/references/orchestration.md  2300
+budget three-loop-workflow/references/orchestration.md  3250
 budget three-loop-workflow/references/maintenance.md    1600
 budget three-loop-workflow/references/escalation.md     1450
 budget three-loop-workflow/references/close.md          1000
