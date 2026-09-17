@@ -1,8 +1,72 @@
 # Orchestration
 
-Read this when you are running **more than one writer at a time**, or driving the Build loop as a
-**script**. Neither is part of an ordinary change: `build.md` is the whole loop, and for a single
-Standard change running it by hand is cheaper than orchestrating it.
+Read this when you are **handing implementation work to another agent**, running **more than one writer
+at a time**, or driving the Build loop as a **script**. None of the three is part of an ordinary change:
+`build.md` is the whole loop, and for a single Standard change running it by hand is cheaper than
+orchestrating it.
+
+## Spawn, or do it yourself
+
+A fresh agent's cost is the **context it lacks** — delegation buys isolation and parallelism, not
+understanding — so the control arm for any orchestration, hand-spawned or scripted, is **one agent with
+a better prompt or a better model**. Run that comparison first.
+
+Sources, read 2026-09-17: Anthropic's *Multi-agent research system* (2025-06-13), where a model upgrade
+beat a larger budget on the weaker model; Cognition's *Don't Build Multi-Agents* (2025-06-12); *MAST*
+(Cemri et al., 2025).
+
+## Briefing a writer
+
+This is the agent that **writes**; a reviewer's brief is `build.md` (Review) and `SKILL.md` §4.
+
+The brief is what you control: your session and your reasoning are not inherited — unless you fork,
+which inherits everything, including what you did not mean to hand over — and whatever a harness injects
+is no substitute for it. Four things go in — the **objective**, the **output shape**, **what to read**
+(the plan's path, the files), and the **boundaries**, meaning the plan's Non-goals plus what it may not
+touch — along with the phase's `baseSha`, which you capture before spawning. Then three a writer gets
+wrong unprompted:
+
+- **Stay on the branch you are given**, in those words — otherwise a per-phase branch appears, and the
+  next phase's review re-shows this phase's work.
+- **Commit before returning**, for the reason `build.md`'s Write step gives.
+- **Report the branch and head sha you finished on**, not "done".
+
+Name the rest of that Write step rather than restating it: the self-pass over its own diff, stopping on
+a plan conflict, and what it was blocked on or least sure of. Where a runtime prefers structure, make
+all of it a schema: `scripts/phase.js` has its writer answer as fields, so "done" is not expressible. On
+Claude Code that is the Workflow tool's `agent()`; with the Agent tool, prose.
+
+## Verify the claim, not the report
+
+"Done" is a claim about a repository. Confirm the reported sha equals `git rev-parse <branch>` — the
+comparison is the check, since `git rev-parse` prints any well-formed sha back at you, and `git cat-file
+-e <sha>` is the existence test — then require `git diff <baseSha>..<branch>` to be non-empty; name the
+branch, not `HEAD`, because the writer may have worked in its own worktree. A failed check is this
+phase's `agent-error`: re-brief, do not accept. Only by hand do you get the comparison at all — a
+Workflow script has no shell (below).
+
+## Two writers: divide, then land
+
+**Partition by file ownership, and write the partition into the plan before you spawn anyone.** Two
+writers on one file overwrite each other with no conflict marker to show it, and in one checkout the
+second's diff contains the first's work — so each needs its own worktree, below. This is the
+hand-spawned case throughout: the script runs a change's phases in sequence, in one tree.
+
+Land the branches **one at a time**, and name an **integrator**: a third role, neither writer. Neither
+writer's green covers the merge — each ran on a tree without the other's work — so the integrator runs
+the gates again on the merged tree, fixes a red run there itself rather than handing it
+back to a writer, and only then sends the merged diff through `SKILL.md` §4's review. That review's base
+is the **merge target's head before the first branch landed**, not either writer's `baseSha`, and the
+range must be non-empty (`close.md` owns that trap).
+
+## The plan does not travel
+
+The task directory reaches no worktree, clone or container (`SKILL.md` §2 says why), so an agent
+starting in one reads `.agent/<task>/plan.md` there, finds nothing, and works from the brief alone.
+**The main worktree's copy is authoritative**: hand the agent its absolute path, and copy the directory
+in only where the agent cannot see the main tree at all — a container — copying nothing back.
+Under the script that path is `planPath`, resolved where `repoPath` puts the agents; with the Agent tool
+it is a line in the brief.
 
 ## Worktrees — one per concurrent writer
 
@@ -58,11 +122,11 @@ Six arguments are required — `planPath`, `tasks`, `acceptCmds`, `baseSha`, `be
 | `acceptCmds` | **required** — an **array** of non-empty command strings whose exit codes decide the phase: `["npm test", "npm run lint"]`. A bare string is a `usage-error`, and so is `[""]` |
 | `baseSha` | **required** — `git rev-parse HEAD` from before editing; *this phase's* base at Deep depth. `build.md` explains why one fixed base for the whole change costs a fix round |
 | `depth` | `'standard'` or `'deep'` — it selects the reviewer prompts and what the result reports, and `'deep'` runs two diff reviewers. **One of `depth` or `reviewers` must be present** |
-| `reviewers` | an explicit count, which **wins** over what `depth` implies. `depth: 'deep', reviewers: 1` is the documented choice on a **reversible** Deep phase — `build.md` buys the second reviewer where the phase is hard to undo — and the script logs the cost of the default so it is visible at the call site. The override is logged too, and the result reports both |
+| `reviewers` | an explicit count, which **wins** over what `depth` implies; the override is logged and the result reports both, and the script logs the cost of the default so the bill is visible at the call site. `depth: 'deep', reviewers: 1` on a **reversible** Deep phase is `SKILL.md` §4's call to make. More than 4 is a `usage-error` |
 | `branch` | optional, authoritative when given — the branch the phase commits on |
 | `repoPath` | absolute path to the repository under test. Omittable **only** when the agents already start there |
-| `maxRounds` | optional, default 3 — bounds fixes **spent**, not verifications. Raising it raises the cap the rest of the skill states as three, so record why in the plan |
-| `behaviorCheck` | **required** — the user-visible path to drive, in enough detail for an agent that has not read the code, or `{ read: "the files, in the order a new user meets them" }` where what this phase produces is **read** rather than run, or `false` if a person will never click, type or call it. A fresh agent drives or reads it beside the reviewers; observations that contradict the plan become findings and go through triage, and asked-for-but-not-runnable returns `behavior-unverified` rather than closing. Required rather than optional for the reason `depth` is: a stage that silently does not run is the defect |
+| `maxRounds` | optional, default 3 — bounds fixes **spent**, not verifications. Raising it raises the cap the rest of the skill states as three, so record why in the plan; more than 10 is a `usage-error` |
+| `behaviorCheck` | **required** — the user-visible path to drive, in enough detail for an agent that has not read the code, or `{ read: "the files, in the order a new user meets them" }` where what this phase produces is **read** rather than run, or `false` if a person will never click, type or call it. A fresh agent drives or reads it beside the reviewers under `build.md`'s Behavior check rules; asked for and not runnable returns `behavior-unverified` below. Required rather than optional for the reason `depth` is: a stage that silently does not run is the defect |
 | `phaseLabel` | optional, default `'phase'`. It labels agents and logs **and** is interpolated into the Write agent's instructions (`You are implementing <phaseLabel>`), so it is caller text an agent reads: a short name that matches the plan, single-line, or it is a `usage-error` |
 | `models` | optional per-stage model overrides: `{write, gates, review, behavior, triage, fix}`. The largest unused cost lever here — gates is a shell proxy that judges nothing and runs happily on the cheapest model available, while review and triage are where capability pays |
 
@@ -107,15 +171,30 @@ downstream of its cause. Measured, not inferred.
 
 Note what that does **not** do: it does not detect a fabricated sha. If the implementer reports a well-formed sha it never created, the reported value is discarded in favour of the real head and the phase reviews the real diff — the fabrication is made harmless, not visible. Resolving a sha in the repository needs a shell, which a Workflow script does not have.
 
+**Two more checks run every round, not only at the write step.** The wrong-branch check stops the phase
+as an `agent-error`: a fix agent that strays leaves this branch unchanged, so without it the phase
+grinds to `cap-exhausted` with nothing to say why. The gates' test tally is not an error — fewer tests
+collected than an earlier round, more skipped, or no tally where one was reported before, each becomes a
+**finding routed through triage**, because deleting an obsolete test is legitimate work. That routing
+happens only on a round whose gates went green. A `closed` result carries the tally as `tests`, or a
+note where no round reported one: a shrink check with no baseline is a guard that was off, not one that
+passed.
+
 **The gates are run by an agent.** Same cause: a Workflow script can dispatch agents and shape control flow — `agent()`, `parallel()`, `pipeline()`, `phase()`, `log()`, `workflow()` — and it has no shell, so it cannot run your test command itself. It sends an agent to run the commands and report exit codes and tallies. That still buys the ordering the loop needs — gates precede every reviewer, and a red build never spends a review — and the agent judges nothing.
 
 `all_pass` is a judgement; the tally reported beside it is data, and where they disagree the script believes the data: green with a failing test in its own tally, or with nothing passed and everything skipped, stops the phase instead of dispatching reviewers. What remains uncheckable is a gates agent that reports green on a red build **and fabricates the tally to match**. If that matters more than the orchestration does, run the gates yourself and pass the phase a command that has already gone green.
 
 **What it does not do, by decision rather than by omission.** The implementer commits before the gates run, so gate output cannot land in *that* commit's trailers — record them yourself, or on the fix commits; moving the commit after the gates would mean amending, which changes the sha every guard here is tracking. Non-blocking findings are accumulated and returned, not triaged: "fix the cheap and correct ones" is a scope judgment, and handing it to an agent is how scope creep gets automated. Gate-driven and review-driven fix rounds share one budget, because the cap is per phase and splitting it would change a documented rule — they are reported separately (`gateFixes`, `reviewFixes`, `exhaustedBy`) so an escalation can say which one spent it.
 
+**Triage is a separate agent**, implementing `SKILL.md` §4's *triage before you fix, and before you
+count* — and it rules on no work of its own. Handed the findings numbered, it may return only numbers
+from that list, so a finding no reviewer raised is unrepresentable rather than discouraged. Rejections
+carry a reason each. A triage that rules on nothing at all is an `agent-error`; a partial ruling stops
+the phase as `triage-incomplete`, with the rest returned as `untriaged`.
+
 ## What comes back, and what to do with it
 
-Switch on `status`. Only `closed` continues the run; every other value is a stop, and each returns what the round already paid for — findings, rejections, `agentsDispatched`.
+Switch on `status`. Only `closed` continues the run; every other value is a stop. `agentsDispatched` is on all of them; findings, rejections and `untriaged` only on the stops that got far enough to have them — `behavior-unverified`, `triage-incomplete`, `no-progress`, `cap-exhausted` — and an `agent-error` discards them.
 
 | `status` | What it means | Next |
 |---|---|---|
@@ -125,8 +204,7 @@ Switch on `status`. Only `closed` continues the run; every other value is a stop
 | `behavior-unverified` | the check was asked for and could not be run or read | Drive it somewhere safe and cheap, or fix what blocked it; do not close on the gates |
 | `triage-incomplete` | triage ruled on some findings and not others | Rule on `untriaged` yourself, then re-run the phase |
 | `usage-error` | an argument is missing or the wrong shape | Fix the call. Nothing was dispatched |
-| `agent-error` | a stage did not return, or a guard fired — an empty diff, a wrong branch, a no-op fix round | Read `stage` and `reason`; it is an infrastructure or environment fault, not a verdict on the change |
+| `agent-error` | a stage did not return, or a guard fired — an empty diff, a wrong branch, a no-op fix round | Read `stage`, which is always set, and `reason` where a guard wrote one; it is an infrastructure or environment fault, not a verdict on the change |
 | `plan-conflict` | the implementer found the plan contradicting the code | Resolve it in the plan (`references/plan.md`, Conflicts), then re-run |
 | `write-escalation` | the implementer was blocked twice | Its `concerns` say what is in the way |
 
-Use it when a Deep change has several phases — the scope this file's opening states.

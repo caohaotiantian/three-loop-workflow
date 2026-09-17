@@ -104,7 +104,7 @@ the claims about existing behavior carry a `file:line`. Accept has both halves.
 
 The line between them is `SKILL.md` §5's. The part worth stating here is the failure mode, which is not a competence gap but a temptation: **relabelling a real decision as "a fact the repo can answer" and resolving it quietly.** If you are choosing on the user's behalf, that is a decision, however obvious the choice looks from here.
 
-If the guide answers something *wrongly* — a command that no longer exists, a count that has moved — carry on with what the repo actually says, and correct the guide line in its own commit rather than folding it into this change (`build.md`, "The journal").
+If the guide answers something *wrongly* — a command that no longer exists, a count that has moved — carry on with what the repo actually says, and correct the guide line in its own commit rather than folding it into this change (`references/maintenance.md`).
 
 ## Claims need their source
 
@@ -126,7 +126,7 @@ A spike is bounded by three rules:
 
 ## Reviewing the plan
 
-At **Deep** depth, spawn **two fresh subagents in parallel** to read the plan before you build. Give each the plan and the relevant code, independently, with the same checklist and a different closing line (below). Take the union of their findings.
+At **Deep** depth the plan gets fresh readers before you build — `SKILL.md` §4 has the count and what to do with what they return. Give each the plan and the relevant code, independently, with the same checklist and a different closing line (below).
 
 Ask each to report everything and let you triage. Do not ask for "only the important issues".
 

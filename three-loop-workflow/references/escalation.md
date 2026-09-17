@@ -14,7 +14,9 @@ A silent default is a decision nobody made and no later reviewer can challenge. 
 | Deleting a file listed under the project guide's _load-bearing-docs_ | Which contract it fulfills, what replaces it, and every file that references it — **ask before deleting** |
 | The action exceeds your authority: pushing to main, deleting outside the workspace, sending anything externally | Ask for authorization first |
 | Credentials, network, or permissions are missing | Verify the actual failure first, then report what you found |
-| Another in-flight task overlaps this domain | The overlap, and whether to merge or serialize |
+| Another in-flight task overlaps this domain | Which files both touch, which task is further along, your recommendation — merge, serialize, or split ownership — and what gets redone in each case |
+
+**Peer sessions and agents are in-flight tasks too.** Two sessions on one checkout are two writers in one tree; `orchestration.md` (*Worktrees — one per concurrent writer*) has the remedy. Before taking over a task another session or agent started, confirm that peer has stopped — a live one rewrites the plan under you — and hunt its uncommitted work in any shared tree. Then read `.agent/<task>/plan.md` **before your first edit**, the hand-off contract between peers as much as across a compaction (`SKILL.md` §2): its Non-goals bind you too, and its Progress line and `baseSha` values say where a review starts — at Deep, the live one and the kept phase-1 one, re-captured per phase (`build.md`, Before you start). A base picked without reading them is the error. An unusable one is re-derived (`close.md`); no plan at all is `plan.md`'s case.
 
 ## How to ask
 
@@ -39,7 +41,7 @@ Batch related questions into one round rather than interrogating one at a time �
 
 They are usually right about the ceremony and rarely right about the checks, so separate the two before you answer.
 
-**Cut the ceremony without asking.** Phases collapse to one. Close becomes three questions instead of a pass. Alternatives get a sentence rather than a section. The plan becomes six lines rather than a page — but it keeps every field, because Non-goals and Decisions are two of the three lines, and they are what stops the change growing while you cut its ceremony. None of that is what the depth was for.
+**Cut the ceremony without asking.** Phases collapse to one. Close becomes three questions instead of a pass. Alternatives get a sentence rather than a section. The plan becomes six lines rather than a page — but it keeps every field, because Non-goals and Decisions are two of the six, and they are what stops the change growing while you cut its ceremony. None of that is what the depth was for.
 
 **Do not quietly cut the two things that are.** Gates before any reviewer, and a reviewer who did not write the change: those are what the grade actually bought, and dropping them silently converts a disagreement about cost into a change nobody independent has read. If they are asked for anyway, say what stops being true — "then nothing independent has read this, and green means only that the tests the author wrote pass" — do it if they still want it, and record in the plan that it was their call. That is a decision, and decisions get written down like any other.
 

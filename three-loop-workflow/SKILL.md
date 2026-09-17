@@ -4,7 +4,7 @@ description: Structured workflow for non-trivial code changes — features, beha
 license: MIT
 compatibility: Subagents are the one hard requirement — a fresh reviewer needs one. The rest is runtime-neutral; Claude Code adds an optional scripted Build loop. See references/platforms.md
 metadata:
-  version: "2.6.0"
+  version: "2.7.0"
 ---
 
 # Three-Loop Workflow
@@ -22,7 +22,7 @@ Two questions: **if this is wrong, how much breaks?** and **how hard is it to un
 | Depth | When | What runs |
 |---|---|---|
 | **Direct** | Where the change turns out smaller than it looked. Typo, comment, formatting, a rename nothing outside the file uses, a patch or minor dependency bump with no advisory behind it. Not a doc edit that moves a rule, not a rename of anything exported, and not a major-version bump. | Make the change. Run the gates (§3). Done. |
-| **Standard** | Default for real work. A feature, a behavior fix, a refactor, a perf change — contained blast radius, revertable with one commit. | Plan brief → build → gates → one fresh-reviewer diff review → fix. |
+| **Standard** | Default for real work. A feature, a behavior fix, a refactor, a perf change — contained blast radius, revertable with one commit. | Plan brief → build → gates → one fresh-reviewer diff review → fix → §2's PR body. |
 | **Deep** | Any one of the four triggers below fires. | Standard, plus: alternatives recorded before choosing, phased build, and a Close pass — scaled to the trigger that fired (below). |
 
 **The Deep triggers. The first three you can tick by reading the diff; the fourth is a judgement, so make it out loud. If none fires, Standard is correct — this is a checklist, not a vibe.**
@@ -54,7 +54,7 @@ Where the loop is delegated, route the stages by cost: running the gate commands
 
 ## 2. Durable state — `.agent/<task>/plan.md`
 
-Every task gets **its own directory** under `.agent/`, named for the task: `.agent/rate-limit-headers/plan.md`. Scratch notes and a journal live beside it. Never a shared path — two tasks both writing `.agent/plan.md` overwrite each other. Nothing backs it up — `git clean -xfd`, a fresh worktree and a clone all lack it (`references/plan.md`). Take one durable copy as soon as the branch has somewhere to put it: Goal, Non-goals and Accept in the PR description. What must outlive the task has to reach the repository.
+Every task gets **its own directory** under `.agent/`, named for the task: `.agent/rate-limit-headers/plan.md`. Scratch notes and a journal live beside it. Never a shared path — two tasks both writing `.agent/plan.md` overwrite each other. Nothing backs it up — `git clean -xfd`, a fresh worktree and a clone all lack it (`references/orchestration.md`). Take one durable copy as soon as the branch has somewhere to put it: Goal, Non-goals and Accept in the PR description. What must outlive the task has to reach the repository.
 
 **Check `.agent/` is in the repo's `.gitignore` the first time you use it here**, and add it if not: untracked, a `git add -A` commits the plan into the very diff the reviewer reads it against.
 
@@ -118,11 +118,11 @@ Never substitute a silent default for a real decision. Record what the user deci
 | Review a change you did not write | `references/build.md` (Review), plus §4's review-only note |
 | Debug a failing check, or a flaky test | `references/build.md` (Diagnosis) |
 | Drive the path a user takes, before closing | `references/build.md` (Behavior check) |
-| Close a Deep change — or read any change's output as a whole | `references/close.md` |
+| Close a Deep change, hand any change over, or read its output as a whole | `references/close.md` |
 | Escalate, or handle a round-cap deadlock | `references/escalation.md` |
 | Run on Codex or opencode | `references/platforms.md` |
-| Run the Build loop deterministically rather than by hand | `references/orchestration.md` (`scripts/phase.js`) |
-| Run more than one writer at once | `references/orchestration.md` (Worktrees) |
+| Run the Build loop deterministically rather than by hand | `references/orchestration.md` (Workflow mode) |
+| Hand implementation to another agent, or run more than one writer at once | `references/orchestration.md` |
 | Fold a task's notes into the project guide | `references/maintenance.md` |
 
 Read the reference for the loop you are in. Two crossings are real: a fix that contradicts the plan sends you back to `references/plan.md` (Conflicts) before you edit, and a defect whose cause is unknown starts in `references/build.md` (Diagnosis), before the plan (§2).

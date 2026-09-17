@@ -1,6 +1,6 @@
 export const meta = {
   name: 'three-loop-phase',
-  description: 'Runs one Build phase: write -> gates -> review -> fix, with round counting as code',
+  description: 'Runs one Build phase: write -> gates -> review (diff reviewers plus the behavior check) -> triage -> fix, with round counting as code',
   phases: [
     { title: 'Write' },
     { title: 'Gates' },
@@ -41,7 +41,7 @@ export const meta = {
 //               callers written against the earlier contract; what is rejected is passing NEITHER,
 //               because a count that defaulted to 1 let a Deep phase silently run the Standard review.
 //   phaseLabel  optional, defaults to 'phase'. It labels agents and logs, and it is named to the Write
-//               and Fix agents in their prompts, so it should match what the plan calls this phase.
+//               agent in its prompt, so it should match what the plan calls this phase.
 //   models      optional per-stage model overrides.
 //   branch      optional, and authoritative when given. The review diffs baseSha..branch, so whoever
 //               owns the branch should say which one rather than trusting the implementer's report.
@@ -210,7 +210,7 @@ if (legacyReviewers !== undefined && !Number.isInteger(legacyReviewers)) {
 // review with nothing in the result to show it. A caller who writes both has said what they mean, and
 // the returned object reports both — which is what makes it reviewable. The case this exists for is a
 // Deep change whose phases are not equally risky: the measurement behind "two" was taken on plans, and
-// on a reversible phase diff the second reviewer is a choice rather than a result (`build.md`, Review).
+// on a reversible phase diff the second reviewer is a choice rather than a result (`SKILL.md` §4).
 const reviewers = legacyReviewers !== undefined ? legacyReviewers : (depth === 'deep' ? 2 : 1)
 if (reviewers < 1) return { status: 'usage-error', reason: `reviewers must be at least 1 (got ${JSON.stringify(reviewers)})` }
 // An upper bound because nothing else here has one: the skill's own answer is one or two, and a typo in
@@ -221,10 +221,10 @@ if (depth !== undefined && legacyReviewers !== undefined && legacyReviewers !== 
   log(`${phaseLabel}: depth '${depth}' implies ${depth === 'deep' ? 2 : 1} reviewer(s); the explicit reviewers=${legacyReviewers} wins and is reported in the result`)
 }
 // Not a flip of the default: reducing verification for every existing caller is the unsafe direction,
-// and build.md's rule ("two where the phase is hard to undo, one elsewhere") is a judgement the caller
+// and SKILL.md §4's rule ("two where the phase is hard to undo, one elsewhere") is a judgement the caller
 // makes, not one this script can make for them. Said at the call site so the bill is visible.
 if (depth === 'deep' && legacyReviewers === undefined) {
-  log(`${phaseLabel}: depth 'deep' is running ${reviewers} diff reviewers; build.md buys the second one where the phase is hard to undo — pass reviewers: 1 on a reversible phase`)
+  log(`${phaseLabel}: depth 'deep' is running ${reviewers} diff reviewers; SKILL.md §4 buys the second one where the phase is hard to undo — pass reviewers: 1 on a reversible phase`)
 }
 const resolvedDepth = depth !== undefined ? depth : (reviewers >= 2 ? 'deep' : 'standard')
 

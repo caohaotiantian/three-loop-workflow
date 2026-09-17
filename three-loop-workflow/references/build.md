@@ -47,11 +47,11 @@ Record the gate output as commit trailers. The work is already committed by the 
 
 ## Review
 
-**Standard: one reviewer. A Deep phase: two where that phase is hard to undo, one elsewhere — in parallel, independent, findings unioned.**
+**How many reviewers run here is `SKILL.md` §4's rule**, and so is the criterion for spending the second one.
 
 Each gets the diff and the plan — not your summary of the change, and not the whole skill. Do not let them see each other's output; the value comes from their independence.
 
-The case for two was made on **plans** (`plan.md`, "Why two"), and a Deep *plan* always gets two. A diff is a friendlier target — the gates have already removed a whole class of defect before a reviewer looks — so the second reader buys less here, and is worth paying for where the phase itself is a migration, a contract, or anything that reaches production before the next phase lands. Say in the plan which phases got two.
+The case for two was made on **plans** (`plan.md`, "Why two"). A diff is a friendlier target — the gates have already removed a whole class of defect before a reviewer looks — so the second reader buys less here than it does there, which is why a phase diff is the one place this skill spends it selectively. Say in the plan which phases got two.
 
 ```
 Review the diff at `git diff <baseSha>..HEAD` against the plan at .agent/<task>/plan.md.
@@ -107,7 +107,7 @@ At Deep depth, give the two reviewers the same list and a **different closing li
 - *Reviewer 1* — "Read as an adversary hunting a case that breaks it: assume the change is wrong somewhere and find where."
 - *Reviewer 2* — "After that diff, run `git log -p -20` on the paths it touches and read how the code got here. Then read as the person who maintains it next year: assume the change works today, and find what it will cost."
 
-Reviewer 2's extra read is the **repository**, not the author — §4's isolation rule bars your summary and your session, not git history — and it buys a class a diff cannot show: an approach that was already tried here and reverted. `scripts/phase.js` sends this block and both closing lines verbatim; the two copies are one mechanism, so edit them together.
+Reviewer 2's extra read is the **repository**, not the author — §4's isolation rule bars your summary and your session, not git history — and it buys a class a diff cannot show: an approach that was already tried here and reverted. `scripts/phase.js` sends the eight questions above, the artefact paragraph and both closing lines verbatim; its own framing lines differ and its return shape is a schema. Those copies are one mechanism, so edit the questions and the closing lines together.
 
 Closure comes from `blocking_count`, never the reviewer's prose (`SKILL.md` §4): "looks good overall" alongside a listed blocking item is not a pass.
 
@@ -147,11 +147,11 @@ Have it try the edges as well as the happy path: the empty case, the error case,
 - If the real surface is one you must not touch — production payments, a live third party, an hours-long job — the check is **not** waived, and `behaviorCheck: false` is the wrong answer, because a person does call this. Drive it somewhere safe and cheap instead: a sandbox or staging credential, a test card, a toy dataset, `--max-steps 500`. Name in the plan where it was driven and what that environment does not cover. `false` asserts one thing only: nothing this phase builds is ever clicked, typed or called.
 - If the plan is **silent** on something you observed and it looks wrong, that is still a finding.
 
-**If what you built is read rather than run** — a reference, a CLI's help text, a config schema, an error-message set — the equivalent is a reader handed the **finished files** with no diff and no change context, the way a new user meets them. That catches what diff review structurally cannot: two sections that now contradict each other, a documented step that cannot be performed. `close.md` ("Read the result as a product") has the questions; it is worth doing at Standard depth too, and it costs one agent.
+**If what you built is read rather than run** — a reference, a CLI's help text, a config schema, an error-message set — the equivalent is a reader handed the **finished files** with no diff and no change context, the way a new user meets them. `close.md` ("Read the result as a product") owns it: when it runs, what to ask, and what it catches that diff review structurally cannot.
 
 Skip both only where the change puts nothing new in front of anyone: an internal refactor, a test-only change, a doc edit that reconciles stale wording with behavior that did not move. **Writing or rewriting something a reader will meet is not one of those** — that is the case above, and the reader is what drives it.
 
-Running the loop as a script, `behaviorCheck` is a required argument, `false` is how you declare that nothing here is observable, and `{ read: "..." }` is how you ask for the reader above where what the phase produces is read rather than run (`references/orchestration.md`). The check runs beside the reviewers, so it costs an agent and no wall-clock.
+Running the loop as a script, this check is a required argument rather than an optional one — `references/orchestration.md` has its shapes, including how you ask for the reader above. It runs beside the reviewers, so it costs an agent and no wall-clock.
 
 ## Triage
 
@@ -207,7 +207,7 @@ Whatever the format: **the message names the phase and the item it addresses**, 
 
 ## Parallel work
 
-Phases run sequentially and share one working tree; `scripts/phase.js` assumes exactly that. **A branch name is not isolation** — two writers in one checkout overwrite each other's files, and the second one's diff contains the first one's work. Running writers concurrently is `references/orchestration.md`, which owns that rule and its traps.
+Running writers concurrently — and why a branch name is not isolation — is `references/orchestration.md` (Two writers; Worktrees).
 
 ## The journal — what outlives the task
 

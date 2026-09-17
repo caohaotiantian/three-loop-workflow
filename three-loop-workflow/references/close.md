@@ -1,6 +1,6 @@
 # Close
 
-Every Deep change closes here — `SKILL.md` §1's trigger table says which of the sections below carry the weight for the trigger that fired. A **Standard** change is closed by green gates and a clean review, with one exception: where what it produced is read or run as a whole — a document set, a CLI's help, a config schema, a public API surface — run *Read the result as a product*, below. That section is depth-independent and costs one agent; the rest of this file is Deep.
+Every Deep change closes here — `SKILL.md` §1's trigger table says which of the sections below carry the weight for the trigger that fired. A **Standard** change is closed by green gates and a clean review, plus two sections below: *What Close hands over*, which runs always and costs nothing, and — where what the change produced is read or run as a whole, a document set, a CLI's help, a config schema, a public API surface — *Read the result as a product*, which costs one agent. The rest of this file is Deep.
 
 The Build loop verified each phase in isolation. Close asks the question no phase asked: **is the repository coherent now that all of this has landed?**
 
@@ -64,10 +64,12 @@ Remove scratch worktrees, spike directories, and temporary artifacts the work cr
 
 No closure document — the archive of them is read by nobody. What the person merging this needs goes in the PR body, where it stays attached to the diff it explains:
 
-- What a user can now do that they could not, in the Goal's words.
-- What was deliberately not done — the Non-goals, so nobody reopens them as omissions.
+- **`SKILL.md` §2's durable copy** — the Goal in the words that say what a user can now do, the
+  Non-goals so nobody reopens them as omissions, and Accept.
 - What the behavior check observed, or that it could not be run and why.
 - Non-blocking findings you did not fix, one line each, and whether each is worth a follow-up.
 - What remains risky, and the rollback as it stands now that the change has landed.
+
+**A Standard change hands over the same, minus the rollback re-read** in the last line.
 
 Anything longer belongs in the commit messages, one fact per commit it explains.

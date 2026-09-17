@@ -20,6 +20,8 @@ The skill files (`SKILL.md`, `references/`, `scripts/`) are the single source of
 [**Why we rebuilt it**](./docs/why-v2.md) — the long version, with the measurements.
 [**Is three fix rounds the right cap?**](./docs/2026-07-31-round-cap-experiment.md) — pre-registered,
 raw data committed, and the answer is that the cap was not the problem.
+[**What the delegation guidance rests on**](./docs/analysis-2026-09-17-orchestration-evidence.md) —
+every source behind v2.7.0's orchestration guidance, with its date, its grade, and what was left out.
 Release notes and full version history live in [CHANGELOG.md](./CHANGELOG.md).
 
 ## What is the three-loop workflow?
@@ -185,7 +187,9 @@ The skill never hard-codes a filename. It reads `AGENTS.md`, `CLAUDE.md`, or bot
 │   ├── references/
 │   │   ├── plan.md                   The plan artifact, facts-vs-decisions, spikes, plan review
 │   │   ├── build.md                  write → gates → review → triage → fix; diagnosis; flakes
-│   │   ├── orchestration.md          Worktrees for concurrent writers; the Build loop as a script
+│   │   ├── orchestration.md          Handing implementation to an agent: briefing it, verifying what
+│   │   │                             it claims, worktrees for concurrent writers, and the Build loop
+│   │   │                             as a script
 │   │   ├── close.md                  Closeout: orphans, blast radius, migrations, rollback re-read,
 │   │   │                             and reading the result as a product
 │   │   ├── maintenance.md            Folding a task's journal back into the project guide
@@ -201,6 +205,8 @@ The skill never hard-codes a filename. It reads `AGENTS.md`, `CLAUDE.md`, or bot
 │   ├── announcement-v2.0.0.md        Release announcement
 │   ├── why-v2.md                     The long-form account of the rebuild
 │   ├── 2026-07-31-round-cap-*.md     Does a document-shaped Deep change converge in three rounds?
+│   ├── analysis-2026-09-17-*.md      What the v2.7.0 delegation guidance rests on: every source with
+│   │                                 its date and a grade, and what was left out
 │   ├── measurements/                 Pre-registration and raw artifacts, committed so the figures
 │   │                                 can be recomputed rather than taken on trust
 │   └── design/, implementation/      Frozen v1 per-task archive — historical, not current behavior
