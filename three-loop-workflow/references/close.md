@@ -1,6 +1,6 @@
 # Close
 
-Every Deep change closes here — `SKILL.md` §1's trigger table says which of the sections below carry the weight for the trigger that fired. A **Standard** change is closed by green gates and a clean review, with one exception: where what it produced is read or run as a whole — a document set, a CLI's help, a config schema, a public API surface — run *Read the result as a product*, below. That section is depth-independent and costs one agent; the rest of this file is Deep.
+Every Deep change closes here — `SKILL.md` §1's trigger table says which of the sections below carry the weight for the trigger that fired. A **Standard** change is closed by green gates and a clean review, with one exception: where what it produced is read or run as a whole — a document set, a CLI's help, a config schema, a public API surface — run *Read the result as a product*, below. That section is depth-independent and costs one agent, and so is *What Close hands over*; the rest of this file is Deep.
 
 The Build loop verified each phase in isolation. Close asks the question no phase asked: **is the repository coherent now that all of this has landed?**
 
@@ -69,5 +69,7 @@ No closure document — the archive of them is read by nobody. What the person m
 - What the behavior check observed, or that it could not be run and why.
 - Non-blocking findings you did not fix, one line each, and whether each is worth a follow-up.
 - What remains risky, and the rollback as it stands now that the change has landed.
+
+**A Standard change hands over the same facts, minus what only a Deep close produces** — no rollback re-read and no blast-radius pass to report, so the last line shrinks to what still looks risky.
 
 Anything longer belongs in the commit messages, one fact per commit it explains.

@@ -14,7 +14,9 @@ A silent default is a decision nobody made and no later reviewer can challenge. 
 | Deleting a file listed under the project guide's _load-bearing-docs_ | Which contract it fulfills, what replaces it, and every file that references it — **ask before deleting** |
 | The action exceeds your authority: pushing to main, deleting outside the workspace, sending anything externally | Ask for authorization first |
 | Credentials, network, or permissions are missing | Verify the actual failure first, then report what you found |
-| Another in-flight task overlaps this domain | The overlap, and whether to merge or serialize |
+| Another in-flight task overlaps this domain | Which files both touch, which task is further along, and your recommendation — merge now, serialize behind it, or split ownership — and what gets redone either way |
+
+**Peer sessions and agents are in-flight tasks too.** Two sessions on one checkout are two writers in one tree; `orchestration.md` (Worktrees) has the remedy. Taking over a task another session or agent started means reading `.agent/<task>/plan.md` and its recorded `baseSha` **before** your first edit: its Non-goals bind you as they bound the writer before you, and a base you pick yourself makes the review read a different change. That directory is the hand-off contract between peers as much as across a compaction (`SKILL.md` §2). Where there is none, you are starting a task, not taking one over.
 
 ## How to ask
 
