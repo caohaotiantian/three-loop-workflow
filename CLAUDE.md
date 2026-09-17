@@ -79,10 +79,10 @@ Protected by the full cycle:
 The references have two indexes — `SKILL.md`'s routing table and `ls three-loop-workflow/references/`
 — and nothing compares them. Adding a reference is not invisible (the layout counts go
 red until they are updated); what is invisible is whether anything **routes** to it, which no check here
-inspects. Two are easy to miss when reading the table: `orchestration.md` (delegation since v2.7.0 —
-briefing an agent and verifying what it claims — plus worktrees for concurrent writers, and the Build
-loop as a script, split out of `build.md` on 2026-08-04) and `maintenance.md`
-(folding a task's journal back into this file — added at v2.4.0).
+inspects. Two are easy to miss when reading the table: `orchestration.md` (split out of `build.md` on
+2026-08-04, and owner of delegation since v2.7.0 — briefing an agent, verifying what it claims,
+worktrees for concurrent writers, and the Build loop as a script) and `maintenance.md` (folding a
+task's journal back into this file — added at v2.4.0).
 
 **Not** load-bearing — edited directly with one fresh-agent review: `tests/**`, `README.md` /
 `README-cn.md`, `CHANGELOG*.md`, every top-level `docs/*.md` (announcements, the rebuild article, the

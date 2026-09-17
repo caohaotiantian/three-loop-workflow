@@ -87,27 +87,30 @@ peers as much as across a compaction.
 half a Deep-only list although a Standard change writes a PR body too. *What Close hands over* is now
 one of two depth-independent sections, it points at `SKILL.md` §2's durable copy rather than
 paraphrasing the Goal and Non-goals again, and a **Standard** change hands over the same list minus the
-rollback re-read. `SKILL.md`'s depth table says so in the Standard row, and its routing row for
-`close.md` now reads "Close a Deep change, hand any change over, or read its output as a whole".
+rollback re-read — that subtraction is `close.md`'s own line. `SKILL.md`'s depth table ends the
+Standard row at §2's PR body, and its routing row for `close.md` now reads "Close a Deep change, hand
+any change over, or read its output as a whole".
 
 ### The backstops moved, after a re-review and in their own commits
 
 Three went red and were raised, each in a commit of its own after the re-review this repo's norm
-requires — two fresh diff reviewers per phase, two fix rounds, a verification review, and a
-read-as-a-product pass over the whole skill, with the duplicates those reviews found cut before the
-counts were taken. `orchestration.md` 2300 → 3250, `escalation.md` 1450 → 1600, and the whole prose
+requires — two fresh diff reviewers on the phase that grew `orchestration.md`, one on the phase that
+grew `escalation.md`, two fix rounds, a verification review of both, and a read-as-a-product pass over
+the whole skill — with the duplicates those reviews found cut before the counts were taken. `orchestration.md` 2300 → 3250, `escalation.md` 1450 → 1600, and the whole prose
 surface 16500 → 17400, each roughly the new count plus five percent, rounded, with the reason written
 into `scripts/accept-release.sh` beside the number. The objection is on the record there too, and it is
 the stronger one this time: `orchestration.md` landed above its own plan's aim twice, it is now the
 largest reference in the set, and it carries two subjects — hand delegation, and the script's API. The
 next growth in that file is a **split**, not another raise. The total is the binding constraint again,
-with roughly eight hundred spare under it, because the per-file backstops now sum above it.
+because the per-file backstops now sum above it.
 
 ### Known limitations
 
-`behaviorCheck: null` is still accepted by `phase.js` as `false` — silently, which is exactly the
-"a stage that does not run" defect the required argument exists to prevent. It is a follow-up, with its
-own harness case, not a fix smuggled into a release.
+`behaviorCheck: null` is still accepted by `phase.js` and **reported as `false`** — the run logs it
+and the closed result says the check was declined, so a `null` arriving from a missing variable is
+indistinguishable in the record from a caller who declared that nothing here is user-visible. That is
+the "a stage that does not run" defect the required argument exists to prevent. It is a follow-up, with
+its own harness case, not a fix smuggled into a release.
 
 ## v2.6.0 — aimed at the person, and at what is likely wrong
 

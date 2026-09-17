@@ -201,6 +201,8 @@ skill 从不写死文件名。它会读取 `AGENTS.md`、`CLAUDE.md` 或两者 �
 │   ├── announcement-v2.0.0-cn.md     发布公告
 │   ├── why-v2-cn.md                  重写全过程的长文
 │   ├── 2026-07-31-round-cap-*.md     文档形态的 Deep 变更能在三轮内收敛吗?
+│   ├── analysis-2026-09-17-*.md      v2.7.0 的委派指导依据的是什么:每个来源连同日期与评级,
+│   │                                 以及哪些被留在了外面
 │   ├── measurements/                 预注册与原始产物,已提交,好让数字能被重算而不是被相信
 │   └── design/、implementation/       已冻结的 v1 每任务归档 —— 历史记录,不代表当前行为
 ├── README.md                         英文说明

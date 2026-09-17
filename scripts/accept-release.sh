@@ -250,25 +250,28 @@ budget() {
 # three new paragraphs. Objection, on the record: the always-loaded surface (SKILL.md) grew by about a
 # third in this one pass, and a tighten pass afterward recovered only a little of that. The next
 # addition to SKILL.md must displace something already there — it does not get another raise for free.
-# 2026-09-17: orchestration.md 2201->3092, raised 2300 -> 3250 (the count plus ~5%, rounded) after the
-# re-review this repo's norm requires — two fresh diff reviewers per phase, two fix rounds, a
-# verification review, and a read-as-a-product pass over the whole skill; the duplicates those reviews
-# found were cut before this count was taken. What grew: the file now owns DELEGATION, not only
-# worktrees — briefing a writer (the brief is the agent's only context, and the three things a writer
-# gets wrong unprompted), verifying a delegated "done" against the repository instead of the report,
-# partitioning two writers by file ownership and landing their branches through an integrator, and the
-# task directory not travelling to a worktree, clone or container — plus the script facts the file
-# understated: the argument caps, the guards that run every round, and what triage returns. Every added
-# sentence traces to a reviewer finding or to a rule that had no home; four rules stated twice were
-# collapsed to a pointer in build.md, plan.md and this file in the same pass, so the growth is net of
-# those cuts.
-# Objection, on the record, and it is the stronger one here: the file landed above its own plan's aim
-# (~2900) twice, in both directions of the re-review. It is now the largest reference in the set, and it
-# carries two subjects — hand delegation, and the phase.js script API. The next growth in
-# this file is a SPLIT, not another raise.
 budget three-loop-workflow/SKILL.md                    3000
 budget three-loop-workflow/references/build.md          4100
 budget three-loop-workflow/references/plan.md           2200
+# 2026-09-17: orchestration.md 2201->3092, raised 2300 -> 3250 (the count plus ~5%, rounded) after the
+# re-review this repo's norm requires. What actually ran, since "re-reviewed" is the claim doing the
+# work here: two fresh diff reviewers on the phase that grew this file, one on the phase that grew
+# escalation.md, two fix rounds, a verification review of both, and a read-as-a-product pass over the
+# whole skill. The duplicates those reviews found were cut before this count was taken.
+# What grew: the file now owns DELEGATION, not only worktrees — briefing a writer (the brief is the
+# agent's only context, and the three things a writer gets wrong unprompted), verifying a delegated
+# "done" against the repository instead of the report, partitioning two writers by file ownership and
+# landing their branches through an integrator, and the task directory not travelling to a worktree,
+# clone or container — plus the script facts the file understated: the argument caps, the guards that
+# run every round, and what triage returns. Every added sentence traces to a reviewer finding or to a
+# rule that had no home; four rules stated twice were collapsed to a pointer in build.md, plan.md and
+# this file in the same pass, so the growth is net of those cuts.
+# Objection, on the record, and it is the stronger one here: the file landed above its own plan's aim
+# (~2900) twice, in both directions of the re-review. It is now the largest reference in the set, and it
+# carries two subjects — hand delegation, and the phase.js script API. The next growth in this file is
+# a SPLIT, not another raise — and a split is not free either: CLAUDE.md's Common Commands bullet on
+# the pinned file set greps out every site a new reference has to be added to, including the one
+# nothing enforces.
 budget three-loop-workflow/references/orchestration.md  3250
 budget three-loop-workflow/references/maintenance.md    1600
 # 2026-09-17: escalation.md 1353->1509, raised 1450 -> 1600 (the count plus ~5%, rounded) after the same
@@ -277,11 +280,12 @@ budget three-loop-workflow/references/maintenance.md    1600
 budget three-loop-workflow/references/escalation.md     1600
 budget three-loop-workflow/references/close.md          1000
 budget three-loop-workflow/references/platforms.md       800
-# 2026-09-17: 16500 -> 17400 (the set is 16605; the count plus ~5%, rounded), because the two per-file
-# raises above sum past the old total — a total left where it was would report the set drifting when
-# nothing had drifted past a reviewed number. This is the SECOND raise of the total. It is the binding
-# constraint again, with roughly 800 words of slack under it: the per-file backstops now sum well above
-# it, so the next file to grow spends the set's margin, not its own. That is what this number is for.
+# 2026-09-17: 16500 -> 17400, measured at 16605 that day — the count plus ~5%, rounded to a round
+# number, which here rounds DOWN. Raised because the two per-file raises above sum past the old total:
+# a total left where it was would report the set drifting when nothing had drifted past a reviewed
+# number. This is the SECOND raise of the total, and it is the binding constraint again — the per-file
+# backstops sum to 17550 against it, so the set can go red while every file passes, and the next file
+# to grow spends the set's margin rather than only its own. That is what this number is for.
 prose_now=$(words three-loop-workflow/SKILL.md three-loop-workflow/references/*.md)
 [ "$prose_now" -le 17400 ] && ok "the whole prose surface is $prose_now words (backstop 17400)" \
                            || bad "the prose surface has grown to $prose_now words — the per-file budgets can all pass while the set still grows"

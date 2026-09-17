@@ -205,6 +205,8 @@ The skill never hard-codes a filename. It reads `AGENTS.md`, `CLAUDE.md`, or bot
 │   ├── announcement-v2.0.0.md        Release announcement
 │   ├── why-v2.md                     The long-form account of the rebuild
 │   ├── 2026-07-31-round-cap-*.md     Does a document-shaped Deep change converge in three rounds?
+│   ├── analysis-2026-09-17-*.md      What the v2.7.0 delegation guidance rests on: every source with
+│   │                                 its date and a grade, and what was left out
 │   ├── measurements/                 Pre-registration and raw artifacts, committed so the figures
 │   │                                 can be recomputed rather than taken on trust
 │   └── design/, implementation/      Frozen v1 per-task archive — historical, not current behavior

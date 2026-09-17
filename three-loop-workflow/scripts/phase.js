@@ -210,7 +210,7 @@ if (legacyReviewers !== undefined && !Number.isInteger(legacyReviewers)) {
 // review with nothing in the result to show it. A caller who writes both has said what they mean, and
 // the returned object reports both — which is what makes it reviewable. The case this exists for is a
 // Deep change whose phases are not equally risky: the measurement behind "two" was taken on plans, and
-// on a reversible phase diff the second reviewer is a choice rather than a result (`build.md`, Review).
+// on a reversible phase diff the second reviewer is a choice rather than a result (`SKILL.md` §4).
 const reviewers = legacyReviewers !== undefined ? legacyReviewers : (depth === 'deep' ? 2 : 1)
 if (reviewers < 1) return { status: 'usage-error', reason: `reviewers must be at least 1 (got ${JSON.stringify(reviewers)})` }
 // An upper bound because nothing else here has one: the skill's own answer is one or two, and a typo in
