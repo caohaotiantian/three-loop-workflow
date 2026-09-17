@@ -2,7 +2,8 @@
 
 Record of what evidence the v2.7.0 delegation guidance in
 `three-loop-workflow/references/orchestration.md` rests on. The shipped skill carries no statistics, so
-every number and source lives here; `orchestration.md` names a source by title and date only.
+every number and source lives here. `orchestration.md` cites three of them by title and date — MAST
+by year — and quotes one finding beside a title; it carries no figure from this file.
 
 ## 1. Sources
 
@@ -28,28 +29,53 @@ every number and source lives here; `orchestration.md` names a source by title a
 Google ADK/A2A was not attempted; nothing here cites the two OpenAI sources. The MAST 42/37/21 split
 circulating in secondary blogs is **not** in the MAST abstract as read (12) and must not be cited.
 
-## 2. Recommendations adopted
+## 2. Recommendations considered
 
-1. Decompose by shared context, not job title — a feature and its tests belong to one agent. *(2; advice)*
-2. Multi-agent suits research/review, not implementation; teams should start on PR review, not code. *(2, 8; advice)*
+Each is marked against `orchestration.md` as it now stands. "Adopted" means the file states it; the
+verification was reading the file, not the diff.
+
+1. Decompose by shared context, not job title — a feature and its tests belong to one agent. *(2;
+   advice)* — **not adopted**: out of scope for this pass; the file partitions writers by file ownership.
+2. Multi-agent suits research/review, not implementation; teams should start on PR review, not code.
+   *(2, 8; advice)* — **adopted in part**: the file's opening says delegation is no part of an ordinary
+   change and that a single Standard change is cheaper by hand. Agent teams are excluded (§5).
 3. Token cost is the main lever: token usage explained 80% of performance variance on BrowseComp.
-   The multipliers on top of it disagree — §4. *(1; measured for the 80%. 2, 11 for the rest)*
-4. A model upgrade beat doubling the token budget on the older model. *(1; measured)*
-5. Better single-agent prompting is the control arm every orchestration proposal owes. *(2; advice)*
+   The multipliers on top of it disagree — §4. *(1; measured for the 80%. 2, 11 for the rest)* —
+   **not adopted**: barred by the no-figures rule; the cost argument ships without a number.
+4. A model upgrade beat doubling the token budget on the older model. *(1; measured)* — **adopted**:
+   *Spawn, or do it yourself* cites the finding, with the models and the multiplier left here.
+5. Better single-agent prompting is the control arm every orchestration proposal owes. *(2; advice)* —
+   **adopted**: same section — one agent with a better prompt or a better model, run first.
 6. Early-victory verification failures need concrete acceptance criteria, not "make sure it works" —
-   "run the full test suite and report all failures". *(5; advice, matching MAST's verification category, 12)*
+   "run the full test suite and report all failures". *(5; advice, matching MAST's verification
+   category, 12)* — **not adopted**: already owned elsewhere — Accept (`SKILL.md` §2) and the gates.
 7. Verification tiers cheapest-first: rules-based, then visual/output, then a single LLM-judge call
-   scoring against a rubric — the single call is the measured part, and beat multiple calls. *(5)*
-8. Cross-check independent agents adversarially rather than trust one. *(9; shipped behavior)*
-9. Scale agent count to the question and say so in the brief: ~1 agent/3–10 tool calls for fact-finding, 2–4 for comparisons, 10+ for complex research; teams start at 3–5. *(1, 8)*
-10. Every delegation brief states objective, output format, tool/source guidance, task boundaries. *(1; maps to MAST's specification category, 12)*
-11. Partition file ownership before spawning writers — teams do not isolate teammates in worktrees. *(8, 13; 27.67% conflict rate measured)*
+   scoring against a rubric — the single call is the measured part, and beat multiple calls. *(5)* —
+   **not adopted**: the skill's gates-then-review order is already cheapest-first.
+8. Cross-check independent agents adversarially rather than trust one. *(9; shipped behavior)* —
+   **adopted in a narrower form**: not adversarial review, but *Verify the claim, not the report* (check
+   a writer's claim against the repository) and the script's gates step reporting its own head beside
+   the writer's.
+9. Scale agent count to the question and say so in the brief: ~1 agent/3–10 tool calls for
+   fact-finding, 2–4 for comparisons, 10+ for complex research; teams start at 3–5. *(1, 8)* — **not
+   adopted**: every part of it is a figure, and the teams half is excluded with agent teams (§5).
+10. Every delegation brief states objective, output format, tool/source guidance, task boundaries.
+    *(1; maps to MAST's specification category, 12)* — **adopted**, in the file's words: objective,
+    output shape, what to read, boundaries.
+11. Partition file ownership before spawning writers — teams do not isolate teammates in worktrees.
+    *(8, 13; 27.67% conflict rate measured)* — **adopted**: *Two writers: divide, then land* requires the
+    partition in the plan before anyone is spawned. The rate stays here.
 12. Externalize state before context runs out — plans to external memory before ~200k tokens, hand-off
     to fresh agents. The C-compiler run coordinated 2,000 sessions through a lock directory and git,
-    not context. *(4, 5, 3)*
-13. Tests are the coordination substrate for autonomous writers, with an external oracle. *(3; case study, n=1)*
-14. Statefulness compounds errors; resume agents rather than restart them. *(1)*
-15. Human checkpoints must be structural — Workflow runs take no mid-run input; sign-off means running each stage as its own workflow. *(9)*
+    not context. *(4, 5, 3)* — **not adopted**: the durable plan is `SKILL.md` §2's rule already, and the
+    threshold is a figure. *The plan does not travel* is about gitignore, not context.
+13. Tests are the coordination substrate for autonomous writers, with an external oracle. *(3; case
+    study, n=1)* — **not adopted**: out of scope for this pass, on n=1.
+14. Statefulness compounds errors; resume agents rather than restart them. *(1)* — **not adopted**:
+    out of scope for this pass; nothing in the file resumes an agent.
+15. Human checkpoints must be structural — Workflow runs take no mid-run input; sign-off means running
+    each stage as its own workflow. *(9)* — **not adopted**: out of scope for this pass; the file maps
+    one phase to one call and says nothing about sign-off between them.
 
 ## 3. Failure modes with evidence
 
@@ -86,6 +112,8 @@ circulating in secondary blogs is **not** in the MAST abstract as read (12) and 
 - **The 42/37/21 MAST split** — not in the abstract as read (12); excluded everywhere.
 
 ## 6. Claude Code names current at time of writing
+
+A snapshot taken 2026-09-17; these names move, so re-read the docs before relying on the list.
 
 **Agent tool** (`subagent_type`, `model`, `isolation: "worktree"`, `run_in_background`,
 `subagent_type: "fork"`, `/subtask`); **SendMessage** (resumes a named subagent with history and cache

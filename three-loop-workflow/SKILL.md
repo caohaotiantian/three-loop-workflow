@@ -118,7 +118,7 @@ Never substitute a silent default for a real decision. Record what the user deci
 | Review a change you did not write | `references/build.md` (Review), plus §4's review-only note |
 | Debug a failing check, or a flaky test | `references/build.md` (Diagnosis) |
 | Drive the path a user takes, before closing | `references/build.md` (Behavior check) |
-| Close a Deep change — or read any change's output as a whole | `references/close.md` |
+| Close a Deep change, hand any change over, or read its output as a whole | `references/close.md` |
 | Escalate, or handle a round-cap deadlock | `references/escalation.md` |
 | Run on Codex or opencode | `references/platforms.md` |
 | Run the Build loop deterministically rather than by hand | `references/orchestration.md` (`scripts/phase.js`) |
