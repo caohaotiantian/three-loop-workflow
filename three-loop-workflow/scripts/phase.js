@@ -221,10 +221,10 @@ if (depth !== undefined && legacyReviewers !== undefined && legacyReviewers !== 
   log(`${phaseLabel}: depth '${depth}' implies ${depth === 'deep' ? 2 : 1} reviewer(s); the explicit reviewers=${legacyReviewers} wins and is reported in the result`)
 }
 // Not a flip of the default: reducing verification for every existing caller is the unsafe direction,
-// and build.md's rule ("two where the phase is hard to undo, one elsewhere") is a judgement the caller
+// and SKILL.md §4's rule ("two where the phase is hard to undo, one elsewhere") is a judgement the caller
 // makes, not one this script can make for them. Said at the call site so the bill is visible.
 if (depth === 'deep' && legacyReviewers === undefined) {
-  log(`${phaseLabel}: depth 'deep' is running ${reviewers} diff reviewers; build.md buys the second one where the phase is hard to undo — pass reviewers: 1 on a reversible phase`)
+  log(`${phaseLabel}: depth 'deep' is running ${reviewers} diff reviewers; SKILL.md §4 buys the second one where the phase is hard to undo — pass reviewers: 1 on a reversible phase`)
 }
 const resolvedDepth = depth !== undefined ? depth : (reviewers >= 2 ? 'deep' : 'standard')
 

@@ -122,7 +122,7 @@ Never substitute a silent default for a real decision. Record what the user deci
 | Escalate, or handle a round-cap deadlock | `references/escalation.md` |
 | Run on Codex or opencode | `references/platforms.md` |
 | Run the Build loop deterministically rather than by hand | `references/orchestration.md` (`scripts/phase.js`) |
-| Hand work to another agent, or run more than one writer at once | `references/orchestration.md` |
+| Hand implementation to another agent, or run more than one writer at once | `references/orchestration.md` |
 | Fold a task's notes into the project guide | `references/maintenance.md` |
 
 Read the reference for the loop you are in. Two crossings are real: a fix that contradicts the plan sends you back to `references/plan.md` (Conflicts) before you edit, and a defect whose cause is unknown starts in `references/build.md` (Diagnosis), before the plan (§2).

@@ -47,11 +47,11 @@ Record the gate output as commit trailers. The work is already committed by the 
 
 ## Review
 
-**How many reviewers run here is `SKILL.md` §4's rule.** In parallel, independent, findings unioned.
+**How many reviewers run here is `SKILL.md` §4's rule**, and so is the criterion for spending the second one.
 
 Each gets the diff and the plan — not your summary of the change, and not the whole skill. Do not let them see each other's output; the value comes from their independence.
 
-The case for two was made on **plans** (`plan.md`, "Why two"), and a Deep *plan* always gets two. A diff is a friendlier target — the gates have already removed a whole class of defect before a reviewer looks — so the second reader buys less here, and is worth paying for where the phase itself is a migration, a contract, or anything that reaches production before the next phase lands. Say in the plan which phases got two.
+The case for two was made on **plans** (`plan.md`, "Why two"). A diff is a friendlier target — the gates have already removed a whole class of defect before a reviewer looks — so the second reader buys less here than it does there, which is why a phase diff is the one place this skill spends it selectively. Say in the plan which phases got two.
 
 ```
 Review the diff at `git diff <baseSha>..HEAD` against the plan at .agent/<task>/plan.md.
@@ -207,7 +207,7 @@ Whatever the format: **the message names the phase and the item it addresses**, 
 
 ## Parallel work
 
-Running writers concurrently is `references/orchestration.md`, which owns that rule and its traps.
+Running writers concurrently — and why a branch name is not isolation — is `references/orchestration.md` (Two writers; Worktrees).
 
 ## The journal — what outlives the task
 

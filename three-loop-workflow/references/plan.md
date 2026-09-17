@@ -126,7 +126,7 @@ A spike is bounded by three rules:
 
 ## Reviewing the plan
 
-At **Deep** depth the plan gets fresh readers before you build — `SKILL.md` §4 has the count. Give each the plan and the relevant code, independently, with the same checklist and a different closing line (below). Take the union of their findings.
+At **Deep** depth the plan gets fresh readers before you build — `SKILL.md` §4 has the count and what to do with what they return. Give each the plan and the relevant code, independently, with the same checklist and a different closing line (below).
 
 Ask each to report everything and let you triage. Do not ask for "only the important issues".
 

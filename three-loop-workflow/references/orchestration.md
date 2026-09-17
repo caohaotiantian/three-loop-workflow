@@ -1,67 +1,74 @@
 # Orchestration
 
-Read this when you are **handing work to another agent**, running **more than one writer at a time**,
-or driving the Build loop as a **script**. None of the three is part of an ordinary change: `build.md`
-is the whole loop, and for a single Standard change running it by hand is cheaper than orchestrating it.
+Read this when you are **handing implementation work to another agent**, running **more than one writer
+at a time**, or driving the Build loop as a **script**. None of the three is part of an ordinary change:
+`build.md` is the whole loop, and for a single Standard change running it by hand is cheaper than
+orchestrating it.
 
 ## Spawn, or do it yourself
 
-A fresh agent's cost is the **context it lacks** — paid once in the brief, and again in whatever the
-brief left out, whether you spawn it by hand or a script dispatches it. Delegation buys isolation and
-parallelism, not understanding, so the control arm for any orchestration is **one agent with a better
-prompt, or a better model**; run that comparison first.
+A fresh agent's cost is the **context it lacks** — paid in the brief, and again in whatever the brief
+left out. Delegation buys isolation and parallelism, not understanding, so the control arm for any
+orchestration, hand-spawned or scripted, is **one agent with a better prompt or a better model**. Run
+that comparison first.
 
 Sources, read 2026-09-17: Anthropic's *Multi-agent research system* (2025-06-13), where a model upgrade
-beat a larger budget on the weaker model; Cognition's *Don't Build Multi-Agents* (2025-06-12), the case
-against; *MAST* (Cemri et al., 2025), the failure taxonomy.
+beat a larger budget on the weaker model; Cognition's *Don't Build Multi-Agents* (2025-06-12); *MAST*
+(Cemri et al., 2025).
 
 ## Briefing a writer
 
-The brief is the agent's **only** context — none of your session, your reasoning or the project guide
-is inherited. Four things go in it: the **objective**, the **output shape** wanted back, **what to
-read** (the plan's path, the files), and the **boundaries** — the plan's Non-goals plus what it may not
-touch. Then three a writer gets wrong unprompted:
+This is the agent that **writes**; a reviewer's brief is `build.md` (Review) and `SKILL.md` §4.
 
-- **Stay on the branch you are given**, in those words. Left to itself it creates a per-phase branch,
-  and the next phase's review then shows this phase's work again.
+The brief is what you control: your session and your reasoning are not inherited, and whatever a harness
+injects — a project guide, a forked conversation — is no substitute for it. Four things go in: the
+**objective**, the **output shape**, **what to read** (the plan's path, the files), and the
+**boundaries** — the plan's Non-goals plus what it may not touch. Then four a writer gets wrong
+unprompted:
+
+- **Stay on the branch you are given**, in those words — otherwise a per-phase branch appears, and the
+  next phase's review re-shows this phase's work.
 - **Commit before returning**, for the reason `build.md`'s Write step gives.
-- **Report the branch and the head sha you finished on**, not "done".
+- **Report the branch and head sha you finished on**, not "done".
+- **Use the `baseSha` the brief gives**: you capture it before spawning, because a writer capturing its
+  own captures it after its first edit.
 
-Name the rest of that Write step rather than restating it: the self-pass over its own diff, and
-stopping on a plan conflict instead of deciding it. Ask too what it was blocked on and least sure of — a
-brief that does not ask gets a report that has none.
-
-Where the runtime prefers structure to prose, specialise the brief as a schema: `scripts/phase.js` makes
-its writer answer as fields, so "done" is not expressible. On Claude Code that dispatch is the Workflow
-tool's `agent()`; hand-spawned with the Agent tool the brief is prose, and the discipline is yours.
+Name the rest of that Write step rather than restating it: the self-pass over its own diff, stopping on
+a plan conflict, and what it was blocked on or least sure of. Where a runtime prefers structure, make
+all of it a schema — `scripts/phase.js` has its writer answer as fields, so "done" is not expressible.
+On Claude Code that dispatch is the Workflow tool's `agent()`; with the Agent tool it is prose.
 
 ## Verify the claim, not the report
 
-"Done" is a claim about a repository: resolve the sha reported (a fabricated one does not resolve),
-confirm the branch is the one you gave, and require `git diff <baseSha>..HEAD` to be non-empty — a
-confident report over an empty diff reads exactly like a clean one. Only by hand do you get the first;
-the script has no shell (*What the script does that the manual path cannot*, below).
+"Done" is a claim about a repository. Confirm the reported sha is what `git rev-parse <branch>` returns
+— a fabricated one resolves to nothing, and one that resolves need not be this branch's head — and
+require `git diff <baseSha>..<branch>` to be non-empty; name the branch, not `HEAD`, because the writer
+may have worked in its own worktree. A failed check is this phase's `agent-error` — re-brief, do not
+accept — because a confident report over an empty diff reads like a clean one. Only by hand do you get
+the first check at all: a Workflow script has no shell (below).
 
 ## Two writers: divide, then land
 
 **Partition by file ownership, and write the partition into the plan before you spawn anyone.** Two
-writers on one file overwrite each other, and the loser's work leaves no conflict marker behind. This
-is the hand-spawned case throughout — the script runs a change's phases in sequence, in one tree — and
-each writer needs its own worktree, below.
+writers on one file overwrite each other with no conflict marker to show it, and in one checkout the
+second's diff contains the first's work — so each needs its own worktree, below. This is the
+hand-spawned case throughout: the script runs a change's phases in sequence, in one tree.
 
-Land the branches **one at a time**. Each writer's gates went green on a tree that did not hold the
-other's work, so neither run covers the merge: the integrator runs them again on the merged tree, and
-that run is the one to close on. The integrated review's base is the **merge target's head before the
-first branch landed**, not either writer's `baseSha`, and the range must be non-empty before you send it
+Land the branches **one at a time**, and name an **integrator**: a third role, neither writer. Each
+writer's gates went green on a tree that did not hold the other's work, so neither run covers the merge.
+The integrator runs them again on the merged tree, owns a red run there as its own fix round against the
+same cap, and sends the merged diff through `SKILL.md` §4's review. That review's base is the **merge target's head
+before the first branch landed**, not either writer's `baseSha`, and the range must be non-empty
 (`close.md` owns that trap).
 
 ## The plan does not travel
 
-`.agent/` is gitignored (`SKILL.md` §2), so a worktree, a clone or a container the agent starts in has
-none of it, and one told to read `.agent/<task>/plan.md` there finds nothing and carries on from the
-brief alone. Either copy the task directory in after creating the worktree, or give the agent the
-**absolute** path in the main one. Under the script that path is `planPath`, resolved where `repoPath`
-puts the agents; hand-spawned with the Agent tool it is a line in the brief.
+It does not (`SKILL.md` §2 — gitignored, and `git clean -xfd` takes it too), so an agent starting in a
+worktree, a clone or a container reads `.agent/<task>/plan.md` there, finds nothing, and carries on from
+the brief alone. **The main worktree's copy is authoritative**: hand the agent its absolute path. Copy
+the directory in only where the agent cannot see the main tree — a container — and copy nothing back.
+Under the script that path is `planPath`, resolved where `repoPath` puts the agents; with the Agent tool
+it is a line in the brief.
 
 ## Worktrees — one per concurrent writer
 
@@ -117,11 +124,11 @@ Six arguments are required — `planPath`, `tasks`, `acceptCmds`, `baseSha`, `be
 | `acceptCmds` | **required** — an **array** of non-empty command strings whose exit codes decide the phase: `["npm test", "npm run lint"]`. A bare string is a `usage-error`, and so is `[""]` |
 | `baseSha` | **required** — `git rev-parse HEAD` from before editing; *this phase's* base at Deep depth. `build.md` explains why one fixed base for the whole change costs a fix round |
 | `depth` | `'standard'` or `'deep'` — it selects the reviewer prompts and what the result reports, and `'deep'` runs two diff reviewers. **One of `depth` or `reviewers` must be present** |
-| `reviewers` | an explicit count, which **wins** over what `depth` implies — the override is logged and the result reports both. `depth: 'deep', reviewers: 1` on a **reversible** Deep phase is `build.md`'s call to make (Review). More than 4 is a `usage-error` |
+| `reviewers` | an explicit count, which **wins** over what `depth` implies; the override is logged and the result reports both, and the script logs the cost of the default so the bill is visible at the call site. `depth: 'deep', reviewers: 1` on a **reversible** Deep phase is `SKILL.md` §4's call to make. More than 4 is a `usage-error` |
 | `branch` | optional, authoritative when given — the branch the phase commits on |
 | `repoPath` | absolute path to the repository under test. Omittable **only** when the agents already start there |
 | `maxRounds` | optional, default 3 — bounds fixes **spent**, not verifications. Raising it raises the cap the rest of the skill states as three, so record why in the plan; more than 10 is a `usage-error` |
-| `behaviorCheck` | **required** — the user-visible path to drive, in enough detail for an agent that has not read the code, or `{ read: "the files, in the order a new user meets them" }` where what this phase produces is **read** rather than run, or `false` — `null` reads the same way — if a person will never click, type or call it. A fresh agent drives or reads it beside the reviewers; observations that contradict the plan become findings and go through triage, and asked-for-but-not-runnable returns `behavior-unverified` rather than closing. Required rather than optional for the reason `depth` is: a stage that silently does not run is the defect |
+| `behaviorCheck` | **required** — the user-visible path to drive, in enough detail for an agent that has not read the code, or `{ read: "the files, in the order a new user meets them" }` where what this phase produces is **read** rather than run, or `false` if a person will never click, type or call it. A fresh agent drives or reads it beside the reviewers under `build.md`'s Behavior check rules; asked for and not runnable returns `behavior-unverified` below. Required rather than optional for the reason `depth` is: a stage that silently does not run is the defect |
 | `phaseLabel` | optional, default `'phase'`. It labels agents and logs **and** is interpolated into the Write agent's instructions (`You are implementing <phaseLabel>`), so it is caller text an agent reads: a short name that matches the plan, single-line, or it is a `usage-error` |
 | `models` | optional per-stage model overrides: `{write, gates, review, behavior, triage, fix}`. The largest unused cost lever here — gates is a shell proxy that judges nothing and runs happily on the cheapest model available, while review and triage are where capability pays |
 
@@ -166,13 +173,14 @@ downstream of its cause. Measured, not inferred.
 
 Note what that does **not** do: it does not detect a fabricated sha. If the implementer reports a well-formed sha it never created, the reported value is discarded in favour of the real head and the phase reviews the real diff — the fabrication is made harmless, not visible. Resolving a sha in the repository needs a shell, which a Workflow script does not have.
 
-**Two more checks run on every round, not only at the write step.** The wrong-branch check is one: a
-fix agent that strays leaves this branch unchanged, and without it the phase grinds to `cap-exhausted`
-with nothing to say why. The gates' test tally is the other — fewer tests collected than an earlier round,
-more skipped, or no tally where one was reported before — and each is a **finding routed through
-triage**, not an error, because deleting an obsolete test is legitimate work. The tally comes back as
-`tests`, or a note where no round reported one: a shrink check with no baseline is a guard that was off,
-not one that passed.
+**Two more checks run every round, not only at the write step.** The wrong-branch check stops the phase
+as an `agent-error`: a fix agent that strays leaves this branch unchanged, so without it the phase
+grinds to `cap-exhausted` with nothing to say why. The gates' test tally is not an error — fewer tests
+collected than an earlier round, more skipped, or no tally where one was reported before, each becomes a
+**finding routed through triage**, because deleting an obsolete test is legitimate work. That routing
+happens only on a round whose gates went green. A `closed` result carries the tally as `tests`, or a
+note where no round reported one: a shrink check with no baseline is a guard that was off, not one that
+passed.
 
 **The gates are run by an agent.** Same cause: a Workflow script can dispatch agents and shape control flow — `agent()`, `parallel()`, `pipeline()`, `phase()`, `log()`, `workflow()` — and it has no shell, so it cannot run your test command itself. It sends an agent to run the commands and report exit codes and tallies. That still buys the ordering the loop needs — gates precede every reviewer, and a red build never spends a review — and the agent judges nothing.
 
@@ -180,10 +188,11 @@ not one that passed.
 
 **What it does not do, by decision rather than by omission.** The implementer commits before the gates run, so gate output cannot land in *that* commit's trailers — record them yourself, or on the fix commits; moving the commit after the gates would mean amending, which changes the sha every guard here is tracking. Non-blocking findings are accumulated and returned, not triaged: "fix the cheap and correct ones" is a scope judgment, and handing it to an agent is how scope creep gets automated. Gate-driven and review-driven fix rounds share one budget, because the cap is per phase and splitting it would change a documented rule — they are reported separately (`gateFixes`, `reviewFixes`, `exhaustedBy`) so an escalation can say which one spent it.
 
-**Triage is a third agent** — `SKILL.md` §4's rule unchanged, and this is how the script implements it.
-Neither the author nor either reviewer, it is handed the findings numbered and may return only numbers
-from that list, so a finding no reviewer raised is unrepresentable rather than discouraged. Rejections
-carry a reason each; whatever it did not rule on comes back as `untriaged`.
+**Triage is a separate agent**, implementing two of `SKILL.md` §4's clauses: triage before you fix and
+before you count, and author ≠ reviewer — it is neither the writer nor either reviewer. Handed the
+findings numbered, it may return only numbers from that list, so a finding no reviewer raised is
+unrepresentable rather than discouraged. Rejections carry a reason each; anything left unruled stops the
+phase as `triage-incomplete`, returned as `untriaged`.
 
 ## What comes back, and what to do with it
 
