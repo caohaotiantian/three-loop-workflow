@@ -277,8 +277,13 @@ budget three-loop-workflow/references/maintenance.md    1600
 budget three-loop-workflow/references/escalation.md     1600
 budget three-loop-workflow/references/close.md          1000
 budget three-loop-workflow/references/platforms.md       800
+# 2026-09-17: 16500 -> 17400 (the set is 16605; the count plus ~5%, rounded), because the two per-file
+# raises above sum past the old total — a total left where it was would report the set drifting when
+# nothing had drifted past a reviewed number. This is the SECOND raise of the total. It is the binding
+# constraint again, with roughly 800 words of slack under it: the per-file backstops now sum well above
+# it, so the next file to grow spends the set's margin, not its own. That is what this number is for.
 prose_now=$(words three-loop-workflow/SKILL.md three-loop-workflow/references/*.md)
-[ "$prose_now" -le 16500 ] && ok "the whole prose surface is $prose_now words (backstop 16500)" \
+[ "$prose_now" -le 17400 ] && ok "the whole prose surface is $prose_now words (backstop 17400)" \
                            || bad "the prose surface has grown to $prose_now words — the per-file budgets can all pass while the set still grows"
 
 echo "== published numbers match the recomputation =="
