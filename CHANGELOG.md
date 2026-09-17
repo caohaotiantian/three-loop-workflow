@@ -2,7 +2,7 @@
 
 Full version history for the three-loop-workflow skill. See [README.md](./README.md) for what the skill is, when it applies, and how to install it.
 
-## v2.7.0 — 2026-09-17
+## v2.7.0 — delegation has a home
 
 `references/orchestration.md` was the file you opened to run two writers at once, or to drive the Build
 loop as a script. Neither is the common case for delegation. The common one — handing a phase to a

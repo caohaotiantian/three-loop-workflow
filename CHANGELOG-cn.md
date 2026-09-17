@@ -2,7 +2,7 @@
 
 three-loop-workflow skill 的完整版本历史。skill 的介绍、适用范围与安装方式见 [README-cn.md](./README-cn.md)。
 
-## v2.7.0 —— 2026-09-17
+## v2.7.0 —— 委派有了归属
 
 `references/orchestration.md` 曾经是这样一个文件:你要同时跑两个写入者,或者要把 Build 循环当脚本驱动时,
 才会打开它。这两件事都不是委派的常见情形。常见的那一件 —— 把一个 phase 交给单个 agent,然后拿回一份你
