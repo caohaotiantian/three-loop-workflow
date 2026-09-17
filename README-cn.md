@@ -20,6 +20,8 @@ skill 文件(`SKILL.md`、`references/`、`scripts/`)是唯一事实标准 —�
 [**我们为什么重写**](./docs/why-v2-cn.md) —— 详版,附全部实测数据。
 [**三轮修复上限合适吗?**](./docs/2026-07-31-round-cap-experiment-cn.md) —— 预注册、原始数据已提交,
 结论是问题不在上限。
+[**委派指导依据的是什么**](./docs/analysis-2026-09-17-orchestration-evidence.md) —— v2.7.0 编排指导背后的
+每一个来源,连同日期、评级,以及哪些被刻意留在了外面(仅英文)。
 完整的版本历史见 [CHANGELOG-cn.md](./CHANGELOG-cn.md)。
 
 ## 什么是三循环工作流
@@ -182,7 +184,8 @@ skill 从不写死文件名。它会读取 `AGENTS.md`、`CLAUDE.md` 或两者 �
 │   ├── references/
 │   │   ├── plan.md                   计划文件、事实与决策之分、spike、计划评审
 │   │   ├── build.md                  编写 → 门禁 → 评审 → 分诊 → 修复;诊断;flaky
-│   │   ├── orchestration.md          并发写入者的 worktree;把 Build 循环当脚本运行
+│   │   ├── orchestration.md          把实现工作交给另一个 agent:下简报、验证它报回来的结果、
+│   │   │                             并发写入者的 worktree,以及把 Build 循环当脚本运行
 │   │   ├── close.md                  收尾:孤儿清理、影响半径、迁移验证、拿实际落地的东西重读
 │   │   │                             Rollback,以及当作产品通读
 │   │   ├── maintenance.md            把任务 journal 折回项目指南的维护 pass
