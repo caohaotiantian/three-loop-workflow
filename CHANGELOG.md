@@ -2,6 +2,113 @@
 
 Full version history for the three-loop-workflow skill. See [README.md](./README.md) for what the skill is, when it applies, and how to install it.
 
+## v2.7.0 — 2026-09-17
+
+`references/orchestration.md` was the file you opened to run two writers at once, or to drive the Build
+loop as a script. Neither is the common case for delegation. The common one — handing a phase to a
+single agent and getting back a claim you have to believe — had no home anywhere in the skill. It has
+one now, and the file is named for it: **hand implementation to another agent** is the first thing its
+opening line says, and `SKILL.md`'s routing table now says so too.
+
+**Five new sections, all about handing work to an agent.** *Spawn, or do it yourself* puts the control
+arm first: a fresh agent's cost is the **context it lacks**, so the comparison any orchestration has to
+beat is one agent with a better prompt or a better model, and you run that comparison before you build
+a topology. *Briefing a writer* says what a brief carries — the objective, the output shape, what to
+read, the boundaries, and the phase's `baseSha` captured before the spawn — because your session and
+your reasoning are not inherited, and then names the three things a writer gets wrong unprompted: it
+opens a per-phase branch, so the next phase's review re-shows this phase's work; it returns "done"
+rather than the branch and head sha it finished on; it leaves the work uncommitted. *Verify the claim,
+not the report* treats "done" as a claim about a repository — compare the reported sha with
+`git rev-parse <branch>`, then require `git diff <baseSha>..<branch>` to be non-empty, and name the
+branch rather than `HEAD`, because the writer may have worked in its own worktree. A failed check is
+the phase's `agent-error`: re-brief, do not accept. *Two writers: divide, then land* partitions by
+**file ownership**, written into the plan before anyone is spawned, and names an **integrator** who is
+neither writer — neither writer's green covers the merge, so the gates run again on the merged tree and
+the integrated review's base is the merge target's head before the first branch landed. And *the plan
+does not travel*: `.agent/` is gitignored, so an agent starting in a worktree, a clone or a container
+reads the plan path, finds nothing, and works from the brief alone. The main worktree's copy is
+authoritative — hand over its absolute path, and copy the directory in only where the agent cannot see
+that tree at all.
+
+What the delegation guidance rests on is recorded outside the skill, in
+**`docs/analysis-2026-09-17-orchestration-evidence.md`**: every source with its URL, its date and a
+grade — measured, vendor advice, case study, opinion — the two that could not be fetched, the
+recommendations that were considered and declined, where the sources disagree with each other, and the
+figures deliberately not carried across. The shipped skill still quotes no statistic; it cites two
+sources by title and date and one by title and year, which is the form `platforms.md` already used.
+
+### What the script actually does, where the file said less
+
+Each of these was in `scripts/phase.js` and not in the prose beside it. `reviewers` above 4 and
+`maxRounds` above 10 are `usage-error`s, not silently clamped values. The wrong-branch check runs
+**every round**, not only at the write step, and it stops the phase as an `agent-error` — without it a
+fix agent that strays leaves the branch unchanged and the phase grinds to `cap-exhausted` with nothing
+to say why. The gates' test tally is not an error: fewer tests collected than an earlier round, more
+skipped, or no tally where one was reported before, each becomes a **finding routed through triage**,
+because deleting an obsolete test is legitimate work — and that routing happens only on a round whose
+gates went **green**. A `closed` result carries the tally as `tests`; no other status does, and a note
+stands in where no round reported one, since a shrink check with no baseline is a guard that was off
+rather than one that passed. Triage is a separate agent that rules on no work of its own and is handed
+the findings **numbered**, so it may return only numbers from that list and a finding no reviewer
+raised is unrepresentable rather than discouraged. And `agent-error` now says what a caller can read
+from it: `stage` is always set, `reason` is there where a guard wrote one, and it is an infrastructure
+or environment fault rather than a verdict on the change.
+
+`phase.js` itself changed only in text, and no behavior moved: `meta.description` named
+write → gates → review → fix while `meta.phases` listed Triage, and neither named the behavior check
+that runs beside the reviewers; two comments and a log line cited `build.md` for the reviewer-count
+rule that `SKILL.md` §4 owns; and one comment claimed `phaseLabel` reaches the Fix agent's prompt,
+which it does not.
+
+### One home, four rules
+
+Four rules were stated in two places, which is two things to keep in sync and a drift this repository
+has already shipped once. The **reviewer count** now lives only in `SKILL.md` §4 — `build.md` and
+`plan.md` point at it, and `plan.md` keeps "Why two", which is its own argument. **A branch name is not
+isolation** lives in `orchestration.md` with the trap it belongs to; `build.md` points. The
+**`behaviorCheck` contract** — the shapes, what `false` asserts, what `{ read: … }` asks for — lives in
+`orchestration.md` beside the rest of the script's arguments; `build.md` states the rule and points for
+the argument. And *read the result as a product* is `close.md`'s, including when it runs at Standard
+depth and what it catches that diff review structurally cannot; `build.md` no longer restates it.
+
+### Escalation, and what Close hands over
+
+`escalation.md`'s in-flight-overlap row asked for "the overlap, and whether to merge or serialize" and
+now asks for the answerable version: which files both tasks touch, which is further along, your
+recommendation — merge, serialize, or split ownership — and what gets redone either way. Beside it, a
+paragraph for the case the row did not cover: **peer sessions and agents are in-flight tasks too**. Two
+sessions on one checkout are two writers in one tree. Before taking over a task another session
+started, confirm that peer has stopped, hunt its uncommitted work in any shared tree, and read
+`.agent/<task>/plan.md` **before your first edit** — its Non-goals bind you too, and its Progress line
+and `baseSha` values say where a review starts. The task directory is the hand-off contract between
+peers as much as across a compaction.
+
+`close.md` said no closure document and then listed what the PR body carries, which made the positive
+half a Deep-only list although a Standard change writes a PR body too. *What Close hands over* is now
+one of two depth-independent sections, it points at `SKILL.md` §2's durable copy rather than
+paraphrasing the Goal and Non-goals again, and a **Standard** change hands over the same list minus the
+rollback re-read. `SKILL.md`'s depth table says so in the Standard row, and its routing row for
+`close.md` now reads "Close a Deep change, hand any change over, or read its output as a whole".
+
+### The backstops moved, after a re-review and in their own commits
+
+Three went red and were raised, each in a commit of its own after the re-review this repo's norm
+requires — two fresh diff reviewers per phase, two fix rounds, a verification review, and a
+read-as-a-product pass over the whole skill, with the duplicates those reviews found cut before the
+counts were taken. `orchestration.md` 2300 → 3250, `escalation.md` 1450 → 1600, and the whole prose
+surface 16500 → 17400, each roughly the new count plus five percent, rounded, with the reason written
+into `scripts/accept-release.sh` beside the number. The objection is on the record there too, and it is
+the stronger one this time: `orchestration.md` landed above its own plan's aim twice, it is now the
+largest reference in the set, and it carries two subjects — hand delegation, and the script's API. The
+next growth in that file is a **split**, not another raise. The total is the binding constraint again,
+with roughly eight hundred spare under it, because the per-file backstops now sum above it.
+
+### Known limitations
+
+`behaviorCheck: null` is still accepted by `phase.js` as `false` — silently, which is exactly the
+"a stage that does not run" defect the required argument exists to prevent. It is a follow-up, with its
+own harness case, not a fix smuggled into a release.
+
 ## v2.6.0 — aimed at the person, and at what is likely wrong
 
 Four independent reviews read v2.5.0 — the always-loaded surface, the Build loop with `phase.js`

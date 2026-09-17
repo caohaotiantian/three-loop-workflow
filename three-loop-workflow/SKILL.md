@@ -4,7 +4,7 @@ description: Structured workflow for non-trivial code changes — features, beha
 license: MIT
 compatibility: Subagents are the one hard requirement — a fresh reviewer needs one. The rest is runtime-neutral; Claude Code adds an optional scripted Build loop. See references/platforms.md
 metadata:
-  version: "2.6.0"
+  version: "2.7.0"
 ---
 
 # Three-Loop Workflow
