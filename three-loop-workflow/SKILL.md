@@ -22,7 +22,7 @@ Two questions: **if this is wrong, how much breaks?** and **how hard is it to un
 | Depth | When | What runs |
 |---|---|---|
 | **Direct** | Where the change turns out smaller than it looked. Typo, comment, formatting, a rename nothing outside the file uses, a patch or minor dependency bump with no advisory behind it. Not a doc edit that moves a rule, not a rename of anything exported, and not a major-version bump. | Make the change. Run the gates (§3). Done. |
-| **Standard** | Default for real work. A feature, a behavior fix, a refactor, a perf change — contained blast radius, revertable with one commit. | Plan brief → build → gates → one fresh-reviewer diff review → fix. |
+| **Standard** | Default for real work. A feature, a behavior fix, a refactor, a perf change — contained blast radius, revertable with one commit. | Plan brief → build → gates → one fresh-reviewer diff review → fix → §2's PR body. |
 | **Deep** | Any one of the four triggers below fires. | Standard, plus: alternatives recorded before choosing, phased build, and a Close pass — scaled to the trigger that fired (below). |
 
 **The Deep triggers. The first three you can tick by reading the diff; the fourth is a judgement, so make it out loud. If none fires, Standard is correct — this is a checklist, not a vibe.**
@@ -121,7 +121,7 @@ Never substitute a silent default for a real decision. Record what the user deci
 | Close a Deep change, hand any change over, or read its output as a whole | `references/close.md` |
 | Escalate, or handle a round-cap deadlock | `references/escalation.md` |
 | Run on Codex or opencode | `references/platforms.md` |
-| Run the Build loop deterministically rather than by hand | `references/orchestration.md` (`scripts/phase.js`) |
+| Run the Build loop deterministically rather than by hand | `references/orchestration.md` (Workflow mode) |
 | Hand implementation to another agent, or run more than one writer at once | `references/orchestration.md` |
 | Fold a task's notes into the project guide | `references/maintenance.md` |
 

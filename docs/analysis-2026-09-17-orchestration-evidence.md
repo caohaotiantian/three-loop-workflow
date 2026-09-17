@@ -2,8 +2,8 @@
 
 Record of what evidence the v2.7.0 delegation guidance in
 `three-loop-workflow/references/orchestration.md` rests on. The shipped skill carries no statistics, so
-every number and source lives here. `orchestration.md` cites three of them by title and date — MAST
-by year — and quotes one finding beside a title; it carries no figure from this file.
+every number and source lives here. `orchestration.md` cites two of them by title and date and MAST by
+title and year, and quotes one finding beside a title; it carries no figure from this file.
 
 ## 1. Sources
 

@@ -41,7 +41,7 @@ export const meta = {
 //               callers written against the earlier contract; what is rejected is passing NEITHER,
 //               because a count that defaulted to 1 let a Deep phase silently run the Standard review.
 //   phaseLabel  optional, defaults to 'phase'. It labels agents and logs, and it is named to the Write
-//               and Fix agents in their prompts, so it should match what the plan calls this phase.
+//               agent in its prompt, so it should match what the plan calls this phase.
 //   models      optional per-stage model overrides.
 //   branch      optional, and authoritative when given. The review diffs baseSha..branch, so whoever
 //               owns the branch should say which one rather than trusting the implementer's report.

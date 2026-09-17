@@ -41,7 +41,7 @@ Batch related questions into one round rather than interrogating one at a time �
 
 They are usually right about the ceremony and rarely right about the checks, so separate the two before you answer.
 
-**Cut the ceremony without asking.** Phases collapse to one. Close becomes three questions instead of a pass. Alternatives get a sentence rather than a section. The plan becomes six lines rather than a page — but it keeps every field, because Non-goals and Decisions are two of the three lines, and they are what stops the change growing while you cut its ceremony. None of that is what the depth was for.
+**Cut the ceremony without asking.** Phases collapse to one. Close becomes three questions instead of a pass. Alternatives get a sentence rather than a section. The plan becomes six lines rather than a page — but it keeps every field, because Non-goals and Decisions are two of the six, and they are what stops the change growing while you cut its ceremony. None of that is what the depth was for.
 
 **Do not quietly cut the two things that are.** Gates before any reviewer, and a reviewer who did not write the change: those are what the grade actually bought, and dropping them silently converts a disagreement about cost into a change nobody independent has read. If they are asked for anyway, say what stops being true — "then nothing independent has read this, and green means only that the tests the author wrote pass" — do it if they still want it, and record in the plan that it was their call. That is a decision, and decisions get written down like any other.
 

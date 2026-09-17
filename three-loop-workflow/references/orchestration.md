@@ -7,10 +7,9 @@ orchestrating it.
 
 ## Spawn, or do it yourself
 
-A fresh agent's cost is the **context it lacks** — paid in the brief, and again in whatever the brief
-left out. Delegation buys isolation and parallelism, not understanding, so the control arm for any
-orchestration, hand-spawned or scripted, is **one agent with a better prompt or a better model**. Run
-that comparison first.
+A fresh agent's cost is the **context it lacks** — delegation buys isolation and parallelism, not
+understanding — so the control arm for any orchestration, hand-spawned or scripted, is **one agent with
+a better prompt or a better model**. Run that comparison first.
 
 Sources, read 2026-09-17: Anthropic's *Multi-agent research system* (2025-06-13), where a model upgrade
 beat a larger budget on the weaker model; Cognition's *Don't Build Multi-Agents* (2025-06-12); *MAST*
@@ -20,32 +19,31 @@ beat a larger budget on the weaker model; Cognition's *Don't Build Multi-Agents*
 
 This is the agent that **writes**; a reviewer's brief is `build.md` (Review) and `SKILL.md` §4.
 
-The brief is what you control: your session and your reasoning are not inherited, and whatever a harness
-injects — a project guide, a forked conversation — is no substitute for it. Four things go in: the
-**objective**, the **output shape**, **what to read** (the plan's path, the files), and the
-**boundaries** — the plan's Non-goals plus what it may not touch. Then four a writer gets wrong
-unprompted:
+The brief is what you control: your session and your reasoning are not inherited — unless you fork,
+which inherits everything, including what you did not mean to hand over — and whatever a harness injects
+is no substitute for it. Four things go in — the **objective**, the **output shape**, **what to read**
+(the plan's path, the files), and the **boundaries**, meaning the plan's Non-goals plus what it may not
+touch — along with the phase's `baseSha`, which you capture before spawning. Then three a writer gets
+wrong unprompted:
 
 - **Stay on the branch you are given**, in those words — otherwise a per-phase branch appears, and the
   next phase's review re-shows this phase's work.
 - **Commit before returning**, for the reason `build.md`'s Write step gives.
 - **Report the branch and head sha you finished on**, not "done".
-- **Use the `baseSha` the brief gives**: you capture it before spawning, because a writer capturing its
-  own captures it after its first edit.
 
 Name the rest of that Write step rather than restating it: the self-pass over its own diff, stopping on
 a plan conflict, and what it was blocked on or least sure of. Where a runtime prefers structure, make
-all of it a schema — `scripts/phase.js` has its writer answer as fields, so "done" is not expressible.
-On Claude Code that dispatch is the Workflow tool's `agent()`; with the Agent tool it is prose.
+all of it a schema: `scripts/phase.js` has its writer answer as fields, so "done" is not expressible. On
+Claude Code that is the Workflow tool's `agent()`; with the Agent tool, prose.
 
 ## Verify the claim, not the report
 
-"Done" is a claim about a repository. Confirm the reported sha is what `git rev-parse <branch>` returns
-— a fabricated one resolves to nothing, and one that resolves need not be this branch's head — and
-require `git diff <baseSha>..<branch>` to be non-empty; name the branch, not `HEAD`, because the writer
-may have worked in its own worktree. A failed check is this phase's `agent-error` — re-brief, do not
-accept — because a confident report over an empty diff reads like a clean one. Only by hand do you get
-the first check at all: a Workflow script has no shell (below).
+"Done" is a claim about a repository. Confirm the reported sha equals `git rev-parse <branch>` — the
+comparison is the check, since `git rev-parse` prints any well-formed sha back at you, and `git cat-file
+-e <sha>` is the existence test — then require `git diff <baseSha>..<branch>` to be non-empty; name the
+branch, not `HEAD`, because the writer may have worked in its own worktree. A failed check is this
+phase's `agent-error`: re-brief, do not accept. Only by hand do you get the comparison at all — a
+Workflow script has no shell (below).
 
 ## Two writers: divide, then land
 
@@ -54,19 +52,19 @@ writers on one file overwrite each other with no conflict marker to show it, and
 second's diff contains the first's work — so each needs its own worktree, below. This is the
 hand-spawned case throughout: the script runs a change's phases in sequence, in one tree.
 
-Land the branches **one at a time**, and name an **integrator**: a third role, neither writer. Each
-writer's gates went green on a tree that did not hold the other's work, so neither run covers the merge.
-The integrator runs them again on the merged tree, owns a red run there as its own fix round against the
-same cap, and sends the merged diff through `SKILL.md` §4's review. That review's base is the **merge target's head
-before the first branch landed**, not either writer's `baseSha`, and the range must be non-empty
-(`close.md` owns that trap).
+Land the branches **one at a time**, and name an **integrator**: a third role, neither writer. Neither
+writer's green covers the merge — each ran on a tree without the other's work — so the integrator runs
+the gates again on the merged tree, fixes a red run there itself rather than handing it
+back to a writer, and only then sends the merged diff through `SKILL.md` §4's review. That review's base
+is the **merge target's head before the first branch landed**, not either writer's `baseSha`, and the
+range must be non-empty (`close.md` owns that trap).
 
 ## The plan does not travel
 
-It does not (`SKILL.md` §2 — gitignored, and `git clean -xfd` takes it too), so an agent starting in a
-worktree, a clone or a container reads `.agent/<task>/plan.md` there, finds nothing, and carries on from
-the brief alone. **The main worktree's copy is authoritative**: hand the agent its absolute path. Copy
-the directory in only where the agent cannot see the main tree — a container — and copy nothing back.
+The task directory reaches no worktree, clone or container (`SKILL.md` §2 says why), so an agent
+starting in one reads `.agent/<task>/plan.md` there, finds nothing, and works from the brief alone.
+**The main worktree's copy is authoritative**: hand the agent its absolute path, and copy the directory
+in only where the agent cannot see the main tree at all — a container — copying nothing back.
 Under the script that path is `planPath`, resolved where `repoPath` puts the agents; with the Agent tool
 it is a line in the brief.
 
@@ -188,15 +186,15 @@ passed.
 
 **What it does not do, by decision rather than by omission.** The implementer commits before the gates run, so gate output cannot land in *that* commit's trailers — record them yourself, or on the fix commits; moving the commit after the gates would mean amending, which changes the sha every guard here is tracking. Non-blocking findings are accumulated and returned, not triaged: "fix the cheap and correct ones" is a scope judgment, and handing it to an agent is how scope creep gets automated. Gate-driven and review-driven fix rounds share one budget, because the cap is per phase and splitting it would change a documented rule — they are reported separately (`gateFixes`, `reviewFixes`, `exhaustedBy`) so an escalation can say which one spent it.
 
-**Triage is a separate agent**, implementing two of `SKILL.md` §4's clauses: triage before you fix and
-before you count, and author ≠ reviewer — it is neither the writer nor either reviewer. Handed the
-findings numbered, it may return only numbers from that list, so a finding no reviewer raised is
-unrepresentable rather than discouraged. Rejections carry a reason each; anything left unruled stops the
-phase as `triage-incomplete`, returned as `untriaged`.
+**Triage is a separate agent**, implementing `SKILL.md` §4's *triage before you fix, and before you
+count* — and it rules on no work of its own. Handed the findings numbered, it may return only numbers
+from that list, so a finding no reviewer raised is unrepresentable rather than discouraged. Rejections
+carry a reason each. A triage that rules on nothing at all is an `agent-error`; a partial ruling stops
+the phase as `triage-incomplete`, with the rest returned as `untriaged`.
 
 ## What comes back, and what to do with it
 
-Switch on `status`. Only `closed` continues the run; every other value is a stop, and each returns what the round already paid for — findings, rejections, `agentsDispatched`.
+Switch on `status`. Only `closed` continues the run; every other value is a stop. `agentsDispatched` is on all of them; findings, rejections and `untriaged` only on the stops that got far enough to have them — `behavior-unverified`, `triage-incomplete`, `no-progress`, `cap-exhausted` — and an `agent-error` discards them.
 
 | `status` | What it means | Next |
 |---|---|---|
@@ -206,7 +204,7 @@ Switch on `status`. Only `closed` continues the run; every other value is a stop
 | `behavior-unverified` | the check was asked for and could not be run or read | Drive it somewhere safe and cheap, or fix what blocked it; do not close on the gates |
 | `triage-incomplete` | triage ruled on some findings and not others | Rule on `untriaged` yourself, then re-run the phase |
 | `usage-error` | an argument is missing or the wrong shape | Fix the call. Nothing was dispatched |
-| `agent-error` | a stage did not return, or a guard fired — an empty diff, a wrong branch, a no-op fix round | Read `stage` and `reason`; it is an infrastructure or environment fault, not a verdict on the change |
+| `agent-error` | a stage did not return, or a guard fired — an empty diff, a wrong branch, a no-op fix round | Read `stage`, which is always set, and `reason` where a guard wrote one; it is an infrastructure or environment fault, not a verdict on the change |
 | `plan-conflict` | the implementer found the plan contradicting the code | Resolve it in the plan (`references/plan.md`, Conflicts), then re-run |
 | `write-escalation` | the implementer was blocked twice | Its `concerns` say what is in the way |
 
