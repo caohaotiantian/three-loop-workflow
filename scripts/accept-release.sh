@@ -271,7 +271,10 @@ budget three-loop-workflow/references/build.md          4100
 budget three-loop-workflow/references/plan.md           2200
 budget three-loop-workflow/references/orchestration.md  3250
 budget three-loop-workflow/references/maintenance.md    1600
-budget three-loop-workflow/references/escalation.md     1450
+# 2026-09-17: escalation.md 1353->1509, raised 1450 -> 1600 (the count plus ~5%, rounded) after the same
+# re-review — one peer-session takeover paragraph and an expanded in-flight-overlap row, both filling
+# the carve-out the row already named.
+budget three-loop-workflow/references/escalation.md     1600
 budget three-loop-workflow/references/close.md          1000
 budget three-loop-workflow/references/platforms.md       800
 prose_now=$(words three-loop-workflow/SKILL.md three-loop-workflow/references/*.md)
