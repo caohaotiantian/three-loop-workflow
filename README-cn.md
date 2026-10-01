@@ -4,25 +4,29 @@
 
 English version → [README.md](./README.md)
 
-> **v2 相对 v1 是一次彻底重写,属于破坏性变更(breaking change)。** 如果你已经安装了 v1,请先阅读
-> [从 v1 升级](#从-v1-升级) 再复制任何文件 —— 你必须**替换**整个文件夹,而不是往里复制。
-> 变更内容与依据见 [docs/why-v2-cn.md](./docs/why-v2-cn.md)。
+> **v3 相对 v2 是一次彻底重写,属于破坏性变更(breaking change)。** 替换整个文件夹,不要往里复制。
+> 如果你已经安装了 v2,请先阅读 [从 v2 升级](#从-v2-升级)。变更内容与依据见
+> [docs/why-v3-cn.md](./docs/why-v3-cn.md)。
 
 ## 仓库内容
 
 - **`three-loop-workflow/`** —— 把工作流落实为可执行流程的 Claude skill。把这个文件夹放进 Claude Code 或 Claude.ai,Claude 在处理任何非平凡代码改动时都会按照它执行。
 
-skill 文件(`SKILL.md`、`references/`、`scripts/`)是唯一事实标准 —— 它们是 Claude Code 实际加载并执行的内容。短小的入口(`SKILL.md`)按需路由到分阶段的引用文件。
+skill 由两个 Markdown 文件加上它的 `LICENSE` 组成:始终加载的 `SKILL.md`,以及只有 Deep 档工作才会读的 `references/deep.md`。它们是唯一事实标准。
 
 ## 更新内容
 
-[**v2.0.0 发布公告**](./docs/announcement-v2.0.0-cn.md) —— 简版,以及如何升级。
-[**我们为什么重写**](./docs/why-v2-cn.md) —— 详版,附全部实测数据。
+[**为什么有 v3**](./docs/why-v3-cn.md) —— v3.0.0 砍掉了什么、保留了什么、依据是什么,以及哪些事情没有人
+测量过。
 [**三轮修复上限合适吗?**](./docs/2026-07-31-round-cap-experiment-cn.md) —— 预注册、原始数据已提交,
 结论是问题不在上限。
-[**委派指导依据的是什么**](./docs/analysis-2026-09-17-orchestration-evidence.md) —— v2.7.0 编排指导背后的
-每一个来源,连同日期、评级,以及哪些被刻意留在了外面(仅英文)。
 完整的版本历史见 [CHANGELOG-cn.md](./CHANGELOG-cn.md)。
+
+历史:
+[**v2.0.0 发布公告**](./docs/announcement-v2.0.0-cn.md) 与 [**v2 为什么重写**](./docs/why-v2-cn.md) ——
+v1 → v2 那次重写,附实测数据。
+[**v2.7.0 的委派指导依据的是什么**](./docs/analysis-2026-09-17-orchestration-evidence.md)
+(已在 v3 中退役)—— 它背后的每一个来源,连同日期、评级,以及哪些被刻意留在了外面(仅英文)。
 
 ## 什么是三循环工作流
 
@@ -30,42 +34,43 @@ agent 类编码失败有共同模式:急于动手实现、悄悄选择默认值�
 
 | 循环 | 产出 |
 |---|---|
-| **Plan(计划)** | `.agent/<task>/plan.md` —— 目标、非目标、决策,以及分两半的 **Accept(验收)**:一条带退出码的命令,加上——只要变更会落在有人点击、输入或调用的地方——一个没读过代码的人也能照着走一遍的可观察结果 |
-| **Build(构建)** | 编写 → 门禁 → 评审 → 分诊 → 修复,循环到 blocking 计数归零 |
-| **Close(收尾)** | *(Deep 档)* 回答任何单个阶段都没问过的整体一致性问题 —— 另有一趟与深度无关的「当作产品通读」,凡是变更产出的东西会被整体阅读或整体运行的,都要跑 |
+| **Plan(计划)** | 第一次编辑之前:目标(Goal)、你曾想顺手去做的非目标(Non-goals),以及 **Accept(验收)** —— 「没有这个变更就会失败」的最便宜的真实证据。只在真正的分岔处写决策。plan 写在 `.agent/<task>/plan.md`,每个任务一个目录,随变更一起提交。`.gitignore` 里已有的 `.agent` 条目保留 |
+| **Build(构建)** | 构建 → 证据 → **一次**独立评审 → 分诊 → 修复,评审者复查每一次修复;修复不再收敛时停下来问 |
+| **Close(收尾)** | 交接,写在变更描述里:证据实际显示了什么、哪些没能检查、谁评审的、未修复的 non-blocking 发现,以及残余风险 |
 
-**深度是最先决定的,先于阅读任何其它内容。** 由两个问题决定:*如果这件事做错了,会波及多少?* 以及 *撤销它有多难?*
+**深度按风险高低来选,取能满足要求的最轻一档。** agent 按自己的判断升档,包括在构建中发现某条触发条件的时候;只有你能降档,而且要在 agent 推荐它选定的深度、并展示这次变更会因此跳过什么以及留下的失败之后。如果你仍然坚持,它照做并记录下来,硬约束不因此放弃。
 
 | 深度 | 适用场景 | 执行内容 |
 |---|---|---|
-| **Direct(直接)** | 影响面收敛且可逆 —— typo、注释、格式、局部重命名、没有 advisory 在背后的 patch 或 minor 依赖升级。绝不包括 major 版本升级、任何导出符号的重命名,以及会挪动规则的文档改动 | 直接改,跑门禁,结束 |
-| **Standard(标准)** | 真实工作的默认档 —— 新功能、行为修复、重构、性能优化 | 计划简报 → 构建 → 门禁 → **一次**全新评审者的 diff 评审 → 修复 |
-| **Deep(深度)** | 破坏已发布契约;仓库之外的不可逆效果;修改 load-bearing 文档中的规则;或仓库本身无法裁决、且其备选方案指向不同结构的决策 | 在 Standard 基础上,增加「先记录备选方案再选择」、分阶段构建,以及一次 Close —— 并**按触发它的那一条来缩放**:每条触发条件都点名了能抓住**它自己**那份风险的机制,以及可以不问自答直接砍掉的部分 |
+| **Direct(直接)** | 正确性在改动本身中可见,或已有检查钉住了它。不确定就等于不可见:修 typo 是 Direct,改一个默认值不是 | 直接改,跑检查;不需要 plan,不需要评审者,交接只写一行,写明跑了哪些检查及其结果 |
+| **Standard(标准)** | 行为变更的默认档 | 计划 → 构建 → 证据 → **一次**独立评审 → 分诊 → 修复,随变更规模伸缩:一行的变更只需一行的计划和一次简短的评审 |
+| **Deep(深度)** | 只在触发条件命中时:对仓库之外所消费的契约做破坏性变更;仓库之外的不可逆效果;改动项目视为契约的文件中的规则;指向不同结构的备选方案 | 在 Standard 基础上加上 `references/deep.md`:先写决策再选择、回滚方案、有出处的外部论断、对 plan 的一次独立阅读,以及 Close 检查,分阶段构建时最后还有一次针对整个变更的评审 —— 再加上所命中那条触发条件的额外项,其中前两条触发条件要两名评审者 |
 
-有五条规则承担了大部分作用:
+五条硬约束是仅有的不属于默认值的规则:
 
-1. **开工之前,先把你的理解确认一遍。** 当 Goal 写下的那个「对请求的理解」本来可以是另一种时,就把这一句话连同 Accept 的可观察结果,摆到提出请求的人面前,然后等。Standard 变更没有 plan reviewer,所以它是最便宜的一道检查:检查这是不是**该做的**那个变更,而不是把错的东西正确地做出来。没有歧义的时候它不花钱:说一句你要做什么,然后接着做。
-2. **门禁先于 agent。** 在派出任何评审者**之前**,先跑项目自己的 typecheck / lint / build / test。让 agent 去评价一段根本编译不过的代码毫无价值,而编译器是免费的。
-3. **作者永远不评审自己的产出。** 这条绑定的是**身份**,不是调用方式。
-4. **对准最可能出错的地方,并且先分诊、再计数。** 评审者按顺序被问:遇到预期之外的输入会怎样、它调用的东西**失败**时会发生什么、它假定了哪些关于 **diff 之外**代码的事实 —— 并且要求它报告一切。然后逐条对照它引用的代码,按顺序问两个问题:它是真的吗?它是这个变更的问题吗?点到已声明 Non-goal 的发现按名字否掉。收敛判定基于**已确认**的发现,绝不基于原始报告,也不基于评审者的结论性措辞。
-5. **触及轮次上限即升级。** 每个阶段三轮修复。上限绝不会悄悄变成第四轮,也绝不降低门槛 —— 而一个改了代码却没改变已确认发现的轮次,会立刻升级上报,而不是把剩下的预算花完。
+1. **Direct 以上的变更由一个没有写它的上下文评审**;只有在没有这样的上下文可用时,交接里才说明这一点。这时评审作为一趟单独的 pass 来跑,只依据 diff 和简报,标注为 "self-review, not independent",并把简报提供给你,让你拿到别处去跑。在 Deep 档,每一次独立阅读都变成这样的一趟 pass。
+2. **跑项目的检查。** 没能跑的检查不算通过。
+3. **交接报告观察到的东西**,而不是打算做的东西。
+4. **改变「谁能访问什么」的变更** —— 认证、授权、密钥、一条接收不可信输入的新路径 —— 永远不是 Direct。
+5. **仓库之外不可撤销的动作要等你**:推送到共享分支、部署、写入真实数据、发送任何东西。
+
+其它一切都是默认值:agent 只有在说明理由时才偏离,你项目的指南可以覆盖其中任何一条,手段由 agent 自己决定。证据要相称 —— **默认不要求新增单元测试**,skill 点名了单元测试是错误检查手段的场合(UI 渲染、接线、配置、对外部服务的薄调用、一次性脚本、散文),在那些地方,由一个没有写这个变更的上下文去驱动人会点击、输入或调用的路径。
 
 ## 何时触发 skill
 
 | 变更类型 | 深度 |
 |---|---|
 | 新功能、行为修复、性能优化、重构 | Standard |
-| 破坏已发布契约;仓库之外的不可逆效果 —— 迁移已持久化的数据或配置、覆盖已存储的数据、花钱、发给第三方;修改 load-bearing 文档中的规则 | Deep |
-| typo、注释、格式、文档重排、局部重命名、minor/patch 依赖升级 | Direct |
-| 拿仓库当前的实际行为去核对项目指南(`AGENTS.md` / `CLAUDE.md`) | 与其它变更一样按深度门判定 —— 更正过期的命令或数字是 Direct,改动指南列为 load-bearing 的规则是 Deep。它永远是独立的一次任务,不嵌在别的变更里 |
-| 评审一个不是你写的变更,在它落地之前 | 只评审 —— 跑门禁、一名全新评审者、分诊,然后把已确认的发现交给作者。不会闭合,因为你不负责修 |
+| 对仓库之外所消费的契约做破坏性变更;仓库之外的不可逆效果 —— 迁移已持久化的数据、涉及金钱、发给第三方的任何东西;改动项目视为契约的文件中的规则;指向不同结构的备选方案 | Deep |
+| 任何正确性在改动本身中可见、或已被现有检查钉住的改动 —— 比如修 typo,但改一个默认值不算 | Direct |
+| 评审一个不是你写的变更,在它落地之前 | 只评审 —— 同一份简报,以该变更的描述作为 plan;分诊,然后把已确认的发现交给作者。你不负责修 |
 | 关于现有代码如何工作的问答、不改代码的探索 | 不适用 |
 
-在 Direct 与 Standard 之间犹豫时,选 Standard。在 Standard 与 Deep 之间犹豫时,Deep 的条件是一份**清单,不是感觉** —— 没有任何一条命中,Standard 就是正确答案。一个高风险的局部不会把整个变更升档;跑 Standard,然后单独把那个局部升级上报。
+没有任何 Deep 触发条件命中,Deep 就是错的。一个高风险的局部只升级那个局部,不升级整个变更。
 
 ## 安装 skill
 
-本 skill 是**「自包含」(self-contained)** 的 —— 不依赖外部插件、不需要配套 agent、不需要 hook。所有 subagent 与 Workflow 节点默认都运行在内置的默认 subagent 上;`phase.js` 支持按阶段覆盖模型。
+本 skill **自包含(self-contained)且与运行时无关**:没有插件、没有 hook、没有脚本,也不点名任何工具。它假定工作处于版本控制之下,因此整个变更可以作为一份 diff 展示,并且 agent 能运行你项目自己的命令。
 
 ### Claude Code
 
@@ -97,10 +102,6 @@ rm -f three-loop-workflow.skill && zip -r three-loop-workflow.skill three-loop-w
 带标签的发布(`v*`)也会通过 `.github/workflows/release.yml` 在 GitHub release 上附带一个预构建的
 `.skill`,因此你可以直接下载而不必本地打包。
 
-### 安装之后,在每个使用它的仓库里
-
-把 `.agent/` 加进该仓库的 `.gitignore`。skill 会在那里为每个任务写一个目录,并假定它已被忽略;除此之外无需其它配置。
-
 ### Claude.ai
 
 在 Skill 管理页上传打包好的 `.skill` 文件。
@@ -115,94 +116,80 @@ rm -f three-loop-workflow.skill && zip -r three-loop-workflow.skill three-loop-w
 | **Codex** | `.agents/skills/`(或 `$HOME/.agents/skills/`) |
 | **opencode** | 原生读取 `.claude/skills/` 与 `.agents/skills/` 两处 —— 无需单独安装 |
 
-把文件夹复制到 `.claude/skills/` 与 `.agents/skills/` 即可覆盖全部三种运行时。纪律本身与运行时无关;只有 Workflow / subagent 编排属于 Claude Code 的加速层(acceleration layer)。在其它运行时上哪些能力会降级、以及该如何诚实地说明,见 `three-loop-workflow/references/platforms.md`。
+把文件夹复制到 `.claude/skills/` 与 `.agents/skills/` 即可覆盖全部三种运行时。
 
-## 从 v1 升级
+## 从 v2 升级
 
-**替换整个文件夹,不要往里合并。** v1 与 v2 只有两个文件名相同 —— `SKILL.md` 和 `references/platforms.md`。把 v2 覆盖到已有的 v1 安装上,只会覆盖这两个,**另外 18 个 v1 文件**会原地残留(`loop-1-design.md`、`l3-phase.js`、`check-consistency.sh` 等等)。没有任何东西会路由到它们,但某个 agent 只要 grep 这个 skill 目录,就会找到并读到本版本已经废弃的规则。
+**替换整个文件夹,不要往上覆盖复制。** 把 v3 覆盖到 v2 安装上,只会覆盖 `SKILL.md`,v2 其余的引用文件和脚本
+都会原地残留。没有任何东西会路由到它们,但某个 agent 只要 grep 这个 skill 目录,就会找到它们,并读到 v3 已经
+废弃的规则。
 
 ```bash
-# Claude Code,用户级
-rm -rf ~/.claude/skills/three-loop-workflow
-cp -r three-loop-workflow ~/.claude/skills/
-
-# 或者等价地
+# Claude Code,用户级 —— 项目级或 .agents/skills/ 的安装用同样的写法
 rsync -a --delete three-loop-workflow/ ~/.claude/skills/three-loop-workflow/
 ```
 
 需要知道的几件事:
 
-- **你的 `CLAUDE.md` anchor map 不用改,继续有效。** 五个角色名完全一致,其中只有两个会改变 skill 的行为(见下文)。如果你还维护 `AGENTS.md`,
-  v2 也会一并读取 —— 见下文。
-- **`docs/design/` 与 `docs/implementation/` 不再产出。** v2 为每个任务写一个受 gitignore 的目录 ——
-  `.agent/<task>/plan.md`,以及该任务需要的其它文件。请把 `.agent/` 加进你的 `.gitignore`。
-  已有归档留着或删掉都行,没有任何东西会读它们。
-- **门禁脚本已移除。** v1 随包发布了 `check-consistency.sh`、`validate-commit-msg.sh` 与
-  `check-workflow-syntax.sh`;v2 只保留最后一个,并移到了 `scripts/`。如果你的 `settings.json` 把
-  `validate-commit-msg.sh` 配成了提交 hook,请删掉那个条目 —— 指向不存在命令的 hook 会在每次提交时报错。
-- **术语变了。** L1/L2/L3/F → Plan/Build/Close;Full/Light/None → Deep/Standard/Direct;
-  severe/general → blocking/non-blocking。任何引用了旧术语的项目文档都需要同步更新。
+- **把 `.agent/<task>/plan.md` 和变更一起提交,** 每个任务一个目录,这样别人能读到这段历史。如果 `.agent/`
+  已经在 `.gitignore` 里,留下那一条;skill 不会删它。
+- **项目指南里的 anchor map 无害,但不再被读取。** v3 把指南当散文来读,从中取它的检查命令,以及它视为契约的
+  文件。
+- **删掉任何要求运行 skill 自带脚本的指令。** v2 在 skill 里附带了 `scripts/phase.js` 与
+  `scripts/check-workflow-syntax.sh`;v3 不附带任何脚本,所以从已安装的 skill 里调用其中任何一个的指南、包装
+  脚本或 CI 步骤,在那里什么也找不到。
+- **术语没有变。** Plan/Build/Close、Direct/Standard/Deep 与 blocking/non-blocking 的含义和原来一样,只是收窄了:
+  Deep 的触发条件更窄,Direct 取决于正确性是否在改动本身中可见。
 
-继续留在 v1 是可行的,只是它不再演进:`git checkout v1.14.0`,或从 v1.14.0 release 下载 `.skill`。
-该版本不会再有任何改动。
+继续留在 v2:`git checkout v2.7.0`,或从 v2.7.0 release 下载 `.skill`。该版本不会再有任何改动。
+
+## 从 v1 升级
+
+这是 v1 → v2 的说明,留给仍在用 v1 的人。规则是一样的:**替换整个文件夹,不要往里合并。** v1 与 v2 只有两个
+文件名相同 —— `SKILL.md` 和 `references/platforms.md` —— 所以把 v2 覆盖到 v1 安装上,**另外 18 个 v1 文件**
+会原地残留(`loop-1-design.md`、`l3-phase.js`、`check-consistency.sh` 等等)。上面的 `rsync --delete` 也会把它们
+清掉;从 v1 直接升到 v3,同样是替换整个文件夹。
+
+- 如果你的 `settings.json` 把 v1 的 `validate-commit-msg.sh` 配成了提交 hook,请删掉那个条目 —— 指向不存在
+  命令的 hook 会在每次提交时报错。
+- v1 的术语对应关系:L1/L2/L3/F → Plan/Build/Close,Full/Light/None → Deep/Standard/Direct,
+  severe/general → blocking/non-blocking。
+
+v1 依然存在:`git checkout v1.14.0`,或 v1.14.0 release 上的 `.skill`。该版本不会再有任何改动。
 
 ## 项目接入(每个仓库一次)
 
-**你什么都不必做。** skill 会读取仓库的项目指南 —— `AGENTS.md`、`CLAUDE.md`,或两者都有 —— 而绝大多数指南都是无结构的散文,这正是它面向的常态:它读你的指南,从中取走它需要的东西,门禁命令、指南视为契约的文件、它写下的规范。当它需要的某样东西在指南里无家可归时,它会从仓库里推导出来 —— 门禁命令来自构建配置与 CI workflow,契约文件来自谁依赖它们 —— 并用一行说明它推断了什么、依据是什么。角色缺失从来不意味着它所支撑的规则可以跳过。
+**什么都不必做。** skill 会把仓库的项目指南 —— `AGENTS.md`、`CLAUDE.md`,或两者都有 —— 当散文来读,从中取它的检查命令,以及它视为契约的文件。指南里一个都没写时,agent 会从仓库里推导出来 —— 检查来自构建配置与 CI,契约是在仓库之外被消费、或被持久化的那些东西 —— 并说明它推断了什么。没有指南,从来不意味着可以跳过检查。
 
-可选的精细化做法是:skill 引用这些东西用的是**角色(role)** 而不是字面 heading 名,因此在指南顶部放一份按角色命名各章节的 **anchor map**,可以让它的角色引用直接解析,而不必再去推断。如果你要写一份,值得写准的是两个角色,因为只有这两个会改变 skill 的行为:
-
-| 角色 | 承载内容 | v2 是否使用 |
-|---|---|---|
-| `_load-bearing-docs_` | 受完整循环保护的契约文件清单 | **是** —— 它决定 Deep 档判定,并把删除其中文件设为需先询问 |
-| `_common-commands_` | 具体的 typecheck / lint / build / test 命令 | **是** —— 门禁在派出任何评审者之前执行这些命令 |
-| `_engineering-norms_` | 项目级编码规范 | 仅作为示例被提及;没有任何规则依据它分支判断,但 `maintenance.md` 会把沉淀下来的规范归档到这里 |
-| `_repo-workflow_` | 本仓库的任务流程 | 未被引用 |
-| `_language-policy_` | 语言和术语规则 | 未被引用 |
-
-另外三个是 anchor map 约定的一部分,对其它工具和人类读者也有用,但没有任何规则依据它们分支判断 —— `maintenance.md` 只会把沉淀下来的规范归档到 `_engineering-norms_` 下。另外,skill 不会在一次变更进行到一半时去重构你的指南:写 anchor map 是在改一个契约文件,所以那是它自己的一次 Deep 变更,会在当前这次变更落地之后,作为一个单独的任务提出来。
-
-项目指南顶部的 anchor map 示例:
-
-```markdown
-<!-- Anchor map (required by three-loop-workflow skill) -->
-- _repo-workflow_       → "## Development Workflow"
-- _load-bearing-docs_   → "## Load-Bearing Documents"
-- _language-policy_     → "## Language Policy"
-- _common-commands_     → "## Common Commands"
-- _engineering-norms_   → "## Engineering Norms"
-```
-
-skill 从不写死文件名。它会读取 `AGENTS.md`、`CLAUDE.md` 或两者 —— 如果你两个都留,常见分工是把共用规则放 `AGENTS.md`、运行时相关规则放 `CLAUDE.md`,而 skill 会两个都读,不会二选一。
+你的指南可以覆盖 skill 的任何默认值,所以一个想把 plan 放在固定位置、或者想跑自己的评审或安全工具的项目,在指南里写明即可。你加上的工具补充独立评审,绝不替代它。
 
 ## 仓库结构
 
 ```
 .
 ├── three-loop-workflow/              skill 本体(唯一事实标准)
-│   ├── SKILL.md                      始终加载:先是深度判定,然后是路由表
+│   ├── SKILL.md                      始终加载:硬约束、深度、计划、构建、证据、评审、修复与停止、
+│   │                                 交接
 │   ├── references/
-│   │   ├── plan.md                   计划文件、事实与决策之分、spike、计划评审
-│   │   ├── build.md                  编写 → 门禁 → 评审 → 分诊 → 修复;诊断;flaky
-│   │   ├── orchestration.md          把实现工作交给另一个 agent:下简报、验证它报回来的结果、
-│   │   │                             并发写入者的 worktree,以及把 Build 循环当脚本运行
-│   │   ├── close.md                  收尾:孤儿清理、影响半径、迁移验证、拿实际落地的东西重读
-│   │   │                             Rollback,以及当作产品通读
-│   │   ├── maintenance.md            把任务 journal 折回项目指南的维护 pass
-│   │   ├── escalation.md             何时以及如何上报;死锁报告
-│   │   └── platforms.md              各运行时,以及离开 Claude Code 后哪些能力降级
-│   └── scripts/
-│       ├── phase.js                  把 Build 循环写成确定性的 Workflow 脚本
-│       └── check-workflow-syntax.sh  解析 Workflow 脚本(node --check 做不到)
+│   │   └── deep.md                   只在某条 Deep 触发条件命中时读取
+│   └── LICENSE
+├── scripts/
+│   ├── accept-release.sh             仓库门禁:重算每一个已发布的数字,并运行下面所有检查
+│   ├── lint-skill.sh                 已发布 skill 的散文性质:不出现运行时机制名、不出现统计数字、
+│   │                                 双向检查路由
+│   ├── negative-test.sh              在副本上逐一破坏每项检查,要求它能察觉
+│   ├── check-workflow-syntax.sh      解析 Workflow 脚本(node --check 做不到);为 probe.js 把关
+│   └── exp-analyse.mjs               从原始数据重算轮次上限实验的数字
 ├── tests/                            gate-fixtures/ 供语法门禁使用(确定性、零成本),以及
 │                                     probe.js —— 按需运行的对照臂仪器,用来问「这条规则
 │                                     到底有没有改变模型的行为」
 ├── docs/
-│   ├── announcement-v2.0.0-cn.md     发布公告
-│   ├── why-v2-cn.md                  重写全过程的长文
+│   ├── why-v3-cn.md                  v3 砍掉与保留了什么、依据是什么、哪些没有测量
+│   ├── why-v2-cn.md                  v1 → v2 重写全过程的长文
+│   ├── announcement-v2.0.0-cn.md     v2.0.0 发布公告
 │   ├── 2026-07-31-round-cap-*.md     文档形态的 Deep 变更能在三轮内收敛吗?
-│   ├── analysis-2026-09-17-*.md      v2.7.0 的委派指导依据的是什么:每个来源连同日期与评级,
-│   │                                 以及哪些被留在了外面
+│   ├── analysis-2026-09-17-*.md      v2.7.0 的委派指导依据的是什么(已在 v3 中退役):每个来源
+│   │                                 连同日期与评级,以及哪些被留在了外面
 │   ├── measurements/                 预注册与原始产物,已提交,好让数字能被重算而不是被相信
 │   └── design/、implementation/       已冻结的 v1 每任务归档 —— 历史记录,不代表当前行为
 ├── README.md                         英文说明
@@ -213,7 +200,7 @@ skill 从不写死文件名。它会读取 `AGENTS.md`、`CLAUDE.md` 或两者 �
 
 ## 修改本工作流
 
-这个 skill **按其自身定义就是 load-bearing 的**。修改 `SKILL.md` 或任何 `references/*.md` 都是在改动契约文件里的规则,按 skill 自己的深度判定属于 **Deep** 档:先记录备选方案再选择、plan 交两名独立读者、外加一次 Close。而 Deep 会按触发它的那一条来缩放,这里触发的正是「契约文件里的规则」那一条 —— 所以 Close 这一侧承重的是「当作产品通读」,phases 与迁移步骤则不问自答直接砍掉。
+这个 skill **按其自身定义就是 load-bearing 的**。修改 `SKILL.md` 或 `references/deep.md`,就是在改动本仓库视为契约的文件中的规则,按 skill 自己的第三条触发条件属于 **Deep** 档:先写决策再选择、回滚方案、对 plan 的一次独立阅读,以及 Close 检查。这条触发条件额外带来的是冷读 —— 一个没有变更上下文的读者,通读这条规则所在的整套文件,而不只是改动的那几行,当作产品来读,而不是当作 diff。
 
 如果你要往这套纪律里加一条规则 —— 或者想知道某条规则是否还值它花掉的 token —— 请运行探针:
 
@@ -233,4 +220,4 @@ MIT —— 见 [LICENSE](./LICENSE)。
 
 ## 致谢
 
-`references/escalation.md` 中的「值得警惕的借口」表,以及对始终加载的 `description` 的「去摘要化」处理,均传承自 [superpowers](https://github.com/obra/superpowers) skill 集合(Jesse Vincent,MIT)中的理由化 / 红旗速查表。
+v2 的「值得警惕的借口」表(位于 `references/escalation.md`,已在 v3.0.0 中退役),以及对始终加载的 `description` 的「去摘要化」处理(v3 保留了这一处理),均传承自 [superpowers](https://github.com/obra/superpowers) skill 集合(Jesse Vincent,MIT)中的理由化 / 红旗速查表。

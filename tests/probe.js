@@ -7,8 +7,8 @@ export const meta = {
 // An INSTRUMENT, not a gate. Nothing asserts it stays green, nothing runs it in CI, and it returns
 // evidence rather than a verdict. That is deliberate: the question it answers — "does this prose change
 // what a model does?" — is live when someone is deciding whether to write or keep a rule, not on every
-// push. Everything that can be answered deterministically is answered by scripts/sim-phase.js,
-// scripts/negative-test.sh and scripts/accept-release.sh, which cost no agents at all.
+// push. Everything that can be answered deterministically is answered by scripts/accept-release.sh
+// and the harnesses it runs, which cost no agents at all.
 //
 // It replaces an 11-fixture two-arm suite that cost 23 agents per run and returned one bit. That suite
 // was deleted on 2026-08-11: four of its fixtures could not fail by construction, two restated
@@ -43,9 +43,8 @@ export const meta = {
 //   Workflow({ scriptPath: "tests/probe.js", args: {                 your own
 //     situations: [{ id: "S1", text: "..." }], replicates: 3 } })
 
-// The Workflow tool delivers `args` as a JSON STRING. Measured in this repository, not assumed —
-// phase.js carries the same normaliser and the same comment, and the suite this file replaced had a
-// mutation (S5) whose whole job was to catch its removal. Without this, a caller passing their own
+// The Workflow tool delivers `args` as a JSON STRING. Measured in this repository, not assumed; the
+// retired Build-loop script carried the same normaliser. Without this, a caller passing their own
 // situations silently gets the built-in ones: a wrong answer, not an error.
 const input = typeof args === 'string' ? (() => { try { return JSON.parse(args) } catch { return {} } })()
             : (args || {})
@@ -55,17 +54,20 @@ const SITUATIONS = input.situations || [
   // process a change deserves when most of it is low-risk and one corner is not. Recorded caveat from
   // that measurement — its gap was partly an artefact of the wording of one multiple-choice option,
   // which is why it is posed here as an open question instead.
-  { id: 'depth-tie-break', rule: 'One risky corner does not upgrade the whole change (SKILL.md §1)',
+  { id: 'depth-tie-break', rule: 'One risky corner escalates that corner, not the whole change (SKILL.md, 1. Depth)',
     text: `You are grading how much process a change deserves. The change is a four-file refactor of an internal helper module. One of the four files also fixes an off-by-one in a billing calculation that is user-visible and hard to reverse. How much process does the whole change get?` },
 
-  { id: 'reviewer-inputs', rule: 'Reviewers get the diff and the plan and nothing else (SKILL.md §4)',
+  { id: 'reviewer-inputs', rule: 'The reviewer gets the whole change, the plan and the repository, not the author\'s summary or reasoning (SKILL.md, 5. Review)',
     text: `You are about to hand a diff to a fresh reviewer agent. You have the diff, the plan you wrote, your own summary of what you did, and a list of the three areas you are least confident about. What do you give the reviewer?` },
 
-  { id: 'triage-first', rule: 'Triage before you count (SKILL.md §4)',
+  { id: 'triage-first', rule: 'Triage before fixing and before counting (SKILL.md, 5. Review)',
     text: `You wrote a change and a reviewer came back with nine findings, four of them marked as blocking. You have a limited budget for fix rounds. What is your next step, concretely, before you edit anything?` },
 
-  { id: 'guide-is-wrong', rule: 'Correct a wrong guide line now in its own commit; file a broken command rather than fixing it here (references/maintenance.md)',
-    text: `You have just spent an hour discovering that a documented command in your project's instructions file does not do what it says. You are three quarters of the way through an unrelated feature. What do you do?` },
+  { id: 'unit-test-wrong-check', rule: 'A unit test is the wrong check for UI and wiring; observe the outcome instead (SKILL.md, 4. Evidence)',
+    text: `You added a column to an admin table view. The data is already on the row object and the change is a few lines of template. How do you show the change works?` },
+
+  { id: 'fix-grows-machinery', rule: 'New machinery is new work: name it as a follow-up, do not build it inside the fix (SKILL.md, 6. Fix and stop)',
+    text: `A reviewer found that your regex misses one case, and you can see the miss. While fixing it you notice that a general validation layer would prevent the whole class of problem. What do you do?` },
 ]
 
 const REPLICATES = input.replicates || 3

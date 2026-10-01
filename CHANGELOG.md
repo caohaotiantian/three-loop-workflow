@@ -2,6 +2,111 @@
 
 Full version history for the three-loop-workflow skill. See [README.md](./README.md) for what the skill is, when it applies, and how to install it.
 
+## v3.0.0 — requirements, not machinery
+
+**Breaking.** v3 replaces v2 rather than extending it. The skill states requirements and constraints
+and leaves the means to the agent: it is runtime-neutral, ships no script, names no runtime's tool or agent type,
+and needs nothing set up in a project. v2.7.0 stays at tag `v2.7.0`, with its `.skill` on that release.
+Replace the installed folder rather than copying over it — see *Upgrading from v2* in the
+[README](./README.md) — and see [docs/why-v3.md](./docs/why-v3.md) for what each decision rests on.
+
+| | v2.7.0 | v3.0.0 |
+|---|---|---|
+| `SKILL.md` | 2,704 words | **1,711 words** |
+| What a Standard task reads | 8,725 words (`SKILL.md`, `plan.md`, `build.md`) | **1,711 words** (`SKILL.md` only) |
+| Total prose | 16,605 words | **2,322 words** |
+| Files in the skill | `SKILL.md`, the references, `phase.js`, `check-workflow-syntax.sh`, `LICENSE` | **`SKILL.md`, `references/deep.md`, `LICENSE`** |
+
+These are surface sizes, recomputed by `scripts/accept-release.sh` from the tags. They say how much an
+agent reads, not what a task costs.
+
+### Retired
+
+`scripts/phase.js`, the Build loop as a Workflow script, and everything that existed to drive or check
+it. `orchestration.md`, the long delegation guide: worktrees, an integrator, a script's API. Two
+properties survive in Build. A delegated "done" is a claim, and the change must be in the repository
+and non-empty before it is accepted. A bounded domain gets its own sub-agent when reading or changing it
+would fill this one; the brief names the domain and what it must not touch, and this context keeps the
+conclusion, not the transcript. `sub-agent` is the skill's word for that context. The lint allows it
+and still rejects a runtime's tool, hook, or agent-type name. `maintenance.md` and the guide journal; its rule against writing down a number a command prints
+survives in Build as "cite the command, not a copied number". `platforms.md`: install paths moved to the
+README, and the degradation table became properties. The anchor map and its roles. `baseSha` bookkeeping, the progress line, gate trailers, rejection files
+and the numeric triage scale. The plan is `.agent/<task>/plan.md`, one directory per task, committed
+with the change so the history stays readable. An existing `.gitignore` entry for `.agent` stays. Every named runtime mechanism and every
+other skill's name. Facts-versus-decisions, the hypothesis list and the commit convention, each either
+shown redundant by the control-arm probe or something a capable model does unprompted. The excuses
+table, peer-session takeover and the first-test-infrastructure escalation, cut on argument rather than
+evidence.
+
+### What survives, and why
+
+The vocabulary is unchanged — **Plan/Build/Close**, **Direct/Standard/Deep**, **blocking/non-blocking**
+— and each term changes meaning only by narrowing. The skill takes the lightest depth that fits. Direct
+means correctness is visible in the edit, or an existing check pins it; Standard is the default for
+behavior changes and scales with the change — a one-line change gets a one-line Goal, Non-goal and
+Accept and one short independent review; Deep fires only on its triggers: a breaking change to a contract consumed outside the
+repository, an irreversible effect outside the repository, a changed rule in a file the project treats
+as a contract, or alternatives that commit to different structures. One risky corner escalates that
+corner, not the whole change — the one rule a control arm has been measured getting wrong. The agent
+raises the depth on its own judgement; only the user lowers it, and only after a recommendation that
+shows, for someone new to the workflow, what this change would skip and the failure left open. If the
+user insists, the agent follows, records that, and does not waive a hard constraint.
+
+The **hard constraints** are the only rules that are not defaults: a change above Direct is reviewed by a
+context that did not write it, and only where none is available does the hand-off say so; the project's checks run, and one that could not
+be run did not pass; the hand-off reports what was observed; a change to who can reach what is never
+Direct; and an irreversible action outside the repository waits for the user. Everything else is a
+default the agent leaves only for a stated reason, and the project's own guide overrides any of it.
+
+Independent review stays, with a shorter brief handed over verbatim; where no independent context
+exists, the review runs as a separate pass, working from the diff and the brief alone, labelled
+"self-review, not independent" — and at Deep each independent read becomes one such pass. A Direct
+change carries a one-line hand-off: what changed, the checks run and their result. The review sees the
+whole change, new untracked files included. Triage still comes before counting. Two reviewers, findings
+unioned, are confined to Deep's first two triggers, and a Deep change built in phases ends with one
+final independent review of the whole change, for how the phases interact; its fixes count as one more
+phase.
+
+### Evidence is proportionate, not a test by default
+
+Accept names the cheapest real evidence that would fail without the change: an existing check turning
+green, a new test, or the observed outcome. **No new unit test is required by default.** The skill names
+where a unit test is the wrong check — UI rendering and layout, wiring and glue, configuration, thin
+calls to external services, one-off scripts, prose — and says a context that did not write the change
+drives that path and reports what it saw. The author drives it, and pastes what they saw, only when no
+such context exists. What is read rather than run gets a cold read of the finished files, as a product,
+not as a diff. An intermittent failure is itself a reproduction and the discriminating evidence, not
+something to re-run until it passes — the half of v2's flaky-test rule that no probe replicate supplied
+unprompted. One this change did not cause is a named follow-up, not fixed inside the change. A missing test is non-blocking unless it guards a confirmed correctness bug, and a fix
+round adds a failing test only for one.
+
+### Fixing, and when to stop
+
+A fix repairs what a confirmed finding cites, at its root cause, everywhere the same defect occurs. New
+machinery — a check, harness, guard, abstraction or test file — is a named follow-up, not part of the
+fix: the round-cap experiment found that growth, not the cap, was what kept changes from converging.
+After each fix the reviewer re-checks only the fix. Stop and ask the user when a round leaves the
+confirmed findings unchanged, when a fix grows into files or machinery the plan did not cover, or when
+blocking findings remain after the third round. The counter is gone; the three stays.
+
+### The repository
+
+`scripts/sim-phase.js` and the `phase.js` half of `scripts/negative-test.sh` are gone with the script.
+`check-workflow-syntax.sh` moved to `scripts/` as repository tooling, no longer shipped, and gates
+`tests/probe.js`. The new `scripts/lint-skill.sh` holds the shipped skill's prose properties — no
+runtime mechanism names, no statistics, no retired file names or plan-only citations, and routing checked
+in both directions — and `negative-test.sh` proves each of its patterns can fail. The per-file backstops
+of the v2 references were removed with the files, not relaxed; the owner then dropped the v3 word
+aims, so the new ones are drift guards only — the reviewed sizes plus modest headroom, not targets. CI runs `accept-release.sh` alone, which runs the rest. `tests/probe.js` drops the situation for a
+cut rule and gains two for v3 rules that have no evidence yet.
+
+### Not measured
+
+Nothing measures whether v3 reduces session time or test effort, and no outcome comparison with v2
+exists. The probe's redundancy verdicts were taken with the models of mid-2026, against v2's wording,
+and have not been re-run against v3's. The class the probe cannot see — the skill pushing a capable
+model away from a correct default — stays uncovered.
+
 ## v2.7.0 — delegation has a home
 
 `references/orchestration.md` was the file you opened to run two writers at once, or to drive the Build

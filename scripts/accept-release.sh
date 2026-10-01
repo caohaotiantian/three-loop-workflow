@@ -8,10 +8,11 @@
 # Two rules this script holds itself to:
 #   Every published metric is RECOMPUTED here, never compared against a hardcoded copy.
 #   Every behavioral invariant is asserted by EXECUTION, never by grepping for a word that names it.
-# The second rule is new. The previous version pinned phase.js's guards with `grep -q`, which passes on
-# a guard disabled with `false &&` and — where the wording also appears in a nearby comment — passes on
-# a guard deleted outright. Both were demonstrated. Control flow now goes through scripts/sim-phase.js,
-# and scripts/negative-test.sh proves that harness fails when the control flow is broken.
+# The second rule exists because an earlier version pinned a script's guards with `grep -q`, which passes
+# on a guard disabled with `false &&` and — where the wording also appears in a nearby comment — passes
+# on a guard deleted outright. Both were demonstrated. The shipped Build-loop script and its harness were
+# retired in v3.0.0 (v2.7.0 has them); the execution rule now applies to scripts/lint-skill.sh and the
+# syntax gate, through scripts/negative-test.sh, which proves each of them can fail.
 set -uo pipefail
 cd "$(git rev-parse --show-toplevel)"
 
@@ -59,11 +60,28 @@ ok()  { printf '  ok    %s\n' "$1"; }
 bad() { printf '  FAIL  %s\n' "$1"; fail=$((fail+1)); }
 chk() { if [ "$2" = "$3" ]; then ok "$1 ($2)"; else bad "$1: expected '$3', got '$2'"; fi; }
 
+echo "== the tags the recomputations read exist =="
+# Without them `git archive <tag>` fails, every recomputed figure is EMPTY, and `want()` greps for the
+# empty string, which matches every line: the figure checks print `ok` carrying nothing. Name the missing
+# tag here, before any of that can happen. Checkouts need full history and tags (CI: fetch-depth 0).
+# v3.0.0 is deliberately absent: until it is tagged the gate reads the working tree for it.
+for _t in v1.14.0 v2.0.0 v2.7.0; do
+  git rev-parse -q --verify "refs/tags/$_t^{commit}" >/dev/null \
+    && ok "tag $_t resolves" || bad "tag $_t is missing — fetch tags, or every figure below is computed from nothing"
+done
 echo "== layout =="
 [ -f three-loop-workflow/SKILL.md ] && ok "SKILL.md present" || bad "SKILL.md missing"
-chk "shipped skill file count" "$(find three-loop-workflow -type f | wc -l | tr -d ' ')" "11"
-chk "reference count"          "$(find three-loop-workflow/references -name '*.md' | wc -l | tr -d ' ')" "7"
-chk "shipped script count"     "$(find three-loop-workflow/scripts -type f | wc -l | tr -d ' ')" "2"
+# The exact file set, not a count: swapping LICENSE for a stray file, or adding a script beside the
+# skill, keeps every count right. Adding or removing a shipped file means editing this list, the
+# archive check near the end, and .github/workflows/release.yml.
+SHIPPED="three-loop-workflow/LICENSE
+three-loop-workflow/SKILL.md
+three-loop-workflow/references/deep.md"
+got=$(find three-loop-workflow -type f | LC_ALL=C sort)
+[ "$got" = "$SHIPPED" ] && ok "the shipped file set is exactly the three expected files" \
+  || bad "the shipped file set differs from the expected three: $(printf '%s' "$got" | tr '\n' ' ')"
+[ ! -e three-loop-workflow/scripts ] && ok "no scripts directory in the shipped skill" \
+  || bad "a scripts/ directory is back in the shipped skill"
 echo "== version agrees with the changelog, in both languages =="
 # Derived, not hardcoded: the old script carried a literal that had to be hand-edited every release,
 # which is one more place for the version to drift.
@@ -73,9 +91,9 @@ v_log_cn=$(sed -n 's/^## v\([0-9][0-9.]*\).*/\1/p' CHANGELOG-cn.md | head -1)
 chk "SKILL.md frontmatter matches the newest CHANGELOG entry" "$v_skill" "$v_log"
 chk "CHANGELOG-cn newest entry matches CHANGELOG"             "$v_log_cn" "$v_log"
 
-echo "== the shipped scripts parse, declare meta, and avoid the forbidden primitives =="
-for f in three-loop-workflow/scripts/phase.js; do
-  if bash three-loop-workflow/scripts/check-workflow-syntax.sh "$f" >/dev/null 2>&1; then
+echo "== the repository's Workflow script parses, declares meta, and avoids the forbidden primitives =="
+for f in tests/probe.js; do
+  if bash scripts/check-workflow-syntax.sh "$f" >/dev/null 2>&1; then
     ok "workflow-syntax $f"
   else
     bad "workflow-syntax $f"
@@ -87,74 +105,41 @@ echo "== the syntax gate fails on what it claims to catch =="
 # was only ever exercised in the passing direction, and a regression to a no-op would go unnoticed —
 # the same asymmetry the execution harnesses exist to remove.
 for f in tests/gate-fixtures/reject-*.js; do
-  if bash three-loop-workflow/scripts/check-workflow-syntax.sh "$f" >/dev/null 2>&1; then
+  if bash scripts/check-workflow-syntax.sh "$f" >/dev/null 2>&1; then
     bad "the syntax gate ACCEPTED $f, which it must reject"
   else
     ok "syntax gate rejects $(basename "$f")"
   fi
 done
 for f in tests/gate-fixtures/accept-*.js; do
-  if bash three-loop-workflow/scripts/check-workflow-syntax.sh "$f" >/dev/null 2>&1; then
+  if bash scripts/check-workflow-syntax.sh "$f" >/dev/null 2>&1; then
     ok "syntax gate accepts $(basename "$f")"
   else
     bad "the syntax gate REJECTED $f, which is legal"
   fi
 done
 
-echo "== phase.js control flow, asserted by execution =="
-if node scripts/sim-phase.js >/tmp/_sim.out 2>&1; then
-  ok "every phase.js invariant holds ($(grep -c '^  ok' /tmp/_sim.out | tr -d ' ') asserted)"
-else
-  bad "a phase.js invariant is broken:"; grep -A1 '^  FAIL' /tmp/_sim.out
-fi
-rm -f /tmp/_sim.out
-
-echo "== and that harness can actually fail =="
+echo "== and those checks can actually fail =="
 if bash scripts/negative-test.sh >/tmp/_neg.out 2>&1; then
-  ok "every mutation detected ($(grep -c '^  detected' /tmp/_neg.out | tr -d ' ') of them)"
+  ok "every mutation detected ($(grep -c '^  detected' /tmp/_neg.out | tr -d ' '))"
 else
-  bad "a mutation SURVIVED — the invariant harness is not asserting what it claims:"
+  bad "a mutation SURVIVED — a check is not asserting what it claims:"
   grep 'SURVIVED\|ERROR' /tmp/_neg.out
 fi
 rm -f /tmp/_neg.out
 
-echo "== one plan directory per task =="
-for f in SKILL.md references/plan.md references/build.md references/close.md references/escalation.md \
-         references/orchestration.md references/maintenance.md; do
-  grep -qF '.agent/<task>' "three-loop-workflow/$f" \
-    && ok "per-task plan path in $f" || bad "$f prescribes a shared plan path"
-done
-grep -qE "^  planPath,\s*$" three-loop-workflow/scripts/phase.js \
-  && ok "phase.js planPath has no default" || bad "phase.js defaults planPath"
-grep -qi 'Leave the task' three-loop-workflow/references/close.md \
-  && ok "close.md keeps the task directory" || bad "close.md deletes the plan"
-
-echo "== the shipped skill states rules, not statistics =="
-if grep -rqE '[0-9]+(\.[0-9]+)?%|percentage points|116 findings' three-loop-workflow/; then
-  bad "a statistic is back in the shipped skill:"
-  grep -rnE '[0-9]+(\.[0-9]+)?%|percentage points|116 findings' three-loop-workflow/
+echo "== the shipped skill's prose properties (scripts/lint-skill.sh) =="
+# One check: statistics, the retired third-reviewer claim, routing, runtime mechanism names, retired v2
+# file names and plan-only provenance forms. The regexes live only in lint-skill.sh, and
+# negative-test.sh proves each alternative can fail.
+lint_out=$(bash scripts/lint-skill.sh three-loop-workflow 2>&1); lint_rc=$?
+if [ "$lint_rc" -eq 0 ]; then
+  ok "lint-skill.sh passes on the shipped skill"
 else
-  ok "no statistics anywhere in the shipped skill"
+  bad "lint-skill.sh reports $lint_rc failing check(s) on the shipped skill:"; printf '%s\n' "$lint_out"
 fi
 grep -qF '56.5%' docs/why-v2.md && grep -qF '56.5%' docs/why-v2-cn.md \
   && ok "the measurement is preserved in both articles" || bad "the measurement was lost, not relocated"
-# Repointed 2026-07-30. The old wording ("a third mostly repeated the second") was a coverage claim that
-# re-analysis of the same data contradicted depending on the denominator, and the artifacts were never
-# kept. The rationale it protected still has to survive — as the cost decision it actually is.
-grep -qi 'stopping at two is a \*\*cost\*\* decision' three-loop-workflow/references/plan.md \
-  && ok "stop-at-two rationale survives as prose" || bad "stop-at-two rationale lost with the numbers"
-grep -qi 'clean first review is weak evidence' three-loop-workflow/references/plan.md \
-  && ok "clean-first-review corollary survives" || bad "clean-first-review corollary lost"
-# The coverage claim about a third reviewer is retired: re-analysis of the same data contradicted it
-# depending on the denominator, and the artifacts were never kept. plan.md carries the cost framing.
-# This check exists because the claim was corrected in plan.md and left standing in SKILL.md — the
-# fix-at-the-cited-line failure this repo has already paid for once, committed again while retiring it.
-if grep -rq 'third mostly repeat' three-loop-workflow/; then
-  bad "the retired third-reviewer coverage claim is back in the shipped skill:"
-  grep -rn 'third mostly repeat' three-loop-workflow/
-else
-  ok "the third-reviewer coverage claim stays retired across the whole shipped skill"
-fi
 
 # Scope note: the sweeps below run over the SHIPPED surface — the skill, the tests, the release
 # workflow — where a stale reference misroutes a reader or a script. Deliberately out of scope:
@@ -171,6 +156,12 @@ hits=$(grep -rlE "$V1" --include='*.md' --include='*.js' --include='*.sh' --incl
 hits=$(grep -rn 'v2/' --include='*.md' --include='*.js' --include='*.sh' --include='*.json' --include='*.yml' \
   three-loop-workflow tests .github CLAUDE.md 2>/dev/null)
 [ -z "$hits" ] && ok "no v2/ path references" || bad "v2/ paths remain: $hits"
+# The retired v2 surface. check-workflow-syntax and gate-fixtures are NOT in this pattern: they are live
+# repository tooling now. README, CLAUDE.md and CHANGELOG are out of scope, because they name the v2
+# files in the past tense.
+V2='phase\.js|sim-phase|three-loop-workflow/scripts|references/(plan|build|close|escalation|orchestration|maintenance|platforms)\.md'
+hits=$(grep -rnE "$V2" --include='*.md' --include='*.js' --include='*.sh' --include='*.yml' tests .github 2>/dev/null)
+[ -z "$hits" ] && ok "no retired v2 files named in tests or .github" || bad "retired v2 files named in tests/.github: $hits"
 hits=$(grep -rlE '\b(L1|L2|L3)\b|Full Mode|Light Mode|two-generation' \
   --include='*.md' three-loop-workflow tests 2>/dev/null)
 [ -z "$hits" ] && ok "no v1 vocabulary in skill or tests" || bad "v1 vocabulary in: $hits"
@@ -215,84 +206,65 @@ d_v2=$(python3 -c "print(f'{1000*$pr_v2/$p_v2:.2f}')")
 echo "     v2.0.0: SKILL.md=$s_v2 prose=$p_v2 prohibitions=$pr_v2 ($d_v2/1k)"
 echo "     v1.14.0: SKILL.md=$s_v1 prose=$p_v1 files=$f_v1 package=$pkg_v1 archive=$arch_v1 prohibitions=$pr_v1 ($d_v1/1k)"
 
-echo "== the always-loaded surface has not bloated =="
+echo "== recomputed metrics: v2.7.0 and v3.0.0, the pair docs/why-v3.md compares =="
+t27=$(mktemp -d); git archive v2.7.0 three-loop-workflow | tar -x -C "$t27"
+s_v27=$(words "$t27/three-loop-workflow/SKILL.md")
+p_v27=$(words "$t27/three-loop-workflow/SKILL.md" "$t27/three-loop-workflow/references"/*.md)
+# The Standard route: what a Standard task read in v2.7.0, SKILL.md plus the plan and build references.
+r_v27=$(words "$t27/three-loop-workflow/SKILL.md" "$t27/three-loop-workflow/references/plan.md" \
+              "$t27/three-loop-workflow/references/build.md")
+rm -rf "$t27"
+# v3 from its tag once the tag exists, from the working tree until then. Before tagging, the tree IS what
+# will be tagged; after tagging, the published v3.0.0 figures are pinned to the tag, so a later release
+# that edits the skill does not silently turn them into claims about a different version.
+if git rev-parse -q --verify refs/tags/v3.0.0 >/dev/null; then
+  t3=$(mktemp -d); git archive v3.0.0 three-loop-workflow | tar -x -C "$t3"; b3="$t3"; v3src="tag v3.0.0"
+else
+  t3=""; b3=.; v3src="working tree, v3.0.0 not tagged yet"
+fi
+s_v3=$(words "$b3/three-loop-workflow/SKILL.md")
+p_v3=$(words "$b3/three-loop-workflow/SKILL.md" "$b3/three-loop-workflow/references"/*.md)
+[ -n "$t3" ] && rm -rf "$t3"
+echo "     v2.7.0: SKILL.md=$s_v27 prose=$p_v27 standard-route=$r_v27"
+echo "     v3.0.0 ($v3src): SKILL.md=$s_v3 prose=$p_v3"
+
+echo "== the prose surface has not bloated =="
 # Anti-bloat is held by review, not by a ceiling — v1 reached 2,915 words under a numeric cap, which is
-# why the cap is not the mechanism. This is a backstop against silent drift, set well above the
-# reviewed size, not the thing that keeps the file short.
-# ── anti-bloat, over EVERY prose surface ─────────────────────────────────────────────────────────
-# A backstop against silent drift, per file, deliberately set above each reviewed size — not a budget
-# to spend. Before 2026-08-24 only SKILL.md had one, so the always-loaded surface was held and the
-# eight-times-larger reference set beside it was not; a set that grew 18% in a single pass is what that
-# gap looks like. Every prose file now carries one, and so does the total.
-#
-# The objection to raising SKILL.md's own number (1500 -> 2300) in the same pass that grew the file is
-# worth recording beside the change: raising the mechanism that opposes growth is the wrong reflex.
-# Three things answer it. The additions are RULES, not prose — two-part acceptance, the behavior-check
-# term in the termination rule, the gitignore check, baseSha, the depth-trigger checklist, a NOT-WHEN in
-# the description; each was argued for individually and several displaced something. The old number had
-# itself caused a defect: the rewrite that stripped the two-reviewer figures to fit it left a paraphrase
-# misstating them in both directions. And the published limit this stands in for is 500 LINES; the file
-# is 122. What is NOT an answer is shaving synonyms to land on a number — that is the behaviour that
-# produced the defect above. Re-review, then move the number in its own commit, with the reason here.
+# why the cap is not the mechanism. These are backstops against silent drift, set above the reviewed
+# size, never a budget to spend: the slack under each is not an allowance, and an addition that
+# displaces nothing has to argue for itself in review. Two things are NOT answers to a red backstop:
+# shaving synonyms to land under it, and raising it in the same commit as the growth. Re-review, then
+# move the number in its own commit, with the reason written here.
 budget() {
   local f="$1" cap="$2" n
   n=$(words "$f")
   [ "$n" -le "$cap" ] && ok "$f is $n words (backstop $cap)" \
                       || bad "$f has drifted to $n words (backstop $cap) — re-review before raising it"
 }
-# 2026-09-06: raised after a re-review (two fresh diff reviewers plus a read-as-a-product pass) grew
-# the prose across the board — SKILL.md 2128->2833, build.md 3505->3909, orchestration.md 1877->2201,
-# escalation.md 1219->1353, close.md 751->962, platforms.md 642->773; plan.md (2157->2173) and
-# maintenance.md (1470->1523) moved only slightly and keep their existing caps. Each raised cap is
-# roughly the new count plus ~5% slack, rounded to a round number; the duplicates the re-review found
-# were cut before this count was taken, so this is the reviewed substance, not drift. The largest
-# single piece of the growth is on the always-loaded surface itself: SKILL.md's trigger table and
-# three new paragraphs. Objection, on the record: the always-loaded surface (SKILL.md) grew by about a
-# third in this one pass, and a tighten pass afterward recovered only a little of that. The next
-# addition to SKILL.md must displace something already there — it does not get another raise for free.
-budget three-loop-workflow/SKILL.md                    3000
-budget three-loop-workflow/references/build.md          4100
-budget three-loop-workflow/references/plan.md           2200
-# 2026-09-17: orchestration.md 2201->3092, raised 2300 -> 3250 (the count plus ~5%, rounded) after the
-# re-review this repo's norm requires. What actually ran, since "re-reviewed" is the claim doing the
-# work here: two fresh diff reviewers on the phase that grew this file, one on the phase that grew
-# escalation.md, two fix rounds, a verification review of both, and a read-as-a-product pass over the
-# whole skill. The duplicates those reviews found were cut before this count was taken.
-# What grew: the file now owns DELEGATION, not only worktrees — briefing a writer (the brief is the
-# agent's only context, and the three things a writer gets wrong unprompted), verifying a delegated
-# "done" against the repository instead of the report, partitioning two writers by file ownership and
-# landing their branches through an integrator, and the task directory not travelling to a worktree,
-# clone or container — plus the script facts the file understated: the argument caps, the guards that
-# run every round, and what triage returns. Every added sentence traces to a reviewer finding or to a
-# rule that had no home; four rules stated twice were collapsed to a pointer in build.md, plan.md and
-# this file in the same pass, so the growth is net of those cuts.
-# Objection, on the record, and it is the stronger one here: the file landed above its own plan's aim
-# (~2900) twice, in both directions of the re-review. It is now the largest reference in the set, and it
-# carries two subjects — hand delegation, and the phase.js script API. The next growth in this file is
-# a SPLIT, not another raise — and a split is not free either: CLAUDE.md's Common Commands bullet on
-# the pinned file set greps out every site a new reference has to be added to, including the one
-# nothing enforces.
-budget three-loop-workflow/references/orchestration.md  3250
-budget three-loop-workflow/references/maintenance.md    1600
-# 2026-09-17: escalation.md 1353->1509, raised 1450 -> 1600 (the count plus ~5%, rounded) after the same
-# re-review — one peer-session takeover paragraph and an expanded in-flight-overlap row, both filling
-# the carve-out the row already named.
-budget three-loop-workflow/references/escalation.md     1600
-budget three-loop-workflow/references/close.md          1000
-budget three-loop-workflow/references/platforms.md       800
-# 2026-09-17: 16500 -> 17400, measured at 16605 that day — the count plus ~5%, rounded to a round
-# number, which here rounds DOWN. Raised because the two per-file raises above sum past the old total:
-# a total left where it was would report the set drifting when nothing had drifted past a reviewed
-# number. This is the SECOND raise of the total, and it is the binding constraint again — the per-file
-# backstops sum to 17550 against it, so the set can go red while every file passes, and the next file
-# to grow spends the set's margin rather than only its own. That is what this number is for.
+# 2026-09-30 (v3.0.0): every earlier cap was REMOVED together with the file it held — the seven v2
+# references are gone — not relaxed. Then the v3 word AIMS were dropped, by the owner's decision: word
+# counts are a drift guard, not a design target, and the skill is built for its goal rather than for a
+# number. Backstops kept, numbers moved in this commit on that decision. Reviewed sizes at the time
+# (after the reviewed gap fixes): SKILL.md 1495, deep.md 581, total 2076. Each number below is that size
+# plus modest headroom (about 7%, 12% and 8%, rounded), so it trips on drift nobody reviewed and on
+# nothing else. Growth up to it is NOT an allowance: an addition that displaces nothing still has to
+# argue for itself in review, and a number is raised only by re-review in its own commit.
+# 2026-10-01: the owner asked for the bounded-domain sub-agent rule and for the lint to allow that word.
+# Reviewed sizes after that rule: SKILL.md 1680, deep.md 611, total 2291. The same day the plan moved
+# to a committed `.agent/<task>/plan.md`; reviewed sizes after that sentence: SKILL.md 1711, deep.md 611,
+# total 2322. Headroom stays the same proportion. The slack is still not an allowance.
+budget three-loop-workflow/SKILL.md                    1800
+budget three-loop-workflow/references/deep.md           650
 prose_now=$(words three-loop-workflow/SKILL.md three-loop-workflow/references/*.md)
-[ "$prose_now" -le 17400 ] && ok "the whole prose surface is $prose_now words (backstop 17400)" \
-                           || bad "the prose surface has grown to $prose_now words — the per-file budgets can all pass while the set still grows"
+[ "$prose_now" -le 2480 ] && ok "the whole prose surface is $prose_now words (backstop 2480)" \
+                          || bad "the prose surface has grown to $prose_now words — the per-file budgets can both pass while the set still grows"
 
 echo "== published numbers match the recomputation =="
-DOCS="README.md README-cn.md CHANGELOG.md CHANGELOG-cn.md docs/announcement-v2.0.0.md docs/announcement-v2.0.0-cn.md docs/why-v2.md docs/why-v2-cn.md"
+DOCS="README.md README-cn.md CHANGELOG.md CHANGELOG-cn.md docs/announcement-v2.0.0.md docs/announcement-v2.0.0-cn.md docs/why-v2.md docs/why-v2-cn.md docs/why-v3.md docs/why-v3-cn.md"
 want() {
+  # An empty figure (a tag that would not resolve) makes grep -F match every line. Fail it by name;
+  # never print an `ok` that carries nothing.
+  if [ -z "$1" ]; then bad "$2 is EMPTY — its source could not be read, so nothing was compared"; return; fi
   n=$(group "$1")
   if grep -qF "$n" $DOCS 2>/dev/null || grep -qF "$1" $DOCS 2>/dev/null; then
     ok "$2 = $n appears in published docs"
@@ -303,10 +275,13 @@ want() {
 want "$s_v2" "v2 SKILL.md words"; want "$p_v2" "v2 prose words"
 want "$s_v1" "v1 SKILL.md words"; want "$p_v1" "v1 prose words"
 want "$pkg_v1" "v1 package words"; want "$arch_v1" "v1 per-task archive words"
+want "$s_v27" "v2.7.0 SKILL.md words"; want "$p_v27" "v2.7.0 prose words"
+want "$r_v27" "v2.7.0 Standard-route words"
+want "$s_v3" "v3.0.0 SKILL.md words"; want "$p_v3" "v3.0.0 prose words"
 
 # The error that matters more: a number published that the tree contradicts. Enumerate EVERY
-# comma-formatted figure and every "<n> words" figure across all eight docs and require each to be a
-# recomputed value or a named historical constant.
+# comma-formatted figure and every "<n> words" figure across every file in DOCS and require each to be
+# a recomputed value or a named historical constant.
 # 6,047 and 43,822 are the same two measurements taken with BSD `wc -w`, which splits on U+2260.
 # They are published in the v2.0.0 documents and stay there; the portable values are published
 # beside them. Allowed as historical constants because that is exactly what they now are.
@@ -315,18 +290,20 @@ for n in $(grep -ohE '[0-9]+,[0-9]{3}' $DOCS | sort -u; \
            grep -ohE '[0-9][0-9,]*[[:space:]]*(words|词)' $DOCS | grep -oE '^[0-9][0-9,]*' | sort -u); do
   raw=${n//,/}
   case "$raw" in
-    "$s_v1"|"$s_v2"|"$p_v1"|"$p_v2"|"$arch_v1"|"$pkg_v1") ok "published $n is a recomputed value" ;;
+    "$s_v1"|"$s_v2"|"$p_v1"|"$p_v2"|"$arch_v1"|"$pkg_v1"|"$s_v27"|"$p_v27"|"$r_v27"|"$s_v3"|"$p_v3")
+       ok "published $n is a recomputed value" ;;
     *) if printf '%s\n' $ALLOW_HIST | grep -qx "$n"; then ok "published $n is an allowed historical constant"
        else bad "published $n matches nothing recomputed and is not an allowed constant"; fi ;;
   esac
 done
 for lit in "$pr_v1" "$pr_v2" "$d_v1" "$d_v2"; do
+  if [ -z "$lit" ]; then bad "a prohibition figure is EMPTY — its source could not be read"; continue; fi
   grep -qF "$lit" docs/why-v2.md    && ok "prohibition figure $lit in why-v2.md"    || bad "prohibition figure $lit is NOT what why-v2.md publishes"
   grep -qF "$lit" docs/why-v2-cn.md && ok "prohibition figure $lit in why-v2-cn.md" || bad "prohibition figure $lit is NOT what why-v2-cn.md publishes"
 done
 
 echo "== cross-file claim consistency =="
-ALLMD="README.md README-cn.md CLAUDE.md CHANGELOG.md CHANGELOG-cn.md docs/announcement-v2.0.0.md docs/announcement-v2.0.0-cn.md docs/why-v2.md docs/why-v2-cn.md tests/README.md"
+ALLMD="README.md README-cn.md CLAUDE.md CHANGELOG.md CHANGELOG-cn.md docs/announcement-v2.0.0.md docs/announcement-v2.0.0-cn.md docs/why-v2.md docs/why-v2-cn.md docs/why-v3.md docs/why-v3-cn.md tests/README.md"
 h=$(grep -n 'all 20 v1\|20 v1 files\|20 个 v1 文件' $ALLMD 2>/dev/null)
 [ -z "$h" ] && ok "leftover-file count is 18 everywhere" || bad "stale '20 v1 files' claim: $h"
 h=$(grep -rn '\.agent/accept\.sh' $ALLMD three-loop-workflow tests 2>/dev/null)
@@ -363,13 +340,13 @@ rm -rf "$t"
 # stated correctly" — text saying the opposite would also match. That is the check-consistency.sh
 # failure mode, and the honest response is to name the limit rather than to dress presence up as
 # verification. Behavioural coverage for these two rules needs two-arm fixtures; see the Close notes.
-echo "== the skill mentions the two rules P5 added (presence only, not verification) =="
-grep -qiE 'if no guide exists, or a role is missing' three-loop-workflow/SKILL.md \
-  && ok "SKILL.md mentions the missing-guide fallback" \
-  || bad "SKILL.md no longer mentions what to do when the project guide or a role is missing"
-grep -qiE 'read the result as a product, not as a diff' three-loop-workflow/references/close.md \
-  && ok "close.md mentions the whole-artifact read" \
-  || bad "close.md no longer mentions the whole-artifact read"
+echo "== the skill mentions two rules (presence only, not verification) =="
+grep -qiE 'derive them from the repository' three-loop-workflow/SKILL.md \
+  && ok "SKILL.md mentions deriving check commands when the guide names none" \
+  || bad "SKILL.md no longer mentions what to do when the project guide names no check commands"
+grep -qiE 'as a product, not as a diff' three-loop-workflow/SKILL.md \
+  && ok "SKILL.md mentions the whole-artifact read" \
+  || bad "SKILL.md no longer mentions the whole-artifact read"
 
 echo "== README paths exist =="
 for p in $(grep -oE '\(\./[A-Za-z0-9_./-]+\)' README.md | tr -d '()'); do
@@ -379,10 +356,11 @@ done
 echo "== bilingual pairs quote the same figures =="
 for pair in "README.md:README-cn.md" "CHANGELOG.md:CHANGELOG-cn.md" \
             "docs/why-v2.md:docs/why-v2-cn.md" \
-            "docs/announcement-v2.0.0.md:docs/announcement-v2.0.0-cn.md"; do
+            "docs/announcement-v2.0.0.md:docs/announcement-v2.0.0-cn.md" \
+            "docs/why-v3.md:docs/why-v3-cn.md"; do
   a=${pair%%:*}; b=${pair##*:}
   { [ -f "$a" ] && [ -f "$b" ]; } || { bad "missing half of pair $pair"; continue; }
-  for val in "$s_v1" "$s_v2" "$p_v1" "$p_v2" "$pkg_v1" "$arch_v1"; do
+  for val in "$s_v1" "$s_v2" "$p_v1" "$p_v2" "$pkg_v1" "$arch_v1" "$s_v27" "$p_v27" "$r_v27" "$s_v3" "$p_v3"; do
     fv=$(group "$val")
     ca=$(grep -oF "$fv" "$a" 2>/dev/null | wc -l | tr -d ' ')
     cb=$(grep -oF "$fv" "$b" 2>/dev/null | wc -l | tr -d ' ')
@@ -402,7 +380,7 @@ echo "== the round-cap experiment's published figures are recomputed from its ra
 # wiring that was missing, not the check. `scripts/negative-test.sh` now keeps that demonstration.
 #
 # The analysis also asserts the raw data against itself: the per-round series reconstructed from the
-# journal has to agree with what phase.js returned, or neither is usable.
+# journal has to agree with what the Build-loop script returned during the runs, or neither is usable.
 EXP_RAW=docs/measurements/2026-07-30-round-cap/raw
 EXP_DOCS="docs/2026-07-31-round-cap-experiment.md docs/2026-07-31-round-cap-experiment-cn.md"
 if [ -d "$EXP_RAW" ]; then
@@ -419,7 +397,9 @@ fi
 echo "== packaged .skill carries the skill and nothing else =="
 pkg=$(mktemp -d)/x.skill
 zip -qr "$pkg" three-loop-workflow/
-chk "archive entry count" "$(unzip -Z1 "$pkg" | grep -vc '/$')" "11"
+chk "archive entry count" "$(unzip -Z1 "$pkg" | grep -vc '/$')" "3"
+[ "$(unzip -Z1 "$pkg" | grep -v '/$' | LC_ALL=C sort)" = "$SHIPPED" ] \
+  && ok "the archive holds exactly the expected three files" || bad "the archive's file set differs from the expected three"
 unzip -Z1 "$pkg" | grep -qE "$V1" && bad "a v1 file is inside the .skill" || ok "no v1 file in .skill"
 unzip -Z1 "$pkg" | grep -q 'three-loop-workflow/SKILL.md' && ok "SKILL.md in .skill" || bad "SKILL.md not in .skill"
 rm -rf "$(dirname "$pkg")"

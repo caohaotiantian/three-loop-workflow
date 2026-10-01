@@ -1,277 +1,277 @@
 #!/usr/bin/env bash
-# Mutation test for scripts/sim-phase.js.
+# Mutation tests for this repository's deterministic checks.
 #
-# A check that cannot fail when the behavior is wrong is worse than no check. This script breaks
-# phase.js on purpose, one invariant at a time, and requires sim-phase.js to notice. If a mutation
-# survives, the invariant it targets is not actually being asserted and this script exits non-zero.
+# A check that cannot fail when the behavior is wrong is worse than no check. This script breaks the
+# things the gate relies on, on COPIES under a temp directory, one defect at a time, and requires the
+# check that owns each one to notice. A mutation that survives means the check is not asserting what it
+# claims, and the script exits non-zero.
 #
-# Each mutation reproduces a defect this project has really shipped or really found:
-#   M1/M2/M3  the empty-diff and no-op-fix guards, which a token grep could not see disabled
-#   M4        v2's first cut: cap fired on the round about to run, so a budget of 3 delivered 2
-#   M5        v1's runner: the round counter incremented unconditionally
-#   M6        findings intersected instead of unioned
-#   M7        closure computed on the raw reported count, before triage
-#   M8        a reviewer that died treated as a reviewer that passed
-#   M9        the shell-sourced half of the empty-diff guard, which let a fabricated sha close a phase
-#   M10       an unparseable gates head failing open, which disabled the no-op-fix guard downstream
-#   M11       the implementer's self-assessment reaching the reviewers
-#   M12       depth no longer deciding the reviewer count, so Deep runs the Standard review
-#   M13       non-blocking findings recomputed per round, dropping anything not repeated at closure
-#   M14       a dead fix agent consuming a round, reporting infrastructure failure as deadlock
-#   M15       the triage rejection record dropped instead of returned
-#   M16       the second reviewer's findings discarded rather than unioned
-#   M17       the loop's structural bound, asserted in combination with a broken counter — alone it
-#             changes nothing observable, so it is only load-bearing when the counter also fails
-#   M19       repoPath dropped from the Fix and Triage prompts, which is how a phase driven against a
-#             repository elsewhere loses the only thing telling its agents where the tree is
-#   M20       the acceptCmds shape guard, without which a string or any other length-bearing value
-#             passes the emptiness test and dies at `.map` with the Write agent already spent
-#   M18/S5    the args normaliser — the Workflow tool passes args as a JSON string, so without it\n#             every invocation through the tool fails (phase.js) or silently ignores args (runner)\n#   S1-S4     the two-arm runner's scoring: an agent-asserted pass, the row-set check, the
-#             discriminating floor, and a broken guard scored as held
+# Three groups remain:
+#   the shipped-skill lint   scripts/lint-skill.sh, with one sample per regex alternative of R1, R2, R5
+#                            and R6, one for R3, and two routing cases for R4. A control runs first: the
+#                            unmutated copy must pass, or every "detected" after it would mean nothing.
+#   the syntax gate          scripts/check-workflow-syntax.sh with one forbidden-primitive row deleted;
+#                            the reject fixtures under tests/gate-fixtures/ must then let something through.
+#   E1-E3                    the round-cap experiment's published figures (scripts/exp-analyse.mjs).
 #
-# M5 also covers termination: without the loop's structural bound it does not return at all, so the
-# harness's runaway ceiling is what catches it.
+# The Build-loop script these tests once covered, and its mutations, were retired in v3.0.0 with the
+# script (v2.7.0 has them).
 #
-# M1-M3, M9, M19 and M20 additionally assert the point of the whole exercise: the grep the previous gate used
-# still passes on the mutated file. Deleting a guard is nearly the only mutation a grep can detect, and
-# where the rule's wording also appears in a nearby comment it cannot detect even that.
+# A mutation that fails to apply is counted as a FAILURE, not skipped: a mutation test whose mutations
+# silently stop applying is the same kind of false coverage it exists to prevent.
 #
-# A patch that no longer matches the source is counted as a FAILURE, not skipped: a mutation test whose
-# mutations silently stop applying is the same kind of false coverage it exists to prevent.
+# SKILL_DIR overrides the skill tree the lint cases copy (default: three-loop-workflow).
 set -uo pipefail
 cd "$(git rev-parse --show-toplevel)"
 
-SRC=three-loop-workflow/scripts/phase.js
 TMP=$(mktemp -d)
 trap 'rm -rf "$TMP"' EXIT
 fail=0
 tried=0
 detected=0
+SKILL_DIR=${SKILL_DIR:-three-loop-workflow}
+LINT=scripts/lint-skill.sh
 
-# apply <name> <python-patch> [grep-token-that-must-still-be-present]
-apply() {
-  local name="$1" patch="$2" token="${3:-}"
-  cp "$SRC" "$TMP/phase.js"
-  python3 - "$TMP/phase.js" <<PY
-import sys
-p = sys.argv[1]
-s = open(p).read()
-$patch
-open(p, 'w').write(s)
-PY
+echo "== mutation test: the shipped-skill lint =="
+
+fresh_copy() { rm -rf "$TMP/skill"; cp -R "$SKILL_DIR" "$TMP/skill"; }
+
+# Control first. If the unmutated copy does not pass, every "detected" below would be meaningless.
+fresh_copy
+if bash "$LINT" "$TMP/skill" >"$TMP/out" 2>&1; then
+  printf '  control   the unmutated copy passes %s (reported apart: it is not a mutation)\n' "$LINT"
+  control_ok=1
+else
+  printf '  ERROR control: %s fails on the UNMUTATED copy of %s, so no mutation below can be judged:\n' "$LINT" "$SKILL_DIR"
+  grep -a 'FAIL\|No such file' "$TMP/out" | sed 's/^/            /'
+  fail=$((fail+1)); control_ok=0
+fi
+
+# lint_expect <case> <check> — $TMP/skill is already mutated. The named check, not merely some check,
+# must be the one that fails: a sample caught by the wrong check would leave its own check untested.
+lint_expect() {
+  local name="$1" check="$2"
   tried=$((tried+1))
-  if cmp -s "$SRC" "$TMP/phase.js"; then
-    printf '  ERROR %s: the mutation did not apply — the patch no longer matches the source\n' "$name"
-    fail=$((fail+1)); return
-  fi
-  if PHASE_JS="$TMP/phase.js" node scripts/sim-phase.js >"$TMP/out" 2>&1; then
-    printf '  SURVIVED  %s — sim-phase.js exited 0 on broken control flow\n' "$name"
+  if bash "$LINT" "$TMP/skill" >"$TMP/out" 2>&1; then
+    printf '  SURVIVED  %s — %s exited 0 on a tree it must reject\n' "$name" "$LINT"
     fail=$((fail+1))
+  elif grep -aq "^  FAIL  $check" "$TMP/out"; then
+    detected=$((detected+1)); printf '  detected  %s\n' "$name"
   else
-    detected=$((detected+1))
-    printf '  detected  %s (%s)\n' "$name" "$(grep -c '^  FAIL' "$TMP/out" | tr -d ' ') invariant(s) broke"
-  fi
-  if [ -n "$token" ]; then
-    if grep -qF "$token" "$TMP/phase.js"; then
-      printf '            ...and the old token grep "%s" still passes on it\n' "$token"
-    else
-      printf '            NOTE the token "%s" is absent, so a grep would have caught this one too\n' "$token"
-    fi
+    printf '  SURVIVED  %s — %s failed, but not on %s\n' "$name" "$LINT" "$check"
+    fail=$((fail+1))
   fi
 }
 
+# lint_sample <check> <sample> — append a line holding the sample to the copy's SKILL.md. The samples are
+# test data, one per regex alternative; the regexes themselves live only in lint-skill.sh.
+lint_sample() {
+  local check="$1" sample="$2"
+  fresh_copy
+  printf '\n%s\n' "$sample" >> "$TMP/skill/SKILL.md"
+  if cmp -s "$SKILL_DIR/SKILL.md" "$TMP/skill/SKILL.md"; then
+    printf '  ERROR %s %s: the mutation did not apply\n' "$check" "$sample"
+    tried=$((tried+1)); fail=$((fail+1)); return
+  fi
+  lint_expect "$check sample: $sample" "$check"
+}
 
-echo "== mutation test: each broken invariant must be detected by execution =="
+# lint_benign <sentence> — append an ordinary sentence; the lint must still pass.
+guards=0; guards_ok=0
+lint_benign() {
+  fresh_copy
+  printf '\n%s\n' "$1" >> "$TMP/skill/SKILL.md"
+  guards=$((guards+1))
+  if bash "$LINT" "$TMP/skill" >"$TMP/out" 2>&1; then
+    guards_ok=$((guards_ok+1)); printf '  guard     benign sentence passes: %s\n' "$1"
+  else
+    printf '  FALSE-POSITIVE  %s — rejected by %s:\n' "$1" "$LINT"
+    grep -a '^  FAIL' "$TMP/out" | sed 's/^/            /'
+    fail=$((fail+1))
+  fi
+}
 
-apply "M19 repoPath dropped from the Fix and Triage prompts" \
-  's = s.replace("await tryAgent(\n        where +\n        `Check each claimed", "await tryAgent(\n        `Check each claimed")
-s = s.replace("await tryAgent(\n    where +\n    `Fix these", "await tryAgent(\n    `Fix these")' \
-  "repoPath"
+if [ "$control_ok" = 1 ]; then
+  while IFS= read -r s; do [ -n "$s" ] && lint_sample R1 "$s"; done <<'SAMPLES'
+AskUserQuestion
+Workflow(
+Workflow tool
+workflow script
+phase.js
+Explore
+Agent tool
+Task tool
+Skill tool
+SendMessage
+ScheduleWakeup
+TodoWrite
+WebFetch
+WebSearch
+Slash command
+security-review
+code-review
+/simplify
+.claude/
+Claude Code
+Plan mode
+Research tool
+EnterWorktree
+ExitPlanMode
+Agent(
+/review
+claude -p
+PreToolUse
+SubagentStop
+MCP server
+Use the Bash tool.
+Run the Grep tool over it
+Glob
+NotebookEdit
+MultiEdit
+BashOutput
+KillShell
+SlashCommand
+via bash tool
+the grep tool
+SAMPLES
+  while IFS= read -r s; do [ -n "$s" ] && lint_sample R2 "$s"; done <<'SAMPLES'
+a gain of 12%
+a gain of 12.5%
+percentage points
+116 findings
+40 percent
+3 out of 4
+Nine out of 10
+a score of 0.86
+a 3x speedup
+SAMPLES
+  lint_sample R3 "the third mostly repeat the second"
+  while IFS= read -r s; do [ -n "$s" ] && lint_sample R5 "$s"; done <<'SAMPLES'
+sim-phase
+check-workflow-syntax
+gate-fixtures
+negative-test
+accept-release
+run scripts/check.sh
+`scripts/phase.js`
+references/plan.md
+references/build.md
+references/close.md
+references/escalation.md
+references/orchestration.md
+references/maintenance.md
+references/platforms.md
+SAMPLES
+  while IFS= read -r s; do [ -n "$s" ] && lint_sample R6 "$s"; done <<'SAMPLES'
+Opus
+Sonnet
+Haiku
+Gemini
+Claude
+claude-sonnet-4-5
+gpt-4o
+opus
+o3-mini
+o1 model
+an o3 run
+Llama
+mistral
+gemini
+GPT-5
+build.md:12
+memory:
+3 of 5
+two-thirds
+roughly half
+SAMPLES
 
-apply "M1 empty-diff guard disabled (tokens intact)" \
-  's = s.replace("if (writeHead === base) {", "if (false && writeHead === base) {")' \
-  "writeHead === base"
+  # False-positive guards: ordinary prose that must PASS. A pattern broad enough to catch every tool
+  # name is broad enough to reject a sentence a writer is entitled to, and a lint that rejects true
+  # sentences does not converge. Reported apart from the mutations, like the control.
+  while IFS= read -r s; do [ -n "$s" ] && lint_benign "$s"; done <<'SAMPLES'
+Dispatch a sub-agent for that domain.
+A Subagent keeps to its own files.
+One sub agent per domain.
+No tool replaces reading the diff.
+The tool output is evidence.
+Each tool the project uses is a check.
+A tool that cannot run is not a check that passed.
+Upgrading from 0.9 to 1.0 is supported.
+It waits 0.5 seconds before retrying.
+See api/review for the handler.
+Read the project's guide before you start.
+Plan the fix before you edit.
+Write the Goal first.
+Edit the file, then read the result.
+A check tool is fine.
+A build tool is the project's choice.
+Compare o1 against the old path.
+Test tool output is evidence.
+Build tool choice belongs to the project.
+The project's scripts are its checks.
+The project's scripts/ directory (build config, CI) names its checks.
+Run it in the Bash shell.
+A Bash one-liner is fine.
+Grep the callers before renaming.
+SAMPLES
 
-apply "M2 no-op-fix guard deleted outright" \
-  'import re
-s = re.sub(r"\n  if \(fixes > 0 && gateHead === lastHead\) \{\n.*?\n  \}\n", "\n", s, flags=re.S)' \
-  "committed nothing"
-
-apply "M3 no-op-fix guard disabled (tokens intact)" \
-  's = s.replace("if (fixes > 0 && gateHead === lastHead) {", "if (false && fixes > 0 && gateHead === lastHead) {")' \
-  "committed nothing"
-
-apply "M9 the shell-sourced half of the empty-diff guard disabled" \
-  's = s.replace("if (gateHead === base) {", "if (false && gateHead === base) {")' \
-  "gateHead === base"
-
-apply "M10 an unparseable gates head fails open again" \
-  's = s.replace("  if (!gateHead) {", "  if (false) {")'
-
-apply "M11 the implementer's self-assessment re-injected into the review prompt" \
-  's = s.replace("      `\\nDo not modify code.`", "      (concerns.length ? `\\nThe implementer flagged low confidence in: ${concerns.join(\x27; \x27)} — look there first.\\n` : \x27\x27) +\n      `\\nDo not modify code.`")'
-
-apply "M12 depth no longer decides the reviewer count" \
-  's = s.replace("const reviewers = legacyReviewers !== undefined ? legacyReviewers : (depth === \x27deep\x27 ? 2 : 1)", "const reviewers = 1")'
-
-# Found by a reviewer, who demonstrated that the union invariant passed under this mutation because the
-# assertion looked for the single letter "y", which occurs in the static triage prompt prose.
-apply "M16 the second reviewer's findings dropped entirely (not intersected — discarded)" \
-  's = s.replace("      ...verdicts.flatMap(v => list(v.blocking)),", "      ...list(verdicts[0].blocking),")'
-
-apply "M13 non-blocking findings recomputed per round instead of accumulated" \
-  's = s.replace("    verdicts.flatMap(v => list(v.nonblocking)).forEach(n => nonblockingSeen.add(n))", "    nonblockingSeen.clear(); verdicts.flatMap(v => list(v.nonblocking)).forEach(n => nonblockingSeen.add(n))")'
-
-apply "M14 a dead fix agent silently consumes a round" \
-  's = s.replace("  if (!fixed) {", "  if (false) {")'
-
-apply "M15 the triage record is dropped instead of returned" \
-  's = s.replace("        rejected: rejectedSeen,\n        untriaged,", "        rejected: [],\n        untriaged,")'
-
-apply "M4 cap fires on the round about to run, not on fixes spent" \
-  's = s.replace("if (fixes >= maxRounds) {", "if (round === maxRounds) {")'
-
-apply "M5 the fix counter never increments" \
-  's = s.replace("\n  fixes++\n", "\n")'
-
-# The structural bound is defence in depth: removing it alone changes nothing observable, because the cap
-# returns first. Its role only appears when the counter is broken too — and then its absence turns a wrong
-# return into a run that never terminates. Asserted here in combination, because a reviewer showed that
-# CLAUDE.md claimed individual coverage the harness did not have.
-# The Workflow tool passes args as a JSON string. Without the normaliser every invocation through the
-# tool returns "planPath is required" no matter what was passed — which is why phase.js had never run.
-apply "M18 the args normaliser removed (a JSON string destructures to all-undefined)" \
-  's = s.replace("} = input", "} = (typeof args === \x27object\x27 && args) || {}")'
-
-apply "M17 the structural bound removed AND the fix counter broken (must not run forever)" \
-  's = s.replace("while (verifyRound <= maxRounds + 1) {", "while (true) {").replace("\n  fixes++\n", "\n")'
-
-apply "M6 reviewer findings intersected instead of unioned" \
-  's = s.replace("      ...verdicts.flatMap(v => list(v.blocking)),", "      ...list(verdicts[0].blocking).filter(b => verdicts.every(v => list(v.blocking).includes(b))),")'
-
-apply "M7 closure computed on the raw count, before triage" \
-  's = s.replace("      blocking = reported.filter((_, i) => confirmedIdx.has(i + 1))", "      blocking = reported")'
-
-apply "M8 a dead reviewer treated as a pass" \
-  's = s.replace("if (verdicts.length < reviewers) {", "if (false) {")'
-
-# Disabled with `false &&` rather than deleted, so the rule's wording survives verbatim in the source
-# and the third argument can show that a token grep still passes on the mutant. Reverting this guard
-# restores the crash it was added for: a non-array acceptCmds reaches `.map` with the Write agent
-# already spent.
-apply "M20 the acceptCmds shape guard reverted, so a non-array reaches .map" \
-  's = s.replace("if (!Array.isArray(acceptCmds))", "if (false \x26\x26 !Array.isArray(acceptCmds))")' \
-  'Array.isArray(acceptCmds)'
-
-echo
-echo "== mutation test: the guards added after the 2026-08-24 audit =="
-
-# The `tasks` guard was shape-blind: an array of task objects stringifies to "[object Object]", passed
-# `!String(tasks).trim()`, and the Write agent was dispatched with that as its whole task list. The
-# mutation restores the original test, so the old wording of the rule survives verbatim in the source.
-apply "M31 the task-list guard reverts to a truthiness test" \
-  's = s.replace("const taskText = taskList(tasks)", "const taskText = (!tasks || !String(tasks).trim()) ? null : String(tasks)")'
-
-apply "M32 acceptCmds entries are no longer required to be runnable" \
-  's = s.replace("if (acceptCmds.some(c => typeof c !== \x27string\x27 || !c.trim()))", "if (false)")' \
-  'a phase with no runnable acceptance cannot close'
-
-# Whatever triage confirms becomes the Fix agent's work list, and that agent has write access and no
-# output schema. Selecting by index is what makes an invented finding unrepresentable.
-apply "M33 triage confirmations are trusted without checking they name a reported finding" \
-  's = s.replace("      const confirmedIdx = new Set((triage.confirmed || []).filter(inRange))", "      const confirmedIdx = new Set(triage.confirmed || [])").replace("      blocking = reported.filter((_, i) => confirmedIdx.has(i + 1))", "      blocking = (triage.confirmed || []).map(n => reported[n - 1] || String(n))")'
-
-apply "M34 a triage that ruled on nothing closes the phase" \
-  's = s.replace("      if (!ruled.size) {", "      if (false) {")'
-
-apply "M35 findings nobody ruled on are dropped instead of returned" \
-  's = s.replace("        untriaged: unruled,", "        untriaged: [],")'
-
-# Reaching green by deleting an assertion or adding a skip moves HEAD and exits 0, so every other guard
-# in the file is satisfied. The tally is the only thing that moves.
-apply "M36 the suite-shrink check is disabled (a fix round may delete its way to green)" \
-  's = s.replace("    if (peakExecuted >= 0 && total < peakExecuted) {", "    if (false) {")' \
-  'Reaching green by deleting a test'
-
-apply "M46 a tally that vanishes between rounds silently disables the suite-shrink check" \
-  's = s.replace("  if (!tally && peakExecuted >= 0) {", "  if (false) {")'
-
-apply "M57 the tally is used without coercion, so a string tally concatenates past the shrink check" \
-  's = s.replace("    ? { passed: num(rawTally.passed), failed: num(rawTally.failed), skipped: num(rawTally.skipped) }", "    ? rawTally")'
-
-apply "M58 a phase whose gates never counted tests reports the check as though it ran" \
-  's = s.replace("  if (!tally && peakExecuted < 0) tallyEverCounted = false", "  void 0")'
-
-apply "M37 the new-skip check is disabled" \
-  's = s.replace("    if (leastSkipped >= 0 && skipped > leastSkipped) {", "    if (false) {")'
-
-apply "M38 the suite findings are computed and then not reported" \
-  's = s.replace("      ...suiteFindings,", "")'
-
-# A behavior check that was asked for and did not run is not a behavior check that passed.
-apply "M39 an unrunnable behavior check is downgraded to a note and the phase closes" \
-  's = s.replace("      if (!observation.ran) {", "      if (false) {")'
-
-apply "M40 observed mismatches are collected and then dropped before triage" \
-  's = s.replace("      ...behaviorFindings,", "")'
-
-apply "M41 the review prompt loses the questions about correctness, security and test integrity" \
-  's = s.replace("      questions +", "      `Check specifically:\\n- Does every changed line trace to the Goal?\\n` +")'
-
-apply "M45 an explicit reviewers count is ignored in favour of what depth implies" \
-  's = s.replace("const reviewers = legacyReviewers !== undefined ? legacyReviewers : (depth === \x27deep\x27 ? 2 : 1)", "const reviewers = depth !== undefined ? (depth === \x27deep\x27 ? 2 : 1) : legacyReviewers")'
-
-apply "M47 a phase closes on findings triage never ruled on" \
-  's = s.replace("      if (unruled.length) {", "      if (false) {")'
-
-apply "M48 an unrunnable behavior check discards the review round that ran beside it" \
-  's = s.replace("          reviewFindings: [...new Set(verdicts.flatMap(v => list(v.blocking)))],", "          reviewFindings: [],")'
-
-apply "M49 the branch is trusted after the write step and never re-checked" \
-  's = s.replace("  if (gates.branch !== undefined && gateBranch && gateBranch !== branch) {", "  if (false) {")'
-
-apply "M50 agent-supplied lists are indexed into without being normalised" \
-  's = s.replace("  const failures = green ? review.blocking : list(gates.failures)", "  const failures = green ? review.blocking : gates.failures")'
-
-apply "M51 a newline in a caller string reaches the prompt as its own instruction" \
-  's = s.replace("if (acceptCmds.some(c => !oneLine(c)))", "if (false)")' \
-  'becomes an extra instruction'
-
-apply "M52 the reviewer fan-out has no upper bound" \
-  's = s.replace("if (reviewers > 4)", "if (false)")'
-
-apply "M53 all_pass is read for truthiness, so a red build reported as the string false closes green" \
-  's = s.replace("  const green = gates.all_pass === true", "  const green = gates.all_pass")'
-
-apply "M56 behaviorCheck becomes optional again, so the step can be skipped by omission" \
-  's = s.replace("if (behaviorCheck === undefined) {", "if (false) {")'
-
-apply "M54 a phase that ran no behavior check reports nothing about it" \
-  's = s.replace("{ ran: false, reason: \x27behaviorCheck was false: this phase closed on gates and review alone\x27 }", "null")'
-
-apply "M43 exhaustedBy reports 'mixed' again when no fix round was ever spent" \
-  's = s.replace("exhaustedBy: fixes === 0 ? \x27none\x27 : gateFixes", "exhaustedBy: gateFixes")'
-
-apply "M44 the reviewer is asked a question it cannot answer from the diff and the plan" \
-  's = s.replace("of the diff that makes it pass.", "did that test ever fail?")'
-
-apply "M55 the reviewer is no longer asked whether the plan itself is wrong" \
-  's = s.replace("      `- Does the PLAN look wrong", "      `- SKIPPED (")'
-
-apply "M59 reviewer 2 loses the history read that build.md documents the script as sending" \
-  's = s.replace("run \\`git log -p -20\\` on the paths it touches and read how the code got here. ", "")'
-
-apply "M42 both Deep reviewers are sent the identical prompt again" \
-  's = s.replace("tryAgent(reviewPrompt + closing(i), {", "tryAgent(reviewPrompt, {")'
+  # R4 fails in either direction: a cited reference that does not exist, and a reference nothing cites.
+  fresh_copy
+  printf '\nSee references/missing.md.\n' >> "$TMP/skill/SKILL.md"
+  lint_expect "R4a a cited reference does not exist" R4
+  fresh_copy
+  mkdir -p "$TMP/skill/references"
+  printf 'An orphan.\n' > "$TMP/skill/references/orphan.md"
+  if [ -f "$TMP/skill/references/orphan.md" ]; then
+    lint_expect "R4b a reference nothing cites" R4
+  else
+    printf '  ERROR R4b: the mutation did not apply\n'; tried=$((tried+1)); fail=$((fail+1))
+  fi
+fi
 
 echo
-echo "== mutation test: the survivors the 2026-08-11 audit found =="
+echo "== mutation test: the syntax gate's fixtures notice a broken gate =="
+# Delete the Date.now row from a COPY of the gate; reject-date-now.js exists for exactly this, so at
+# least one reject fixture must now be accepted. The unmutated gate must reject all of them first.
+GATE=scripts/check-workflow-syntax.sh
+tried=$((tried+1))
+cp "$GATE" "$TMP/csg.sh"
+grep -vF '[/\bDate\s*\.\s*now\b/, "Date.now"]' "$GATE" > "$TMP/csg-mut.sh"
+ctl_bad=0
+for f in tests/gate-fixtures/reject-*.js; do
+  bash "$TMP/csg.sh" "$f" >/dev/null 2>&1 && ctl_bad=$((ctl_bad+1))
+done
+# A gate that does not parse exits non-zero on every fixture, mutated or not, and the branch below
+# would call that "still rejected". That is the false coverage this file exists to prevent.
+if ! bash -n "$TMP/csg.sh" 2>"$TMP/csg-parse"; then
+  printf '  ERROR syntax-gate: the unmutated gate does not parse, so the case cannot be judged\n'
+  sed 's/^/            /' "$TMP/csg-parse"
+  fail=$((fail+1))
+elif ! bash -n "$TMP/csg-mut.sh" 2>"$TMP/csg-parse"; then
+  printf '  ERROR syntax-gate: the mutated gate does not parse, so the case cannot be judged\n'
+  sed 's/^/            /' "$TMP/csg-parse"
+  fail=$((fail+1))
+elif cmp -s "$GATE" "$TMP/csg-mut.sh"; then
+  printf '  ERROR syntax-gate: the mutation did not apply — the Date.now row is not where the patch looks\n'
+  fail=$((fail+1))
+elif [ "$ctl_bad" -ne 0 ]; then
+  printf '  ERROR syntax-gate: the UNMUTATED gate accepts %s reject fixture(s), so the case cannot be judged\n' "$ctl_bad"
+  fail=$((fail+1))
+else
+  accepted=0
+  for f in tests/gate-fixtures/reject-*.js; do
+    bash "$TMP/csg-mut.sh" "$f" >/dev/null 2>&1 && accepted=$((accepted+1))
+  done
+  if [ "$accepted" -ge 1 ]; then
+    detected=$((detected+1))
+    printf '  detected  syntax-gate: with the Date.now row deleted, %s reject fixture(s) are accepted\n' "$accepted"
+  else
+    printf '  SURVIVED  syntax-gate: every reject fixture still rejected on a gate that lost its Date.now row\n'
+    fail=$((fail+1))
+  fi
+fi
 
-
-
-
-
-
+echo
 # The round-cap experiment's analysis has the same contract as everything above: it must fail when the
 # thing it checks is wrong. It is what entitles a number to appear in the results documents, so a
 # version that could not reject a drifted figure would be the false coverage this file exists to
@@ -299,112 +299,6 @@ apply_exp() {
   fi
 }
 
-# ── M21-M30: the survivors an ad-hoc mutation audit found on 2026-08-11 ──────────────────────────
-# sim-phase.js printed "all 54 invariants hold" against every one of these. The invariants that kill
-# them were added in the same change; these mutations are what make that permanent, so that deleting
-# one of those invariants shows up here as a survivor rather than as a smaller number nobody reads.
-
-apply "M21 the reviewers-below-one guard deleted (a phase closes green having reviewed nothing)" \
-  's = s.replace("if (reviewers < 1)", "if (false && reviewers < 1)")'
-
-apply "M22 lastHead tracking dropped (a no-op fix after an advancing round grinds to cap-exhausted)" \
-  's = s.replace("lastHead = gateHead", "lastHead = lastHead")'
-
-apply "M23 the closed phase returns the writer's claimed head instead of the one the gates saw" \
-  's = s.replace("headSha: gateHead", "headSha: writeHead")'
-
-apply "M24 verifyRound frozen (every round labelled r1; a 4-round escalation reports round 1)" \
-  's = s.replace("verifyRound++", "verifyRound")'
-
-apply "M25 the dead-write-agent return deleted (TypeError instead of agent-error)" \
-  "s = s.replace(\"if (!work) return { agentsDispatched, status: 'agent-error', phaseLabel, round: 0, stage: 'write' }\", '')"
-
-apply "M26 the dead-redispatch return deleted" \
-  "s = s.replace(\"if (!retry) return { agentsDispatched, status: 'agent-error', phaseLabel, round: 0, stage: 'write-redispatch' }\", '')"
-
-apply "M27 the dead-gates-agent return deleted" \
-  "s = s.replace(\"if (!gates) return { agentsDispatched, status: 'agent-error', phaseLabel, round, stage: 'gates' }\", '')"
-
-apply "M28 the dead-triage-agent return deleted" \
-  "s = s.replace(\"if (!triage) return { agentsDispatched, status: 'agent-error', phaseLabel, round, stage: 'triage' }\", '')"
-
-apply "M29 the cap-exhausted payload blanks what is unresolved" \
-  "import re; s = re.sub(r'unresolved: [^,\\n]+', 'unresolved: []', s, count=1)"
-
-apply "M30 exhaustedBy pinned to a constant (the escalation cannot say which stage spent the budget)" \
-  "import re; s = re.sub(r'exhaustedBy: [^,\\n}]+', \"exhaustedBy: 'mixed'\", s, count=1)"
-
-echo
-echo "== mutation test: the guards added in the 2026-09 review pass =="
-
-# Sha equality is not diff emptiness. A revert of the phase's own work moves HEAD, survives both
-# equality guards, and hands the reviewer an empty range — which reads exactly like a clean review.
-apply "M60 the empty-tree guard disabled (a revert-shaped fix round is reviewed as clean)" \
-  's = s.replace("  if (diffLines === 0) {", "  if (false) {")' \
-  "diffLines"
-
-# The guard's input is what switched it off before: `Number(undefined)` is NaN, NaN === 0 is false, and
-# a gates step that omitted the field or answered "0 lines" walked past the check with nothing logged.
-# The mutation restores exactly that reading, so the guard is present, named, and off.
-apply "M73 an unreadable diffLines fails open again (NaN skips the empty-tree check)" \
-  's = s.replace("  if (diffLines === null) {", "  if (false) {").replace("    : null\n", "    : NaN\n")' \
-  "diffLines === 0"
-
-# The no-progress signature is built from whatever list drove the round. On a red build that is the
-# GATE failure list, whose strings do not move while the tally under them does — so a converging phase
-# was cut off. The mutation widens it back to every round.
-apply "M74 the no-progress stop fires on gate failures again (a converging red phase is cut off)" \
-  's = s.replace("if (green && fixes > 0 && fixes < maxRounds && signature === lastConfirmed) {", "if (fixes > 0 && signature === lastConfirmed) {")'
-
-# Both stops are true on the last round, and only one of them carries exhaustedBy.
-apply "M75 no-progress is tested before the cap, so the last round loses exhaustedBy" \
-  's = s.replace("fixes > 0 && fixes < maxRounds && signature === lastConfirmed", "fixes > 0 && signature === lastConfirmed")'
-
-apply "M76 the reviewer keeps the test question but loses the standard it is judged against" \
-  's = s.replace(" A test that passes with the change reverted is testing nothing.", "")'
-
-# all_pass is a judgement; the tally beside it is data. Both cross-checks are disabled together, so
-# neither can cover for the other, and the rule's wording survives verbatim for the token grep.
-apply "M61 all_pass is believed over the script's own contradicting tally" \
-  's = s.replace("if (green && tally && tally.failed > 0) {", "if (false && tally.failed > 0) {").replace("if (green && tally && tally.passed === 0 && tally.skipped > 0) {", "if (false && tally.skipped > 0) {")' \
-  "all_pass"
-
-apply "M62 the no-progress stop never fires (a deadlocked phase pays the full cap)" \
-  's = s.replace("signature === lastConfirmed", "false")'
-
-# The other direction, so no constant satisfies both: a phase that IS converging must keep its rounds.
-apply "M63 the no-progress stop always fires (a converging phase is cut off at the first fix)" \
-  's = s.replace("signature === lastConfirmed", "true")'
-
-apply "M64 the triage precedent pre-judges a reappearing claim again" \
-  's = s.replace("that reappears is EITHER the same phantom OR a real defect the earlier rejection got ", "that reappears is very likely the same phantom, so say so rather than ")'
-
-apply "M65 the triage rubric is dropped, leaving a binary confirm/reject" \
-  "import re; s = re.sub(r\"        \`First: if a claim names.*?rather than implying the claim was false.\\\\n\` \\+\\n\", '', s, flags=re.S)"
-
-apply "M66 the fix prompt loses the repair-only rule and the plan is writable again" \
-  "import re; s = re.sub(r\"    \`Repair only\\. A fix round repairs.*?never by rewriting the plan\\.\\\\n\` \\+\\n\", '', s, flags=re.S)"
-
-apply "M67 read mode disabled, so a change that is read has only behaviorCheck: false to say" \
-  's = s.replace("const readMode = !!behaviorCheck", "const readMode = false && !!behaviorCheck")' \
-  "read: "
-
-apply "M68 an unparseable branch from the gates step fails open again" \
-  's = s.replace("  if (gates.branch !== undefined && !gateBranch) {", "  if (false) {")'
-
-apply "M69 the cost is reported only on the paths that closed" \
-  's = s.replace("agentsDispatched, status: ", "status: ").replace("          agentsDispatched,\n          status: \x27behavior-unverified\x27,", "          status: \x27behavior-unverified\x27,").replace("          agentsDispatched,\n          status: \x27triage-incomplete\x27,", "          status: \x27triage-incomplete\x27,").replace("      agentsDispatched, unresolved: failures,", "      unresolved: failures,")'
-
-apply "M70 the closed phase returns its gate results raw" \
-  's = s.replace("        gates: list(gates.results),\n        nonblocking:", "        gates: gates.results,\n        nonblocking:")'
-
-apply "M71 reviewers three and four are byte-identical copies of one and two" \
-  's = s.replace("i < emphasis.length ? emphasis[i]", "true ? emphasis[i % emphasis.length]")'
-
-apply "M72 the reviewer loses the error-path and assumed-facts questions" \
-  "import re; s = re.sub(r\"      \`- What happens when something this change calls FAILS.*?confirmed it in the repository or could not.\\\\n\` \\+\\n\", '', s, flags=re.S)"
-
-echo
 echo "== mutation test: the round-cap experiment's published figures =="
 
 apply_exp "E1 a published figure in the English results document drifts from the raw data" \
@@ -429,11 +323,10 @@ open(p,"w").write(n)'
 
 echo
 if [ "$fail" -eq 0 ]; then
-  echo "negative-test: $detected/$tried mutations killed"
-  echo "  (the denominator is hand-written: it counts the defects someone thought to inject."
-  echo "   An audit on 2026-08-11 injected 88 into phase.js and 21 survived, so a 100% kill rate"
-  echo "   here bounds nothing above the mutations below.)"
+  echo "negative-test: $detected/$tried mutations killed; control passes; $guards_ok/$guards false-positive guards hold"
+  echo "  (the denominator counts the defects someone thought to inject, and a full kill rate"
+  echo "   bounds nothing beyond them: a defect nobody injected is one this run says nothing about.)"
 else
-  echo "negative-test: $fail mutation(s) SURVIVED — sim-phase.js is not asserting what it claims"
+  echo "negative-test: $fail mutation(s) SURVIVED or could not be judged — a check is not asserting what it claims"
 fi
 exit "$fail"

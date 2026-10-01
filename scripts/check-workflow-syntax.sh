@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Validate a three-loop-workflow Workflow script (phase.js, or your own).
+# Validate a Workflow script (this repository's `tests/probe.js`, or your own).
 #
 # Three things are checked, because each one fails at a different time and only the first is a
 # syntax error:
@@ -21,12 +21,13 @@
 #
 # Masking rather than a regex over raw text, because the naive version failed in both directions and
 # both were reproduced: a `Date.now()` sitting after a `//` inside a string literal passed, and a
-# CORRECT script was rejected for the word `Math.random()` appearing inside prompt text — which is a
-# live hazard here, since phase.js is mostly template-literal prompts that instruct agents about
-# determinism. A check that rejects the true sentences a writer is entitled to make does not converge.
+# CORRECT script was rejected for the word `Math.random()` appearing inside prompt text — which was a
+# live hazard, since the retired Build-loop script was mostly template-literal prompts that instructed
+# agents about determinism. A check that rejects the true sentences a writer is entitled to make does
+# not converge.
 #
-# This gate says nothing about whether the logic is right. Control flow is asserted by execution —
-# see scripts/sim-phase.js in the three-loop-workflow repository for how.
+# This gate says nothing about whether the logic is right. Its own behaviour is pinned by
+# `tests/gate-fixtures/` and `scripts/negative-test.sh`.
 #
 # Exit 0 = usable. 1 = a problem, named. 2 = usage.
 set -uo pipefail
@@ -34,7 +35,12 @@ if [ "$#" -eq 0 ]; then
   echo "usage: check-workflow-syntax.sh <file.js> [<file.js>...]" >&2
   exit 2
 fi
-JS=$(cat <<'NODE'
+# The checker is written to a file. bash 3.2 (macOS /usr/bin/bash) still scans a quoted heredoc for
+# backticks when that heredoc sits inside $(...), so the script died at parse time and a deleted
+# Date.now row could not be observed. A top-level quoted heredoc is literal.
+JS_SRC=$(mktemp)
+trap 'rm -f "$JS_SRC"' EXIT
+cat > "$JS_SRC" <<'NODE' || exit 2
 
 const fs = require("fs")
 const p = process.argv[1]
@@ -56,10 +62,10 @@ function parse(src) {
 try { parse(raw) } catch (e) { console.error(`${p}: ${e.message}`); process.exit(1) }
 
 // Blank out comments and literal text, keep code. Newlines survive so line numbers are unchanged.
-// Regex literals are recognised too: phase.js contains one holding a backtick and two quote
-// characters, and mistaking it for division corrupts every state decision after it.
+// Regex literals are recognised too: the retired Build-loop script contained one holding a backtick and
+// two quote characters, and mistaking it for division corrupts every state decision after it.
 // A keyword cannot end an expression, so a `/` after one opens a regex rather than dividing. This is
-// not a corner case here: `return /^[A-Za-z0-9._\/-]*$/` is the shape phase.js validates refs with, and
+// not a corner case: `return /^[A-Za-z0-9._\/-]*$/` is the shape that script validated refs with, and
 // reading it as division starts the scan at the ESCAPED slash inside the character class, ends it at
 // the real terminator, and blanks the `]`. The mask then silently disagrees with the file it came from.
 const OPENERS = new Set(["return","typeof","instanceof","in","of","new","delete","void","throw",
@@ -222,12 +228,11 @@ for (const [re, name] of banned) {
 }
 if (bad) process.exit(1)
 NODE
-)
 # Every file is checked, and each failure names its own file. Stopping at the first one means a caller
 # fixing a batch learns about them one run at a time.
 rc=0
 for f in "$@"; do
-  node -e "$JS" "$f" || rc=1
+  node -e "$(cat "$JS_SRC")" "$f" || rc=1
 done
 [ "$rc" -eq 0 ] || exit 1
 echo "workflow-syntax ok: $*"
