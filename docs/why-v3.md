@@ -38,8 +38,8 @@ wrong check.
 
 **The reading load.** Recomputed by the gate from the tags: in v2.7.0 the always-loaded `SKILL.md` was
 2,704 words, a Standard task read 8,725 words (`SKILL.md` plus the plan and build references), and the
-whole prose surface was 16,605 words. In v3.0.0, `SKILL.md` is 1,711 words and is the whole Standard
-route; with `references/deep.md` the surface is 2,322 words.
+whole prose surface was 16,605 words. In v3.0.0, `SKILL.md` is 1,867 words and is the whole Standard
+route; with `references/deep.md` the surface is 2,484 words.
 
 ## What was cut, and why
 
@@ -52,25 +52,28 @@ route; with `references/deep.md` the surface is 2,322 words.
   files, a numeric triage scale. The plan is `.agent/<task>/plan.md`, one directory per task, committed
   with the change. An existing `.gitignore` entry for `.agent` stays. The change description carries the
   hand-off.
-- **The delegation guide, the guide journal, the platform table.** The long guide is retired: worktrees,
-  an integrator, a script's API. Two properties stay. A delegated "done" is a claim, and the change must
-  be in the repository and non-empty before it is accepted. A bounded domain goes to its own sub-agent
-  when reading or changing it would fill this one; the brief names the domain and what it must not
-  touch, and this context keeps the conclusion, not the transcript. The probe found the model handled a
-  wrong guide better than the rule did. Install paths moved to the README.
+- **The delegation guide, the guide journal, the platform table.** The long guide is retired as
+  machinery: worktrees, a script's API, the product names. Its portable rules stay in Build, shorter. A
+  delegated "done" is a claim, and the change must be in the repository and non-empty before it is
+  accepted. A bounded domain goes to its own sub-agent when reading or changing it would fill this one;
+  the brief names the domain and what it must not touch, and this context keeps the conclusion, not the
+  transcript. The split is written into the plan before dispatch; extra contexts buy reading and review
+  rather than concurrent writes, and where writers do run at once a context that wrote neither
+  integrates the merge. The probe found the model handled a wrong guide better than the rule did.
+  Install paths moved to the README.
 - **Default test-writing.** Evidence is the cheapest thing that would fail without the change: an
   existing check turning green, a new test, or the observed outcome. No new unit test is required by
   default, and the skill names where one is the wrong check (UI rendering, wiring, configuration, thin
   calls to external services, one-off scripts, prose). A missing test is non-blocking unless it guards a
   confirmed correctness bug.
 - **Depth defaults that pushed upward.** v3 takes the lightest depth that fits. Deep fires only on four
-  narrowed triggers; Direct is decided by whether correctness is visible in the edit, or an existing
-  check pins it.
+  narrowed triggers; Direct is decided by whether correctness is visible in the edit, or whether an
+  existing check would go red if the change were wrong.
 
 ## What was kept, and on what evidence
 
-- **One risky corner escalates that corner, not the whole change**: the only rule a control arm has been
-  measured getting wrong.
+- **One risky corner raises its own depth, never the whole change's depth**: the only rule a control arm
+  has been measured getting wrong.
 - **A path a person clicks, types or calls** is driven by a context that did not write the change. That
   context gets the path and the failure, not the diff or the author's account, and a contradiction is a
   finding. The author drives it only when no such context exists, and the hand-off says so. Retiring the

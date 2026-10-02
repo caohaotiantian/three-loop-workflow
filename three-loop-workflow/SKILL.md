@@ -1,8 +1,8 @@
 ---
 name: three-loop-workflow
-description: Use for non-trivial code changes (features, behavior fixes, refactors, performance work), for changes to contract files such as public APIs, schemas, and agent instruction files like AGENTS.md or CLAUDE.md, and to review a change before it lands. Do NOT use for questions, for exploration, or for one obvious edit whose correctness is visible in the edit itself.
+description: Use for non-trivial code changes (features, behavior fixes, refactors, performance work), for a changed rule in a contract file (a public API, schema, AGENTS.md, or CLAUDE.md), and to review a change before it lands. Do NOT use for questions, for exploration, or for one obvious edit whose correctness is visible in the edit itself.
 license: MIT
-compatibility: Runtime-neutral. Assumes the work is under version control, so the whole change can be shown as one diff, and that you can run the project's own commands.
+compatibility: Assumes version control (one diff); the project's commands; references/deep.md on a Deep trigger; separate review context when the host has one (else section 5); a user for irreversible external action and section 6 stop; sub-agent host for the bounded-domain step.
 metadata:
   version: "3.0.0"
 ---
@@ -27,7 +27,7 @@ metadata:
 
 Take the lightest depth that fits.
 
-- **Direct:** correctness is visible in the edit itself, or an existing check pins it. Unsure means not visible: a typo fix is Direct, a changed default is not. Make the change; it needs no plan, and its hand-off is one line: what changed, the checks run and their result (a pass as section 4 defines it), not reviewed.
+- **Direct:** correctness is visible in the edit itself, or an existing check would go red if this change were wrong. Unsure means not visible: a typo fix is Direct, a changed default is not. Make the change; it needs no plan, and its hand-off is one line: what changed, the checks run and their result (a pass as section 4 defines it), not reviewed.
 - **Standard:** the default for behavior changes.
 - **Deep:** only when a trigger fires:
   1. a breaking change to a contract consumed outside this repository;
@@ -37,7 +37,7 @@ Take the lightest depth that fits.
 
   Then read `references/deep.md`.
 
-One risky corner escalates that corner, not the whole change. Raise the depth yourself, including when the build reveals a trigger; only the user lowers it. Before lowering it, recommend your depth. For someone new to this workflow, show what this change would skip and the failure left open. If they insist, follow them without waiving a hard constraint.
+One risky corner raises its own depth, never the whole change's depth. Raise the depth yourself, including when the build reveals a trigger; only the user lowers it. Before lowering it, recommend your depth. For someone new to this workflow, show what this change would skip and the failure left open. If they insist, follow them without waiving a hard constraint.
 
 ## 2. Plan
 
@@ -47,7 +47,7 @@ Standard scales with the change. A one-line change gets a one-line Goal, Non-goa
 
 Add **Decisions** only at real forks: the options, including the smaller one, and why the winner won.
 
-Write it to `.agent/<task>/plan.md`, one directory per task, and commit the files there with the change, unless the project has its own convention. If `.agent` is already in `.gitignore`, leave that entry as it is and do not force-add the files. The change description carries the hand-off (section 7).
+Write it to `.agent/<task>/plan.md`, one directory per task, and commit the files with the change, unless the project has its own convention. If `.agent` is in `.gitignore`, leave that entry and do not force-add the files.
 
 When two readings of the request need different work, state yours in the Goal, show it and the Accept to the user, and wait; if no one can answer, proceed on your reading and mark it unconfirmed in the hand-off. Ask about real product, scope or risk decisions with options, a recommendation and a rationale, never deciding silently; record the answer in the plan.
 
@@ -56,10 +56,12 @@ When a defect's cause is unknown, finding it is the task: its Accept is a reprod
 ## 3. Build
 
 - Every changed line traces to the Goal or a Decision. No abstraction, configurability or error handling nobody needs.
-- If the code, or a fix, contradicts the plan, stop and correct the plan openly, not silently and not at the end.
+- If the code, or a fix, contradicts the plan, stop and correct the plan openly, not at the end.
 - A delegated "done" is a claim: before accepting it, confirm the change is in the repository and non-empty.
-- **A bounded domain gets its own sub-agent** when reading it or changing it would fill this one. The brief names the domain, the files it may change, what it must not touch, and the conclusion to return. It does not receive this context's history. Keep the conclusion, not the transcript. The conclusion names where the change is. Two sub-agents do not change the same files. This context keeps the plan and the user. Then apply the claim check above.
-- Where a document quotes a figure that a command produces, cite the command beside the figure, or have a check recompute it; a bare copy goes stale without anyone noticing.
+- **A bounded domain gets its own sub-agent** when reading it or changing it would fill this one. The brief names the domain, the objective, what to read, the files it may change, what it must not touch, and the conclusion to return. It does not receive this context's history. Keep the conclusion, not the transcript, and make the conclusion name where the change is. This context keeps the plan and the user. Then apply the claim check above.
+- **Delegation buys isolation and parallelism, not understanding.** A fresh context lacks what this one has, so the cheaper arm is one context with a better brief, and fan-out is a cost, not a default. Split only work that stands alone, and write the split into the plan before dispatching it: each slice, what it may change, and what it returns.
+- **Parallel reading, serial writing.** Extra contexts buy intelligence — a read, a search, a second opinion — not concurrent writes; one writer at a time: two writers on one tree overwrite each other silently, and a whole-state read makes even disjoint files unsafe. A rework returns to the context that did it. Where two writers did run at once, a third context that wrote neither integrates: the gates run again on the merged tree, and the review covers the merged change rather than either writer's part of it — neither writer's green covers the merge.
+- Where a document quotes a figure that a command produces, cite the command beside the figure, or have a check recompute it.
 
 ## 4. Evidence
 
@@ -67,14 +69,14 @@ When a defect's cause is unknown, finding it is the task: its Accept is a reprod
 - **No new unit test is required by default.** Write one where the behavior is logic a test pins cheaply and a regression is worth guarding. It is the wrong check for UI rendering and layout, wiring and glue, configuration, thin calls to external services, one-off scripts, and prose: observe the outcome instead.
 - **Where a person clicks, types or calls it,** a context that did not write the change drives it and reports what it saw. Give it the path and the failure, not the diff or your account. A contradiction is a finding. No such context: drive it yourself and paste what you saw. Drive an off-limits surface somewhere safe and name the gap. Not driven means not checked.
 - **Where the output is read rather than run** (documents, help text, a spec), the evidence is a cold read of the finished files by a reader without the change context: read it as a product, not as a diff.
-- **An intermittent failure is itself a reproduction** and the discriminating evidence. Do not re-run it until it passes, and do not demand a deterministic reproduction before treating it as one. One this change did not cause is a named follow-up, not fixed inside this change.
+- **An intermittent failure is itself a reproduction** and the discriminating evidence. Do not re-run this change's failure until it passes, and do not demand a deterministic reproduction before treating it as one. One this change did not cause is a named follow-up, not fixed inside this change.
 - **Run the checks** before review, those covering the change after each fix, and the full set once before the hand-off. Paste the pass/fail lines, not whole logs. Everything skipped, or green bought by weakening a test, is not a pass.
 
 ## 5. Review
 
 The reviewer gets the whole change (or, for a change built in phases, the whole phase), the plan and the repository, not your summary or reasoning. Whole means every file the change adds, modifies or deletes, new untracked files included; a review of an empty or incomplete diff is not a clean review. Direct needs no reviewer; Standard gets one.
 
-**No independent context available,** for this or any other independent read: do it yourself as a separate pass, working from the diff (or plan) and the brief alone, not from memory of writing it; label it "self-review, not independent", and offer the user the brief to run elsewhere.
+**No independent context available,** for this or any other independent read: do it yourself once, not several times, working from the diff (or plan) and the brief alone, not from memory of writing it; label it "self-review, not independent", and offer the user the brief to run elsewhere.
 
 Hand over this brief verbatim:
 
@@ -105,7 +107,7 @@ or non-blocking. Do not modify code.
 
 ## 7. Close: the hand-off
 
-The change description carries:
+At Standard and Deep, the change description carries:
 
 - the Goal, as what a user can now do, and the Non-goals;
 - Accept, and what the evidence actually showed;

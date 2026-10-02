@@ -5,16 +5,16 @@ Full version history for the three-loop-workflow skill. See [README.md](./README
 ## v3.0.0 — requirements, not machinery
 
 **Breaking.** v3 replaces v2 rather than extending it. The skill states requirements and constraints
-and leaves the means to the agent: it is runtime-neutral, ships no script, names no runtime's tool or agent type,
-and needs nothing set up in a project. v2.7.0 stays at tag `v2.7.0`, with its `.skill` on that release.
+and leaves the means to the agent: it ships no script, names no runtime's tool or agent type, states
+what it needs of a host, and needs nothing set up in a project. v2.7.0 stays at tag `v2.7.0`, with its `.skill` on that release.
 Replace the installed folder rather than copying over it — see *Upgrading from v2* in the
 [README](./README.md) — and see [docs/why-v3.md](./docs/why-v3.md) for what each decision rests on.
 
 | | v2.7.0 | v3.0.0 |
 |---|---|---|
-| `SKILL.md` | 2,704 words | **1,711 words** |
-| What a Standard task reads | 8,725 words (`SKILL.md`, `plan.md`, `build.md`) | **1,711 words** (`SKILL.md` only) |
-| Total prose | 16,605 words | **2,322 words** |
+| `SKILL.md` | 2,704 words | **1,867 words** |
+| What a Standard task reads | 8,725 words (`SKILL.md`, `plan.md`, `build.md`) | **1,867 words** (`SKILL.md` only) |
+| Total prose | 16,605 words | **2,484 words** |
 | Files in the skill | `SKILL.md`, the references, `phase.js`, `check-workflow-syntax.sh`, `LICENSE` | **`SKILL.md`, `references/deep.md`, `LICENSE`** |
 
 These are surface sizes, recomputed by `scripts/accept-release.sh` from the tags. They say how much an
@@ -23,12 +23,14 @@ agent reads, not what a task costs.
 ### Retired
 
 `scripts/phase.js`, the Build loop as a Workflow script, and everything that existed to drive or check
-it. `orchestration.md`, the long delegation guide: worktrees, an integrator, a script's API. Two
-properties survive in Build. A delegated "done" is a claim, and the change must be in the repository
-and non-empty before it is accepted. A bounded domain gets its own sub-agent when reading or changing it
-would fill this one; the brief names the domain and what it must not touch, and this context keeps the
-conclusion, not the transcript. `sub-agent` is the skill's word for that context. The lint allows it
-and still rejects a runtime's tool, hook, or agent-type name. `maintenance.md` and the guide journal; its rule against writing down a number a command prints
+it. `orchestration.md`, the long delegation guide: worktrees, a script's API, and every product name.
+Its portable rules survive in Build in shorter form: a delegated "done" is a claim, and the change must
+be in the repository and non-empty before it is accepted; a bounded domain gets its own sub-agent when
+reading or changing it would fill this one, the brief names the domain and what it must not touch, and
+this context keeps the conclusion, not the transcript; the split is written into the plan before
+dispatch; extra contexts buy reading and review, not concurrent writes; and where writers do run at
+once, a context that wrote neither integrates. `sub-agent` is the skill's word for that context. The
+lint allows it and still rejects a runtime's tool, hook, or agent-type name. `maintenance.md` and the guide journal; its rule against writing down a number a command prints
 survives in Build as "cite the command, not a copied number". `platforms.md`: install paths moved to the
 README, and the degradation table became properties. The anchor map and its roles. `baseSha` bookkeeping, the progress line, gate trailers, rejection files
 and the numeric triage scale. The plan is `.agent/<task>/plan.md`, one directory per task, committed
@@ -42,12 +44,13 @@ evidence.
 
 The vocabulary is unchanged — **Plan/Build/Close**, **Direct/Standard/Deep**, **blocking/non-blocking**
 — and each term changes meaning only by narrowing. The skill takes the lightest depth that fits. Direct
-means correctness is visible in the edit, or an existing check pins it; Standard is the default for
-behavior changes and scales with the change — a one-line change gets a one-line Goal, Non-goal and
-Accept and one short independent review; Deep fires only on its triggers: a breaking change to a contract consumed outside the
+means correctness is visible in the edit, or an existing check would go red if the change were wrong;
+Standard is the default for behavior changes and scales with the change — a one-line change gets a
+one-line Goal, Non-goal and Accept and one short independent review; Deep fires only on its triggers: a
+breaking change to a contract consumed outside the
 repository, an irreversible effect outside the repository, a changed rule in a file the project treats
-as a contract, or alternatives that commit to different structures. One risky corner escalates that
-corner, not the whole change — the one rule a control arm has been measured getting wrong. The agent
+as a contract, or alternatives that commit to different structures. One risky corner raises its own
+depth, never the whole change's depth — the one rule a control arm has been measured getting wrong. The agent
 raises the depth on its own judgement; only the user lowers it, and only after a recommendation that
 shows, for someone new to the workflow, what this change would skip and the failure left open. If the
 user insists, the agent follows, records that, and does not waive a hard constraint.

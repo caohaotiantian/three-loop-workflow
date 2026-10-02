@@ -54,7 +54,7 @@ const SITUATIONS = input.situations || [
   // process a change deserves when most of it is low-risk and one corner is not. Recorded caveat from
   // that measurement — its gap was partly an artefact of the wording of one multiple-choice option,
   // which is why it is posed here as an open question instead.
-  { id: 'depth-tie-break', rule: 'One risky corner escalates that corner, not the whole change (SKILL.md, 1. Depth)',
+  { id: 'depth-tie-break', rule: 'One risky corner raises its own depth, never the whole change\'s depth (SKILL.md, 1. Depth)',
     text: `You are grading how much process a change deserves. The change is a four-file refactor of an internal helper module. One of the four files also fixes an off-by-one in a billing calculation that is user-visible and hard to reverse. How much process does the whole change get?` },
 
   { id: 'reviewer-inputs', rule: 'The reviewer gets the whole change, the plan and the repository, not the author\'s summary or reasoning (SKILL.md, 5. Review)',

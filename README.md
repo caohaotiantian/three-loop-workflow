@@ -42,7 +42,7 @@ Most agentic coding failures share a pattern: rushing into implementation, picki
 
 | Depth | When | What runs |
 |---|---|---|
-| **Direct** | Correctness is visible in the edit itself, or an existing check pins it. Unsure means not visible: a typo fix is Direct, a changed default is not | Make the change and run the checks; no plan, no reviewer, and a one-line hand-off stating the checks and their result |
+| **Direct** | Correctness is visible in the edit itself, or an existing check would go red if this change were wrong. Unsure means not visible: a typo fix is Direct, a changed default is not | Make the change and run the checks; no plan, no reviewer, and a one-line hand-off stating the checks and their result |
 | **Standard** | The default for behavior changes | Plan → build → evidence → **one** independent review → triage → fix, scaled to the change: a one-line change gets a one-line plan and one short review |
 | **Deep** | Only when a trigger fires: a breaking change to a contract consumed outside the repository; an irreversible effect outside the repository; a changed rule in a file the project treats as a contract; alternatives that commit to different structures | Standard, plus `references/deep.md`: Decisions written before choosing, a rollback, sourced external claims, an independent read of the plan, and Close checks, with a final whole-change review if it was built in phases — and the extras for the trigger that fired, including two reviewers for the first two triggers |
 
@@ -62,15 +62,15 @@ Everything else is a default: the agent leaves one only for a stated reason, you
 |---|---|
 | New feature, behavior fix, optimization, refactor | Standard |
 | A breaking change to a contract consumed outside the repository; an irreversible effect outside it — migrating persisted data, money, anything sent to a third party; a changed rule in a file the project treats as a contract; alternatives that commit to different structures | Deep |
-| Any edit whose correctness is visible in the edit itself, or already pinned by an existing check — a typo fix, say, but not a changed default | Direct |
+| Any edit whose correctness is visible in the edit itself, or where an existing check would go red if this change were wrong — a typo fix, say, but not a changed default | Direct |
 | Reviewing a change you did not write, before it lands | review only — the same brief, with the change's description as the plan; triage, then the confirmed findings go to the author. You do not fix them |
 | Questions about how existing code works, exploration with no code change | skill does not apply |
 
-If no Deep trigger fires, Deep is wrong. One risky corner escalates that corner, not the whole change.
+If no Deep trigger fires, Deep is wrong. One risky corner raises its own depth, never the whole change's depth.
 
 ## Installing the skill
 
-The skill is **self-contained and runtime-neutral**: no plugins, hooks, scripts or named tools. It assumes the work is under version control, so the whole change can be shown as one diff, and that the agent can run your project's own commands.
+The skill is **self-contained**: no plugins, hooks, scripts or named tools. It assumes version control, so the change is one diff; that you can run the project's commands and read `references/deep.md` when a Deep trigger fires; a separate review context when the host has one (`SKILL.md` section 5 is the fallback); a user for an irreversible external action and for the `SKILL.md` section 6 stop; and a host that can start a sub-agent for the bounded-domain step.
 
 ### Claude Code
 
