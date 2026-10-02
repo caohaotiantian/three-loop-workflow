@@ -12,7 +12,7 @@ A disciplined workflow for non-trivial software changes, packaged as a portable 
 
 - **`three-loop-workflow/`** — a Claude skill that operationalizes the workflow. Drop this folder into Claude Code or Claude.ai and Claude will follow it on any non-trivial code change.
 
-The skill is two Markdown files plus its `LICENSE`: `SKILL.md`, which is always loaded, and `references/deep.md`, which only Deep work reads. They are the single source of truth.
+The skill is three Markdown files plus its `LICENSE`: `SKILL.md`, which is always loaded; `references/deep.md`, which only Deep work reads; and `references/parallel.md`, which only work split across writers reads. They are the single source of truth.
 
 ## What's new
 
@@ -176,7 +176,8 @@ Your guide overrides any of the skill's defaults, so a project that keeps plans 
 │   ├── SKILL.md                      Always loaded: hard constraints, depth, plan, build, evidence,
 │   │                                 review, fix and stop, hand-off
 │   ├── references/
-│   │   └── deep.md                   Read only when a Deep trigger fires
+│   │   ├── deep.md                   Read only when a Deep trigger fires
+│   │   └── parallel.md               Read only when writers run at once
 │   └── LICENSE
 ├── scripts/
 │   ├── accept-release.sh             The repository gate: recomputes every published figure and runs
@@ -207,7 +208,7 @@ Your guide overrides any of the skill's defaults, so a project that keeps plans 
 
 ## Iterating on the workflow
 
-This skill is **load-bearing by its own definition**. Editing `SKILL.md` or `references/deep.md` changes a rule in a file this repository treats as a contract, which is a **Deep** change under the skill's own third trigger: Decisions written before choosing, a rollback, an independent read of the plan, and the Close checks. What that trigger adds is the cold read — a reader without the change context reads the whole file set the rule lives in, not only the edited lines, as a product rather than as a diff.
+This skill is **load-bearing by its own definition**. Editing any shipped file under `three-loop-workflow/` changes a rule in a file this repository treats as a contract, which is a **Deep** change under the skill's own third trigger: Decisions written before choosing, a rollback, an independent read of the plan, and the Close checks. What that trigger adds is the cold read — a reader without the change context reads the whole file set the rule lives in, not only the edited lines, as a product rather than as a diff.
 
 If you are adding a rule to the discipline — or wondering whether one still earns its tokens — run the probe:
 

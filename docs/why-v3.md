@@ -38,8 +38,8 @@ wrong check.
 
 **The reading load.** Recomputed by the gate from the tags: in v2.7.0 the always-loaded `SKILL.md` was
 2,704 words, a Standard task read 8,725 words (`SKILL.md` plus the plan and build references), and the
-whole prose surface was 16,605 words. In v3.0.0, `SKILL.md` is 1,867 words and is the whole Standard
-route; with `references/deep.md` the surface is 2,484 words.
+whole prose surface was 16,605 words. In v3.0.0, `SKILL.md` is 1,887 words and is the whole Standard
+route; with the two references the surface is 2,849 words.
 
 ## What was cut, and why
 
@@ -53,14 +53,15 @@ route; with `references/deep.md` the surface is 2,484 words.
   with the change. An existing `.gitignore` entry for `.agent` stays. The change description carries the
   hand-off.
 - **The delegation guide, the guide journal, the platform table.** The long guide is retired as
-  machinery: worktrees, a script's API, the product names. Its portable rules stay in Build, shorter. A
-  delegated "done" is a claim, and the change must be in the repository and non-empty before it is
-  accepted. A bounded domain goes to its own sub-agent when reading or changing it would fill this one;
-  the brief names the domain and what it must not touch, and this context keeps the conclusion, not the
-  transcript. The split is written into the plan before dispatch; extra contexts buy reading and review
-  rather than concurrent writes, and where writers do run at once a context that wrote neither
-  integrates the merge. The probe found the model handled a wrong guide better than the rule did.
-  Install paths moved to the README.
+  machinery: a host's worktree option, a script's API, the product names. Its portable rules stay in the
+  shipped files, shorter, together with the version-control half of its worktree guidance —
+  `references/parallel.md` is the tree a second writer works in. A delegated "done" is a claim, and the
+  change must be in the repository and non-empty before it is accepted. A bounded domain goes to its own
+  sub-agent when reading or changing it would fill this one; the brief names the domain and what it must
+  not touch, and this context keeps the conclusion, not the transcript. The split is written into the
+  plan before dispatch; extra contexts buy reading and review, writers are isolated one tree each, and a
+  context that wrote none of the parts integrates the merge. The probe found the model handled a wrong
+  guide better than the rule did. Install paths moved to the README.
 - **Default test-writing.** Evidence is the cheapest thing that would fail without the change: an
   existing check turning green, a new test, or the observed outcome. No new unit test is required by
   default, and the skill names where one is the wrong check (UI rendering, wiring, configuration, thin

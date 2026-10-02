@@ -12,10 +12,10 @@ Replace the installed folder rather than copying over it — see *Upgrading from
 
 | | v2.7.0 | v3.0.0 |
 |---|---|---|
-| `SKILL.md` | 2,704 words | **1,867 words** |
-| What a Standard task reads | 8,725 words (`SKILL.md`, `plan.md`, `build.md`) | **1,867 words** (`SKILL.md` only) |
-| Total prose | 16,605 words | **2,484 words** |
-| Files in the skill | `SKILL.md`, the references, `phase.js`, `check-workflow-syntax.sh`, `LICENSE` | **`SKILL.md`, `references/deep.md`, `LICENSE`** |
+| `SKILL.md` | 2,704 words | **1,887 words** |
+| What a Standard task reads | 8,725 words (`SKILL.md`, `plan.md`, `build.md`) | **1,887 words** (`SKILL.md` only) |
+| Total prose | 16,605 words | **2,849 words** |
+| Files in the skill | `SKILL.md`, the references, `phase.js`, `check-workflow-syntax.sh`, `LICENSE` | **`SKILL.md`, `references/deep.md`, `references/parallel.md`, `LICENSE`** |
 
 These are surface sizes, recomputed by `scripts/accept-release.sh` from the tags. They say how much an
 agent reads, not what a task costs.
@@ -23,13 +23,13 @@ agent reads, not what a task costs.
 ### Retired
 
 `scripts/phase.js`, the Build loop as a Workflow script, and everything that existed to drive or check
-it. `orchestration.md`, the long delegation guide: worktrees, a script's API, and every product name.
-Its portable rules survive in Build in shorter form: a delegated "done" is a claim, and the change must
-be in the repository and non-empty before it is accepted; a bounded domain gets its own sub-agent when
-reading or changing it would fill this one, the brief names the domain and what it must not touch, and
-this context keeps the conclusion, not the transcript; the split is written into the plan before
-dispatch; extra contexts buy reading and review, not concurrent writes; and where writers do run at
-once, a context that wrote neither integrates. `sub-agent` is the skill's word for that context. The
+it. `orchestration.md`, the long delegation guide: a host's worktree option, a script's API, and every
+product name. Its portable rules survive in the shipped files in shorter form: a delegated "done" is a
+claim, and the change must be in the repository and non-empty before it is accepted; a bounded domain
+gets its own sub-agent when reading or changing it would fill this one, the brief names the domain and
+what it must not touch, and this context keeps the conclusion, not the transcript; the split is written
+into the plan before dispatch; extra contexts buy reading and review; writers are isolated, one working
+tree each (`references/parallel.md`); and a context that wrote none of the parts integrates. `sub-agent` is the skill's word for that context. The
 lint allows it and still rejects a runtime's tool, hook, or agent-type name. `maintenance.md` and the guide journal; its rule against writing down a number a command prints
 survives in Build as "cite the command, not a copied number". `platforms.md`: install paths moved to the
 README, and the degradation table became properties. The anchor map and its roles. `baseSha` bookkeeping, the progress line, gate trailers, rejection files

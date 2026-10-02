@@ -28,6 +28,8 @@ in this file is quoted by a shipped document.
 | 13 | Agent Skills specification | agentskills.io | accessed 2026-10-02 | agentskills.io/specification | Defines no delegation primitive: a host need not be able to start an agent | normative |
 | 14 | `/orchestrate` (native and Claude dialect) | this machine | read 2026-10-02 | `~/.omp/agent/commands/orchestrate.md` | One harness's own orchestration prompt: batch by dependency, self-contained briefs, verify the workspace, send shortfalls back to the same agent | vendor practice |
 | 15 | Parallel-dive slices | installed skill | read 2026-10-02 | `~/.omp/agent/skills/`, `deep-dive-doc-slices` | Same shape: fixed section template, batched independent slices, closing slice re-derives every claim | vendor practice |
+| 16 | `git worktree` documentation | git | accessed 2026-10-02 | git-scm.com/docs/git-worktree | Path resolution, one branch per tree, and removal semantics that `references/parallel.md` states | normative |
+| 17 | `orchestration.md` at tag `v2.7.0` | this repository | 2026-09-17 | `git show v2.7.0:three-loop-workflow/references/orchestration.md` | The version-control half of the worktree scheme, recorded before v3 cut the file, including the path trap and "the plan does not travel" | first-hand record |
 
 Raw findings for the two read-only surveys behind this table are in `.agent/delegation-rules/`
 (working state, not committed): `research-web.md` (sources 1–13, 15) and `research-local.md` (14, 15 and
@@ -37,14 +39,27 @@ the harness's own agent API).
 
 | Rule in `SKILL.md` §3 | Rests on |
 |---|---|
-| `Delegation buys isolation and parallelism, not understanding` — a fresh context lacks what this one has; the cheaper arm is a better brief or a better model here | 4 (a model upgrade beat a larger budget), 5, 6; the 2026-09-17 record §2 items 2, 4, 5 |
+| `Delegation buys isolation and parallelism, not understanding` — a fresh context lacks what this one has, so the cheaper arm is a better brief | 4 (a model upgrade beat a larger budget), 5, 6; the 2026-09-17 record §2 items 2, 4, 5 |
 | `fan-out is a cost, not a default` | 7, 10, 11 — coordination is charged against the task, and more agents measured worse on a research task |
 | `Split only work that stands alone, and write the split into the plan before dispatching it` | 9 (partition by cohesion, decided before spawning), 10 (interface mismatch is the dominant cost), 14 (one deliverable plus its acceptance check per slice) |
-| `Parallel reading, serial writing` — extra contexts buy a read, a search, a second opinion, not concurrent writes | 1, 2, 3 (the one class all three endorse), 8 (parallel writers failed even on disjoint files), 9 |
+| `Parallel reading, isolated writing` — extra contexts buy a read, a search, a second opinion, and another writer where the work splits cleanly | 1, 2, 3 (the one class all three endorse), 8 (parallel writers failed even on disjoint files), 9 |
 | `a whole-state read makes even disjoint files unsafe` | 8 — the mechanism there is that a writer's *reads* span the whole tree, so file-level disjointness is not isolation |
 | `A rework returns to the context that did it` | 14, 15 — the agent still holds what the rework needs, and a fresh one re-derives it |
-| `Where two writers did run at once, a third context that wrote neither integrates … the review covers the merged change rather than either writer's part of it` | 8, 9, 10; v2.7.0's reference said the same before v3 cut it, and this change restores the requirement without its machinery |
+| `Where more than one writer produced the change, a third context that wrote neither integrates … the review covers the merged change rather than one writer's part of it` | 8, 9, 10; v2.7.0's reference said the same before v3 cut it, and this change restores the requirement without its machinery |
 | `each with a different angle added` (already in `deep.md`) — diversity comes from the role, not the count | 12 — independent agents share priors and repeat the same choice |
+
+### The tree a second writer works in — `references/parallel.md`
+
+| Rule there | Rests on |
+|---|---|
+| One tree per writer: a branch is not isolation, because writers in one checkout share the index, the build output and the diff | 8, 17 — even where the file sets are disjoint |
+| The path is anchored on the **main** tree, not the tree you are standing in, and the trees live outside the checkout under one hidden sibling | 16, 17 — `git rev-parse --show-toplevel` answers with the current tree, so from inside a linked tree the new one is grouped inside the old |
+| A relative path is worse still: it resolves against the current directory, and both misplacements exit 0 with no warning | 16, 17 |
+| One branch per tree — including one that merely exists, which is what a removed tree leaves behind | 16 |
+| Dependencies, virtual environments and build caches are per tree and want reinstalling — measure before splitting | 17 — the cost that decides whether parallelism wins on a given project |
+| Removal refuses a tree holding uncommitted work, which is a writer's ordinary state; `--force` discards that work, and prune clears the metadata of a directory deleted by hand | 16 |
+| Where the project's version control has no linked trees, a clone or a second copy serves the same purpose | 13 — the skill assumes version control, not one implementation of it |
+| The plan may not travel into the new tree | 17, and it is sharper here: where the task directory is gitignored, as this repository's is, a new tree checks out the committed tree and the plan is simply absent |
 
 ## 3. Considered and not adopted
 

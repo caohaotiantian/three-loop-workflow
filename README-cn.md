@@ -12,7 +12,7 @@ English version → [README.md](./README.md)
 
 - **`three-loop-workflow/`** —— 把工作流落实为可执行流程的 Claude skill。把这个文件夹放进 Claude Code 或 Claude.ai,Claude 在处理任何非平凡代码改动时都会按照它执行。
 
-skill 由两个 Markdown 文件加上它的 `LICENSE` 组成:始终加载的 `SKILL.md`,以及只有 Deep 档工作才会读的 `references/deep.md`。它们是唯一事实标准。
+skill 由三个 Markdown 文件加上它的 `LICENSE` 组成:始终加载的 `SKILL.md`;只有 Deep 档工作才会读的 `references/deep.md`;以及只有拆分给多个写入者的工作才会读的 `references/parallel.md`。它们是唯一事实标准。
 
 ## 更新内容
 
@@ -200,7 +200,7 @@ v1 依然存在:`git checkout v1.14.0`,或 v1.14.0 release 上的 `.skill`。该
 
 ## 修改本工作流
 
-这个 skill **按其自身定义就是 load-bearing 的**。修改 `SKILL.md` 或 `references/deep.md`,就是在改动本仓库视为契约的文件中的规则,按 skill 自己的第三条触发条件属于 **Deep** 档:先写决策再选择、回滚方案、对 plan 的一次独立阅读,以及 Close 检查。这条触发条件额外带来的是冷读 —— 一个没有变更上下文的读者,通读这条规则所在的整套文件,而不只是改动的那几行,当作产品来读,而不是当作 diff。
+这个 skill **按其自身定义就是 load-bearing 的**。修改 `three-loop-workflow/` 下任何随 skill 发布的文件,就是在改动本仓库视为契约的文件中的规则,按 skill 自己的第三条触发条件属于 **Deep** 档:先写决策再选择、回滚方案、对 plan 的一次独立阅读,以及 Close 检查。这条触发条件额外带来的是冷读 —— 一个没有变更上下文的读者,通读这条规则所在的整套文件,而不只是改动的那几行,当作产品来读,而不是当作 diff。
 
 如果你要往这套纪律里加一条规则 —— 或者想知道某条规则是否还值它花掉的 token —— 请运行探针:
 

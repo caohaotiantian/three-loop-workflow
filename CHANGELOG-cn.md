@@ -11,10 +11,10 @@ three-loop-workflow skill 的完整版本历史。skill 的介绍、适用范围
 
 | | v2.7.0 | v3.0.0 |
 |---|---|---|
-| `SKILL.md` | 2,704 词 | **1,867 词** |
-| 一个 Standard 任务要读的内容 | 8,725 词(`SKILL.md`、`plan.md`、`build.md`) | **1,867 词**(仅 `SKILL.md`) |
-| 散文总量 | 16,605 词 | **2,484 词** |
-| skill 中的文件 | `SKILL.md`、各份引用、`phase.js`、`check-workflow-syntax.sh`、`LICENSE` | **`SKILL.md`、`references/deep.md`、`LICENSE`** |
+| `SKILL.md` | 2,704 词 | **1,887 词** |
+| 一个 Standard 任务要读的内容 | 8,725 词(`SKILL.md`、`plan.md`、`build.md`) | **1,887 词**(仅 `SKILL.md`) |
+| 散文总量 | 16,605 词 | **2,849 词** |
+| skill 中的文件 | `SKILL.md`、各份引用、`phase.js`、`check-workflow-syntax.sh`、`LICENSE` | **`SKILL.md`、`references/deep.md`、`references/parallel.md`、`LICENSE`** |
 
 这些是表面尺寸,由 `scripts/accept-release.sh` 从标签重算得出。它们说的是 agent 要读多少,而不是一个任务要花
 多少成本。
@@ -22,11 +22,11 @@ three-loop-workflow skill 的完整版本历史。skill 的介绍、适用范围
 ### 已退役
 
 `scripts/phase.js` —— 写成 Workflow 脚本的 Build 循环 —— 以及所有为驱动或检查它而存在的东西。
-`orchestration.md`,那份委派长文:worktree、脚本的 API,以及所有产品名。它可移植的规则以更短的形式留在 Build 里:
-被委派方说的「做完了」是一个声明,接受之前,变更必须确实在仓库里且非空;一个有边界的领域,当阅读或改动它会填满当前
-上下文时,交给它自己的 sub-agent,简报写明领域以及它不能碰什么,当前上下文只留下结论,不留下对方的全过程;拆分在
-派发之前写进 plan;额外的上下文买到的是阅读与评审,而不是并发写入;当确实有多个写入者同时开工时,由一个什么都没写的
-上下文来集成。`sub-agent` 是 skill 对这个上下文的用词。
+`orchestration.md`,那份委派长文:宿主提供的 worktree 选项、脚本的 API,以及所有产品名。它可移植的规则以更短的
+形式留在发布的三份文件里:被委派方说的「做完了」是一个声明,接受之前,变更必须确实在仓库里且非空;一个有边界的领域,
+当阅读或改动它会填满当前上下文时,交给它自己的 sub-agent,简报写明领域以及它不能碰什么,当前上下文只留下结论,不留下
+对方的全过程;拆分在派发之前写进 plan;额外的上下文买到的是阅读与评审;写入按每个写入者一棵工作树隔离
+(`references/parallel.md`);而由什么都没写的上下文来集成。`sub-agent` 是 skill 对这个上下文的用词。
 lint 允许这个词,仍然拒绝一个运行时的工具名、hook 名或 agent 类型名。`maintenance.md` 与指南 journal;它那条「不要把命令打印出来的数字写下来」的规则,以「引用命令,而不是抄来的数字」
 的形式留在了 Build 里。`platforms.md`:安装路径挪到了
 README,降级表变成了性质。anchor map 及其角色。`baseSha` 记账、进度行、

@@ -76,10 +76,11 @@ echo "== layout =="
 # archive check near the end, and .github/workflows/release.yml.
 SHIPPED="three-loop-workflow/LICENSE
 three-loop-workflow/SKILL.md
-three-loop-workflow/references/deep.md"
+three-loop-workflow/references/deep.md
+three-loop-workflow/references/parallel.md"
 got=$(find three-loop-workflow -type f | LC_ALL=C sort)
-[ "$got" = "$SHIPPED" ] && ok "the shipped file set is exactly the three expected files" \
-  || bad "the shipped file set differs from the expected three: $(printf '%s' "$got" | tr '\n' ' ')"
+[ "$got" = "$SHIPPED" ] && ok "the shipped file set is exactly the four expected files" \
+  || bad "the shipped file set differs from the expected four: $(printf '%s' "$got" | tr '\n' ' ')"
 [ ! -e three-loop-workflow/scripts ] && ok "no scripts directory in the shipped skill" \
   || bad "a scripts/ directory is back in the shipped skill"
 echo "== version agrees with the changelog, in both languages =="
@@ -259,6 +260,7 @@ budget() {
 # above 617. Raised in its own commit, after the re-review the paragraph above requires.
 budget three-loop-workflow/SKILL.md                    2000
 budget three-loop-workflow/references/deep.md           650
+budget three-loop-workflow/references/parallel.md       375
 prose_now=$(words three-loop-workflow/SKILL.md three-loop-workflow/references/*.md)
 [ "$prose_now" -le 2680 ] && ok "the whole prose surface is $prose_now words (backstop 2680)" \
                           || bad "the prose surface has grown to $prose_now words — the per-file budgets can both pass while the set still grows"
@@ -401,9 +403,9 @@ fi
 echo "== packaged .skill carries the skill and nothing else =="
 pkg=$(mktemp -d)/x.skill
 zip -qr "$pkg" three-loop-workflow/
-chk "archive entry count" "$(unzip -Z1 "$pkg" | grep -vc '/$')" "3"
+chk "archive entry count" "$(unzip -Z1 "$pkg" | grep -vc '/$')" "4"
 [ "$(unzip -Z1 "$pkg" | grep -v '/$' | LC_ALL=C sort)" = "$SHIPPED" ] \
-  && ok "the archive holds exactly the expected three files" || bad "the archive's file set differs from the expected three"
+  && ok "the archive holds exactly the expected four files" || bad "the archive's file set differs from the expected four"
 unzip -Z1 "$pkg" | grep -qE "$V1" && bad "a v1 file is inside the .skill" || ok "no v1 file in .skill"
 unzip -Z1 "$pkg" | grep -q 'three-loop-workflow/SKILL.md' && ok "SKILL.md in .skill" || bad "SKILL.md not in .skill"
 rm -rf "$(dirname "$pkg")"
