@@ -4,15 +4,13 @@ Two things live here, and they answer different questions at wildly different pr
 
 ## `gate-fixtures/` — deterministic, free
 
-Eight files that assert `three-loop-workflow/scripts/check-workflow-syntax.sh` rejects what it claims to
-reject and accepts what is legal. `scripts/accept-release.sh` runs them in both directions on every
-push. No agents, no tokens, a few milliseconds.
+Files that assert `scripts/check-workflow-syntax.sh` rejects what it claims to reject and accepts what is
+legal. `scripts/accept-release.sh` runs them in both directions on every push, and
+`scripts/negative-test.sh` proves they notice a broken gate. No agents, no tokens, a few milliseconds.
 
-Every other deterministic check lives outside this directory: `scripts/sim-phase.js` drives the real
-`phase.js` with stub agents, `scripts/negative-test.sh` breaks it and requires the harness to notice,
-and `scripts/accept-release.sh` recomputes every published figure. Together they cost about two seconds
-of CPU and zero tokens, and they are the only things in this repository that have ever caught a
-regression.
+Every other deterministic check lives in `scripts/`: `accept-release.sh` recomputes every published
+figure and runs the rest; `lint-skill.sh` holds the shipped skill's prose properties; `negative-test.sh`
+proves both can fail.
 
 ## `probe.js` — agents, on demand, not a gate
 
@@ -33,15 +31,12 @@ suites died of exactly that.
 An eleven-fixture two-arm suite, deleted 2026-08-11. It ran every fixture with the skill loaded and
 withheld, cost 23 agents per run, and its own recorded result was that one fixture of eleven
 discriminated. Four could not fail by construction — one of them was testing whether a question gets
-asked, and a fixture's whole form is asking it. Two restated invariants that `sim-phase.js` already
-proves by execution and `negative-test.sh` already proves can fail. It had not been run in the fourteen
-commits before it was deleted, and it was not in CI, because CI cannot spawn agents.
+asked, and a fixture's whole form is asking it. Two restated invariants that the retired Build-loop
+harness proved by execution. It had not been run in the fourteen commits before it was deleted, and it
+was not in CI, because CI cannot spawn agents.
 
-Keeping it green cost more than running it ever did: a claim about the fixture tally had propagated to
-eight places across the repository, and a recomputation check, two exemption markers and a cross-file
-sweep existed to keep those eight in agreement. All of that went with the suite.
-
-The question its one discriminating fixture asked survives in `probe.js`, where it is asked when someone needs the answer.
+The question its one discriminating fixture asked survives in `probe.js`, where it is asked when someone
+needs the answer.
 
 Its guards do not, and that is a real subtraction rather than a wash. They existed for the opposite
 question — does the skill push a capable model *away* from a correct default — and a control arm alone
