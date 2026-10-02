@@ -253,10 +253,14 @@ budget() {
 # Reviewed sizes after that rule: SKILL.md 1680, deep.md 611, total 2291. The same day the plan moved
 # to a committed `.agent/<task>/plan.md`; reviewed sizes after that sentence: SKILL.md 1711, deep.md 611,
 # total 2322. Headroom stays the same proportion. The slack is still not an allowance.
-budget three-loop-workflow/SKILL.md                    1800
+# 2026-10-02: the owner asked for the delegation rules. Reviewed sizes after that change, once its two
+# readers and the blind cold read had re-checked it: SKILL.md 1867, deep.md 617, total 2484. SKILL.md and
+# the surface take the proportions this block already names (about 7% and 8%); deep.md keeps 650, still
+# above 617. Raised in its own commit, after the re-review the paragraph above requires.
+budget three-loop-workflow/SKILL.md                    2000
 budget three-loop-workflow/references/deep.md           650
 prose_now=$(words three-loop-workflow/SKILL.md three-loop-workflow/references/*.md)
-[ "$prose_now" -le 2480 ] && ok "the whole prose surface is $prose_now words (backstop 2480)" \
+[ "$prose_now" -le 2680 ] && ok "the whole prose surface is $prose_now words (backstop 2680)" \
                           || bad "the prose surface has grown to $prose_now words — the per-file budgets can both pass while the set still grows"
 
 echo "== published numbers match the recomputation =="
