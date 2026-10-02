@@ -258,11 +258,16 @@ budget() {
 # readers and the blind cold read had re-checked it: SKILL.md 1867, deep.md 617, total 2484. SKILL.md and
 # the surface take the proportions this block already names (about 7% and 8%); deep.md keeps 650, still
 # above 617. Raised in its own commit, after the re-review the paragraph above requires.
+# 2026-10-02, later: the same day, the owner asked for the tree a second writer works in. That added a
+# third shipped file, so the surface guard moves with it, and the third reference takes a line of its own:
+# reviewed sizes SKILL.md 1887, deep.md 617, references/parallel.md 345, total 2849. Each cap is its file
+# plus the proportion above; the per-file numbers were reviewed with the file, and the surface in its own
+# commit as before.
 budget three-loop-workflow/SKILL.md                    2000
 budget three-loop-workflow/references/deep.md           650
 budget three-loop-workflow/references/parallel.md       375
 prose_now=$(words three-loop-workflow/SKILL.md three-loop-workflow/references/*.md)
-[ "$prose_now" -le 2680 ] && ok "the whole prose surface is $prose_now words (backstop 2680)" \
+[ "$prose_now" -le 3100 ] && ok "the whole prose surface is $prose_now words (backstop 3100)" \
                           || bad "the prose surface has grown to $prose_now words — the per-file budgets can both pass while the set still grows"
 
 echo "== published numbers match the recomputation =="
