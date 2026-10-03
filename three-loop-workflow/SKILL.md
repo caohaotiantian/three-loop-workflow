@@ -23,6 +23,8 @@ metadata:
 
 **Read the project's guide** (AGENTS.md, CLAUDE.md) for its check commands and the files it treats as contracts; where it names none, derive them from the repository and say what you inferred. Checks come from the build config and CI; contracts are what is consumed outside this repository or persisted: public APIs, schemas, CLIs, wire formats, stored data.
 
+**Write all the English this task produces in ASD-STE100 Simplified Technical English** (`references/writing.md`). **That file also says when to use a diagram, a table, or HTML.**
+
 ## 1. Depth
 
 Take the lightest depth that fits.

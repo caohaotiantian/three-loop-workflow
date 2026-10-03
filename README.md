@@ -12,7 +12,7 @@ A disciplined workflow for non-trivial software changes, packaged as a portable 
 
 - **`three-loop-workflow/`** — a Claude skill that operationalizes the workflow. Drop this folder into Claude Code or Claude.ai and Claude will follow it on any non-trivial code change.
 
-The skill is three Markdown files plus its `LICENSE`: `SKILL.md`, which is always loaded; `references/deep.md`, which only Deep work reads; and `references/parallel.md`, which only work split across writers reads. They are the single source of truth.
+The skill is four Markdown files plus its `LICENSE`: `SKILL.md`, which is always loaded; `references/deep.md`, which only Deep work reads; `references/parallel.md`, which only work split across writers reads; and `references/writing.md`, which is read before any English is written. They are the single source of truth.
 
 ## What's new
 
@@ -177,7 +177,8 @@ Your guide overrides any of the skill's defaults, so a project that keeps plans 
 │   │                                 review, fix and stop, hand-off
 │   ├── references/
 │   │   ├── deep.md                   Read only when a Deep trigger fires
-│   │   └── parallel.md               Read only when writers run at once
+│   │   ├── parallel.md               Read only when writers run at once
+│   │   └── writing.md                Read before any English is written
 │   └── LICENSE
 ├── scripts/
 │   ├── accept-release.sh             The repository gate: recomputes every published figure and runs

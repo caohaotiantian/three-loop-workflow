@@ -77,10 +77,11 @@ echo "== layout =="
 SHIPPED="three-loop-workflow/LICENSE
 three-loop-workflow/SKILL.md
 three-loop-workflow/references/deep.md
-three-loop-workflow/references/parallel.md"
+three-loop-workflow/references/parallel.md
+three-loop-workflow/references/writing.md"
 got=$(find three-loop-workflow -type f | LC_ALL=C sort)
-[ "$got" = "$SHIPPED" ] && ok "the shipped file set is exactly the four expected files" \
-  || bad "the shipped file set differs from the expected four: $(printf '%s' "$got" | tr '\n' ' ')"
+[ "$got" = "$SHIPPED" ] && ok "the shipped file set is exactly the five expected files" \
+  || bad "the shipped file set differs from the expected five: $(printf '%s' "$got" | tr '\n' ' ')"
 [ ! -e three-loop-workflow/scripts ] && ok "no scripts directory in the shipped skill" \
   || bad "a scripts/ directory is back in the shipped skill"
 echo "== version agrees with the changelog, in both languages =="
@@ -263,9 +264,20 @@ budget() {
 # reviewed sizes SKILL.md 1887, deep.md 617, references/parallel.md 345, total 2849. Each cap is its file
 # plus the proportion above; the per-file numbers were reviewed with the file, and the surface in its own
 # commit as before.
+# 2026-10-03: the owner asked for the ASD-STE100 writing rule in the shipped skill. That adds a fourth
+# shipped file and one sentence to SKILL.md. Reviewed sizes: SKILL.md 1899, deep.md 617,
+# references/parallel.md 345, references/writing.md 629, total 3490. The new reference takes its own line
+# below — setting a cap, not raising one, so it ships with the file — and the surface line moves in its
+# own step after the re-review, as before.
+# 2026-10-03, later: the owner asked for two more things in the same reference — the rule now covers
+# everyday conversation, not only a change's artifacts, and the file carries the diagram, table, list and
+# HTML guidance. Reviewed sizes after that: SKILL.md 1913, deep.md 617, references/parallel.md 345,
+# references/writing.md 816, total 3691. The reference's own line crosses its cap here, so it moves in its
+# own step after the re-review; the surface at 3691 stays under its backstop.
 budget three-loop-workflow/SKILL.md                    2000
 budget three-loop-workflow/references/deep.md           650
 budget three-loop-workflow/references/parallel.md       375
+budget three-loop-workflow/references/writing.md        700
 prose_now=$(words three-loop-workflow/SKILL.md three-loop-workflow/references/*.md)
 [ "$prose_now" -le 3100 ] && ok "the whole prose surface is $prose_now words (backstop 3100)" \
                           || bad "the prose surface has grown to $prose_now words — the per-file budgets can both pass while the set still grows"
@@ -408,9 +420,9 @@ fi
 echo "== packaged .skill carries the skill and nothing else =="
 pkg=$(mktemp -d)/x.skill
 zip -qr "$pkg" three-loop-workflow/
-chk "archive entry count" "$(unzip -Z1 "$pkg" | grep -vc '/$')" "4"
+chk "archive entry count" "$(unzip -Z1 "$pkg" | grep -vc '/$')" "5"
 [ "$(unzip -Z1 "$pkg" | grep -v '/$' | LC_ALL=C sort)" = "$SHIPPED" ] \
-  && ok "the archive holds exactly the expected four files" || bad "the archive's file set differs from the expected four"
+  && ok "the archive holds exactly the expected five files" || bad "the archive's file set differs from the expected five"
 unzip -Z1 "$pkg" | grep -qE "$V1" && bad "a v1 file is inside the .skill" || ok "no v1 file in .skill"
 unzip -Z1 "$pkg" | grep -q 'three-loop-workflow/SKILL.md' && ok "SKILL.md in .skill" || bad "SKILL.md not in .skill"
 rm -rf "$(dirname "$pkg")"

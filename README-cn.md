@@ -12,7 +12,7 @@ English version → [README.md](./README.md)
 
 - **`three-loop-workflow/`** —— 把工作流落实为可执行流程的 Claude skill。把这个文件夹放进 Claude Code 或 Claude.ai,Claude 在处理任何非平凡代码改动时都会按照它执行。
 
-skill 由三个 Markdown 文件加上它的 `LICENSE` 组成:始终加载的 `SKILL.md`;只有 Deep 档工作才会读的 `references/deep.md`;以及只有拆分给多个写入者的工作才会读的 `references/parallel.md`。它们是唯一事实标准。
+skill 由四个 Markdown 文件加上它的 `LICENSE` 组成:始终加载的 `SKILL.md`;只有 Deep 档工作才会读的 `references/deep.md`;只有拆分给多个写入者的工作才会读的 `references/parallel.md`;以及在任何英文写作之前读的 `references/writing.md`。它们是唯一事实标准。
 
 ## 更新内容
 
@@ -171,7 +171,9 @@ v1 依然存在:`git checkout v1.14.0`,或 v1.14.0 release 上的 `.skill`。该
 │   ├── SKILL.md                      始终加载:硬约束、深度、计划、构建、证据、评审、修复与停止、
 │   │                                 交接
 │   ├── references/
-│   │   └── deep.md                   只在某条 Deep 触发条件命中时读取
+│   │   ├── deep.md                   只在某条 Deep 触发条件命中时读取
+│   │   ├── parallel.md               只在多个写入者并行时读取
+│   │   └── writing.md                任何英文写作前读取
 │   └── LICENSE
 ├── scripts/
 │   ├── accept-release.sh             仓库门禁:重算每一个已发布的数字,并运行下面所有检查
