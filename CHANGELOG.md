@@ -2,6 +2,31 @@
 
 Full version history for the three-loop-workflow skill. See [README.md](./README.md) for what the skill is, when it applies, and how to install it.
 
+## v3.1.0 — the writing rule
+
+The skill now states how its English is written, and how the things it shows are shaped.
+**`references/writing.md`** is new: it carries the ASD-STE100 Simplified Technical English rules for the
+English this task produces — a reply, a question, an explanation, the plan, the hand-off, the commit
+message, a comment in code, a report — and the guidance for diagrams, tables, lists and HTML. `SKILL.md`
+states the rule in one sentence and points at that file. The detail is not repeated in a second home.
+
+**Scope, and its one boundary.** The rule covers the prose this task writes. It does not cover a document
+the change edits, or text the change only touches. Without that boundary the rule would indict the files
+that carry it, because `SKILL.md` and `references/deep.md` use the semicolons and the long sentences the
+same rules ban. A document the task creates is in scope, which is why the new reference obeys the rules it
+ships.
+
+**Four places the source text was corrected**, each because the file names Issue 9 as its authority: the
+passive-voice rule (Issue 9 permits the passive voice in descriptive writing only when the agent is
+unknown; the source dropped that restriction and added a second case), a condition example that used a
+present-continuous form the rules ban, the vertical-list rule (the source states the threshold in one
+section and the categories in another; the shipped file keeps one home), and the Latin-abbreviation bullet
+(it prints the English replacements, not the abbreviations). The standard's public download page replaces
+the source's workstation path.
+
+The shipped set is now five files. The reading-load figures in the v3.0.0 entry are recomputed from the
+`v3.0.0` tag by `scripts/accept-release.sh`, so they stay the v3.0.0 figures.
+
 ## v3.0.0 — requirements, not machinery
 
 **Breaking.** v3 replaces v2 rather than extending it. The skill states requirements and constraints

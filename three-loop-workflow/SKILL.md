@@ -4,7 +4,7 @@ description: Use for non-trivial code changes (features, behavior fixes, refacto
 license: MIT
 compatibility: Assumes version control (one diff); the project's commands; references/deep.md on a Deep trigger; separate review context when the host has one (else section 5); a user for irreversible external action and section 6 stop; sub-agent host for the bounded-domain step.
 metadata:
-  version: "3.0.0"
+  version: "3.1.0"
 ---
 
 # Three-Loop Workflow
