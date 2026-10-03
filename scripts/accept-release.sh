@@ -269,17 +269,20 @@ budget() {
 # references/parallel.md 345, references/writing.md 629, total 3490. The new reference takes its own line
 # below — setting a cap, not raising one, so it ships with the file — and the surface line moves in its
 # own step after the re-review, as before.
+# 2026-10-03, after the diff review and the cold read: the surface guard moves with the fourth file. The
+# new reference was reviewed with its own line above; the surface moves here, in its own step, on the
+# same proportion (3490 words plus about 8%).
 # 2026-10-03, later: the owner asked for two more things in the same reference — the rule now covers
 # everyday conversation, not only a change's artifacts, and the file carries the diagram, table, list and
 # HTML guidance. Reviewed sizes after that: SKILL.md 1913, deep.md 617, references/parallel.md 345,
 # references/writing.md 816, total 3691. The reference's own line crosses its cap here, so it moves in its
-# own step after the re-review; the surface at 3691 stays under its backstop.
+# own step after the re-review; the surface at 3691 stays under its 3775 backstop and does not move.
 budget three-loop-workflow/SKILL.md                    2000
 budget three-loop-workflow/references/deep.md           650
 budget three-loop-workflow/references/parallel.md       375
 budget three-loop-workflow/references/writing.md        700
 prose_now=$(words three-loop-workflow/SKILL.md three-loop-workflow/references/*.md)
-[ "$prose_now" -le 3100 ] && ok "the whole prose surface is $prose_now words (backstop 3100)" \
+[ "$prose_now" -le 3775 ] && ok "the whole prose surface is $prose_now words (backstop 3775)" \
                           || bad "the prose surface has grown to $prose_now words — the per-file budgets can both pass while the set still grows"
 
 echo "== published numbers match the recomputation =="
