@@ -275,12 +275,13 @@ budget() {
 # 2026-10-03, later: the owner asked for two more things in the same reference — the rule now covers
 # everyday conversation, not only a change's artifacts, and the file carries the diagram, table, list and
 # HTML guidance. Reviewed sizes after that: SKILL.md 1913, deep.md 617, references/parallel.md 345,
-# references/writing.md 816, total 3691. The reference's own line crosses its cap here, so it moves in its
-# own step after the re-review; the surface at 3691 stays under its 3775 backstop and does not move.
+# references/writing.md 816, total 3691. That reference's own line is the one that went red, so it moves
+# here, in its own step, to 816 words plus about 11%; the surface at 3691 stays under its 3775 backstop
+# and does not move.
 budget three-loop-workflow/SKILL.md                    2000
 budget three-loop-workflow/references/deep.md           650
 budget three-loop-workflow/references/parallel.md       375
-budget three-loop-workflow/references/writing.md        700
+budget three-loop-workflow/references/writing.md        910
 prose_now=$(words three-loop-workflow/SKILL.md three-loop-workflow/references/*.md)
 [ "$prose_now" -le 3775 ] && ok "the whole prose surface is $prose_now words (backstop 3775)" \
                           || bad "the prose surface has grown to $prose_now words — the per-file budgets can both pass while the set still grows"
