@@ -2,6 +2,22 @@
 
 Full version history for the three-loop-workflow skill. See [README.md](./README.md) for what the skill is, when it applies, and how to install it.
 
+## v3.2.0 — implementation ownership (unreleased)
+
+- Own the assigned implementation plan, changes, evidence, review, and repairs.
+- Keep task allocation, shared interfaces, dependencies, and integration ownership with the coordinator when one exists.
+- Preserve standalone use and parent-owned implementation. Keep execution mode separate from implementation depth.
+- Limit Direct depth to obvious small edits. Existing tests do not make a non-trivial behavior change Direct.
+- Replace nested task allocation and the mandatory separate integrator with coordinator requests and integrated verification.
+- Use assigned plan paths and return artifact revisions, evidence, review state, and unresolved requests.
+- Preserve required review, writer isolation, project checks, and repair stop conditions.
+- Apply writing rules to new and rewritten prose in existing documents while preserving exact text and established formats.
+- Use available independent reviewers first and disclose fallback for missing roles without overriding stronger requirements.
+- Use complete review artifacts during fallback, including untracked files and relevant unchanged context.
+- Preserve the required starting commit when creating a writer workspace and verify transferred inputs before dependent implementation.
+- Qualify linked-worktree isolation and control shared Git operations, including stash object-ID capture and restoration.
+- Correct the README depth guidance to preserve Direct for obvious spelling and formatting fixes.
+
 ## v3.1.0 — the writing rule
 
 The skill now states how its English is written, and how the things it shows are shaped.

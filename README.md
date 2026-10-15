@@ -16,6 +16,9 @@ The skill is four Markdown files plus its `LICENSE`: `SKILL.md`, which is always
 
 ## What's new
 
+The unreleased update separates implementation from orchestration.
+See [CHANGELOG.md](./CHANGELOG.md) for the changes.
+
 [**Why v3**](./docs/why-v3.md) — what v3.0.0 cut, what it kept and on what evidence, and what nobody
 has measured.
 [**Is three fix rounds the right cap?**](./docs/2026-07-31-round-cap-experiment.md) — pre-registered,
@@ -42,13 +45,13 @@ Most agentic coding failures share a pattern: rushing into implementation, picki
 
 | Depth | When | What runs |
 |---|---|---|
-| **Direct** | Correctness is visible in the edit itself, or an existing check would go red if this change were wrong. Unsure means not visible: a typo fix is Direct, a changed default is not | Make the change and run the checks; no plan, no reviewer, and a one-line hand-off stating the checks and their result |
+| **Direct** | An obvious small edit whose correctness is visible or covered by an existing check. Non-trivial behavior changes use Standard or Deep, even with tests. A changed default cannot be Direct | Make the change and run the checks. No plan or reviewer is required. Report checks and results in one line |
 | **Standard** | The default for behavior changes | Plan → build → evidence → **one** independent review → triage → fix, scaled to the change: a one-line change gets a one-line plan and one short review |
 | **Deep** | Only when a trigger fires: a breaking change to a contract consumed outside the repository; an irreversible effect outside the repository; a changed rule in a file the project treats as a contract; alternatives that commit to different structures | Standard, plus `references/deep.md`: Decisions written before choosing, a rollback, sourced external claims, an independent read of the plan, and Close checks, with a final whole-change review if it was built in phases — and the extras for the trigger that fired, including two reviewers for the first two triggers |
 
 Five hard constraints are the only rules that are not defaults:
 
-1. **A change above Direct is reviewed by a context that did not write it**; only where none is available does the hand-off say so. Then the review runs as a separate pass, working from the diff and the brief alone, labelled "self-review, not independent", and you are offered the brief to run elsewhere. At Deep, each independent read becomes one such pass.
+1. **A change above Direct requires independent review.** Use available independent reviewers first. For missing roles, follow the fallback in `SKILL.md` section 5. It uses complete artifacts and reports self-review separately. Stronger independence requirements still apply.
 2. **Run the project's checks.** A check that could not be run is not a check that passed.
 3. **The hand-off reports what was observed**, not what was intended.
 4. **A change to who can reach what** — authentication, authorization, secrets, a new path for untrusted input — is never Direct.
@@ -56,13 +59,25 @@ Five hard constraints are the only rules that are not defaults:
 
 Everything else is a default: the agent leaves one only for a stated reason, your project's guide overrides any of them, and the means are the agent's. Evidence is proportionate — **no new unit test is required by default**, and the skill names where one is the wrong check (UI rendering, wiring, configuration, thin calls to external services, one-off scripts, prose). Where a person clicks, types or calls the change, a context that did not write it drives that path.
 
+## Use with a coordinator
+
+Three-loop-workflow owns each assigned implementation, including its plan, changes, evidence, review, and repairs.
+The implementer can be the parent or an assigned executor.
+When Orchestrate coordinates work, it owns task allocation, dependencies, shared interfaces, integration ownership, and overall acceptance.
+Execution mode and implementation depth remain separate. Direct execution does not remove required implementation gates.
+
+Use the supplied implementation plan path and reference shared requirements.
+Return artifact revisions, evidence, review state, and unresolved requests to the coordinator.
+Request scheduling changes instead of recursively coordinating other tasks.
+Without a coordinator, manage the change and required roles directly.
+
 ## When the skill applies
 
 | Change type | Depth |
 |---|---|
 | New feature, behavior fix, optimization, refactor | Standard |
 | A breaking change to a contract consumed outside the repository; an irreversible effect outside it — migrating persisted data, money, anything sent to a third party; a changed rule in a file the project treats as a contract; alternatives that commit to different structures | Deep |
-| Any edit whose correctness is visible in the edit itself, or where an existing check would go red if this change were wrong — a typo fix, say, but not a changed default | Direct |
+| An obvious small edit whose correctness is visible or covered by an existing check, such as a typo fix | Direct |
 | Reviewing a change you did not write, before it lands | review only — the same brief, with the change's description as the plan; triage, then the confirmed findings go to the author. You do not fix them |
 | Questions about how existing code works, exploration with no code change | skill does not apply |
 
@@ -70,7 +85,10 @@ If no Deep trigger fires, Deep is wrong. One risky corner raises its own depth, 
 
 ## Installing the skill
 
-The skill is **self-contained**: no plugins, hooks, scripts or named tools. It assumes version control, so the change is one diff; that you can run the project's commands and read `references/deep.md` when a Deep trigger fires; a separate review context when the host has one (`SKILL.md` section 5 is the fallback); a user for an irreversible external action and for the `SKILL.md` section 6 stop; and a host that can start a sub-agent for the bounded-domain step.
+The skill is **self-contained**: no plugins, hooks, scripts or named tools.
+It assumes version control, project checks, and access to `references/deep.md` when a Deep trigger applies.
+It uses independent review when available, with the fallback in `SKILL.md` section 5.
+It requires user decisions for irreversible external actions and the repair stop conditions in section 6.
 
 ### Claude Code
 
@@ -209,7 +227,11 @@ Your guide overrides any of the skill's defaults, so a project that keeps plans 
 
 ## Iterating on the workflow
 
-This skill is **load-bearing by its own definition**. Editing any shipped file under `three-loop-workflow/` changes a rule in a file this repository treats as a contract, which is a **Deep** change under the skill's own third trigger: Decisions written before choosing, a rollback, an independent read of the plan, and the Close checks. What that trigger adds is the cold read — a reader without the change context reads the whole file set the rule lives in, not only the edited lines, as a product rather than as a diff.
+This skill is **load-bearing by its own definition**.
+A rule change in a shipped skill file requires **Deep** under the third depth trigger.
+Obvious spelling and formatting fixes can use Direct.
+Deep requires decisions, rollback, independent plan review, and the Close checks in `references/deep.md`.
+For rule changes, the cold read covers the complete affected rule surfaces.
 
 If you are adding a rule to the discipline — or wondering whether one still earns its tokens — run the probe:
 

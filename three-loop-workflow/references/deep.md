@@ -37,4 +37,4 @@ Add the row for each trigger that fired.
 
 The plan read and each diff review, the phased final review included, get two independent reviewers instead of one. Both get the same brief, each with a different angle added: one is an adversary hunting a break; the other is next year's maintainer, who also reads the history of the touched paths. Union their findings; never intersect them. Both do the scoped re-check after each fix.
 
-Without independent contexts, follow SKILL.md section 5.
+If fewer independent reviewers are available than required, follow SKILL.md section 5 for the missing roles.

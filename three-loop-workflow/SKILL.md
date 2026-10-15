@@ -1,15 +1,23 @@
 ---
 name: three-loop-workflow
-description: Use for non-trivial code changes (features, behavior fixes, refactors, performance work), for a changed rule in a contract file (a public API, schema, AGENTS.md, or CLAUDE.md), and to review a change before it lands. Do NOT use for questions, for exploration, or for one obvious edit whose correctness is visible in the edit itself.
+description: Implement non-trivial code or contract-rule changes through Plan, Build, and Close. Also use for pre-landing review. Exclude questions, exploration, and obvious small edits.
 license: MIT
-compatibility: Assumes version control (one diff); the project's commands; references/deep.md on a Deep trigger; separate review context when the host has one (else section 5); a user for irreversible external action and section 6 stop; sub-agent host for the bounded-domain step.
+compatibility: Assumes version control, project checks, and user decisions for irreversible actions and repair limits. Use independent review when available, otherwise section 5.
 metadata:
-  version: "3.1.0"
+  version: "3.2.0"
 ---
 
 # Three-Loop Workflow
 
 **Plan → Build → Close**, at a depth chosen from the stakes.
+
+Own the assigned implementation: its plan, changes, evidence, review, and repairs.
+The implementer can be the parent or an assigned executor.
+When a coordinator exists, leave task allocation, dependencies, shared interfaces, and integration ownership with it.
+Request required roles or scheduling changes from that coordinator. Do not recursively coordinate other tasks.
+Route user decision requests through the coordinator.
+Without a coordinator, manage the change and required roles directly.
+Implementation depth and execution mode are separate. Direct execution does not remove required review.
 
 **Hard constraints**, the only rules that are not defaults:
 
@@ -29,7 +37,7 @@ metadata:
 
 Take the lightest depth that fits.
 
-- **Direct:** correctness is visible in the edit itself, or an existing check would go red if this change were wrong. Unsure means not visible: a typo fix is Direct, a changed default is not. Make the change; it needs no plan, and its hand-off is one line: what changed, the checks run and their result (a pass as section 4 defines it), not reviewed.
+- **Direct:** an obvious small edit whose correctness is visible or covered by an existing check. A non-trivial behavior change is Standard or Deep, even with tests. A typo fix can be Direct. A changed default cannot. Make the change and run the checks. No plan or reviewer is required. Report the change, checks, results, and absence of review in one line.
 - **Standard:** the default for behavior changes.
 - **Deep:** only when a trigger fires:
   1. a breaking change to a contract consumed outside this repository;
@@ -51,6 +59,9 @@ Add **Decisions** only at real forks: the options, including the smaller one, an
 
 Write it to `.agent/<task>/plan.md`, one directory per task, and commit the files with the change, unless the project has its own convention. If `.agent` is in `.gitignore`, leave that entry and do not force-add the files.
 
+For assigned work, use the supplied plan path and reference shared scope and acceptance criteria.
+Keep implementation details there. Leave global task records with the coordinator.
+
 When two readings of the request need different work, state yours in the Goal, show it and the Accept to the user, and wait; if no one can answer, proceed on your reading and mark it unconfirmed in the hand-off. Ask about real product, scope or risk decisions with options, a recommendation and a rationale, never deciding silently; record the answer in the plan.
 
 When a defect's cause is unknown, finding it is the task: its Accept is a reproduction; plan the fix after it.
@@ -59,10 +70,9 @@ When a defect's cause is unknown, finding it is the task: its Accept is a reprod
 
 - Every changed line traces to the Goal or a Decision. No abstraction, configurability or error handling nobody needs.
 - If the code, or a fix, contradicts the plan, stop and correct the plan openly, not at the end.
-- A delegated "done" is a claim: before accepting it, confirm the change is in the repository and non-empty.
-- **A bounded domain gets its own sub-agent** when reading it or changing it would fill this one. The brief names the domain, the objective, what to read, the files it may change, what it must not touch, and the conclusion to return. It does not receive this context's history. Keep the conclusion, not the transcript, and make the conclusion name where the change is. This context keeps the plan and the user. Then apply the claim check above.
-- **Delegation buys isolation and parallelism, not understanding.** A fresh context lacks what this one has, so the cheaper arm is one context with a better brief, and fan-out is a cost, not a default. Split only work that stands alone, and write the split into the plan before dispatching it: each slice, what it may change, and what it returns.
-- **Parallel reading, isolated writing.** Extra contexts buy intelligence — a read, a search, a second opinion — and, where the work splits cleanly, another writer: never two writers in one working tree, where they overwrite each other silently and a whole-state read makes even disjoint files unsafe. A second writer running at once gets its own tree and its own files (`references/parallel.md`); a rework returns to the context that did it. Where more than one writer produced the change, a third context that wrote neither integrates: the gates run again on the merged tree, and the review covers the merged change rather than one writer's part of it — neither writer's green covers the merge.
+- Stay within assigned files and interfaces. If these need changes, pause affected work and request a revised assignment.
+- **Parallel reading, isolated writing.** Use a separate working tree for each concurrent writer (`references/parallel.md`).
+- For integration work, run checks and review against the merged change. Passing slice checks do not establish integrated acceptance.
 - Where a document quotes a figure that a command produces, cite the command beside the figure, or have a check recompute it.
 
 ## 4. Evidence
@@ -78,7 +88,12 @@ When a defect's cause is unknown, finding it is the task: its Accept is a reprod
 
 The reviewer gets the whole change (or, for a change built in phases, the whole phase), the plan and the repository, not your summary or reasoning. Whole means every file the change adds, modifies or deletes, new untracked files included; a review of an empty or incomplete diff is not a clean review. Direct needs no reviewer; Standard gets one.
 
-**No independent context available,** for this or any other independent read: do it yourself once, not several times, working from the diff (or plan) and the brief alone, not from memory of writing it; label it "self-review, not independent", and offer the user the brief to run elsewhere.
+**Unavailable independent reviews or reads:** use available independent contexts first.
+For missing roles, inspect the complete artifacts specified above, not your recollection of the work.
+Apply the missing roles' briefs in one self-review pass.
+Label it "self-review, not independent" and report the missing independent roles.
+Offer the user the briefs to run elsewhere.
+This fallback does not override stricter user, project, or host requirements.
 
 Hand over this brief verbatim:
 
@@ -119,5 +134,8 @@ At Standard and Deep, the change description carries:
 - unfixed non-blocking findings, one line each;
 - residual risk;
 - at Deep, the rollback as it now stands.
+
+For assigned work, return artifact paths and revisions, evidence, review state, unresolved requests, and active or unknown modifying commands.
+Report local completion to the coordinator. Do not claim completion of the overall task.
 
 Review, security or orchestration tools the user adds supplement the independent review, never replace it.

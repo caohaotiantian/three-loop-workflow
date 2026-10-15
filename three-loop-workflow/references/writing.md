@@ -11,8 +11,9 @@ rules as a direction of travel. The approved dictionary of about 900 words is no
 do not claim dictionary compliance. The standard is at
 <https://www.asd-ste100.org/STE_downloads.html>.
 
-This rule covers the prose this task writes. It does not cover a document that the change edits, or text
-that the change only touches.
+Apply this rule to new and rewritten prose in both new and existing documents.
+Preserve exact quotations, identifiers, schemas, and established document formats.
+Leave untouched text as it is.
 
 ## Words
 
