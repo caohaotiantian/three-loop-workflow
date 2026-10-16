@@ -2,7 +2,9 @@
 
 Full version history for the three-loop-workflow skill. See [README.md](./README.md) for what the skill is, when it applies, and how to install it.
 
-## v3.2.0 — implementation ownership (unreleased)
+## v3.2.0 — implementation ownership (2026-10-16)
+
+Release: [v3.2.0](https://github.com/caohaotiantian/three-loop-workflow/releases/tag/v3.2.0)
 
 - Own the assigned implementation plan, changes, evidence, review, and repairs.
 - Keep task allocation, shared interfaces, dependencies, and integration ownership with the coordinator when one exists.

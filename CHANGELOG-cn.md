@@ -2,7 +2,9 @@
 
 three-loop-workflow skill 的完整版本历史。skill 的介绍、适用范围与安装方式见 [README-cn.md](./README-cn.md)。
 
-## v3.2.0 —— 实现职责（尚未发布）
+## v3.2.0 —— 实现职责（2026-10-16）
+
+发布：[v3.2.0](https://github.com/caohaotiantian/three-loop-workflow/releases/tag/v3.2.0)
 
 - 负责分配任务的实现计划、修改、证据、评审与修复。
 - 有协调者时，由其管理任务分配、共享接口、依赖与集成归属。

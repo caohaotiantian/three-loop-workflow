@@ -16,7 +16,7 @@ The skill is four Markdown files plus its `LICENSE`: `SKILL.md`, which is always
 
 ## What's new
 
-The unreleased update separates implementation from orchestration.
+**v3.2.0** separates implementation from orchestration.
 See [CHANGELOG.md](./CHANGELOG.md) for the changes.
 
 [**Why v3**](./docs/why-v3.md) — what v3.0.0 cut, what it kept and on what evidence, and what nobody

@@ -16,7 +16,7 @@ skill 由四个 Markdown 文件加上它的 `LICENSE` 组成:始终加载的 `SK
 
 ## 更新内容
 
-尚未发布的更新将具体实现与编排调度分开。变更见 [CHANGELOG-cn.md](./CHANGELOG-cn.md)。
+**v3.2.0** 将具体实现与编排调度分开。变更见 [CHANGELOG-cn.md](./CHANGELOG-cn.md)。
 
 [**为什么有 v3**](./docs/why-v3-cn.md) —— v3.0.0 砍掉了什么、保留了什么、依据是什么,以及哪些事情没有人
 测量过。
