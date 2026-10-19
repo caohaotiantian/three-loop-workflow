@@ -4,7 +4,7 @@ description: Implement non-trivial code or contract-rule changes through Plan, B
 license: MIT
 compatibility: Assumes version control, project checks, and user decisions for irreversible actions and repair limits. Use independent review when available, otherwise section 5.
 metadata:
-  version: "3.2.0"
+  version: "3.3.0"
 ---
 
 # Three-Loop Workflow
@@ -53,7 +53,7 @@ One risky corner raises its own depth, never the whole change's depth. Raise the
 
 At Standard and Deep, before the first edit, write the **Goal**, the **Non-goals** you were tempted by, and **Accept**, the evidence (section 4).
 
-Standard scales with the change. A one-line change gets a one-line Goal, Non-goal and Accept and a short review, not a document.
+Scale the plan and review to the change.
 
 Add **Decisions** only at real forks: the options, including the smaller one, and why the winner won.
 
@@ -61,6 +61,7 @@ Write it to `.agent/<task>/plan.md`, one directory per task, and commit the file
 
 For assigned work, use the supplied plan path and reference shared scope and acceptance criteria.
 Keep implementation details there. Leave global task records with the coordinator.
+Preserve existing canonical task directories. For delegated plans, default to `.agent/<task>/tasks/<slice-id>/plan.md`.
 
 When two readings of the request need different work, state yours in the Goal, show it and the Accept to the user, and wait; if no one can answer, proceed on your reading and mark it unconfirmed in the hand-off. Ask about real product, scope or risk decisions with options, a recommendation and a rationale, never deciding silently; record the answer in the plan.
 
@@ -74,6 +75,10 @@ When a defect's cause is unknown, finding it is the task: its Accept is a reprod
 - **Parallel reading, isolated writing.** Use a separate working tree for each concurrent writer (`references/parallel.md`).
 - For integration work, run checks and review against the merged change. Passing slice checks do not establish integrated acceptance.
 - Where a document quotes a figure that a command produces, cite the command beside the figure, or have a check recompute it.
+
+For durable work, store check results in `evidence/checks.md` beside the plan.
+Record criteria, commands, revisions, results, evidence links, and invalidation conditions.
+Store findings, triage, reviewer identity, and repair rounds in `evidence/review.md`.
 
 ## 4. Evidence
 
@@ -123,6 +128,10 @@ or non-blocking. Do not modify code.
 **Stop and ask the user** when a round leaves the confirmed findings unchanged, a fix grows into files or machinery the plan did not cover, or blocking findings remain after the third round. Bring the unresolved findings verbatim, what was tried, where it breaks with real output, the options (revise the plan, accept a documented risk, drop the item as a follow-up, split the machinery out) and your recommendation. Never lower the bar silently.
 
 ## 7. Close: the hand-off
+
+The hand-off is the final change description. A coordinator's HANDOFF.md instead provides resume instructions.
+At entry, read project MEMORY.md. At completion, apply the memory rules in `references/writing.md`.
+With a coordinator, submit candidate lessons and let it maintain memory under its continuity rules.
 
 At Standard and Deep, the change description carries:
 

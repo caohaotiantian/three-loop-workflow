@@ -2,6 +2,15 @@
 
 Full version history for the three-loop-workflow skill. See [README.md](./README.md) for what the skill is, when it applies, and how to install it.
 
+## v3.3.0 — task records and project memory (2026-10-19)
+
+Release: [v3.3.0](https://github.com/caohaotiantian/three-loop-workflow/releases/tag/v3.3.0)
+
+- Share new task roots and preserve existing canonical directories.
+- Define durable check and review evidence paths.
+- Read project memory at entry and maintain sourced lessons after each task.
+- Remove obsolete development archives and retain current tests and measurement evidence.
+
 ## v3.2.0 — implementation ownership (2026-10-16)
 
 Release: [v3.2.0](https://github.com/caohaotiantian/three-loop-workflow/releases/tag/v3.2.0)

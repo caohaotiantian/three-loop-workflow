@@ -71,6 +71,12 @@ Return artifact revisions, evidence, review state, and unresolved requests to th
 Request scheduling changes instead of recursively coordinating other tasks.
 Without a coordinator, manage the change and required roles directly.
 
+New coordinated work shares `.agent/<task-id>/` with delegated plans under `tasks/<slice-id>/plan.md`.
+Preserve existing canonical directories. Keep durable check and review records in `evidence/` beside each plan.
+The final change description reports delivery. `HANDOFF.md` provides resume instructions.
+Read project-root `MEMORY.md` at entry and review the available session for reusable lessons at completion.
+With a coordinator, submit candidate lessons for its memory update.
+
 ## When the skill applies
 
 | Change type | Depth |
@@ -216,14 +222,16 @@ Your guide overrides any of the skill's defaults, so a project that keeps plans 
 │   ├── 2026-07-31-round-cap-*.md     Does a document-shaped Deep change converge in three rounds?
 │   ├── analysis-2026-09-17-*.md      What the v2.7.0 delegation guidance rested on (retired in v3):
 │   │                                 every source with its date and a grade, and what was left out
-│   ├── measurements/                 Pre-registration and raw artifacts, committed so the figures
-│   │                                 can be recomputed rather than taken on trust
-│   └── design/, implementation/      Frozen v1 per-task archive — historical, not current behavior
+│   └── measurements/                 Pre-registration and raw artifacts, committed so the figures
+│                                     can be recomputed rather than taken on trust
 ├── README.md                         this file
 ├── README-cn.md                      Chinese version
 ├── CHANGELOG.md                      Full version history
 └── CHANGELOG-cn.md                   Chinese version history
 ```
+
+The retired v1 task archives and early audit reports remain available in Git history.
+Use `git show v1.14.0:docs/design/<file>` for v1 design records.
 
 ## Iterating on the workflow
 

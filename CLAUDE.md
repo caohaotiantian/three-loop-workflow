@@ -92,7 +92,7 @@ gate's file-set pins (Common Commands).
 
 **Not** load-bearing — edited directly with one fresh-agent review: `tests/**`, `README.md` /
 `README-cn.md`, `CHANGELOG*.md`, every top-level `docs/*.md` (announcements, the rebuild articles, the
-audit records), and the `docs/design/` + `docs/implementation/` archives.
+audit records).
 
 **`tests/**` stays off that list deliberately, and the reason is not that the tests are unimportant.**
 Agents asked to improve this skill have repeatedly redirected their effort into the test suite —
@@ -102,8 +102,10 @@ spend a change's budget on the suite unless the change is about the suite. What 
 is small on purpose: the syntax gate's `gate-fixtures/`, which cost nothing, and `probe.js`, which is an
 instrument rather than a gate. The deterministic harnesses live in `scripts/`, which **is** load-bearing.
 
-`docs/design/` and `docs/implementation/` are a **frozen v1 archive**, kept as the record of how v1 was
-built. Do not add to those directories and do not treat their contents as describing current behavior.
+The retired `docs/design/` and `docs/implementation/` archives remain in Git history.
+Read them from tag `v1.14.0` when historical context is necessary.
+Early June and July audit and research reports also remain in Git history.
+Keep current tests and measurement evidence because repository checks and published results depend on them.
 
 ## Language Policy
 
@@ -111,8 +113,7 @@ All skill files and process documents: English. Terminology must be consistent w
 **Plan/Build/Close**, **Direct/Standard/Deep**, **blocking/non-blocking**.
 
 v1's vocabulary (L1/L2/L3/F, Full/Light/None, severe/general) is **retired for new writing**. It still
-appears throughout the historical record — the `CHANGELOG*.md` version tables, the frozen `docs/design/`
-and `docs/implementation/` archives, and the dated audit and analysis files under `docs/` — all of which
+appears throughout the historical record — the `CHANGELOG*.md` version tables and the dated analysis files under `docs/` — all of which
 are records of what was true when written and must not be retro-edited into current terms. v2's retired
 file names get the same treatment wherever a record written before v3.0.0 names them.
 

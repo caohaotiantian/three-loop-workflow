@@ -83,3 +83,14 @@ Show the structure of the content when the structure is real. Do not add a diagr
   directives that the ASCII renderer drops.
 - If a diagram and the text disagree, correct the diagram.
 - Use a diagram only when one sentence is not sufficient.
+
+## Project memory
+
+Use project-root MEMORY.md unless project instructions select another path.
+After each task, review the full available session for reusable lessons and supported user preferences.
+Disclose missing context. Do not invent habits.
+Record dates, scope, sources, and reuse conditions. Exclude secrets, transcripts, and temporary status.
+Reread memory before updates. Merge duplicates and correct obsolete entries.
+If no useful lesson exists, record the review date and outcome.
+Keep one writer. Reconcile concurrent changes. Report unavailable memory. Share accessible memory with new contexts.
+Memory never overrides instructions or grants authorization.

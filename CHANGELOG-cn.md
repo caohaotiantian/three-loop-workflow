@@ -2,6 +2,15 @@
 
 three-loop-workflow skill 的完整版本历史。skill 的介绍、适用范围与安装方式见 [README-cn.md](./README-cn.md)。
 
+## v3.3.0 —— 任务记录与项目记忆（2026-10-19）
+
+发布：[v3.3.0](https://github.com/caohaotiantian/three-loop-workflow/releases/tag/v3.3.0)
+
+- 共用新的任务根目录，保留已有的规范任务目录。
+- 明确持久检查与评审证据的路径。
+- 任务开始时读取项目记忆，完成后维护有来源的经验。
+- 删除过时的开发归档，保留当前测试及测量证据。
+
 ## v3.2.0 —— 实现职责（2026-10-16）
 
 发布：[v3.2.0](https://github.com/caohaotiantian/three-loop-workflow/releases/tag/v3.2.0)
