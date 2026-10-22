@@ -2,6 +2,15 @@
 
 Full version history for the three-loop-workflow skill. See [README.md](./README.md) for what the skill is, when it applies, and how to install it.
 
+## v3.4.0 — shared worktree locations (2026-10-22)
+
+Release: [v3.4.0](https://github.com/caohaotiantian/three-loop-workflow/releases/tag/v3.4.0)
+
+- Default new worktrees to a shared sibling `.worktree` directory with repository and module namespaces.
+- Replace the porcelain-entry anchor with verified checkout paths for modules and linked worktrees.
+- Require explicit confirmation before location deviations, with applicable confirmed exceptions reused.
+- Record durable location rules in AGENTS.md and confirmed exception decisions in MEMORY.md.
+
 ## v3.3.0 — task records and project memory (2026-10-19)
 
 Release: [v3.3.0](https://github.com/caohaotiantian/three-loop-workflow/releases/tag/v3.3.0)

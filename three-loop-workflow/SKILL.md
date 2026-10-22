@@ -4,7 +4,7 @@ description: Implement non-trivial code or contract-rule changes through Plan, B
 license: MIT
 compatibility: Assumes version control, project checks, and user decisions for irreversible actions and repair limits. Use independent review when available, otherwise section 5.
 metadata:
-  version: "3.3.0"
+  version: "3.4.0"
 ---
 
 # Three-Loop Workflow

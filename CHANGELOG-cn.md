@@ -2,6 +2,15 @@
 
 three-loop-workflow skill 的完整版本历史。skill 的介绍、适用范围与安装方式见 [README-cn.md](./README-cn.md)。
 
+## v3.4.0 —— 统一 worktree 存放路径（2026-10-22）
+
+发布：[v3.4.0](https://github.com/caohaotiantian/three-loop-workflow/releases/tag/v3.4.0)
+
+- 新 worktree 默认使用仓库同级的 `.worktree` 目录，并保留仓库及模块命名空间。
+- 使用已核实的 checkout 路径，替代从 porcelain 首项推导模块及 linked worktree 锚点的方法。
+- 偏离存放规则前必须获得明确确认，复用适用的已确认例外。
+- 在 AGENTS.md 中记录长期路径规则，在 MEMORY.md 中记录已确认的例外决定。
+
 ## v3.3.0 —— 任务记录与项目记忆（2026-10-19）
 
 发布：[v3.3.0](https://github.com/caohaotiantian/three-loop-workflow/releases/tag/v3.3.0)
