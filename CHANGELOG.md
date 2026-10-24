@@ -2,6 +2,17 @@
 
 Full version history for the three-loop-workflow skill. See [README.md](./README.md) for what the skill is, when it applies, and how to install it.
 
+## v3.5.0 — selective records and writing rules (2026-10-24)
+
+Release: [v3.5.0](https://github.com/caohaotiantian/three-loop-workflow/releases/tag/v3.5.0)
+
+- Select relevant memory and named recovery records instead of loading task history at entry.
+- Define standalone record admission, replacement, closure, and evidence retention.
+- Remove completed work, duplicate memory, and superseded entries from active read routes.
+- Allow memory review without completion entries, review dates, or other no-change writes.
+- Preserve unresolved obligations, process safety, and required complete reviews.
+- Apply STE by text type, add Chinese prose rules, and align visual checks with browser availability.
+
 ## v3.4.0 — shared worktree locations (2026-10-22)
 
 Release: [v3.4.0](https://github.com/caohaotiantian/three-loop-workflow/releases/tag/v3.4.0)

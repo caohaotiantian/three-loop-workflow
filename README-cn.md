@@ -12,11 +12,11 @@ English version → [README.md](./README.md)
 
 - **`three-loop-workflow/`** —— 把工作流落实为可执行流程的 Claude skill。把这个文件夹放进 Claude Code 或 Claude.ai,Claude 在处理任何非平凡代码改动时都会按照它执行。
 
-skill 由四个 Markdown 文件加上它的 `LICENSE` 组成:始终加载的 `SKILL.md`;只有 Deep 档工作才会读的 `references/deep.md`;只有拆分给多个写入者的工作才会读的 `references/parallel.md`;以及在任何英文写作之前读的 `references/writing.md`。它们是唯一事实标准。
+skill 由四个 Markdown 文件加上它的 `LICENSE` 组成:始终加载的 `SKILL.md`;只有 Deep 档工作才会读的 `references/deep.md`;只有拆分给多个写入者的工作才会读的 `references/parallel.md`;以及按文本类型与语言选择写作规则的 `references/writing.md`。它们是唯一事实标准。
 
 ## 更新内容
 
-**v3.2.0** 将具体实现与编排调度分开。变更见 [CHANGELOG-cn.md](./CHANGELOG-cn.md)。
+**v3.5.0** 按需读取连续性记录，并按文本类型与语言应用写作规则。变更见 [CHANGELOG-cn.md](./CHANGELOG-cn.md)。
 
 [**为什么有 v3**](./docs/why-v3-cn.md) —— v3.0.0 砍掉了什么、保留了什么、依据是什么,以及哪些事情没有人
 测量过。
@@ -71,10 +71,12 @@ Orchestrate 负责编排时，它管理任务分配、依赖、共享接口、�
 没有协调者时，直接管理变更与所需角色。
 
 新的协调任务共用 `.agent/<task-id>/`，分配任务的计划放在 `tasks/<slice-id>/plan.md`。
-保留已有的规范任务目录。持久检查与评审记录放在每份计划旁的 `evidence/` 目录。
-最终变更描述报告交付结果，`HANDOFF.md` 提供恢复步骤。
-任务开始时读取项目根目录的 `MEMORY.md`，完成时回顾可用会话并提取可复用经验。
-有协调者时，提交候选经验，由协调者更新记忆。
+复用当前任务的规范目录。持久检查与评审证据放在计划旁。
+最终变更描述报告交付结果。活动任务的 `HANDOFF.md` 指定下一步恢复动作。
+记录生命周期遵循 `references/writing.md`。有协调者时，遵循其连续性规则。
+新任务不读取旧任务记录。先读取记忆选择表，再按需读取适用内容。
+任务完成后，从活动记录中移除完成事项，并检查记忆是否需要变更。
+检查可以不产生写入。有协调者时，提交有来源的记忆候选项。
 
 ## 何时触发 skill
 
@@ -196,7 +198,7 @@ v1 依然存在:`git checkout v1.14.0`,或 v1.14.0 release 上的 `.skill`。该
 │   ├── references/
 │   │   ├── deep.md                   只在某条 Deep 触发条件命中时读取
 │   │   ├── parallel.md               只在多个写入者并行时读取
-│   │   └── writing.md                任何英文写作前读取
+│   │   └── writing.md                按文本类型与语言选择写作规则
 │   └── LICENSE
 ├── scripts/
 │   ├── accept-release.sh             仓库门禁:重算每一个已发布的数字,并运行下面所有检查

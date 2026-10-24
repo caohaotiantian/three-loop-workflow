@@ -2,6 +2,17 @@
 
 three-loop-workflow skill 的完整版本历史。skill 的介绍、适用范围与安装方式见 [README-cn.md](./README-cn.md)。
 
+## v3.5.0 —— 按需读取记录与分类写作规则（2026-10-24）
+
+发布：[v3.5.0](https://github.com/caohaotiantian/three-loop-workflow/releases/tag/v3.5.0)
+
+- 按需选择记忆与指定的恢复记录，避免在任务开始时读取历史。
+- 明确独立执行时记录的准入、替换、关闭与证据保留规则。
+- 从活动读取路径中移除完成事项、重复记忆与过时条目。
+- 允许检查记忆后不写入，避免新增完成条目与检查日期。
+- 保留未解决的责任、进程安全要求与完整评审要求。
+- 按文本类型应用 STE，补充中文写作规则，并按浏览器是否可用核验视觉产物。
+
 ## v3.4.0 —— 统一 worktree 存放路径（2026-10-22）
 
 发布：[v3.4.0](https://github.com/caohaotiantian/three-loop-workflow/releases/tag/v3.4.0)

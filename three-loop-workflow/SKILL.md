@@ -4,7 +4,7 @@ description: Implement non-trivial code or contract-rule changes through Plan, B
 license: MIT
 compatibility: Assumes version control, project checks, and user decisions for irreversible actions and repair limits. Use independent review when available, otherwise section 5.
 metadata:
-  version: "3.4.0"
+  version: "3.5.0"
 ---
 
 # Three-Loop Workflow
@@ -31,7 +31,7 @@ Implementation depth and execution mode are separate. Direct execution does not 
 
 **Read the project's guide** (AGENTS.md, CLAUDE.md) for its check commands and the files it treats as contracts; where it names none, derive them from the repository and say what you inferred. Checks come from the build config and CI; contracts are what is consumed outside this repository or persisted: public APIs, schemas, CLIs, wire formats, stored data.
 
-**Write all the English this task produces in ASD-STE100 Simplified Technical English** (`references/writing.md`). **That file also says when to use a diagram, a table, or HTML.**
+**Apply the text-type, language, and visual rules in `references/writing.md` to this task's writing.**
 
 ## 1. Depth
 
@@ -130,8 +130,8 @@ or non-blocking. Do not modify code.
 ## 7. Close: the hand-off
 
 The hand-off is the final change description. A coordinator's HANDOFF.md instead provides resume instructions.
-At entry, read project MEMORY.md. At completion, apply the memory rules in `references/writing.md`.
-With a coordinator, submit candidate lessons and let it maintain memory under its continuity rules.
+Apply selective reads and record lifecycle rules in `references/writing.md`.
+With a coordinator, return sourced memory candidates and leave shared updates with it.
 
 At Standard and Deep, the change description carries:
 

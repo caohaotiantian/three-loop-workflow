@@ -34,6 +34,10 @@ findings before counting them**.
 Any edit that changes a rule in a file under _load-bearing-docs_ is a **Deep** change by the skill's own
 depth triggers. A typo or formatting fix in one of those files is still Direct.
 
+Apply the record lifecycle in `three-loop-workflow/references/writing.md`, or the coordinator's continuity rules when one exists.
+Read only applicable project memory and the identified active task's recovery route.
+Local historical plans and evidence remain available for explicit questions. Their presence does not require entry reads.
+
 Escalation: open an issue or comment in the PR.
 
 **On gating.** Two things this repo once treated as acceptance gates did not work. Both were measured on

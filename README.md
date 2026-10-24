@@ -12,11 +12,11 @@ A disciplined workflow for non-trivial software changes, packaged as a portable 
 
 - **`three-loop-workflow/`** — a Claude skill that operationalizes the workflow. Drop this folder into Claude Code or Claude.ai and Claude will follow it on any non-trivial code change.
 
-The skill is four Markdown files plus its `LICENSE`: `SKILL.md`, which is always loaded; `references/deep.md`, which only Deep work reads; `references/parallel.md`, which only work split across writers reads; and `references/writing.md`, which is read before any English is written. They are the single source of truth.
+The skill is four Markdown files plus its `LICENSE`: `SKILL.md`, which is always loaded; `references/deep.md`, which only Deep work reads; `references/parallel.md`, which only work split across writers reads; and `references/writing.md`, which selects writing rules by text type and language. They are the single source of truth.
 
 ## What's new
 
-**v3.2.0** separates implementation from orchestration.
+**v3.5.0** selects continuity records on demand and applies writing rules by text type and language.
 See [CHANGELOG.md](./CHANGELOG.md) for the changes.
 
 [**Why v3**](./docs/why-v3.md) — what v3.0.0 cut, what it kept and on what evidence, and what nobody
@@ -72,10 +72,12 @@ Request scheduling changes instead of recursively coordinating other tasks.
 Without a coordinator, manage the change and required roles directly.
 
 New coordinated work shares `.agent/<task-id>/` with delegated plans under `tasks/<slice-id>/plan.md`.
-Preserve existing canonical directories. Keep durable check and review records in `evidence/` beside each plan.
-The final change description reports delivery. `HANDOFF.md` provides resume instructions.
-Read project-root `MEMORY.md` at entry and review the available session for reusable lessons at completion.
-With a coordinator, submit candidate lessons for its memory update.
+Reuse the current task's canonical directory. Keep durable check and review evidence beside each plan.
+The final change description reports delivery. An active task's `HANDOFF.md` selects its next recovery action.
+Follow the record lifecycle in `references/writing.md`, or the coordinator's continuity rules when present.
+New work does not load old task records. Read applicable memory through its selector, with details loaded only as needed.
+At completion, remove finished work from active records and review memory for qualifying changes.
+A review may produce no write. With a coordinator, submit sourced memory candidates instead of editing shared memory.
 
 ## When the skill applies
 
@@ -202,7 +204,7 @@ Your guide overrides any of the skill's defaults, so a project that keeps plans 
 │   ├── references/
 │   │   ├── deep.md                   Read only when a Deep trigger fires
 │   │   ├── parallel.md               Read only when writers run at once
-│   │   └── writing.md                Read before any English is written
+│   │   └── writing.md                Writing rules by text type and language
 │   └── LICENSE
 ├── scripts/
 │   ├── accept-release.sh             The repository gate: recomputes every published figure and runs

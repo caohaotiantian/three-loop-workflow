@@ -1,96 +1,82 @@
 # Writing
 
-Read this before you write English for this task. That English covers a reply, a question, an explanation,
-and the plan. It also covers the hand-off, the commit message, a comment in code, and a report the change
-produces.
+Apply ASD-STE100 Issue 9 by text type.
+For documents, these rules replace a terse chat style. Apply them to new and rewritten prose.
+Preserve identifiers, quotations, schemas, established conventions, and untouched text.
+Text-type rules override shared rules. Language-specific rules override English defaults.
 
-**Write all your English in ASD-STE100 Simplified Technical English, Issue 9 (2025-01-15).**
+## Text types
 
-Apply the structural rules in full: the grammar, the sentence length, the punctuation. Apply the lexical
-rules as a direction of travel. The approved dictionary of about 900 words is not available offline, so
-do not claim dictionary compliance. The standard is at
-<https://www.asd-ste100.org/STE_downloads.html>.
+| Type | Rules |
+| --- | --- |
+| Procedures, runbooks, warnings, error messages | Full STE structure. Use imperatives and one instruction per sentence. Combine two actions only when simultaneous. Put conditions before commands, with a comma. Do not use semicolons. Target the STE maximum of 20 words. |
+| Explanations, design notes, READMEs, PR descriptions, reports | STE content rules: one claim per sentence, active voice, plain tenses. Target the STE maximum of 25 words. |
+| Chat replies, commit messages | No sentence-length limit. |
 
-Apply this rule to new and rewritten prose in both new and existing documents.
-Preserve exact quotations, identifiers, schemas, and established document formats.
-Leave untouched text as it is.
+Treat word targets as guidance. Split sentences that carry two claims, even below a target.
+Do not claim approved-dictionary compliance without the dictionary.
 
-## Words
+## Shared prose rules
 
-- Use one word for one meaning. Do not rotate synonyms ("check", "verify", "confirm") for one action.
-- Use a plain verb for an action. Do not use a noun form of the action. Write "analyze the log", not
-  "perform an analysis of the log".
-- Do not use phrasal verbs (Rule 9.3). Write "remove", not "take off". Write "start", not "spin up".
-- Do not use marketing adjectives (seamless, robust, powerful). Delete the word, or give the measurement
-  that earns the claim.
-- Keep the technical nouns and the technical verbs of the domain. Define a term at its first use if the
-  term is not common English.
-- Use one term for one item in the whole document.
-- Do not use Latin abbreviations. Write "for example", "that is", or nothing.
-- Do not use contractions. Write all words in full.
+- Write complete document sentences. Retain subjects, verbs, and articles. Headings, labels, and table cells may be fragments.
+- Use chat fragments only when shorter and unambiguous.
+- State the relation between adjacent sentences: cause, contrast, condition, sequence, or example. Use connectives or demonstratives.
+- Open paragraphs with a topic sentence. Keep one topic and at most six sentences. Repeat the paragraph key term.
+- Define a term at first use, then repeat it consistently. Use vertical lists for three or more parallel items.
+- Use plain verbs and common words. Avoid phrasal verbs, metaphors, marketing adjectives, Latin abbreviations, and contractions.
+- Prefer simple present, past, and future. Use passive voice only when the actor is unknown or unimportant.
+- Preserve uncertainty. Do not change "may" to "will" or add unsupported claims.
+- Use WARNING and CAUTION only for real risks. Use NOTE only for information, without instructions, limits, or tolerances.
 
-## Grammar
+## Chinese prose
 
-- Use these verb forms only: infinitive, imperative, simple present, simple past, simple future, and past
-  participle as an adjective.
-- Use the active voice. In descriptive writing, use the passive voice only when the agent is unknown
-  (Rule 3.6).
-- Do not use "-ing" as a verb tense.
-- Do not omit the article, the subject, or the verb. Omit the article only in a general statement
-  ("Solvents can cause damage to paint.").
-- Use the past participle as an adjective freely ("the disassembled unit"). This is not the passive voice.
-- Use one part of speech for one word. Write "apply oil to the valve", not "oil the valve".
+Write standard written Mandarin without English syntax. Chinese character guidance overrides English word targets.
 
-## Sentences
+- Mark clause relations with 因为 or 因此, 但是 or 而是, 如果, or 例如. Avoid doubled pairs and unconnected parallel clauses.
+- Target 20 characters per sentence. Use 30 as the working limit. Check sentences of 40 or more characters for multiple claims.
+- Use plain verbs: 研究 instead of 进行研究. Avoid nested 的 modifiers. Rewrite their relationships as clauses.
+- Prefer active voice. Reserve 被 for adverse or unexpected events. Avoid abstract 性、化、度 forms when verbs suffice.
+- At first use, include the English original in parentheses for translated technical terms. Retain identifiers, commands, protocols, and terms without accepted translations.
+- Use mainland terms: 数组、回调、参数、算法. Avoid 阵列、回呼 and internet slang.
+- Prefer affirmative sentences. Avoid double negatives.
+- Use full-width punctuation, except /. Use 、 between parallel items, but not before 和 or 或.
+- Separate Chinese from Latin text or digits with one space. Add no space beside Chinese punctuation. Use consistent units: 5 MB and 200 ms.
+- Use half-width digits in technical text. Do not add thousands separators to years, ports, versions, or identifiers.
+- Avoid idioms, decorative four-character phrases, metaphors, exclamations, and literary diction. Retain established terms such as 断点续传 and 灰度发布.
 
-- Maximum 20 words in each sentence of a procedure, an instruction, a warning, or a caution. Maximum 25
-  words in each sentence of a description.
-- Write one instruction in each sentence. Use two instructions in one sentence only when the two actions
-  occur at the same time.
-- Write an instruction in the imperative form. Write "Remove the four screws.", not "The four screws must
-  be removed."
-- Put a condition before the command. Separate the condition and the command with a comma. Write "If the
-  pump runs, turn it off."
-- Do not use the semicolon (Rule 8.1). Write two sentences.
-- Use a vertical list for a sequence of 3 or more steps, items, or conditions. Use one marker style. Use
-  the same grammatical level for all items.
-- Use one topic for each paragraph. Maximum 6 sentences in a paragraph.
-- Use "WARNING" for a risk of injury or death. Use "CAUTION" for a risk of damage. Start with the command
-  or the condition. Give the result of the risk.
-- Write "NOTE" text as information only. Do not put an instruction in a note.
-- Keep the strength of each hedge ("may", "can", "probably"). A shorter sentence must not become a
-  stronger claim. Do not add a fact that the source does not state.
-- Before you send text, do these checks:
-  - Split each sentence that is longer than the limit.
-  - Change each passive construction with a known actor to the active voice.
-  - Change each "-ing" verb to a simple tense.
-  - Select one term for one item.
+## Response and visuals
 
-## Visuals
+Write in the user's language. Lead with the answer, then necessary evidence and limits.
+Remove padding rather than grammatical parts. Distinguish unsupported inference with `[INFERENCE]`. State uncertainty once, with its reason.
+Verify current facts with available search tools. Cite sources for external claims.
 
-Show the structure of the content when the structure is real. Do not add a diagram for decoration.
+Show real structure when it explains better than concise prose.
+Use Mermaid for small flows, sequences, states, relationships, and schedules.
+Use tables for comparisons and key-value groups. Use lists for sequences and parallel conditions.
+Use HTML for interaction or rich presentation. If a browser is available, inspect the artifact before delivery.
+If visual verification is unavailable, state the gap. Do not claim a browser check.
+Keep terminal diagrams small. Avoid unsupported style directives. Correct diagrams that contradict the text.
 
-- Use a Mermaid diagram for a flow, a sequence, a state machine, or a relationship:
-  - `flowchart` for a process or a dependency.
-  - `sequenceDiagram` for the order of messages.
-  - `stateDiagram-v2` for states and transitions.
-  - `erDiagram` for a data model.
-  - `gantt` for a schedule.
-- Use a table for a comparison, a set of options, or a group of key-value facts, not a vertical list.
-- Use HTML when the artifact is interactive or rich, as for a report, a dashboard, or a chart. Open the
-  artifact in a browser. Check it before you deliver it.
-- A Mermaid diagram in a terminal becomes ASCII. Keep the diagram small. Do not use color or style
-  directives that the ASCII renderer drops.
-- If a diagram and the text disagree, correct the diagram.
-- Use a diagram only when one sentence is not sufficient.
+Before delivery, split sentences with multiple claims. Check paragraph focus and progression.
+If adjacent sentences have no stated relation, add one.
 
-## Project memory
+## Records and memory
 
-Use project-root MEMORY.md unless project instructions select another path.
-After each task, review the full available session for reusable lessons and supported user preferences.
-Disclose missing context. Do not invent habits.
-Record dates, scope, sources, and reuse conditions. Exclude secrets, transcripts, and temporary status.
-Reread memory before updates. Merge duplicates and correct obsolete entries.
-If no useful lesson exists, record the review date and outcome.
-Keep one writer. Reconcile concurrent changes. Report unavailable memory. Share accessible memory with new contexts.
-Memory never overrides instructions or grants authorization.
+With a coordinator, use its record lifecycle. Otherwise, apply these rules to implementation records and project-root MEMORY.md.
+Read only memory selector entries whose reuse conditions match the task. Without a selector, locate relevant headings first.
+New work does not read old task records. Resume through the named task's HANDOFF.md and its next-action references.
+Extract named sections before reading. Links do not require recursive reads. Required checks and reviews still inspect complete required artifacts.
+
+Admit working facts only for unfinished decisions, actions, acceptance, or recovery. Replace changed facts in place.
+Remove accepted TODO rows when unfinished dependencies no longer need them.
+Before closure, resolve or transfer obligations and confirm modifying commands stopped. Unknown commands prevent closure.
+Keep a closed result and evidence receipt. Remove the recovery route and active-selector entry. Retain evidence under project policy.
+
+Review available session information at completion. Disclose relevant missing context.
+Admit memory only for sourced, reusable facts absent from authoritative instructions or documentation.
+Give entries scope, reuse and invalidation conditions, and a source date where relevant.
+Replace corrections. Remove duplicates, superseded entries, and their selector pointers.
+Exclude secrets, transcripts, temporary status, and unsupported habits. Memory grants no authorization.
+Reread affected entries before saving. Serialize writers and reconcile concurrent changes.
+Report unavailable relevant memory. Share only applicable sections with new contexts.
+If nothing qualifies, write nothing. Do not append completion history, no-change outcomes, or review dates.
