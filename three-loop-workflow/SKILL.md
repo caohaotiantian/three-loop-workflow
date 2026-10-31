@@ -4,7 +4,7 @@ description: Implement non-trivial code or contract-rule changes through Plan, B
 license: MIT
 compatibility: Assumes version control, project checks, and user decisions for irreversible actions and repair limits. Use independent review when available, otherwise section 5.
 metadata:
-  version: "3.5.0"
+  version: "3.5.1"
 ---
 
 # Three-Loop Workflow
@@ -31,7 +31,7 @@ Implementation depth and execution mode are separate. Direct execution does not 
 
 **Read the project's guide** (AGENTS.md, CLAUDE.md) for its check commands and the files it treats as contracts; where it names none, derive them from the repository and say what you inferred. Checks come from the build config and CI; contracts are what is consumed outside this repository or persisted: public APIs, schemas, CLIs, wire formats, stored data.
 
-**Apply the text-type, language, and visual rules in `references/writing.md` to this task's writing.**
+**Apply the text-type, reply, and visual rules in `references/writing.md` to this task's writing.**
 
 ## 1. Depth
 

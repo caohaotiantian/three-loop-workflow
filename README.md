@@ -12,11 +12,11 @@ A disciplined workflow for non-trivial software changes, packaged as a portable 
 
 - **`three-loop-workflow/`** — a Claude skill that operationalizes the workflow. Drop this folder into Claude Code or Claude.ai and Claude will follow it on any non-trivial code change.
 
-The skill is four Markdown files plus its `LICENSE`: `SKILL.md`, which is always loaded; `references/deep.md`, which only Deep work reads; `references/parallel.md`, which only work split across writers reads; and `references/writing.md`, which selects writing rules by text type and language. They are the single source of truth.
+The skill is four Markdown files plus its `LICENSE`: `SKILL.md`, which is always loaded; `references/deep.md`, which only Deep work reads; `references/parallel.md`, which only work split across writers reads; and `references/writing.md`, which selects writing rules by text type. They are the single source of truth.
 
 ## What's new
 
-**v3.5.0** selects continuity records on demand and applies writing rules by text type and language.
+**v3.5.1** replaces the mandated simplified-English standard with judgment-based writing rules aligned with the global instructions.
 See [CHANGELOG.md](./CHANGELOG.md) for the changes.
 
 [**Why v3**](./docs/why-v3.md) — what v3.0.0 cut, what it kept and on what evidence, and what nobody
@@ -204,7 +204,7 @@ Your guide overrides any of the skill's defaults, so a project that keeps plans 
 │   ├── references/
 │   │   ├── deep.md                   Read only when a Deep trigger fires
 │   │   ├── parallel.md               Read only when writers run at once
-│   │   └── writing.md                Writing rules by text type and language
+│   │   └── writing.md                Writing rules by text type
 │   └── LICENSE
 ├── scripts/
 │   ├── accept-release.sh             The repository gate: recomputes every published figure and runs

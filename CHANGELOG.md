@@ -2,6 +2,13 @@
 
 Full version history for the three-loop-workflow skill. See [README.md](./README.md) for what the skill is, when it applies, and how to install it.
 
+## v3.5.1 — writing guidance without a mandated standard (2026-10-31)
+
+- Replace the mandated simplified-English standard with judgment-based rules, applied under Grice's Cooperative Principle.
+- Let each section's rules govern its subject, apply them to new and rewritten prose only, and use the shared rules for the gaps.
+- Remove the Chinese-prose section; add reply rules for fact, uncertainty, and source citation from the global instruction file.
+- Keep the record lifecycle, visual, and document-label rules.
+
 ## v3.5.0 — selective records and writing rules (2026-10-24)
 
 Release: [v3.5.0](https://github.com/caohaotiantian/three-loop-workflow/releases/tag/v3.5.0)

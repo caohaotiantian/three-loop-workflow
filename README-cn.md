@@ -12,11 +12,11 @@ English version → [README.md](./README.md)
 
 - **`three-loop-workflow/`** —— 把工作流落实为可执行流程的 Claude skill。把这个文件夹放进 Claude Code 或 Claude.ai,Claude 在处理任何非平凡代码改动时都会按照它执行。
 
-skill 由四个 Markdown 文件加上它的 `LICENSE` 组成:始终加载的 `SKILL.md`;只有 Deep 档工作才会读的 `references/deep.md`;只有拆分给多个写入者的工作才会读的 `references/parallel.md`;以及按文本类型与语言选择写作规则的 `references/writing.md`。它们是唯一事实标准。
+skill 由四个 Markdown 文件加上它的 `LICENSE` 组成:始终加载的 `SKILL.md`;只有 Deep 档工作才会读的 `references/deep.md`;只有拆分给多个写入者的工作才会读的 `references/parallel.md`;以及按文本类型选择写作规则的 `references/writing.md`。它们是唯一事实标准。
 
 ## 更新内容
 
-**v3.5.0** 按需读取连续性记录，并按文本类型与语言应用写作规则。变更见 [CHANGELOG-cn.md](./CHANGELOG-cn.md)。
+**v3.5.1** 用按判断力应用、与全局指令一致的写作规则取代强制执行的简化英语标准。变更见 [CHANGELOG-cn.md](./CHANGELOG-cn.md)。
 
 [**为什么有 v3**](./docs/why-v3-cn.md) —— v3.0.0 砍掉了什么、保留了什么、依据是什么,以及哪些事情没有人
 测量过。
@@ -198,7 +198,7 @@ v1 依然存在:`git checkout v1.14.0`,或 v1.14.0 release 上的 `.skill`。该
 │   ├── references/
 │   │   ├── deep.md                   只在某条 Deep 触发条件命中时读取
 │   │   ├── parallel.md               只在多个写入者并行时读取
-│   │   └── writing.md                按文本类型与语言选择写作规则
+│   │   └── writing.md                按文本类型选择写作规则
 │   └── LICENSE
 ├── scripts/
 │   ├── accept-release.sh             仓库门禁:重算每一个已发布的数字,并运行下面所有检查
